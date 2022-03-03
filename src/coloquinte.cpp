@@ -46,7 +46,6 @@ void place_ispd(
     auto xtopo = NetTopology::xTopology(circuit);
 
     xt::random::seed(0);
-    xt::xtensor<float, 1> xplace = xt::random::rand<float>({xtopo.nbCells()});
     //std::cout << "Initial X HPWL: " << xtopo.valueHPWL(xplace) << std::endl;
     //std::cout << "Initial X LSE: " << xtopo.valueLSE(xplace, 1.0) << std::endl;
     //std::cout << "Initial X WA: " << xtopo.valueWA(xplace, 1.0) << std::endl;
@@ -54,15 +53,25 @@ void place_ispd(
     //std::cout << "Gradient X LSE: " << xtopo.gradLSE(xplace, 1.0) << std::endl;
     //std::cout << "Gradient X WA: " << xtopo.gradWA(xplace, 1.0) << std::endl;
     //std::cout << "Proximal step X: " << xtopo.proximalStep(xplace, 1.0) << std::endl;
-    int nbSteps = 1000;
-    float smoothing = 1.0;
-    for (float stepSize : {0.25, 0.5, 1.0, 2.0, 4.0, 8.0}) {
-        for (float momentum : {0.0, 0.9, 0.95, 0.975}) {
-            for (DescentModel model : {DescentModel::HPWL, DescentModel::LSE, DescentModel::WA, DescentModel::Proximal}) {
-                gradientDescent(xtopo, xplace, model, nbSteps, stepSize, momentum, smoothing);
+    auto starPlace = xtopo.starSolve();
+    std::cout << "Star HPWL: " << xtopo.valueHPWL(starPlace) << std::endl;
+    for (int i = 0; i < 100; ++i) {
+        starPlace = xtopo.starSolve(starPlace);
+        std::cout << "Star HPWL#" << i << ": " << xtopo.valueHPWL(starPlace) << std::endl;
+    }
+    /*
+    int nbSteps = 100;
+    float smoothing = 2.0;
+    //DescentModel model = DescentModel::Proximal;
+    for (float momentum : {0.9, 0.95, 0.975, 0.9875}) {
+        for (float stepSize : {0.7, 1.0, 1.4, 2.0, 2.8}) {
+            for (DescentModel model : {DescentModel::WA, DescentModel::Proximal}) {
+            //for (float smoothing : {1.0, 2.0, 4.0}) {
+                gradientDescent(xtopo, starPlace, model, nbSteps, stepSize, momentum, smoothing);
             }
         }
     }
+    */
 }
 }
 
