@@ -9,6 +9,8 @@
 #include <xtensor/xstrided_view.hpp>
 #include <xtensor/xio.hpp>
 #include <xtensor/xsort.hpp>
+#include <eigen3/Eigen/Dense>
+#include <eigen3/Eigen/IterativeLinearSolvers>
 
 #include <algorithm>
 #include <cmath>
@@ -24,10 +26,7 @@ NetTopology NetTopology::yTopology(const Circuit &circuit) {
 }
 
 NetTopology NetTopology::fromData(const std::vector<int> &cellSizes, const std::vector<int> & pl, const std::vector<char> &cellFixed, const std::vector<int> &netLimits, const std::vector<int> &pinCells, const std::vector<int> &pinOffsets) {
-    std::vector<NetTopologyFixedSizeBuilder> netBuilders_;
-    std::vector<NetTopologyFixedSizeTerminalsBuilder> terminalNetBuilders_;
-    int nbCells = cellSizes.size();
-    int nbNets = 0;
+    NetTopologyBuilder builder(cellSizes.size());
     for (int i = 0; i + 1 < netLimits.size(); ++i) {
         float minPos = std::numeric_limits<float>::infinity();
         float maxPos = -std::numeric_limits<float>::infinity();
@@ -49,27 +48,42 @@ NetTopology NetTopology::fromData(const std::vector<int> &cellSizes, const std::
                 offsets.push_back(offset - 0.5f * cellSizes[cell]);
             }
         }
-        int sz = cells.size();
-        if (std::isfinite(minPos)) {
-            if (cells.empty()) continue;
-            while (terminalNetBuilders_.size() < sz + 1) {
-                terminalNetBuilders_.emplace_back(nbCells, terminalNetBuilders_.size());
-            }
-            terminalNetBuilders_[sz].push(cells, offsets, minPos, maxPos);
-        }
-        else {
-            if (cells.size() <= 1) continue;
-            while (netBuilders_.size() < sz + 1) {
-                netBuilders_.emplace_back(nbCells, netBuilders_.size());
-            }
-            netBuilders_[sz].push(cells, offsets);
-        }
-        ++nbNets;
+        builder.push(cells, offsets, minPos, maxPos);
     }
+    return builder.build();
+}
 
+void NetTopologyBuilder::push(const std::vector<int> &cells, const std::vector<float> &offsets) {
+    assert (cells.size() == offsets.size());
+    if (cells.size() <= 1) return;
+    int sz = cells.size();
+    while (netBuilders_.size() < sz + 1) {
+        netBuilders_.emplace_back(nbCells_, netBuilders_.size());
+    }
+    netBuilders_[sz].push(cells, offsets);
+}
+
+void NetTopologyBuilder::push(const std::vector<int> &cells, const std::vector<float> &offsets, float minPos, float maxPos) {
+    assert (cells.size() == offsets.size());
+    if (std::isfinite(minPos)) {
+        assert (maxPos >= minPos);
+        if (cells.empty()) return;
+        int sz = cells.size();
+        while (terminalNetBuilders_.size() < sz + 1) {
+            terminalNetBuilders_.emplace_back(nbCells_, terminalNetBuilders_.size());
+        }
+        terminalNetBuilders_[sz].push(cells, offsets, minPos, maxPos);
+    }
+    else {
+        push(cells, offsets);
+    }
+    ++nbNets_;
+}
+
+NetTopology NetTopologyBuilder::build() const {
     NetTopology ret;
-    ret.nbCells_ = nbCells;
-    ret.nbNets_ = nbNets;
+    ret.nbCells_ = nbCells_;
+    ret.nbNets_ = nbNets_;
     for (const auto &bd : netBuilders_) {
         if (!bd.empty()) {
             ret.nets_.push_back(bd.build());
@@ -391,6 +405,19 @@ std::pair<xt::xtensor<float, 2>, xt::xtensor<float, 2> > NetTopologyFixedSizeTer
     return std::make_pair(minPins, maxPins);
 }
 
+xt::xtensor<float, 2> NetTopologyFixedSizeTerminals::pinCoordsAll(xt::xtensor<float, 1> pl) const {
+    auto pins = pinCoords(pl);
+    return xt::concatenate(xtuple(pins, xt::expand_dims(minPins_, 1), xt::expand_dims(maxPins_, 1)), 1);
+}
+
+xt::xtensor<int, 2> NetTopologyFixedSizeTerminals::pinCellsAll() const {
+    return xt::concatenate(xtuple(pinCells(), -xt::ones<int>({nbNets(), 2})), 1);
+}
+
+xt::xtensor<float, 2> NetTopologyFixedSizeTerminals::pinOffsetsAll() const {
+    return xt::concatenate(xtuple(pinOffsets(), xt::expand_dims(minPins_, 1), xt::expand_dims(maxPins_, 1)), 1);
+}
+
 xt::xtensor<float, 1> NetTopologyFixedSizeTerminals::toCellGradMinMax(xt::xtensor<float, 2> pinGrad) const {
     return toCellGrad(xt::view(pinGrad, xt::all(), xt::range(xt::placeholders::_, -1)));
 }
@@ -409,4 +436,270 @@ void NetTopologyFixedSizeTerminalsBuilder::push(const std::vector<int> &cells, c
     pinOffsets_.insert(pinOffsets_.end(), offsets.begin(), offsets.end());
     minPins_.push_back(minPin);
     maxPins_.push_back(maxPin);
+}
+
+MatrixBuilder MatrixBuilder::createStar(const NetTopology &topo) {
+    MatrixBuilder bd(topo.nbCells());
+    for (const auto &nt : topo.nets()) {
+        bd.extendStar(nt);
+    }
+    for (const auto &nt : topo.terminalNets()) {
+        bd.extendStar(nt);
+    }
+    return bd;
+}
+
+void MatrixBuilder::extendStar(const NetTopologyFixedSize &topo) {
+    const auto &cells = topo.pinCells();
+    const auto &offsets = topo.pinOffsets();
+    for (int i = 0; i < topo.nbNets(); ++i) {
+        if (topo.netSize() == 2) {
+            addPin(cells(i, 0), cells(i, 1), offsets(i, 0), offsets(i, 1), 0.5);
+        }
+        else if (topo.netSize() == 3) {
+            addPin(cells(i, 0), cells(i, 1), offsets(i, 0), offsets(i, 1), 0.5);
+            addPin(cells(i, 0), cells(i, 2), offsets(i, 0), offsets(i, 2), 0.5);
+            addPin(cells(i, 2), cells(i, 1), offsets(i, 2), offsets(i, 1), 0.5);
+        }
+        else {
+            float weight = 1.0 / topo.netSize();
+            int newCell = nbCells_ + nbSupps_;
+            nbSupps_++;
+            rhs_.push_back(0.0);
+            initial_.push_back(0.0);
+            for (int j = 0; j < topo.netSize(); ++j) {
+                addPin(cells(i, j), newCell, offsets(i, j), 0.0f, weight);
+            }
+        }
+    }
+}
+
+void MatrixBuilder::extendStar(const NetTopologyFixedSizeTerminals &topo) {
+    const auto &cells = topo.pinCells();
+    const auto &offsets = topo.pinOffsets();
+    for (int i = 0; i < topo.nbNets(); ++i) {
+        float pos = 0.5 * (topo.minPins()(i) + topo.maxPins()(i));
+        if (topo.netSize() == 1) {
+            addFixedPin(cells(i, 0), offsets(i, 0), pos, 0.5);
+        }
+        else if (topo.netSize() == 2) {
+            addFixedPin(cells(i, 1), offsets(i, 1), pos, 0.5);
+            addFixedPin(cells(i, 1), offsets(i, 1), pos, 0.5);
+            addPin(cells(i, 0), cells(i, 1), offsets(i, 0), offsets(i, 1), 0.5);
+        }
+        else {
+            float weight = 1.0 / (topo.netSize() + 1);
+            int newCell = nbCells_ + nbSupps_;
+            nbSupps_++;
+            rhs_.push_back(0.0);
+            initial_.push_back(0.0);
+            addFixedPin(newCell, 0.0, pos, weight);
+            for (int j = 0; j < topo.netSize(); ++j) {
+                addPin(cells(i, j), newCell, offsets(i, j), 0.0f, weight);
+            }
+        }
+    }
+}
+
+MatrixBuilder MatrixBuilder::createStar(const NetTopology &topo, xt::xtensor<float, 1> pl) {
+    MatrixBuilder bd(topo.nbCells());
+    bd.initial_ = std::vector<float>(pl.begin(), pl.end());
+    for (const auto &nt : topo.nets()) {
+        bd.extendStar(nt, pl);
+    }
+    for (const auto &nt : topo.terminalNets()) {
+        bd.extendStar(nt, pl);
+    }
+    return bd;
+}
+
+void MatrixBuilder::extendStar(const NetTopologyFixedSize &topo, xt::xtensor<float, 1> pl) {
+    float epsilon = 1.0e-1;
+    const auto coords = topo.pinCoords(pl);
+    const auto &cells = topo.pinCells();
+    const auto &offsets = topo.pinOffsets();
+    xt::xtensor<float, 1> pinMin = xt::amin(coords, {1});
+    xt::xtensor<float, 1> pinMax = xt::amax(coords, {1});
+    xt::xtensor<float, 1> pinMed = 0.5 * (pinMin + pinMax);
+    for (int i = 0; i < topo.nbNets(); ++i) {
+        if (topo.netSize() == 2) {
+            float weight = 1.0 / std::max(pinMax(i) - pinMin(i), epsilon);
+            addPin(cells(i, 0), cells(i, 1), offsets(i, 0), offsets(i, 1), weight);
+        }
+        else {
+            int newCell = nbCells_ + nbSupps_;
+            nbSupps_++;
+            rhs_.push_back(0.0);
+            initial_.push_back(pinMed(i));
+            for (int j = 0; j < topo.netSize(); ++j) {
+                // TODO: better evaluation
+                float weight = 2.0 / (std::abs(coords(i, j) - pinMed(i)) + epsilon);
+                addPin(cells(i, j), newCell, offsets(i, j), 0.0f, weight);
+            }
+        }
+    }
+}
+
+void MatrixBuilder::extendStar(const NetTopologyFixedSizeTerminals &topo, xt::xtensor<float, 1> pl) {
+    float epsilon = 1.0e-1;
+    const auto coords = topo.pinCoordsAll(pl);
+    const auto cells = topo.pinCellsAll();
+    const auto offsets = topo.pinOffsetsAll();
+    xt::xtensor<float, 1> pinMin = xt::amin(coords, {1});
+    xt::xtensor<float, 1> pinMax = xt::amax(coords, {1});
+    xt::xtensor<float, 1> pinMed = 0.5 * (pinMin + pinMax);
+    for (int i = 0; i < topo.nbNets(); ++i) {
+        float minFixed = topo.minPins()(i);
+        float maxFixed = topo.maxPins()(i);
+        if (topo.netSize() == 1 && minFixed == maxFixed) {
+            float weight = 1.0 / std::max(pinMax(i) - pinMin(i), epsilon);
+            addFixedPin(cells(i, 0), offsets(i, 0), minFixed, weight);
+        }
+        else {
+            int newCell = nbCells_ + nbSupps_;
+            nbSupps_++;
+            rhs_.push_back(0.0);
+            initial_.push_back(pinMed(i));
+            int nbFixed = minFixed == maxFixed ? 1 : 2;
+            for (int j = 0; j < topo.netSize() + nbFixed; ++j) {
+                // TODO: better evaluation
+                float weight = 2.0 / (std::abs(coords(i, j) - pinMed(i)) + epsilon);
+                addPinOrFixed(cells(i, j), newCell, offsets(i, j), 0.0f, weight);
+            }
+        }
+    }
+}
+
+MatrixBuilder MatrixBuilder::createB2B(const NetTopology &topo, xt::xtensor<float, 1> pl) {
+    MatrixBuilder bd(topo.nbCells());
+    bd.initial_ = std::vector<float>(pl.begin(), pl.end());
+    for (const auto &nt : topo.nets()) {
+        bd.extendB2B(nt, pl);
+    }
+    for (const auto &nt : topo.terminalNets()) {
+        bd.extendB2B(nt, pl);
+    }
+    return bd;
+}
+
+void MatrixBuilder::extendB2B(const NetTopologyFixedSize &topo, xt::xtensor<float, 1> pl) {
+    float epsilon = 1.0e-1;
+    const auto coords = topo.pinCoords(pl);
+    const auto &cells = topo.pinCells();
+    const auto &offsets = topo.pinOffsets();
+    xt::xtensor<int, 1> amnt = xt::argmin(coords, 1);
+    xt::xtensor<int, 1> amxt = xt::argmax(coords, 1);
+    for (int i = 0; i < topo.nbNets(); ++i) {
+        int amn = amnt(i);
+        int amx = amxt(i);
+        float factor = 1.0f / (topo.netSize() - 1);
+        for (int j = 0; j < topo.netSize(); ++j) {
+            if (j != amn) {
+                float weight = factor / std::max(std::abs(coords(i, j) - coords(i, amn)), epsilon);
+                addPin(cells(i, j), cells(i, amn), offsets(i, j), offsets(i, amn), weight);
+            }
+            if (j != amx) {
+                float weight = factor / std::max(std::abs(coords(i, j) - coords(i, amx)), epsilon);
+                addPin(cells(i, j), cells(i, amx), offsets(i, j), offsets(i, amx), weight);
+            }
+        }
+    }
+}
+
+void MatrixBuilder::extendB2B(const NetTopologyFixedSizeTerminals &topo, xt::xtensor<float, 1> pl) {
+    float epsilon = 1.0e-1;
+    const auto coords = topo.pinCoordsAll(pl);
+    const auto cells = topo.pinCellsAll();
+    const auto offsets = topo.pinOffsetsAll();
+    xt::xtensor<int, 1> amnt = xt::argmin(coords, 1);
+    xt::xtensor<int, 1> amxt = xt::argmax(coords, 1);
+    for (int i = 0; i < topo.nbNets(); ++i) {
+        int amn = amnt(i);
+        int amx = amxt(i);
+        int nbFixed;
+        if (topo.minPins()(i) == topo.maxPins()(i)) {
+            // Only consider one fixed pin
+            nbFixed = 1;
+            amn = std::min(amn, topo.netSize());
+            amx = std::min(amx, topo.netSize());
+        }
+        else {
+            nbFixed = 2;
+        }
+        float factor = 1.0f / (topo.netSize() + nbFixed - 1);
+        for (int j = 0; j < topo.netSize() + nbFixed; ++j) {
+            if (j != amn) {
+                float weight = factor / std::max(std::abs(coords(i, j) - coords(i, amn)), epsilon);
+                addPinOrFixed(cells(i, j), cells(i, amn), offsets(i, j), offsets(i, amn), weight);
+            }
+            if (j != amx) {
+                float weight = factor / std::max(std::abs(coords(i, j) - coords(i, amx)), epsilon);
+                addPinOrFixed(cells(i, j), cells(i, amx), offsets(i, j), offsets(i, amx), weight);
+            }
+        }
+    }
+}
+
+void MatrixBuilder::addPin(int c1, int c2, float offs1, float offs2, float weight) {
+    if (c1 == c2) return;
+    assert (c1 >= 0);
+    assert (c2 >= 0);
+    mat_.emplace_back(c1, c2, -weight);
+    mat_.emplace_back(c2, c1, -weight);
+    mat_.emplace_back(c1, c1, weight);
+    mat_.emplace_back(c2, c2, weight);
+    rhs_[c1] += weight * (offs2 - offs1);
+    rhs_[c2] += weight * (offs1 - offs2);
+}
+
+void MatrixBuilder::addFixedPin(int c1, float offs1, float pos, float weight) {
+    assert (c1 >= 0);
+    mat_.emplace_back(c1, c1, weight);
+    rhs_[c1] += weight * (pos - offs1);
+}
+
+void MatrixBuilder::addPinOrFixed(int c1, int c2, float offs1, float offs2, float weight) {
+    if (c1 == c2) return;
+    if (c1 == -1) {
+        addFixedPin(c2, offs2, offs1, weight);
+        return;
+    }
+    if (c2 == -1) {
+        addFixedPin(c1, offs1, offs2, weight);
+        return;
+    }
+    addPin(c1, c2, offs1, offs2, weight);
+}
+
+xt::xtensor<float, 1> MatrixBuilder::solve() {
+    Eigen::SparseMatrix<float> mat(matSize(), matSize());
+    mat.setFromTriplets(mat_.begin(), mat_.end());
+    Eigen::Map<Eigen::Matrix<float, -1, 1> > rhs(rhs_.data(), rhs_.size());
+    Eigen::Map<Eigen::Matrix<float, -1, 1> > initial(initial_.data(), initial_.size());
+    Eigen::ConjugateGradient<Eigen::SparseMatrix<float> > solver;
+    solver.compute(mat);
+    solver.setTolerance(1.0e-6f);
+    solver.setMaxIterations(1000);
+    Eigen::Matrix<float, -1, 1> res = solver.solveWithGuess(rhs, initial);
+    // Copy to a std::vector and remove the fake cells
+    std::vector<float> ret;
+    ret.resize(matSize());
+    Eigen::Matrix<float, -1, 1>::Map(ret.data(), ret.size()) = res;
+    ret.resize(nbCells_);
+    return xt::adapt(ret, {nbCells_});
+}
+
+xt::xtensor<float, 1> NetTopology::starSolve() const {
+    MatrixBuilder bd = MatrixBuilder::createStar(*this);
+    return bd.solve();
+}
+
+xt::xtensor<float, 1> NetTopology::starSolve(const xt::xtensor<float, 1> &pl) const {
+    MatrixBuilder bd = MatrixBuilder::createStar(*this, pl);
+    return bd.solve();
+}
+
+xt::xtensor<float, 1> NetTopology::b2bSolve(const xt::xtensor<float, 1> &pl) const {
+    MatrixBuilder bd = MatrixBuilder::createB2B(*this, pl);
+    return bd.solve();
 }
