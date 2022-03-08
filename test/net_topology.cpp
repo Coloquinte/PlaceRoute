@@ -367,3 +367,29 @@ BOOST_AUTO_TEST_CASE(b2b_mid) {
     BOOST_CHECK_CLOSE(res[1], 3.0, 0.001);
 }
 
+BOOST_AUTO_TEST_CASE(star_singlepin) {
+    int nbCells = 4;
+    NetTopologyBuilder bd(nbCells);
+    bd.push({0}, {0.0f}, 4.0f, 4.0f);
+    bd.push({1}, {5.0f}, 1.0f, 1.0f);
+    bd.push({2}, {-6.0f}, 2.0f, 2.0f);
+    bd.push({3}, {2.0f}, 3.0f, 3.0f);
+    auto topo = bd.build();
+    xt::xtensor<float, 1> place = {10.0f, 20.0f, 30.0f, 40.0f};
+    auto res = topo.starSolve(place);
+    BOOST_CHECK_CLOSE(res[0], 4.0, 0.001);
+    BOOST_CHECK_CLOSE(res[1], -4.0, 0.001);
+    BOOST_CHECK_CLOSE(res[2], 8.0, 0.001);
+    BOOST_CHECK_CLOSE(res[3], 1.0, 0.001);
+}
+
+BOOST_AUTO_TEST_CASE(star_mid) {
+    int nbCells = 2;
+    NetTopologyBuilder bd(nbCells);
+    bd.push({0, 1}, {0.0f, 0.0f}, 0.0f, 4.0f);
+    auto topo = bd.build();
+    xt::xtensor<float, 1> place = {2.0f, 3.0f};
+    auto res = topo.starSolve(place);
+    BOOST_CHECK_CLOSE(res[0], 2.0, 0.001);
+    BOOST_CHECK_CLOSE(res[1], 3.0, 0.001);
+}
