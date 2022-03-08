@@ -501,19 +501,19 @@ void MatrixBuilder::extendStar(const NetTopologyFixedSizeTerminals &topo) {
     }
 }
 
-MatrixBuilder MatrixBuilder::createStar(const NetTopology &topo, xt::xtensor<float, 1> pl, float epsilon) {
+MatrixBuilder MatrixBuilder::createStar(const NetTopology &topo, xt::xtensor<float, 1> pl, float epsilon, float relaxation, bool b2bScale) {
     MatrixBuilder bd(topo.nbCells());
     bd.initial_ = std::vector<float>(pl.begin(), pl.end());
     for (const auto &nt : topo.nets()) {
-        bd.extendStar(nt, pl, epsilon);
+        bd.extendStar(nt, pl, epsilon, relaxation, b2bScale);
     }
     for (const auto &nt : topo.terminalNets()) {
-        bd.extendStar(nt, pl, epsilon);
+        bd.extendStar(nt, pl, epsilon, relaxation, b2bScale);
     }
     return bd;
 }
 
-void MatrixBuilder::extendStar(const NetTopologyFixedSize &topo, xt::xtensor<float, 1> pl, float epsilon) {
+void MatrixBuilder::extendStar(const NetTopologyFixedSize &topo, xt::xtensor<float, 1> pl, float epsilon, float relaxation, bool b2bScale) {
     const auto coords = topo.pinCoords(pl);
     const auto &cells = topo.pinCells();
     const auto &offsets = topo.pinOffsets();
@@ -532,17 +532,20 @@ void MatrixBuilder::extendStar(const NetTopologyFixedSize &topo, xt::xtensor<flo
             nbSupps_++;
             rhs_.push_back(0.0);
             initial_.push_back(pinMed(i));
+            float halfDiameter = pinMax(i) - pinMed(i);
             for (int j = 0; j < topo.netSize(); ++j) {
                 if (j == amnt(i) || j == amxt(i)) {
                     // Extreme pins are connected directly (gradient of one)
-                    float weight = 1.0 / std::max(std::abs(pinMax(i) - pinMed(i)), epsilon);
+                    float weight = 1.0 / std::max(halfDiameter, epsilon);
                     addPin(cells(i, j), newCell, offsets(i, j), 0.0f, weight);
                 }
                 else {
                     // Non-extreme pins have a zero force at their current position
                     float pos = coords(i, j);
                     float dist = std::min(pinMax(i) - pos, pos - pinMin(i));
-                    float weight = 1.0 / std::max(dist, epsilon);
+                    float rdist = relaxation * halfDiameter;
+                    float weight = 1.0 / std::max(std::max(rdist, dist), epsilon);
+                    if (b2bScale) weight /= (topo.netSize() - 1);
                     addPin(cells(i, j), newCell, offsets(i, j), pos - pinMed(i), weight);
                 }
             }
@@ -550,7 +553,7 @@ void MatrixBuilder::extendStar(const NetTopologyFixedSize &topo, xt::xtensor<flo
     }
 }
 
-void MatrixBuilder::extendStar(const NetTopologyFixedSizeTerminals &topo, xt::xtensor<float, 1> pl, float epsilon) {
+void MatrixBuilder::extendStar(const NetTopologyFixedSizeTerminals &topo, xt::xtensor<float, 1> pl, float epsilon, float relaxation, bool b2bScale) {
     const auto coords = topo.pinCoordsAll(pl);
     const auto cells = topo.pinCellsAll();
     const auto offsets = topo.pinOffsetsAll();
@@ -584,17 +587,20 @@ void MatrixBuilder::extendStar(const NetTopologyFixedSizeTerminals &topo, xt::xt
             nbSupps_++;
             rhs_.push_back(0.0);
             initial_.push_back(pinMed(i));
+            float halfDiameter = pinMax(i) - pinMed(i);
             for (int j = 0; j < topo.netSize() + nbFixed; ++j) {
                 if (j == amn || j == amx) {
                     // Extreme pins are connected directly (gradient of one)
-                    float weight = 1.0 / std::max(std::abs(pinMax(i) - pinMed(i)), epsilon);
+                    float weight = 1.0 / std::max(halfDiameter, epsilon);
                     addPinOrFixed(cells(i, j), newCell, offsets(i, j), 0.0f, weight);
                 }
                 else {
                     // Non-extreme pins have a zero force at their current position
                     float pos = coords(i, j);
                     float dist = std::min(pinMax(i) - pos, pos - pinMin(i));
-                    float weight = 1.0 / std::max(dist, epsilon);
+                    float rdist = relaxation * halfDiameter;
+                    float weight = 1.0 / std::max(std::max(rdist, dist), epsilon);
+                    if (b2bScale) weight /= (topo.netSize() + nbFixed - 1);
                     addPinOrFixed(cells(i, j), newCell, offsets(i, j), pos - pinMed(i), weight);
                 }
             }
@@ -722,8 +728,8 @@ xt::xtensor<float, 1> NetTopology::starSolve() const {
     return bd.solve();
 }
 
-xt::xtensor<float, 1> NetTopology::starSolve(const xt::xtensor<float, 1> &pl, float epsilon) const {
-    MatrixBuilder bd = MatrixBuilder::createStar(*this, pl, epsilon);
+xt::xtensor<float, 1> NetTopology::starSolve(const xt::xtensor<float, 1> &pl, float epsilon, float relaxation, bool b2bScale) const {
+    MatrixBuilder bd = MatrixBuilder::createStar(*this, pl, epsilon, relaxation, b2bScale);
     return bd.solve();
 }
 

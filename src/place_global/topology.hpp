@@ -146,7 +146,7 @@ class NetTopology {
 
     // Direct solutions
     xt::xtensor<float, 1> starSolve() const;
-    xt::xtensor<float, 1> starSolve(const xt::xtensor<float, 1> &pl, float epsilon) const;
+    xt::xtensor<float, 1> starSolve(const xt::xtensor<float, 1> &pl, float epsilon, float relaxation=0.0, bool b2bScale=false) const;
     xt::xtensor<float, 1> b2bSolve(const xt::xtensor<float, 1> &pl, float epsilon) const;
 
     // Consistency checker
@@ -225,9 +225,9 @@ class MatrixBuilder {
     void extendStar(const NetTopologyFixedSizeTerminals &topo);
 
     // Star model, with local approximation from the current placement
-    static MatrixBuilder createStar(const NetTopology &topo, xt::xtensor<float, 1> pl, float epsilon);
-    void extendStar(const NetTopologyFixedSize &topo, xt::xtensor<float, 1> pl, float epsilon);
-    void extendStar(const NetTopologyFixedSizeTerminals &topo, xt::xtensor<float, 1> pl, float epsilon);
+    static MatrixBuilder createStar(const NetTopology &topo, xt::xtensor<float, 1> pl, float epsilon, float relaxation, bool b2bScale);
+    void extendStar(const NetTopologyFixedSize &topo, xt::xtensor<float, 1> pl, float epsilon, float relaxation, bool b2bScale);
+    void extendStar(const NetTopologyFixedSizeTerminals &topo, xt::xtensor<float, 1> pl, float epsilon, float relaxation, bool b2bScale);
 
     // Bound to bound model, with local approximation from the current placement
     static MatrixBuilder createB2B(const NetTopology &topo, xt::xtensor<float, 1> pl, float epsilon);
