@@ -521,6 +521,8 @@ void MatrixBuilder::extendStar(const NetTopologyFixedSize &topo, xt::xtensor<flo
     xt::xtensor<float, 1> pinMin = xt::amin(coords, {1});
     xt::xtensor<float, 1> pinMax = xt::amax(coords, {1});
     xt::xtensor<float, 1> pinMed = 0.5 * (pinMin + pinMax);
+    xt::xtensor<int, 1> amnt = xt::argmin(coords, 1);
+    xt::xtensor<int, 1> amxt = xt::argmax(coords, 1);
     for (int i = 0; i < topo.nbNets(); ++i) {
         if (topo.netSize() == 2) {
             float weight = 1.0 / std::max(pinMax(i) - pinMin(i), epsilon);
@@ -532,9 +534,18 @@ void MatrixBuilder::extendStar(const NetTopologyFixedSize &topo, xt::xtensor<flo
             rhs_.push_back(0.0);
             initial_.push_back(pinMed(i));
             for (int j = 0; j < topo.netSize(); ++j) {
-                // TODO: better evaluation
-                float weight = 2.0 / (std::abs(coords(i, j) - pinMed(i)) + epsilon);
-                addPin(cells(i, j), newCell, offsets(i, j), 0.0f, weight);
+                if (j == amnt(i) || j == amxt(i)) {
+                    // Extreme pins are connected directly (gradient of one)
+                    float weight = 1.0 / std::max(std::abs(pinMax(i) - pinMed(i)), epsilon);
+                    addPin(cells(i, j), newCell, offsets(i, j), 0.0f, weight);
+                }
+                else {
+                    // Non-extreme pins have a zero force at their current position
+                    float pos = coords(i, j);
+                    float dist = std::min(pinMax(i) - pos, pos - pinMin(i));
+                    float weight = 1.0 / std::max(dist, epsilon);
+                    addPin(cells(i, j), newCell, offsets(i, j), pos - pinMed(i), weight);
+                }
             }
         }
     }
@@ -548,23 +559,46 @@ void MatrixBuilder::extendStar(const NetTopologyFixedSizeTerminals &topo, xt::xt
     xt::xtensor<float, 1> pinMin = xt::amin(coords, {1});
     xt::xtensor<float, 1> pinMax = xt::amax(coords, {1});
     xt::xtensor<float, 1> pinMed = 0.5 * (pinMin + pinMax);
+    xt::xtensor<int, 1> amnt = xt::argmin(coords, 1);
+    xt::xtensor<int, 1> amxt = xt::argmax(coords, 1);
     for (int i = 0; i < topo.nbNets(); ++i) {
         float minFixed = topo.minPins()(i);
         float maxFixed = topo.maxPins()(i);
+
         if (topo.netSize() == 1 && minFixed == maxFixed) {
             float weight = 1.0 / std::max(pinMax(i) - pinMin(i), epsilon);
             addFixedPin(cells(i, 0), offsets(i, 0), minFixed, weight);
         }
         else {
+            int amn = amnt(i);
+            int amx = amxt(i);
+            int nbFixed;
+            if (topo.minPins()(i) == topo.maxPins()(i)) {
+                // Only consider one fixed pin
+                nbFixed = 1;
+                amn = std::min(amn, topo.netSize());
+                amx = std::min(amx, topo.netSize());
+            }
+            else {
+                nbFixed = 2;
+            }
             int newCell = nbCells_ + nbSupps_;
             nbSupps_++;
             rhs_.push_back(0.0);
             initial_.push_back(pinMed(i));
-            int nbFixed = minFixed == maxFixed ? 1 : 2;
             for (int j = 0; j < topo.netSize() + nbFixed; ++j) {
-                // TODO: better evaluation
-                float weight = 2.0 / (std::abs(coords(i, j) - pinMed(i)) + epsilon);
-                addPinOrFixed(cells(i, j), newCell, offsets(i, j), 0.0f, weight);
+                if (j == amn || j == amx) {
+                    // Extreme pins are connected directly (gradient of one)
+                    float weight = 1.0 / std::max(std::abs(pinMax(i) - pinMed(i)), epsilon);
+                    addPinOrFixed(cells(i, j), newCell, offsets(i, j), 0.0f, weight);
+                }
+                else {
+                    // Non-extreme pins have a zero force at their current position
+                    float pos = coords(i, j);
+                    float dist = std::min(pinMax(i) - pos, pos - pinMin(i));
+                    float weight = 1.0 / std::max(dist, epsilon);
+                    addPinOrFixed(cells(i, j), newCell, offsets(i, j), pos - pinMed(i), weight);
+                }
             }
         }
     }
