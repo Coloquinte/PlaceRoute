@@ -501,20 +501,19 @@ void MatrixBuilder::extendStar(const NetTopologyFixedSizeTerminals &topo) {
     }
 }
 
-MatrixBuilder MatrixBuilder::createStar(const NetTopology &topo, xt::xtensor<float, 1> pl) {
+MatrixBuilder MatrixBuilder::createStar(const NetTopology &topo, xt::xtensor<float, 1> pl, float epsilon) {
     MatrixBuilder bd(topo.nbCells());
     bd.initial_ = std::vector<float>(pl.begin(), pl.end());
     for (const auto &nt : topo.nets()) {
-        bd.extendStar(nt, pl);
+        bd.extendStar(nt, pl, epsilon);
     }
     for (const auto &nt : topo.terminalNets()) {
-        bd.extendStar(nt, pl);
+        bd.extendStar(nt, pl, epsilon);
     }
     return bd;
 }
 
-void MatrixBuilder::extendStar(const NetTopologyFixedSize &topo, xt::xtensor<float, 1> pl) {
-    float epsilon = 1.0e-1;
+void MatrixBuilder::extendStar(const NetTopologyFixedSize &topo, xt::xtensor<float, 1> pl, float epsilon) {
     const auto coords = topo.pinCoords(pl);
     const auto &cells = topo.pinCells();
     const auto &offsets = topo.pinOffsets();
@@ -551,8 +550,7 @@ void MatrixBuilder::extendStar(const NetTopologyFixedSize &topo, xt::xtensor<flo
     }
 }
 
-void MatrixBuilder::extendStar(const NetTopologyFixedSizeTerminals &topo, xt::xtensor<float, 1> pl) {
-    float epsilon = 1.0e-1;
+void MatrixBuilder::extendStar(const NetTopologyFixedSizeTerminals &topo, xt::xtensor<float, 1> pl, float epsilon) {
     const auto coords = topo.pinCoordsAll(pl);
     const auto cells = topo.pinCellsAll();
     const auto offsets = topo.pinOffsetsAll();
@@ -604,20 +602,19 @@ void MatrixBuilder::extendStar(const NetTopologyFixedSizeTerminals &topo, xt::xt
     }
 }
 
-MatrixBuilder MatrixBuilder::createB2B(const NetTopology &topo, xt::xtensor<float, 1> pl) {
+MatrixBuilder MatrixBuilder::createB2B(const NetTopology &topo, xt::xtensor<float, 1> pl, float epsilon) {
     MatrixBuilder bd(topo.nbCells());
     bd.initial_ = std::vector<float>(pl.begin(), pl.end());
     for (const auto &nt : topo.nets()) {
-        bd.extendB2B(nt, pl);
+        bd.extendB2B(nt, pl, epsilon);
     }
     for (const auto &nt : topo.terminalNets()) {
-        bd.extendB2B(nt, pl);
+        bd.extendB2B(nt, pl, epsilon);
     }
     return bd;
 }
 
-void MatrixBuilder::extendB2B(const NetTopologyFixedSize &topo, xt::xtensor<float, 1> pl) {
-    float epsilon = 1.0e-1;
+void MatrixBuilder::extendB2B(const NetTopologyFixedSize &topo, xt::xtensor<float, 1> pl, float epsilon) {
     const auto coords = topo.pinCoords(pl);
     const auto &cells = topo.pinCells();
     const auto &offsets = topo.pinOffsets();
@@ -640,8 +637,7 @@ void MatrixBuilder::extendB2B(const NetTopologyFixedSize &topo, xt::xtensor<floa
     }
 }
 
-void MatrixBuilder::extendB2B(const NetTopologyFixedSizeTerminals &topo, xt::xtensor<float, 1> pl) {
-    float epsilon = 1.0e-1;
+void MatrixBuilder::extendB2B(const NetTopologyFixedSizeTerminals &topo, xt::xtensor<float, 1> pl, float epsilon) {
     const auto coords = topo.pinCoordsAll(pl);
     const auto cells = topo.pinCellsAll();
     const auto offsets = topo.pinOffsetsAll();
@@ -728,12 +724,12 @@ xt::xtensor<float, 1> NetTopology::starSolve() const {
     return bd.solve();
 }
 
-xt::xtensor<float, 1> NetTopology::starSolve(const xt::xtensor<float, 1> &pl) const {
-    MatrixBuilder bd = MatrixBuilder::createStar(*this, pl);
+xt::xtensor<float, 1> NetTopology::starSolve(const xt::xtensor<float, 1> &pl, float epsilon) const {
+    MatrixBuilder bd = MatrixBuilder::createStar(*this, pl, epsilon);
     return bd.solve();
 }
 
-xt::xtensor<float, 1> NetTopology::b2bSolve(const xt::xtensor<float, 1> &pl) const {
-    MatrixBuilder bd = MatrixBuilder::createB2B(*this, pl);
+xt::xtensor<float, 1> NetTopology::b2bSolve(const xt::xtensor<float, 1> &pl, float epsilon) const {
+    MatrixBuilder bd = MatrixBuilder::createB2B(*this, pl, epsilon);
     return bd.solve();
 }

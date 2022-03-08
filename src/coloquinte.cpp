@@ -53,11 +53,22 @@ void place_ispd(
     //std::cout << "Gradient X LSE: " << xtopo.gradLSE(xplace, 1.0) << std::endl;
     //std::cout << "Gradient X WA: " << xtopo.gradWA(xplace, 1.0) << std::endl;
     //std::cout << "Proximal step X: " << xtopo.proximalStep(xplace, 1.0) << std::endl;
-    auto starPlace = xtopo.starSolve();
-    std::cout << "Star HPWL: " << xtopo.valueHPWL(starPlace) << std::endl;
-    for (int i = 0; i < 100; ++i) {
-        starPlace = xtopo.starSolve(starPlace);
-        std::cout << "Star HPWL#" << i << ": " << xtopo.valueHPWL(starPlace) << std::endl;
+    int nbSteps = 20;
+    for (float epsilon : {1.0/128, 1.0/16, 1.0/2, 4.0, 16.0, 128.0}) {
+        auto starPlace = xtopo.starSolve();
+        //std::cout << "Initial HPWL: " << xtopo.valueHPWL(starPlace) << std::endl;
+        for (int i = 0; i < nbSteps; ++i) {
+            std::cout << "B2B\t" << epsilon << "\t" << i << "\t" << xtopo.valueHPWL(starPlace) << std::endl;
+            starPlace = xtopo.b2bSolve(starPlace, epsilon);
+        }
+        std::cout << "B2B\t" << epsilon << "\t" << nbSteps << "\t" << xtopo.valueHPWL(starPlace) << std::endl;
+        starPlace = xtopo.starSolve();
+        //std::cout << "Initial HPWL: " << xtopo.valueHPWL(starPlace) << std::endl;
+        for (int i = 0; i < nbSteps; ++i) {
+            std::cout << "STAR\t" << epsilon << "\t" << i << "\t" << xtopo.valueHPWL(starPlace) << std::endl;
+            starPlace = xtopo.starSolve(starPlace, epsilon);
+        }
+        std::cout << "STAR\t" << epsilon << "\t" << nbSteps << "\t" << xtopo.valueHPWL(starPlace) << std::endl;
     }
     /*
     int nbSteps = 100;
