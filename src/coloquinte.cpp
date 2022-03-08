@@ -53,18 +53,17 @@ void place_ispd(
     //std::cout << "Gradient X LSE: " << xtopo.gradLSE(xplace, 1.0) << std::endl;
     //std::cout << "Gradient X WA: " << xtopo.gradWA(xplace, 1.0) << std::endl;
     //std::cout << "Proximal step X: " << xtopo.proximalStep(xplace, 1.0) << std::endl;
-    /*
-    int nbSteps = 100;
-    float epsilon = 0.1;
-    auto starPlace = xtopo.starSolve();
-    std::cout << "INIT\t" << epsilon << "\t" << 0 << "\t" << xtopo.valueHPWL(starPlace) << std::endl;
-    for (int i = 0; i < nbSteps; ++i) {
-        starPlace = xtopo.b2bSolve(starPlace, epsilon);
-        std::cout << "B2B\t" << epsilon << "\t" << i + 1 << "\t" << xtopo.valueHPWL(starPlace) << std::endl;
-        starPlace = xtopo.starSolve(starPlace, epsilon);
-        std::cout << "STAR\t" << epsilon << "\t" << i + 1 << "\t" << xtopo.valueHPWL(starPlace) << std::endl;
+    int nbSteps = 20;
+    float epsilon = 1.0;
+    for (float relaxation : {1.0, 0.5, 0.1, 0.0}) {
+        auto starPlace = xtopo.starSolve();
+        std::cout << "INIT\t" << epsilon << "\t" << relaxation << "\t" << 0 << "\t" << xtopo.valueHPWL(starPlace) << std::endl;
+        for (int i = 0; i < nbSteps; ++i) {
+            starPlace = xtopo.starSolve(starPlace, epsilon, relaxation, true);
+            std::cout << "STAR\t" << epsilon << "\t" << relaxation << "\t" << i + 1 << "\t" << xtopo.valueHPWL(starPlace) << std::endl;
+        }
     }
-    */
+    /*
     auto starPlace = xtopo.starSolve();
     int nbSteps = 100;
     float smoothing = 2.0;
@@ -77,6 +76,7 @@ void place_ispd(
             gradientDescentFixedStep(xtopo, starPlace, model, nbSteps, stepSize, momentum, smoothing);
         }
     }
+    */
 }
 }
 
