@@ -625,14 +625,13 @@ void MatrixBuilder::extendB2B(const NetTopologyFixedSize &topo, xt::xtensor<floa
         int amx = amxt(i);
         float factor = 1.0f / (topo.netSize() - 1);
         for (int j = 0; j < topo.netSize(); ++j) {
-            if (j != amn) {
-                float weight = factor / std::max(std::abs(coords(i, j) - coords(i, amn)), epsilon);
-                addPin(cells(i, j), cells(i, amn), offsets(i, j), offsets(i, amn), weight);
-            }
-            if (j != amx) {
-                float weight = factor / std::max(std::abs(coords(i, j) - coords(i, amx)), epsilon);
-                addPin(cells(i, j), cells(i, amx), offsets(i, j), offsets(i, amx), weight);
-            }
+            float weight;
+            if (j == amn) continue;
+            weight = factor / std::max(std::abs(coords(i, j) - coords(i, amn)), epsilon);
+            addPin(cells(i, j), cells(i, amn), offsets(i, j), offsets(i, amn), weight);
+            if (j == amx) continue;
+            weight = factor / std::max(std::abs(coords(i, j) - coords(i, amx)), epsilon);
+            addPin(cells(i, j), cells(i, amx), offsets(i, j), offsets(i, amx), weight);
         }
     }
 }
@@ -658,14 +657,13 @@ void MatrixBuilder::extendB2B(const NetTopologyFixedSizeTerminals &topo, xt::xte
         }
         float factor = 1.0f / (topo.netSize() + nbFixed - 1);
         for (int j = 0; j < topo.netSize() + nbFixed; ++j) {
-            if (j != amn) {
-                float weight = factor / std::max(std::abs(coords(i, j) - coords(i, amn)), epsilon);
-                addPinOrFixed(cells(i, j), cells(i, amn), offsets(i, j), offsets(i, amn), weight);
-            }
-            if (j != amx) {
-                float weight = factor / std::max(std::abs(coords(i, j) - coords(i, amx)), epsilon);
-                addPinOrFixed(cells(i, j), cells(i, amx), offsets(i, j), offsets(i, amx), weight);
-            }
+            float weight;
+            if (j == amn) continue;
+            weight = factor / std::max(std::abs(coords(i, j) - coords(i, amn)), epsilon);
+            addPinOrFixed(cells(i, j), cells(i, amn), offsets(i, j), offsets(i, amn), weight);
+            if (j == amx) continue;
+            weight = factor / std::max(std::abs(coords(i, j) - coords(i, amx)), epsilon);
+            addPinOrFixed(cells(i, j), cells(i, amx), offsets(i, j), offsets(i, amx), weight);
         }
     }
 }
