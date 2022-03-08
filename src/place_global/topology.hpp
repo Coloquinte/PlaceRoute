@@ -141,13 +141,13 @@ class NetTopology {
     xt::xtensor<float, 1> gradLSE(const xt::xtensor<float, 1> &pl, float epsilon) const;
     xt::xtensor<float, 1> gradWA(const xt::xtensor<float, 1> &pl, float epsilon) const;
     xt::xtensor<float, 1> proximalStep(const xt::xtensor<float, 1> &pl, float step) const;
-    xt::xtensor<float, 1> starStep(const xt::xtensor<float, 1> &pl) const;
-    xt::xtensor<float, 1> b2bStep(const xt::xtensor<float, 1> &pl) const;
+    xt::xtensor<float, 1> starStep(const xt::xtensor<float, 1> &pl, float epsilon) const;
+    xt::xtensor<float, 1> b2bStep(const xt::xtensor<float, 1> &pl, float epsilon) const;
 
     // Direct solutions
     xt::xtensor<float, 1> starSolve() const;
-    xt::xtensor<float, 1> starSolve(const xt::xtensor<float, 1> &pl) const;
-    xt::xtensor<float, 1> b2bSolve(const xt::xtensor<float, 1> &pl) const;
+    xt::xtensor<float, 1> starSolve(const xt::xtensor<float, 1> &pl, float epsilon) const;
+    xt::xtensor<float, 1> b2bSolve(const xt::xtensor<float, 1> &pl, float epsilon) const;
 
     // Consistency checker
     void check() const;
@@ -225,14 +225,14 @@ class MatrixBuilder {
     void extendStar(const NetTopologyFixedSizeTerminals &topo);
 
     // Star model, with local approximation from the current placement
-    static MatrixBuilder createStar(const NetTopology &topo, xt::xtensor<float, 1> pl);
-    void extendStar(const NetTopologyFixedSize &topo, xt::xtensor<float, 1> pl);
-    void extendStar(const NetTopologyFixedSizeTerminals &topo, xt::xtensor<float, 1> pl);
+    static MatrixBuilder createStar(const NetTopology &topo, xt::xtensor<float, 1> pl, float epsilon);
+    void extendStar(const NetTopologyFixedSize &topo, xt::xtensor<float, 1> pl, float epsilon);
+    void extendStar(const NetTopologyFixedSizeTerminals &topo, xt::xtensor<float, 1> pl, float epsilon);
 
     // Bound to bound model, with local approximation from the current placement
-    static MatrixBuilder createB2B(const NetTopology &topo, xt::xtensor<float, 1> pl);
-    void extendB2B(const NetTopologyFixedSize &topo, xt::xtensor<float, 1> pl);
-    void extendB2B(const NetTopologyFixedSizeTerminals &topo, xt::xtensor<float, 1> pl);
+    static MatrixBuilder createB2B(const NetTopology &topo, xt::xtensor<float, 1> pl, float epsilon);
+    void extendB2B(const NetTopologyFixedSize &topo, xt::xtensor<float, 1> pl, float epsilon);
+    void extendB2B(const NetTopologyFixedSizeTerminals &topo, xt::xtensor<float, 1> pl, float epsilon);
 
   private:
     void addPin(int c1, int c2, float offs1, float offs2, float weight);
