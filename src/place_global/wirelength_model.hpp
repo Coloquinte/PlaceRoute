@@ -8,16 +8,67 @@
 #include <xtensor/xtensor.hpp>
 #include <eigen3/Eigen/Sparse>
 
+class NetWirelengthFixedSize;
+class NetWirelengthFixedSizeTerminals;
+
+/**
+ * Representation of the nets as 1D HPWL for optimization algorithms
+ */
+class NetWirelength {
+  public:
+    // Constructors
+    static NetWirelength xTopology(const Circuit &);
+    static NetWirelength yTopology(const Circuit &);
+
+    static NetWirelength fromData(const std::vector<int> &cellSizes, const std::vector<int> & pl, const std::vector<char> &cellFixed, const std::vector<int> &netLimits, const std::vector<int> &pinCells, const std::vector<int> &pinOffsets);
+
+    // Basic accessors
+    int nbCells() const { return nbCells_; }
+    int nbNets() const { return nbNets_; }
+
+    const std::vector<NetWirelengthFixedSize> &nets() const { return nets_; }
+    const std::vector<NetWirelengthFixedSizeTerminals> &terminalNets() const { return terminalNets_; }
+
+    // Objective value computation
+    float valueHPWL(const xt::xtensor<float, 1> &pl) const;
+    float valueLSE(const xt::xtensor<float, 1> &pl, float epsilon) const;
+    float valueWA(const xt::xtensor<float, 1> &pl, float epsilon) const;
+
+    // Gradient and descent steps
+    xt::xtensor<float, 1> gradHPWL(const xt::xtensor<float, 1> &pl) const;
+    xt::xtensor<float, 1> gradLSE(const xt::xtensor<float, 1> &pl, float epsilon) const;
+    xt::xtensor<float, 1> gradWA(const xt::xtensor<float, 1> &pl, float epsilon) const;
+    xt::xtensor<float, 1> proximalStep(const xt::xtensor<float, 1> &pl, float step) const;
+    xt::xtensor<float, 1> starStep(const xt::xtensor<float, 1> &pl, float epsilon) const;
+    xt::xtensor<float, 1> b2bStep(const xt::xtensor<float, 1> &pl, float epsilon) const;
+
+    // Direct solutions
+    xt::xtensor<float, 1> starSolve() const;
+    xt::xtensor<float, 1> starSolve(const xt::xtensor<float, 1> &pl, float epsilon, float relaxation=0.0, bool b2bScale=false) const;
+    xt::xtensor<float, 1> b2bSolve(const xt::xtensor<float, 1> &pl, float epsilon) const;
+
+    // Consistency checker
+    void check() const;
+
+  private:
+    int nbCells_;
+    int nbNets_;
+
+    std::vector<NetWirelengthFixedSize> nets_;
+    std::vector<NetWirelengthFixedSizeTerminals> terminalNets_;
+
+    friend class NetWirelengthBuilder;
+};
 
 /**
  * Representation of nets of a given size as 1D HPWL for optimization algorithms.
  *
  * This allows us to use more efficient array operations and specialize for fixed terminals
  */
-class NetTopologyFixedSize {
+class NetWirelengthFixedSize {
   public:
-    NetTopologyFixedSize(int nbCells, int netSize, std::vector<int> pinCells, std::vector<float> pinOffsets);
-    NetTopologyFixedSize(int nbCells, xt::xtensor<int, 2> pinCells, xt::xtensor<float, 2> pinOffsets);
+    NetWirelengthFixedSize(int nbCells, int netSize, std::vector<int> pinCells, std::vector<float> pinOffsets);
+    NetWirelengthFixedSize(int nbCells, xt::xtensor<int, 2> pinCells, xt::xtensor<float, 2> pinOffsets);
 
     int nbCells() const { return nbCells_; }
     int nbNets() const { return nbNets_; }
@@ -73,10 +124,10 @@ class NetTopologyFixedSize {
 /**
  * Representation of nets of a given size as 1D HPWL for optimization algorithms.
  */
-class NetTopologyFixedSizeTerminals : NetTopologyFixedSize {
+class NetWirelengthFixedSizeTerminals : NetWirelengthFixedSize {
   public:
-    NetTopologyFixedSizeTerminals(int nbCells, int netSize, std::vector<int> pinCells, std::vector<float> pinOffsets, std::vector<float> minPos, std::vector<float> maxPos);
-    NetTopologyFixedSizeTerminals(int nbCells, xt::xtensor<int, 2> pinCells, xt::xtensor<float, 2> pinOffsets, xt::xtensor<float, 1> minPos, xt::xtensor<float, 1> maxPos);
+    NetWirelengthFixedSizeTerminals(int nbCells, int netSize, std::vector<int> pinCells, std::vector<float> pinOffsets, std::vector<float> minPos, std::vector<float> maxPos);
+    NetWirelengthFixedSizeTerminals(int nbCells, xt::xtensor<int, 2> pinCells, xt::xtensor<float, 2> pinOffsets, xt::xtensor<float, 1> minPos, xt::xtensor<float, 1> maxPos);
 
     int nbCells() const { return nbCells_; }
     int nbNets() const { return nbNets_; }
@@ -113,61 +164,12 @@ class NetTopologyFixedSizeTerminals : NetTopologyFixedSize {
     xt::xtensor<float, 1> maxPins_;
 };
 
-/**
- * Representation of the nets as 1D HPWL for optimization algorithms
- */
-class NetTopology {
+class NetWirelengthFixedSizeBuilder {
   public:
-    // Constructors
-    static NetTopology xTopology(const Circuit &);
-    static NetTopology yTopology(const Circuit &);
-
-    static NetTopology fromData(const std::vector<int> &cellSizes, const std::vector<int> & pl, const std::vector<char> &cellFixed, const std::vector<int> &netLimits, const std::vector<int> &pinCells, const std::vector<int> &pinOffsets);
-
-    // Basic accessors
-    int nbCells() const { return nbCells_; }
-    int nbNets() const { return nbNets_; }
-
-    const std::vector<NetTopologyFixedSize> &nets() const { return nets_; }
-    const std::vector<NetTopologyFixedSizeTerminals> &terminalNets() const { return terminalNets_; }
-
-    // Objective value computation
-    float valueHPWL(const xt::xtensor<float, 1> &pl) const;
-    float valueLSE(const xt::xtensor<float, 1> &pl, float epsilon) const;
-    float valueWA(const xt::xtensor<float, 1> &pl, float epsilon) const;
-
-    // Gradient and descent steps
-    xt::xtensor<float, 1> gradHPWL(const xt::xtensor<float, 1> &pl) const;
-    xt::xtensor<float, 1> gradLSE(const xt::xtensor<float, 1> &pl, float epsilon) const;
-    xt::xtensor<float, 1> gradWA(const xt::xtensor<float, 1> &pl, float epsilon) const;
-    xt::xtensor<float, 1> proximalStep(const xt::xtensor<float, 1> &pl, float step) const;
-    xt::xtensor<float, 1> starStep(const xt::xtensor<float, 1> &pl, float epsilon) const;
-    xt::xtensor<float, 1> b2bStep(const xt::xtensor<float, 1> &pl, float epsilon) const;
-
-    // Direct solutions
-    xt::xtensor<float, 1> starSolve() const;
-    xt::xtensor<float, 1> starSolve(const xt::xtensor<float, 1> &pl, float epsilon, float relaxation=0.0, bool b2bScale=false) const;
-    xt::xtensor<float, 1> b2bSolve(const xt::xtensor<float, 1> &pl, float epsilon) const;
-
-    // Consistency checker
-    void check() const;
-
-  private:
-    int nbCells_;
-    int nbNets_;
-
-    std::vector<NetTopologyFixedSize> nets_;
-    std::vector<NetTopologyFixedSizeTerminals> terminalNets_;
-
-    friend class NetTopologyBuilder;
-};
-
-class NetTopologyFixedSizeBuilder {
-  public:
-    NetTopologyFixedSizeBuilder(int nbCells, int netSize) : nbCells_(nbCells), netSize_(netSize) {}
+    NetWirelengthFixedSizeBuilder(int nbCells, int netSize) : nbCells_(nbCells), netSize_(netSize) {}
     bool empty() const { return pinCells_.empty(); }
     void push(const std::vector<int> &cells, const std::vector<float> &offsets);
-    NetTopologyFixedSize build() const { return NetTopologyFixedSize(nbCells_, netSize_, pinCells_, pinOffsets_); }
+    NetWirelengthFixedSize build() const { return NetWirelengthFixedSize(nbCells_, netSize_, pinCells_, pinOffsets_); }
 
   private:
     int nbCells_;
@@ -176,12 +178,12 @@ class NetTopologyFixedSizeBuilder {
     std::vector<float> pinOffsets_;
 };
 
-class NetTopologyFixedSizeTerminalsBuilder {
+class NetWirelengthFixedSizeTerminalsBuilder {
   public:
-    NetTopologyFixedSizeTerminalsBuilder(int nbCells, int netSize) : nbCells_(nbCells), netSize_(netSize) {}
+    NetWirelengthFixedSizeTerminalsBuilder(int nbCells, int netSize) : nbCells_(nbCells), netSize_(netSize) {}
     bool empty() const { return pinCells_.empty(); }
     void push(const std::vector<int> &cells, const std::vector<float> &offsets, float minPin, float maxPin);
-    NetTopologyFixedSizeTerminals build() const { return NetTopologyFixedSizeTerminals(nbCells_, netSize_, pinCells_, pinOffsets_, minPins_, maxPins_); }
+    NetWirelengthFixedSizeTerminals build() const { return NetWirelengthFixedSizeTerminals(nbCells_, netSize_, pinCells_, pinOffsets_, minPins_, maxPins_); }
 
   private:
     int nbCells_;
@@ -192,18 +194,18 @@ class NetTopologyFixedSizeTerminalsBuilder {
     std::vector<float> maxPins_;
 };
 
-class NetTopologyBuilder {
+class NetWirelengthBuilder {
   public:
-    NetTopologyBuilder(int nbCells) : nbCells_(nbCells), nbNets_(0) {}
+    NetWirelengthBuilder(int nbCells) : nbCells_(nbCells), nbNets_(0) {}
     void push(const std::vector<int> &cells, const std::vector<float> &offsets);
     void push(const std::vector<int> &cells, const std::vector<float> &offsets, float minPos, float maxPos);
-    NetTopology build() const;
+    NetWirelength build() const;
 
   private:
     int nbCells_;
     int nbNets_;
-    std::vector<NetTopologyFixedSizeBuilder> netBuilders_;
-    std::vector<NetTopologyFixedSizeTerminalsBuilder> terminalNetBuilders_;
+    std::vector<NetWirelengthFixedSizeBuilder> netBuilders_;
+    std::vector<NetWirelengthFixedSizeTerminalsBuilder> terminalNetBuilders_;
 };
 
 /**
@@ -220,19 +222,19 @@ class MatrixBuilder {
     const std::vector<float> &initial() const { return initial_; }
 
     // Simple star model, without taking pin positions into account
-    static MatrixBuilder createStar(const NetTopology &topo);
-    void extendStar(const NetTopologyFixedSize &topo);
-    void extendStar(const NetTopologyFixedSizeTerminals &topo);
+    static MatrixBuilder createStar(const NetWirelength &topo);
+    void extendStar(const NetWirelengthFixedSize &topo);
+    void extendStar(const NetWirelengthFixedSizeTerminals &topo);
 
     // Star model, with local approximation from the current placement
-    static MatrixBuilder createStar(const NetTopology &topo, xt::xtensor<float, 1> pl, float epsilon, float relaxation, bool b2bScale);
-    void extendStar(const NetTopologyFixedSize &topo, xt::xtensor<float, 1> pl, float epsilon, float relaxation, bool b2bScale);
-    void extendStar(const NetTopologyFixedSizeTerminals &topo, xt::xtensor<float, 1> pl, float epsilon, float relaxation, bool b2bScale);
+    static MatrixBuilder createStar(const NetWirelength &topo, xt::xtensor<float, 1> pl, float epsilon, float relaxation, bool b2bScale);
+    void extendStar(const NetWirelengthFixedSize &topo, xt::xtensor<float, 1> pl, float epsilon, float relaxation, bool b2bScale);
+    void extendStar(const NetWirelengthFixedSizeTerminals &topo, xt::xtensor<float, 1> pl, float epsilon, float relaxation, bool b2bScale);
 
     // Bound to bound model, with local approximation from the current placement
-    static MatrixBuilder createB2B(const NetTopology &topo, xt::xtensor<float, 1> pl, float epsilon);
-    void extendB2B(const NetTopologyFixedSize &topo, xt::xtensor<float, 1> pl, float epsilon);
-    void extendB2B(const NetTopologyFixedSizeTerminals &topo, xt::xtensor<float, 1> pl, float epsilon);
+    static MatrixBuilder createB2B(const NetWirelength &topo, xt::xtensor<float, 1> pl, float epsilon);
+    void extendB2B(const NetWirelengthFixedSize &topo, xt::xtensor<float, 1> pl, float epsilon);
+    void extendB2B(const NetWirelengthFixedSizeTerminals &topo, xt::xtensor<float, 1> pl, float epsilon);
 
   private:
     void addPin(int c1, int c2, float offs1, float offs2, float weight);

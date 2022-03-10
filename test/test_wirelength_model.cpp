@@ -3,7 +3,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "place_global/topology.hpp"
+#include "place_global/wirelength_model.hpp"
 
 #include <xtensor/xio.hpp>
 
@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(valueHPWLTwoPins) {
     xt::xtensor<int, 2> pinCells = {{0, 1}};
     xt::xtensor<float, 2> pinOffsets = {{0.0, 0.0}};
     xt::xtensor<float, 1> place = {-1000.0, 1000.0};
-    auto topo = NetTopologyFixedSize(nbCells, pinCells, pinOffsets);
+    auto topo = NetWirelengthFixedSize(nbCells, pinCells, pinOffsets);
     BOOST_CHECK_CLOSE(topo.valueHPWL(place), 2000.0, 0.001);
 }
 
@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(valueLSETwoPins) {
     xt::xtensor<int, 2> pinCells = {{0, 1}};
     xt::xtensor<float, 2> pinOffsets = {{0.0, 0.0}};
     xt::xtensor<float, 1> place = {-1000.0, 1000.0};
-    auto topo = NetTopologyFixedSize(nbCells, pinCells, pinOffsets);
+    auto topo = NetWirelengthFixedSize(nbCells, pinCells, pinOffsets);
     BOOST_CHECK_CLOSE(topo.valueLSE(place, 0.01), 2000.0, 0.001);
 }
 
@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(valueWATwoPins) {
     xt::xtensor<int, 2> pinCells = {{0, 1}};
     xt::xtensor<float, 2> pinOffsets = {{0.0, 0.0}};
     xt::xtensor<float, 1> place = {-1000.0, 1000.0};
-    auto topo = NetTopologyFixedSize(nbCells, pinCells, pinOffsets);
+    auto topo = NetWirelengthFixedSize(nbCells, pinCells, pinOffsets);
     BOOST_CHECK_CLOSE(topo.valueWA(place, 0.01), 2000.0, 0.001);
 }
 
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(valueHPWLThreePins) {
     xt::xtensor<int, 2> pinCells = {{2, 0, 1}};
     xt::xtensor<float, 2> pinOffsets = {{0.0, 0.0, 0.0}};
     xt::xtensor<float, 1> place = {0.0, -1000.0, 1000.0};
-    auto topo = NetTopologyFixedSize(nbCells, pinCells, pinOffsets);
+    auto topo = NetWirelengthFixedSize(nbCells, pinCells, pinOffsets);
     BOOST_CHECK_CLOSE(topo.valueHPWL(place), 2000.0, 0.001);
 }
 
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(valueLSEThreePins) {
     xt::xtensor<int, 2> pinCells = {{2, 0, 1}};
     xt::xtensor<float, 2> pinOffsets = {{0.0, 0.0, 0.0}};
     xt::xtensor<float, 1> place = {0.0, -1000.0, 1000.0};
-    auto topo = NetTopologyFixedSize(nbCells, pinCells, pinOffsets);
+    auto topo = NetWirelengthFixedSize(nbCells, pinCells, pinOffsets);
     BOOST_CHECK_CLOSE(topo.valueLSE(place, 0.01), 2000.0, 0.001);
 }
 
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(valueWAThreePins) {
     xt::xtensor<int, 2> pinCells = {{2, 0, 1}};
     xt::xtensor<float, 2> pinOffsets = {{0.0, 0.0, 0.0}};
     xt::xtensor<float, 1> place = {0.0, -1000.0, 1000.0};
-    auto topo = NetTopologyFixedSize(nbCells, pinCells, pinOffsets);
+    auto topo = NetWirelengthFixedSize(nbCells, pinCells, pinOffsets);
     BOOST_CHECK_CLOSE(topo.valueWA(place, 0.01), 2000.0, 0.001);
 }
 
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(valueHPWLRepeat) {
     xt::xtensor<int, 2> pinCells = {{0, 0}};
     xt::xtensor<float, 2> pinOffsets = {{1000.0, -1000.0}};
     xt::xtensor<float, 1> place = {5000.0};
-    auto topo = NetTopologyFixedSize(nbCells, pinCells, pinOffsets);
+    auto topo = NetWirelengthFixedSize(nbCells, pinCells, pinOffsets);
     BOOST_CHECK_CLOSE(topo.valueHPWL(place), 2000.0, 0.001);
 }
 
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(valueHPWLMultiNet) {
     xt::xtensor<int, 2> pinCells = {{0, 1}, {2, 1}, {0, 2}};
     xt::xtensor<float, 2> pinOffsets = {{0.0, 0.0}, {0.0, 0.0}, {-5.0, 5.0}};
     xt::xtensor<float, 1> place = {0.0, 2.0, 3.0};
-    auto topo = NetTopologyFixedSize(nbCells, pinCells, pinOffsets);
+    auto topo = NetWirelengthFixedSize(nbCells, pinCells, pinOffsets);
     BOOST_CHECK_CLOSE(topo.valueHPWL(place), 16.0, 0.001);
 }
 
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(gradHPWLTwoPins) {
     xt::xtensor<int, 2> pinCells = {{0, 1}};
     xt::xtensor<float, 2> pinOffsets = {{0.0, 0.0}};
     xt::xtensor<float, 1> place = {-1000.0, 1000.0};
-    auto topo = NetTopologyFixedSize(nbCells, pinCells, pinOffsets);
+    auto topo = NetWirelengthFixedSize(nbCells, pinCells, pinOffsets);
     xt::xtensor<float, 1> grad = topo.gradHPWL(place);
     BOOST_CHECK_CLOSE(grad[0], -1.0, 0.001);
     BOOST_CHECK_CLOSE(grad[1], 1.0, 0.001);
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(gradLSETwoPins) {
     xt::xtensor<int, 2> pinCells = {{0, 1}};
     xt::xtensor<float, 2> pinOffsets = {{0.0, 0.0}};
     xt::xtensor<float, 1> place = {-1000.0, 1000.0};
-    auto topo = NetTopologyFixedSize(nbCells, pinCells, pinOffsets);
+    auto topo = NetWirelengthFixedSize(nbCells, pinCells, pinOffsets);
     xt::xtensor<float, 1> grad = topo.gradLSE(place, 0.01);
     BOOST_CHECK_CLOSE(grad[0], -1.0, 0.001);
     BOOST_CHECK_CLOSE(grad[1], 1.0, 0.001);
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(gradWATwoPins) {
     xt::xtensor<int, 2> pinCells = {{0, 1}};
     xt::xtensor<float, 2> pinOffsets = {{0.0, 0.0}};
     xt::xtensor<float, 1> place = {-1000.0, 1000.0};
-    auto topo = NetTopologyFixedSize(nbCells, pinCells, pinOffsets);
+    auto topo = NetWirelengthFixedSize(nbCells, pinCells, pinOffsets);
     xt::xtensor<float, 1> grad = topo.gradWA(place, 0.01);
     BOOST_CHECK_CLOSE(grad[0], -1.0, 0.001);
     BOOST_CHECK_CLOSE(grad[1], 1.0, 0.001);
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(gradHPWLThreePins) {
     xt::xtensor<int, 2> pinCells = {{2, 0, 1}};
     xt::xtensor<float, 2> pinOffsets = {{0.0, 0.0, 0.0}};
     xt::xtensor<float, 1> place = {0.0, -1000.0, 1000.0};
-    auto topo = NetTopologyFixedSize(nbCells, pinCells, pinOffsets);
+    auto topo = NetWirelengthFixedSize(nbCells, pinCells, pinOffsets);
     xt::xtensor<float, 1> grad = topo.gradHPWL(place);
     BOOST_CHECK_SMALL(grad[0], 0.001f);
     BOOST_CHECK_CLOSE(grad[1], -1.0, 0.001);
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(gradLSEThreePins) {
     xt::xtensor<int, 2> pinCells = {{2, 0, 1}};
     xt::xtensor<float, 2> pinOffsets = {{0.0, 0.0, 0.0}};
     xt::xtensor<float, 1> place = {0.0, -1000.0, 1000.0};
-    auto topo = NetTopologyFixedSize(nbCells, pinCells, pinOffsets);
+    auto topo = NetWirelengthFixedSize(nbCells, pinCells, pinOffsets);
     xt::xtensor<float, 1> grad = topo.gradLSE(place, 0.01);
     BOOST_CHECK_SMALL(grad[0], 0.001f);
     BOOST_CHECK_CLOSE(grad[1], -1.0, 0.001);
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(gradWAThreePins) {
     xt::xtensor<int, 2> pinCells = {{2, 0, 1}};
     xt::xtensor<float, 2> pinOffsets = {{0.0, 0.0, 0.0}};
     xt::xtensor<float, 1> place = {0.0, -1000.0, 1000.0};
-    auto topo = NetTopologyFixedSize(nbCells, pinCells, pinOffsets);
+    auto topo = NetWirelengthFixedSize(nbCells, pinCells, pinOffsets);
     xt::xtensor<float, 1> grad = topo.gradWA(place, 0.01);
     BOOST_CHECK_SMALL(grad[0], 0.001f);
     BOOST_CHECK_CLOSE(grad[1], -1.0, 0.001);
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(gradHPWLMultiNet) {
     xt::xtensor<int, 2> pinCells = {{0, 1}, {2, 1}, {0, 2}};
     xt::xtensor<float, 2> pinOffsets = {{0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}};
     xt::xtensor<float, 1> place = {0.0, 1000.0, 2000.0};
-    auto topo = NetTopologyFixedSize(nbCells, pinCells, pinOffsets);
+    auto topo = NetWirelengthFixedSize(nbCells, pinCells, pinOffsets);
     xt::xtensor<float, 1> grad = topo.gradHPWL(place);
     BOOST_CHECK_CLOSE(grad[0], -2.0, 0.001);
     BOOST_CHECK_SMALL(grad[1], 0.001f);
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(gradLSEMultiNet) {
     xt::xtensor<int, 2> pinCells = {{0, 1}, {2, 1}, {0, 2}};
     xt::xtensor<float, 2> pinOffsets = {{0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}};
     xt::xtensor<float, 1> place = {0.0, 1000.0, 2000.0};
-    auto topo = NetTopologyFixedSize(nbCells, pinCells, pinOffsets);
+    auto topo = NetWirelengthFixedSize(nbCells, pinCells, pinOffsets);
     xt::xtensor<float, 1> grad = topo.gradLSE(place, 0.01);
     BOOST_CHECK_CLOSE(grad[0], -2.0, 0.001);
     BOOST_CHECK_SMALL(grad[1], 0.001f);
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(gradWAMultiNet) {
     xt::xtensor<int, 2> pinCells = {{0, 1}, {2, 1}, {0, 2}};
     xt::xtensor<float, 2> pinOffsets = {{0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}};
     xt::xtensor<float, 1> place = {0.0, 1000.0, 2000.0};
-    auto topo = NetTopologyFixedSize(nbCells, pinCells, pinOffsets);
+    auto topo = NetWirelengthFixedSize(nbCells, pinCells, pinOffsets);
     xt::xtensor<float, 1> grad = topo.gradWA(place, 0.01);
     BOOST_CHECK_CLOSE(grad[0], -2.0, 0.001);
     BOOST_CHECK_SMALL(grad[1], 0.001f);
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(proximalTwoPins) {
     xt::xtensor<int, 2> pinCells = {{0, 1}};
     xt::xtensor<float, 2> pinOffsets = {{0.0, 0.0}};
     xt::xtensor<float, 1> place = {-1000.0, 1000.0};
-    auto topo = NetTopologyFixedSize(nbCells, pinCells, pinOffsets);
+    auto topo = NetWirelengthFixedSize(nbCells, pinCells, pinOffsets);
     xt::xtensor<float, 1> grad = topo.proximalStep(place, 1.0);
     BOOST_CHECK_CLOSE(grad[0], 1.0, 0.001);
     BOOST_CHECK_CLOSE(grad[1], -1.0, 0.001);
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(proximalThreePins1) {
     xt::xtensor<int, 2> pinCells = {{0, 1, 2}};
     xt::xtensor<float, 2> pinOffsets = {{0.0, 0.0, 0.0}};
     xt::xtensor<float, 1> place = {-1000.0, 1000.0, 0.0};
-    auto topo = NetTopologyFixedSize(nbCells, pinCells, pinOffsets);
+    auto topo = NetWirelengthFixedSize(nbCells, pinCells, pinOffsets);
     xt::xtensor<float, 1> grad = topo.proximalStep(place, 1.0);
     BOOST_CHECK_CLOSE(grad[0], 1.0, 0.001);
     BOOST_CHECK_CLOSE(grad[1], -1.0, 0.001);
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(proximalThreePins2) {
     xt::xtensor<int, 2> pinCells = {{0, 1, 2}};
     xt::xtensor<float, 2> pinOffsets = {{0.0, 0.0, 0.0}};
     xt::xtensor<float, 1> place = {-1000.0, 0.0, 0.0};
-    auto topo = NetTopologyFixedSize(nbCells, pinCells, pinOffsets);
+    auto topo = NetWirelengthFixedSize(nbCells, pinCells, pinOffsets);
     xt::xtensor<float, 1> grad = topo.proximalStep(place, 1.0);
     BOOST_CHECK_CLOSE(grad[0], 1.0, 0.001);
     BOOST_CHECK_CLOSE(grad[1], -0.5, 0.001);
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(valueHPWLOneTerminal) {
     xt::xtensor<float, 1> minFixed = {2000.0};
     xt::xtensor<float, 1> maxFixed = {2000.0};
     xt::xtensor<float, 1> place = {1000.0};
-    auto topo = NetTopologyFixedSizeTerminals(nbCells, pinCells, pinOffsets, minFixed, maxFixed);
+    auto topo = NetWirelengthFixedSizeTerminals(nbCells, pinCells, pinOffsets, minFixed, maxFixed);
     BOOST_CHECK_CLOSE(topo.valueHPWL(place), 1000.0, 0.001);
 }
 
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(valueLSEOneTerminal) {
     xt::xtensor<float, 1> minFixed = {2000.0};
     xt::xtensor<float, 1> maxFixed = {2000.0};
     xt::xtensor<float, 1> place = {1000.0};
-    auto topo = NetTopologyFixedSizeTerminals(nbCells, pinCells, pinOffsets, minFixed, maxFixed);
+    auto topo = NetWirelengthFixedSizeTerminals(nbCells, pinCells, pinOffsets, minFixed, maxFixed);
     BOOST_CHECK_CLOSE(topo.valueLSE(place, 0.01), 1000.0, 0.001);
 }
 
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(valueWAOneTerminal) {
     xt::xtensor<float, 1> minFixed = {2000.0};
     xt::xtensor<float, 1> maxFixed = {2000.0};
     xt::xtensor<float, 1> place = {1000.0};
-    auto topo = NetTopologyFixedSizeTerminals(nbCells, pinCells, pinOffsets, minFixed, maxFixed);
+    auto topo = NetWirelengthFixedSizeTerminals(nbCells, pinCells, pinOffsets, minFixed, maxFixed);
     BOOST_CHECK_CLOSE(topo.valueWA(place, 0.01), 1000.0, 0.001);
 }
 
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(valueHPWLTwoTerminals){
     xt::xtensor<float, 1> minFixed = {0.0};
     xt::xtensor<float, 1> maxFixed = {2000.0};
     xt::xtensor<float, 1> place = {1000.0};
-    auto topo = NetTopologyFixedSizeTerminals(nbCells, pinCells, pinOffsets, minFixed, maxFixed);
+    auto topo = NetWirelengthFixedSizeTerminals(nbCells, pinCells, pinOffsets, minFixed, maxFixed);
     BOOST_CHECK_CLOSE(topo.valueHPWL(place), 2000.0, 0.001);
 }
 
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(valueLSETwoTerminals) {
     xt::xtensor<float, 1> minFixed = {0.0};
     xt::xtensor<float, 1> maxFixed = {2000.0};
     xt::xtensor<float, 1> place = {1000.0};
-    auto topo = NetTopologyFixedSizeTerminals(nbCells, pinCells, pinOffsets, minFixed, maxFixed);
+    auto topo = NetWirelengthFixedSizeTerminals(nbCells, pinCells, pinOffsets, minFixed, maxFixed);
     BOOST_CHECK_CLOSE(topo.valueLSE(place, 0.01), 2000.0, 0.001);
 }
 
@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(valueWATwoTerminals) {
     xt::xtensor<float, 1> minFixed = {0.0};
     xt::xtensor<float, 1> maxFixed = {2000.0};
     xt::xtensor<float, 1> place = {1000.0};
-    auto topo = NetTopologyFixedSizeTerminals(nbCells, pinCells, pinOffsets, minFixed, maxFixed);
+    auto topo = NetWirelengthFixedSizeTerminals(nbCells, pinCells, pinOffsets, minFixed, maxFixed);
     BOOST_CHECK_CLOSE(topo.valueWA(place, 0.01), 2000.0, 0.001);
 }
 
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(gradHPWLTwoTerminals){
     xt::xtensor<float, 1> minFixed = {0.0};
     xt::xtensor<float, 1> maxFixed = {2000.0};
     xt::xtensor<float, 1> place = {1000.0};
-    auto topo = NetTopologyFixedSizeTerminals(nbCells, pinCells, pinOffsets, minFixed, maxFixed);
+    auto topo = NetWirelengthFixedSizeTerminals(nbCells, pinCells, pinOffsets, minFixed, maxFixed);
     xt::xtensor<float, 1> grad = topo.gradHPWL(place);
     BOOST_CHECK_SMALL(grad[0], 0.001f);
 }
@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE(gradLSETwoTerminals) {
     xt::xtensor<float, 1> minFixed = {0.0};
     xt::xtensor<float, 1> maxFixed = {2000.0};
     xt::xtensor<float, 1> place = {1000.0};
-    auto topo = NetTopologyFixedSizeTerminals(nbCells, pinCells, pinOffsets, minFixed, maxFixed);
+    auto topo = NetWirelengthFixedSizeTerminals(nbCells, pinCells, pinOffsets, minFixed, maxFixed);
     xt::xtensor<float, 1> grad = topo.gradLSE(place, 0.01);
     BOOST_CHECK_SMALL(grad[0], 0.001f);
 }
@@ -322,7 +322,7 @@ BOOST_AUTO_TEST_CASE(gradWATwoTerminals) {
     xt::xtensor<float, 1> minFixed = {0.0};
     xt::xtensor<float, 1> maxFixed = {2000.0};
     xt::xtensor<float, 1> place = {1000.0};
-    auto topo = NetTopologyFixedSizeTerminals(nbCells, pinCells, pinOffsets, minFixed, maxFixed);
+    auto topo = NetWirelengthFixedSizeTerminals(nbCells, pinCells, pinOffsets, minFixed, maxFixed);
     xt::xtensor<float, 1> grad = topo.gradWA(place, 0.01);
     BOOST_CHECK_SMALL(grad[0], 0.001f);
 }
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(proximalTerminal) {
     xt::xtensor<float, 1> place = {-500.0, 2000.0};
     xt::xtensor<float, 1> minFixed = {-1000.0};
     xt::xtensor<float, 1> maxFixed = {1000.0};
-    auto topo = NetTopologyFixedSizeTerminals(nbCells, pinCells, pinOffsets, minFixed, maxFixed);
+    auto topo = NetWirelengthFixedSizeTerminals(nbCells, pinCells, pinOffsets, minFixed, maxFixed);
     xt::xtensor<float, 1> grad = topo.proximalStep(place, 10000.0);
     BOOST_CHECK_SMALL(grad[0], 0.001f);
     BOOST_CHECK_CLOSE(grad[1], -1000.0, 0.001);
@@ -342,7 +342,7 @@ BOOST_AUTO_TEST_CASE(proximalTerminal) {
 
 BOOST_AUTO_TEST_CASE(b2b_singlepin) {
     int nbCells = 4;
-    NetTopologyBuilder bd(nbCells);
+    NetWirelengthBuilder bd(nbCells);
     bd.push({0}, {0.0f}, 4.0f, 4.0f);
     bd.push({1}, {5.0f}, 1.0f, 1.0f);
     bd.push({2}, {-6.0f}, 2.0f, 2.0f);
@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(b2b_singlepin) {
 
 BOOST_AUTO_TEST_CASE(b2b_mid) {
     int nbCells = 2;
-    NetTopologyBuilder bd(nbCells);
+    NetWirelengthBuilder bd(nbCells);
     bd.push({0, 1}, {0.0f, 0.0f}, 0.0f, 4.0f);
     auto topo = bd.build();
     xt::xtensor<float, 1> place = {2.0f, 3.0f};
@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE(b2b_mid) {
 
 BOOST_AUTO_TEST_CASE(b2b_two_pins) {
     int nbCells = 1;
-    NetTopologyBuilder bd(nbCells);
+    NetWirelengthBuilder bd(nbCells);
     bd.push({0}, {0.0f}, 0.0f, 4.0f);
     auto topo = bd.build();
     xt::xtensor<float, 1> place = {8.0f};
@@ -379,7 +379,7 @@ BOOST_AUTO_TEST_CASE(b2b_two_pins) {
 
 BOOST_AUTO_TEST_CASE(star_singlepin) {
     int nbCells = 4;
-    NetTopologyBuilder bd(nbCells);
+    NetWirelengthBuilder bd(nbCells);
     bd.push({0}, {0.0f}, 4.0f, 4.0f);
     bd.push({1}, {5.0f}, 1.0f, 1.0f);
     bd.push({2}, {-6.0f}, 2.0f, 2.0f);
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE(star_singlepin) {
 
 BOOST_AUTO_TEST_CASE(star_mid) {
     int nbCells = 2;
-    NetTopologyBuilder bd(nbCells);
+    NetWirelengthBuilder bd(nbCells);
     bd.push({0, 1}, {0.0f, 0.0f}, 0.0f, 4.0f);
     auto topo = bd.build();
     xt::xtensor<float, 1> place = {2.0f, 3.0f};

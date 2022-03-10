@@ -12,8 +12,8 @@ INCLUDE_DIRECTORIES(
 
 SET(SOURCES
   src/coloquinte.cpp
-  src/place_global/topology.cpp
-  src/place_global/descent.cpp
+  src/place_global/wirelength_model.cpp
+  src/place_global/gradient_descent.cpp
 )
 
 add_library(coloquinte SHARED ${SOURCES})
