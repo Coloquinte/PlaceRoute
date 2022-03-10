@@ -1,7 +1,7 @@
 
 #include "coloquinte.hpp"
-#include "place_global/topology.hpp"
-#include "place_global/descent.hpp"
+#include "place_global/wirelength_model.hpp"
+#include "place_global/gradient_descent.hpp"
 
 #include <xtensor/xio.hpp>
 #include <xtensor/xrandom.hpp>
@@ -43,7 +43,7 @@ void place_ispd(
               << circuit.nbNets() << " nets and "
               << circuit.nbPins() << " pins."
               << std::endl;
-    auto xtopo = NetTopology::xTopology(circuit);
+    auto xtopo = NetWirelength::xTopology(circuit);
 
     xt::random::seed(0);
     //std::cout << "Initial X HPWL: " << xtopo.valueHPWL(xplace) << std::endl;

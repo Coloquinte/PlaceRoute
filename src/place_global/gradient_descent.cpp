@@ -1,5 +1,5 @@
 
-#include "place_global/descent.hpp"
+#include "place_global/gradient_descent.hpp"
 
 #include <iostream>
 #include <iomanip>
@@ -37,7 +37,7 @@ void lineSearch(xt::xtensor<float, 1> start, xt::xtensor<float, 1> direction, fl
     }
 }
 
-float computeValue(const NetTopology &topo, xt::xtensor<float, 1> current, DescentModel model, float smoothing) {
+float computeValue(const NetWirelength &topo, xt::xtensor<float, 1> current, DescentModel model, float smoothing) {
     if (model == DescentModel::HPWL) {
         return topo.valueHPWL(current);
     }
@@ -52,7 +52,7 @@ float computeValue(const NetTopology &topo, xt::xtensor<float, 1> current, Desce
     }
 }
 
-xt::xtensor<float, 1> descentDirection(const NetTopology &topo, xt::xtensor<float, 1> current, DescentModel model, float smoothing) {
+xt::xtensor<float, 1> descentDirection(const NetWirelength &topo, xt::xtensor<float, 1> current, DescentModel model, float smoothing) {
     if (model == DescentModel::HPWL) {
         return -topo.gradHPWL(current);
     }
@@ -79,7 +79,7 @@ void reportFooter() {
     std::cout << std::endl;
 }
 
-void report(const NetTopology &topo, xt::xtensor<float, 1> pl, DescentModel model, int stepInd, float stepSize, float momentum, float smoothing, LineSearchType lineSearch, DescentType descent) {
+void report(const NetWirelength &topo, xt::xtensor<float, 1> pl, DescentModel model, int stepInd, float stepSize, float momentum, float smoothing, LineSearchType lineSearch, DescentType descent) {
     float hpwlValue = topo.valueHPWL(pl);
     float smoothedValue = computeValue(topo, pl, model, smoothing);
 
@@ -123,7 +123,7 @@ void report(const NetTopology &topo, xt::xtensor<float, 1> pl, DescentModel mode
 }
 }
 
-xt::xtensor<float, 1> gradientDescentFixedStep(const NetTopology &topo, xt::xtensor<float, 1> initial, DescentModel model, int nbSteps, float stepSize, float momentum, float smoothing) {
+xt::xtensor<float, 1> gradientDescentFixedStep(const NetWirelength &topo, xt::xtensor<float, 1> initial, DescentModel model, int nbSteps, float stepSize, float momentum, float smoothing) {
     assert (stepSize > 0.0);
     assert (momentum >= 0.0 && momentum < 1.0);
     assert (initial.size() == topo.nbCells());
@@ -141,7 +141,7 @@ xt::xtensor<float, 1> gradientDescentFixedStep(const NetTopology &topo, xt::xten
     return x;
 }
 
-xt::xtensor<float, 1> gradientDescent(const NetTopology &topo, xt::xtensor<float, 1> initial, DescentModel model, int nbSteps, float momentum, float smoothing, float initialStepSize, float stepVariation) {
+xt::xtensor<float, 1> gradientDescent(const NetWirelength &topo, xt::xtensor<float, 1> initial, DescentModel model, int nbSteps, float momentum, float smoothing, float initialStepSize, float stepVariation) {
     assert (initialStepSize > 0.0);
     assert (momentum >= 0.0 && momentum < 1.0);
     assert (stepVariation < 1.0);
@@ -163,7 +163,7 @@ xt::xtensor<float, 1> gradientDescent(const NetTopology &topo, xt::xtensor<float
     return x;
 }
 
-xt::xtensor<float, 1> conjugateGradientDescent(const NetTopology &topo, xt::xtensor<float, 1> initial, DescentModel model, int nbSteps, float smoothing, float initialStepSize, float stepVariation) {
+xt::xtensor<float, 1> conjugateGradientDescent(const NetWirelength &topo, xt::xtensor<float, 1> initial, DescentModel model, int nbSteps, float smoothing, float initialStepSize, float stepVariation) {
     assert (initialStepSize > 0.0);
     assert (momentum >= 0.0 && momentum < 1.0);
     assert (stepVariation < 1.0);
@@ -191,7 +191,7 @@ xt::xtensor<float, 1> conjugateGradientDescent(const NetTopology &topo, xt::xten
     return x;
 }
 
-xt::xtensor<float, 1> nesterovGradientDescent(const NetTopology &topo, xt::xtensor<float, 1> initial, DescentModel model, int nbSteps, float smoothing, float initialStepSize, float stepVariation) {
+xt::xtensor<float, 1> nesterovGradientDescent(const NetWirelength &topo, xt::xtensor<float, 1> initial, DescentModel model, int nbSteps, float smoothing, float initialStepSize, float stepVariation) {
     assert (initialStepSize > 0.0);
     assert (momentum >= 0.0 && momentum < 1.0);
     assert (stepVariation < 1.0);

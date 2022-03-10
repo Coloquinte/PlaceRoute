@@ -1,5 +1,5 @@
 
-#include "place_global/topology.hpp"
+#include "place_global/wirelength_model.hpp"
 
 #include <xtensor/xarray.hpp>
 #include <xtensor/xtensor.hpp>
@@ -17,16 +17,16 @@
 #include <cassert>
 #include <iostream>
 
-NetTopology NetTopology::xTopology(const Circuit &circuit) {
+NetWirelength NetWirelength::xTopology(const Circuit &circuit) {
     return fromData(circuit.cellWidths, circuit.cellX, circuit.cellFixed, circuit.netLimits, circuit.pinCells, circuit.pinXOffsets);
 }
 
-NetTopology NetTopology::yTopology(const Circuit &circuit) {
+NetWirelength NetWirelength::yTopology(const Circuit &circuit) {
     return fromData(circuit.cellHeights, circuit.cellY, circuit.cellFixed, circuit.netLimits, circuit.pinCells, circuit.pinYOffsets);
 }
 
-NetTopology NetTopology::fromData(const std::vector<int> &cellSizes, const std::vector<int> & pl, const std::vector<char> &cellFixed, const std::vector<int> &netLimits, const std::vector<int> &pinCells, const std::vector<int> &pinOffsets) {
-    NetTopologyBuilder builder(cellSizes.size());
+NetWirelength NetWirelength::fromData(const std::vector<int> &cellSizes, const std::vector<int> & pl, const std::vector<char> &cellFixed, const std::vector<int> &netLimits, const std::vector<int> &pinCells, const std::vector<int> &pinOffsets) {
+    NetWirelengthBuilder builder(cellSizes.size());
     for (int i = 0; i + 1 < netLimits.size(); ++i) {
         float minPos = std::numeric_limits<float>::infinity();
         float maxPos = -std::numeric_limits<float>::infinity();
@@ -53,7 +53,7 @@ NetTopology NetTopology::fromData(const std::vector<int> &cellSizes, const std::
     return builder.build();
 }
 
-void NetTopologyBuilder::push(const std::vector<int> &cells, const std::vector<float> &offsets) {
+void NetWirelengthBuilder::push(const std::vector<int> &cells, const std::vector<float> &offsets) {
     assert (cells.size() == offsets.size());
     if (cells.size() <= 1) return;
     int sz = cells.size();
@@ -63,7 +63,7 @@ void NetTopologyBuilder::push(const std::vector<int> &cells, const std::vector<f
     netBuilders_[sz].push(cells, offsets);
 }
 
-void NetTopologyBuilder::push(const std::vector<int> &cells, const std::vector<float> &offsets, float minPos, float maxPos) {
+void NetWirelengthBuilder::push(const std::vector<int> &cells, const std::vector<float> &offsets, float minPos, float maxPos) {
     assert (cells.size() == offsets.size());
     if (std::isfinite(minPos)) {
         assert (maxPos >= minPos);
@@ -80,8 +80,8 @@ void NetTopologyBuilder::push(const std::vector<int> &cells, const std::vector<f
     ++nbNets_;
 }
 
-NetTopology NetTopologyBuilder::build() const {
-    NetTopology ret;
+NetWirelength NetWirelengthBuilder::build() const {
+    NetWirelength ret;
     ret.nbCells_ = nbCells_;
     ret.nbNets_ = nbNets_;
     for (const auto &bd : netBuilders_) {
@@ -97,7 +97,7 @@ NetTopology NetTopologyBuilder::build() const {
     return ret;
 }
 
-float NetTopology::valueHPWL(const xt::xtensor<float, 1> &pl) const {
+float NetWirelength::valueHPWL(const xt::xtensor<float, 1> &pl) const {
     float val = 0.0;
     for (const auto &bd : nets_) {
         val += bd.valueHPWL(pl);
@@ -108,7 +108,7 @@ float NetTopology::valueHPWL(const xt::xtensor<float, 1> &pl) const {
     return val;
 }
 
-float NetTopology::valueLSE(const xt::xtensor<float, 1> &pl, float epsilon) const {
+float NetWirelength::valueLSE(const xt::xtensor<float, 1> &pl, float epsilon) const {
     float val = 0.0;
     for (const auto &bd : nets_) {
         val += bd.valueLSE(pl, epsilon);
@@ -119,7 +119,7 @@ float NetTopology::valueLSE(const xt::xtensor<float, 1> &pl, float epsilon) cons
     return val;
 }
 
-float NetTopology::valueWA(const xt::xtensor<float, 1> &pl, float epsilon) const {
+float NetWirelength::valueWA(const xt::xtensor<float, 1> &pl, float epsilon) const {
     float val = 0.0;
     for (const auto &bd : nets_) {
         val += bd.valueWA(pl, epsilon);
@@ -130,7 +130,7 @@ float NetTopology::valueWA(const xt::xtensor<float, 1> &pl, float epsilon) const
     return val;
 }
 
-xt::xtensor<float, 1> NetTopology::gradHPWL(const xt::xtensor<float, 1> &pl) const {
+xt::xtensor<float, 1> NetWirelength::gradHPWL(const xt::xtensor<float, 1> &pl) const {
     xt::xtensor<float, 1> val = xt::zeros<float>({nbCells()});
     for (const auto &bd : nets_) {
         val += bd.gradHPWL(pl);
@@ -141,7 +141,7 @@ xt::xtensor<float, 1> NetTopology::gradHPWL(const xt::xtensor<float, 1> &pl) con
     return val;
 }
 
-xt::xtensor<float, 1> NetTopology::gradLSE(const xt::xtensor<float, 1> &pl, float epsilon) const {
+xt::xtensor<float, 1> NetWirelength::gradLSE(const xt::xtensor<float, 1> &pl, float epsilon) const {
     xt::xtensor<float, 1> val = xt::zeros<float>({nbCells()});
     for (const auto &bd : nets_) {
         val += bd.gradLSE(pl, epsilon);
@@ -152,7 +152,7 @@ xt::xtensor<float, 1> NetTopology::gradLSE(const xt::xtensor<float, 1> &pl, floa
     return val;
 }
 
-xt::xtensor<float, 1> NetTopology::gradWA(const xt::xtensor<float, 1> &pl, float epsilon) const {
+xt::xtensor<float, 1> NetWirelength::gradWA(const xt::xtensor<float, 1> &pl, float epsilon) const {
     xt::xtensor<float, 1> val = xt::zeros<float>({nbCells()});
     for (const auto &bd : nets_) {
         val += bd.gradWA(pl, epsilon);
@@ -163,7 +163,7 @@ xt::xtensor<float, 1> NetTopology::gradWA(const xt::xtensor<float, 1> &pl, float
     return val;
 }
 
-xt::xtensor<float, 1> NetTopology::proximalStep(const xt::xtensor<float, 1> &pl, float step) const {
+xt::xtensor<float, 1> NetWirelength::proximalStep(const xt::xtensor<float, 1> &pl, float step) const {
     xt::xtensor<float, 1> val = xt::zeros<float>({nbCells()});
     for (const auto &bd : nets_) {
         val += bd.proximalStep(pl, step);
@@ -174,7 +174,7 @@ xt::xtensor<float, 1> NetTopology::proximalStep(const xt::xtensor<float, 1> &pl,
     return val;
 }
 
-NetTopologyFixedSize::NetTopologyFixedSize(int nbCells, int netSize, std::vector<int> pinCells, std::vector<float> pinOffsets) {
+NetWirelengthFixedSize::NetWirelengthFixedSize(int nbCells, int netSize, std::vector<int> pinCells, std::vector<float> pinOffsets) {
     assert (pinCells.size() == pinOffsets.size());
     assert (pinCells.size() % netSize == 0);
     nbNets_ = pinCells.size() / netSize;
@@ -185,7 +185,7 @@ NetTopologyFixedSize::NetTopologyFixedSize(int nbCells, int netSize, std::vector
     check();
 }
 
-NetTopologyFixedSize::NetTopologyFixedSize(int nbCells, xt::xtensor<int, 2> pinCells, xt::xtensor<float, 2> pinOffsets) {
+NetWirelengthFixedSize::NetWirelengthFixedSize(int nbCells, xt::xtensor<int, 2> pinCells, xt::xtensor<float, 2> pinOffsets) {
     assert (pinCells.shape()[0] == pinOffsets.shape()[0]);
     assert (pinCells.shape()[1] == pinOffsets.shape()[1]);
     nbCells_ = nbCells;
@@ -196,7 +196,7 @@ NetTopologyFixedSize::NetTopologyFixedSize(int nbCells, xt::xtensor<int, 2> pinC
     check();
 }
 
-void NetTopologyFixedSize::check() const {
+void NetWirelengthFixedSize::check() const {
     assert (pinCells_.shape()[0] == nbNets_);
     assert (offsets_.shape()[0] == nbNets_);
     assert (pinCells_.shape()[1] == netSize_);
@@ -205,7 +205,7 @@ void NetTopologyFixedSize::check() const {
     assert (xt::all(pinCells_ >= 0));
 }
 
-xt::xtensor<float, 2> NetTopologyFixedSize::pinCoords(xt::xtensor<float, 1> pl) const {
+xt::xtensor<float, 2> NetWirelengthFixedSize::pinCoords(xt::xtensor<float, 1> pl) const {
     assert (pl.size() == nbCells());
     xt::xtensor<float, 2> cellCoords = xt::reshape_view(
         xt::index_view(pl, pinCells_),
@@ -214,48 +214,48 @@ xt::xtensor<float, 2> NetTopologyFixedSize::pinCoords(xt::xtensor<float, 1> pl) 
     return cellCoords + offsets_;
 }
 
-float NetTopologyFixedSize::valueHPWL(xt::xtensor<float, 1> pl) const {
+float NetWirelengthFixedSize::valueHPWL(xt::xtensor<float, 1> pl) const {
     auto pins = pinCoords(pl);
     return xt::sum(xt::amax(pins, {1}) - xt::amin(pins, {1}))();
 }
 
-float NetTopologyFixedSize::valueLSE(xt::xtensor<float, 1> pl, float epsilon) const {
+float NetWirelengthFixedSize::valueLSE(xt::xtensor<float, 1> pl, float epsilon) const {
     auto pins = pinCoords(pl);
     return xt::sum(lseMax(pins, epsilon) + lseMax(-pins, epsilon))();
 }
 
-float NetTopologyFixedSize::valueWA(xt::xtensor<float, 1> pl, float epsilon) const {
+float NetWirelengthFixedSize::valueWA(xt::xtensor<float, 1> pl, float epsilon) const {
     auto pins = pinCoords(pl);
     return xt::sum(waMax(pins, epsilon) + waMax(-pins, epsilon))();
 }
 
-xt::xtensor<float, 1> NetTopologyFixedSize::gradHPWL(xt::xtensor<float, 1> pl) const {
+xt::xtensor<float, 1> NetWirelengthFixedSize::gradHPWL(xt::xtensor<float, 1> pl) const {
     auto pins = pinCoords(pl);
     return toCellGrad(maxGrad(pins) - maxGrad(-pins));
 }
 
-xt::xtensor<float, 1> NetTopologyFixedSize::gradLSE(xt::xtensor<float, 1> pl, float epsilon) const {
+xt::xtensor<float, 1> NetWirelengthFixedSize::gradLSE(xt::xtensor<float, 1> pl, float epsilon) const {
     auto pins = pinCoords(pl);
     return toCellGrad(lseMaxGrad(pins, epsilon) - lseMaxGrad(-pins, epsilon));
 }
 
-xt::xtensor<float, 1> NetTopologyFixedSize::gradWA(xt::xtensor<float, 1> pl, float epsilon) const {
+xt::xtensor<float, 1> NetWirelengthFixedSize::gradWA(xt::xtensor<float, 1> pl, float epsilon) const {
     auto pins = pinCoords(pl);
     return toCellGrad(waMaxGrad(pins, epsilon) - waMaxGrad(-pins, epsilon));
 }
 
-xt::xtensor<float, 1> NetTopologyFixedSize::proximalStep(xt::xtensor<float, 1> pl, float step) const {
+xt::xtensor<float, 1> NetWirelengthFixedSize::proximalStep(xt::xtensor<float, 1> pl, float step) const {
     auto pins = pinCoords(pl);
     return toCellGrad(maxProximal(pins, step) - maxProximal(-pins, step));
 }
 
-xt::xtensor<float, 1> NetTopologyFixedSize::lseMax(xt::xtensor<float, 2> pins, float epsilon) const {
+xt::xtensor<float, 1> NetWirelengthFixedSize::lseMax(xt::xtensor<float, 2> pins, float epsilon) const {
     xt::xtensor<float, 1> maxVal = xt::amax(pins, {1});
     xt::xtensor<float, 2> normalized = pins - xt::expand_dims(maxVal, 1);
     return maxVal + epsilon * xt::log(xt::sum(xt::exp(normalized / epsilon), 1));
 }
 
-xt::xtensor<float, 1> NetTopologyFixedSize::waMax(xt::xtensor<float, 2> pins, float epsilon) const {
+xt::xtensor<float, 1> NetWirelengthFixedSize::waMax(xt::xtensor<float, 2> pins, float epsilon) const {
     xt::xtensor<float, 1> maxVal = xt::amax(pins, {1});
     // Normalize by the maximum and remove infinities for the product computation later
     xt::xtensor<float, 2> normalized = xt::maximum(pins - xt::expand_dims(maxVal, 1), -1000.0f*epsilon);
@@ -263,7 +263,7 @@ xt::xtensor<float, 1> NetTopologyFixedSize::waMax(xt::xtensor<float, 2> pins, fl
     return maxVal + xt::sum(normalized * expValue, 1) / xt::sum(expValue, 1);
 }
 
-xt::xtensor<float, 2> NetTopologyFixedSize::maxGrad(xt::xtensor<float, 2> pins) const {
+xt::xtensor<float, 2> NetWirelengthFixedSize::maxGrad(xt::xtensor<float, 2> pins) const {
     xt::xtensor<int, 1> amx = xt::argmax(pins, 1);
     xt::xtensor<float, 2> ret = xt::zeros<float>(pins.shape());
     // It is a pain to do this in xtensor, so let's go for the simple loop
@@ -273,7 +273,7 @@ xt::xtensor<float, 2> NetTopologyFixedSize::maxGrad(xt::xtensor<float, 2> pins) 
     return ret;
 }
 
-xt::xtensor<float, 2> NetTopologyFixedSize::lseMaxGrad(xt::xtensor<float, 2> pins, float epsilon) const {
+xt::xtensor<float, 2> NetWirelengthFixedSize::lseMaxGrad(xt::xtensor<float, 2> pins, float epsilon) const {
     xt::xtensor<float, 1> maxVal = xt::amax(pins, {1});
     xt::xtensor<float, 2> normalized = pins - xt::expand_dims(maxVal, 1);
     xt::xtensor<float, 2> expValue = xt::exp(normalized / epsilon);
@@ -281,7 +281,7 @@ xt::xtensor<float, 2> NetTopologyFixedSize::lseMaxGrad(xt::xtensor<float, 2> pin
     return expValue / xt::expand_dims(expSum, 1);
 }
 
-xt::xtensor<float, 2> NetTopologyFixedSize::waMaxGrad(xt::xtensor<float, 2> pins, float epsilon) const {
+xt::xtensor<float, 2> NetWirelengthFixedSize::waMaxGrad(xt::xtensor<float, 2> pins, float epsilon) const {
     xt::xtensor<float, 1> maxVal = xt::amax(pins, {1});
     // Normalize by the maximum and remove infinities for the product computation later
     xt::xtensor<float, 2> normalized = xt::maximum(pins - xt::expand_dims(maxVal, 1), -1000.0f*epsilon);
@@ -293,7 +293,7 @@ xt::xtensor<float, 2> NetTopologyFixedSize::waMaxGrad(xt::xtensor<float, 2> pins
     return (numDerivative * xt::expand_dims(denum, 1) - num * denumDerivative) / xt::square(xt::expand_dims(denum, 1));
 }
 
-xt::xtensor<float, 2> NetTopologyFixedSize::posProximal(xt::xtensor<float, 2> pins, float step) const {
+xt::xtensor<float, 2> NetWirelengthFixedSize::posProximal(xt::xtensor<float, 2> pins, float step) const {
     float penalty = 0.5 / step;
     xt::xtensor<float, 1> maxVal = xt::amax(pins, {1});
     xt::xtensor<float, 2> normalized = pins - xt::expand_dims(maxVal, 1);
@@ -320,11 +320,11 @@ xt::xtensor<float, 2> NetTopologyFixedSize::posProximal(xt::xtensor<float, 2> pi
     return xt::minimum(pins, xt::expand_dims(pos, 1));
 }
 
-xt::xtensor<float, 2> NetTopologyFixedSize::maxProximal(xt::xtensor<float, 2> pins, float step) const {
+xt::xtensor<float, 2> NetWirelengthFixedSize::maxProximal(xt::xtensor<float, 2> pins, float step) const {
     return posProximal(pins, step) - pins;
 }
 
-xt::xtensor<float, 2> NetTopologyFixedSize::maxProximal(xt::xtensor<float, 2> pins, xt::xtensor<float, 1> fixedPins, float step) const {
+xt::xtensor<float, 2> NetWirelengthFixedSize::maxProximal(xt::xtensor<float, 2> pins, xt::xtensor<float, 1> fixedPins, float step) const {
     xt::xtensor<float, 2> pos = posProximal(pins, step);
     // Stop the movement at the fixed pin
     xt::xtensor<float, 2> satPos = xt::maximum(pos, xt::expand_dims(fixedPins, 1));
@@ -333,7 +333,7 @@ xt::xtensor<float, 2> NetTopologyFixedSize::maxProximal(xt::xtensor<float, 2> pi
     return finalPos - pins;
 }
 
-xt::xtensor<float, 1> NetTopologyFixedSize::toCellGrad(xt::xtensor<float, 2> pinGrad) const {
+xt::xtensor<float, 1> NetWirelengthFixedSize::toCellGrad(xt::xtensor<float, 2> pinGrad) const {
     xt::xtensor<float, 1> flatPinGrad = xt::flatten(pinGrad);
     xt::xtensor<int, 1> flatCells = xt::flatten(pinCells_);
     xt::xtensor<float, 1> ret = xt::zeros<float>({nbCells()});
@@ -343,93 +343,93 @@ xt::xtensor<float, 1> NetTopologyFixedSize::toCellGrad(xt::xtensor<float, 2> pin
     return ret;
 }
 
-NetTopologyFixedSizeTerminals::NetTopologyFixedSizeTerminals(int nbCells, int netSize, std::vector<int> pinCells, std::vector<float> pinOffsets, std::vector<float> minPos, std::vector<float> maxPos)
-: NetTopologyFixedSize(nbCells, netSize, pinCells, pinOffsets) {
+NetWirelengthFixedSizeTerminals::NetWirelengthFixedSizeTerminals(int nbCells, int netSize, std::vector<int> pinCells, std::vector<float> pinOffsets, std::vector<float> minPos, std::vector<float> maxPos)
+: NetWirelengthFixedSize(nbCells, netSize, pinCells, pinOffsets) {
     minPins_ = xt::adapt(minPos, {nbNets_});
     maxPins_ = xt::adapt(maxPos, {nbNets_});
     check();
 }
 
-NetTopologyFixedSizeTerminals::NetTopologyFixedSizeTerminals(int nbCells, xt::xtensor<int, 2> pinCells, xt::xtensor<float, 2> pinOffsets, xt::xtensor<float, 1> minPos, xt::xtensor<float, 1> maxPos)
-: NetTopologyFixedSize(nbCells, pinCells, pinOffsets) {
+NetWirelengthFixedSizeTerminals::NetWirelengthFixedSizeTerminals(int nbCells, xt::xtensor<int, 2> pinCells, xt::xtensor<float, 2> pinOffsets, xt::xtensor<float, 1> minPos, xt::xtensor<float, 1> maxPos)
+: NetWirelengthFixedSize(nbCells, pinCells, pinOffsets) {
     minPins_ = minPos;
     maxPins_ = maxPos;
     check();
 }
 
-void NetTopologyFixedSizeTerminals::check() const {
-    NetTopologyFixedSize::check();
+void NetWirelengthFixedSizeTerminals::check() const {
+    NetWirelengthFixedSize::check();
     assert (minPins_.shape()[0] == nbNets_);
     assert (maxPins_.shape()[0] == nbNets_);
 }
 
-float NetTopologyFixedSizeTerminals::valueHPWL(xt::xtensor<float, 1> pl) const {
+float NetWirelengthFixedSizeTerminals::valueHPWL(xt::xtensor<float, 1> pl) const {
     auto pinsMinMax = pinCoordsMinMax(pl);
     return xt::sum(xt::amax(pinsMinMax.second, {1}) - xt::amin(pinsMinMax.first, {1}))();
 }
 
-float NetTopologyFixedSizeTerminals::valueLSE(xt::xtensor<float, 1> pl, float epsilon) const {
+float NetWirelengthFixedSizeTerminals::valueLSE(xt::xtensor<float, 1> pl, float epsilon) const {
     auto pinsMinMax = pinCoordsMinMax(pl);
     return xt::sum(lseMax(pinsMinMax.second, epsilon) + lseMax(-pinsMinMax.first, epsilon))();
 }
 
-float NetTopologyFixedSizeTerminals::valueWA(xt::xtensor<float, 1> pl, float epsilon) const {
+float NetWirelengthFixedSizeTerminals::valueWA(xt::xtensor<float, 1> pl, float epsilon) const {
     auto pinsMinMax = pinCoordsMinMax(pl);
     return xt::sum(waMax(pinsMinMax.second, epsilon) + waMax(-pinsMinMax.first, epsilon))();
 }
 
-xt::xtensor<float, 1> NetTopologyFixedSizeTerminals::gradHPWL(xt::xtensor<float, 1> pl) const {
+xt::xtensor<float, 1> NetWirelengthFixedSizeTerminals::gradHPWL(xt::xtensor<float, 1> pl) const {
     auto pinsMinMax = pinCoordsMinMax(pl);
     return toCellGradMinMax(maxGrad(pinsMinMax.second) - maxGrad(-pinsMinMax.first));
 }
 
-xt::xtensor<float, 1> NetTopologyFixedSizeTerminals::gradLSE(xt::xtensor<float, 1> pl, float epsilon) const {
+xt::xtensor<float, 1> NetWirelengthFixedSizeTerminals::gradLSE(xt::xtensor<float, 1> pl, float epsilon) const {
     auto pinsMinMax = pinCoordsMinMax(pl);
     return toCellGradMinMax(lseMaxGrad(pinsMinMax.second, epsilon) - lseMaxGrad(-pinsMinMax.first, epsilon));
 }
 
-xt::xtensor<float, 1> NetTopologyFixedSizeTerminals::gradWA(xt::xtensor<float, 1> pl, float epsilon) const {
+xt::xtensor<float, 1> NetWirelengthFixedSizeTerminals::gradWA(xt::xtensor<float, 1> pl, float epsilon) const {
     auto pinsMinMax = pinCoordsMinMax(pl);
     return toCellGradMinMax(waMaxGrad(pinsMinMax.second, epsilon) - waMaxGrad(-pinsMinMax.first, epsilon));
 }
 
-xt::xtensor<float, 1> NetTopologyFixedSizeTerminals::proximalStep(xt::xtensor<float, 1> pl, float step) const {
+xt::xtensor<float, 1> NetWirelengthFixedSizeTerminals::proximalStep(xt::xtensor<float, 1> pl, float step) const {
     auto pins = pinCoords(pl);
     return toCellGrad(maxProximal(pins, maxPins_, step) - maxProximal(-pins, -minPins_, step));
 }
 
-std::pair<xt::xtensor<float, 2>, xt::xtensor<float, 2> > NetTopologyFixedSizeTerminals::pinCoordsMinMax(xt::xtensor<float, 1> pl) const {
+std::pair<xt::xtensor<float, 2>, xt::xtensor<float, 2> > NetWirelengthFixedSizeTerminals::pinCoordsMinMax(xt::xtensor<float, 1> pl) const {
     auto pins = pinCoords(pl);
     xt::xtensor<float, 2> minPins = xt::concatenate(xtuple(pins, xt::expand_dims(minPins_, 1)), 1);
     xt::xtensor<float, 2> maxPins = xt::concatenate(xtuple(pins, xt::expand_dims(maxPins_, 1)), 1);
     return std::make_pair(minPins, maxPins);
 }
 
-xt::xtensor<float, 2> NetTopologyFixedSizeTerminals::pinCoordsAll(xt::xtensor<float, 1> pl) const {
+xt::xtensor<float, 2> NetWirelengthFixedSizeTerminals::pinCoordsAll(xt::xtensor<float, 1> pl) const {
     auto pins = pinCoords(pl);
     return xt::concatenate(xtuple(pins, xt::expand_dims(minPins_, 1), xt::expand_dims(maxPins_, 1)), 1);
 }
 
-xt::xtensor<int, 2> NetTopologyFixedSizeTerminals::pinCellsAll() const {
+xt::xtensor<int, 2> NetWirelengthFixedSizeTerminals::pinCellsAll() const {
     return xt::concatenate(xtuple(pinCells(), -xt::ones<int>({nbNets(), 2})), 1);
 }
 
-xt::xtensor<float, 2> NetTopologyFixedSizeTerminals::pinOffsetsAll() const {
+xt::xtensor<float, 2> NetWirelengthFixedSizeTerminals::pinOffsetsAll() const {
     return xt::concatenate(xtuple(pinOffsets(), xt::expand_dims(minPins_, 1), xt::expand_dims(maxPins_, 1)), 1);
 }
 
-xt::xtensor<float, 1> NetTopologyFixedSizeTerminals::toCellGradMinMax(xt::xtensor<float, 2> pinGrad) const {
+xt::xtensor<float, 1> NetWirelengthFixedSizeTerminals::toCellGradMinMax(xt::xtensor<float, 2> pinGrad) const {
     return toCellGrad(xt::view(pinGrad, xt::all(), xt::range(xt::placeholders::_, -1)));
 }
 
-void NetTopologyFixedSizeBuilder::push(const std::vector<int> &cells, const std::vector<float> &offsets) {
+void NetWirelengthFixedSizeBuilder::push(const std::vector<int> &cells, const std::vector<float> &offsets) {
     assert (cells.size() == netSize_);
     assert (offsets.size() == netSize_);
     pinCells_.insert(pinCells_.end(), cells.begin(), cells.end());
     pinOffsets_.insert(pinOffsets_.end(), offsets.begin(), offsets.end());
 }
 
-void NetTopologyFixedSizeTerminalsBuilder::push(const std::vector<int> &cells, const std::vector<float> &offsets, float minPin, float maxPin) {
+void NetWirelengthFixedSizeTerminalsBuilder::push(const std::vector<int> &cells, const std::vector<float> &offsets, float minPin, float maxPin) {
     assert (cells.size() == netSize_);
     assert (offsets.size() == netSize_);
     pinCells_.insert(pinCells_.end(), cells.begin(), cells.end());
@@ -438,7 +438,7 @@ void NetTopologyFixedSizeTerminalsBuilder::push(const std::vector<int> &cells, c
     maxPins_.push_back(maxPin);
 }
 
-MatrixBuilder MatrixBuilder::createStar(const NetTopology &topo) {
+MatrixBuilder MatrixBuilder::createStar(const NetWirelength &topo) {
     MatrixBuilder bd(topo.nbCells());
     for (const auto &nt : topo.nets()) {
         bd.extendStar(nt);
@@ -449,7 +449,7 @@ MatrixBuilder MatrixBuilder::createStar(const NetTopology &topo) {
     return bd;
 }
 
-void MatrixBuilder::extendStar(const NetTopologyFixedSize &topo) {
+void MatrixBuilder::extendStar(const NetWirelengthFixedSize &topo) {
     const auto &cells = topo.pinCells();
     const auto &offsets = topo.pinOffsets();
     for (int i = 0; i < topo.nbNets(); ++i) {
@@ -474,7 +474,7 @@ void MatrixBuilder::extendStar(const NetTopologyFixedSize &topo) {
     }
 }
 
-void MatrixBuilder::extendStar(const NetTopologyFixedSizeTerminals &topo) {
+void MatrixBuilder::extendStar(const NetWirelengthFixedSizeTerminals &topo) {
     const auto &cells = topo.pinCells();
     const auto &offsets = topo.pinOffsets();
     for (int i = 0; i < topo.nbNets(); ++i) {
@@ -501,7 +501,7 @@ void MatrixBuilder::extendStar(const NetTopologyFixedSizeTerminals &topo) {
     }
 }
 
-MatrixBuilder MatrixBuilder::createStar(const NetTopology &topo, xt::xtensor<float, 1> pl, float epsilon, float relaxation, bool b2bScale) {
+MatrixBuilder MatrixBuilder::createStar(const NetWirelength &topo, xt::xtensor<float, 1> pl, float epsilon, float relaxation, bool b2bScale) {
     MatrixBuilder bd(topo.nbCells());
     bd.initial_ = std::vector<float>(pl.begin(), pl.end());
     for (const auto &nt : topo.nets()) {
@@ -513,7 +513,7 @@ MatrixBuilder MatrixBuilder::createStar(const NetTopology &topo, xt::xtensor<flo
     return bd;
 }
 
-void MatrixBuilder::extendStar(const NetTopologyFixedSize &topo, xt::xtensor<float, 1> pl, float epsilon, float relaxation, bool b2bScale) {
+void MatrixBuilder::extendStar(const NetWirelengthFixedSize &topo, xt::xtensor<float, 1> pl, float epsilon, float relaxation, bool b2bScale) {
     const auto coords = topo.pinCoords(pl);
     const auto &cells = topo.pinCells();
     const auto &offsets = topo.pinOffsets();
@@ -553,7 +553,7 @@ void MatrixBuilder::extendStar(const NetTopologyFixedSize &topo, xt::xtensor<flo
     }
 }
 
-void MatrixBuilder::extendStar(const NetTopologyFixedSizeTerminals &topo, xt::xtensor<float, 1> pl, float epsilon, float relaxation, bool b2bScale) {
+void MatrixBuilder::extendStar(const NetWirelengthFixedSizeTerminals &topo, xt::xtensor<float, 1> pl, float epsilon, float relaxation, bool b2bScale) {
     const auto coords = topo.pinCoordsAll(pl);
     const auto cells = topo.pinCellsAll();
     const auto offsets = topo.pinOffsetsAll();
@@ -608,7 +608,7 @@ void MatrixBuilder::extendStar(const NetTopologyFixedSizeTerminals &topo, xt::xt
     }
 }
 
-MatrixBuilder MatrixBuilder::createB2B(const NetTopology &topo, xt::xtensor<float, 1> pl, float epsilon) {
+MatrixBuilder MatrixBuilder::createB2B(const NetWirelength &topo, xt::xtensor<float, 1> pl, float epsilon) {
     MatrixBuilder bd(topo.nbCells());
     bd.initial_ = std::vector<float>(pl.begin(), pl.end());
     for (const auto &nt : topo.nets()) {
@@ -620,7 +620,7 @@ MatrixBuilder MatrixBuilder::createB2B(const NetTopology &topo, xt::xtensor<floa
     return bd;
 }
 
-void MatrixBuilder::extendB2B(const NetTopologyFixedSize &topo, xt::xtensor<float, 1> pl, float epsilon) {
+void MatrixBuilder::extendB2B(const NetWirelengthFixedSize &topo, xt::xtensor<float, 1> pl, float epsilon) {
     const auto coords = topo.pinCoords(pl);
     const auto &cells = topo.pinCells();
     const auto &offsets = topo.pinOffsets();
@@ -642,7 +642,7 @@ void MatrixBuilder::extendB2B(const NetTopologyFixedSize &topo, xt::xtensor<floa
     }
 }
 
-void MatrixBuilder::extendB2B(const NetTopologyFixedSizeTerminals &topo, xt::xtensor<float, 1> pl, float epsilon) {
+void MatrixBuilder::extendB2B(const NetWirelengthFixedSizeTerminals &topo, xt::xtensor<float, 1> pl, float epsilon) {
     const auto coords = topo.pinCoordsAll(pl);
     const auto cells = topo.pinCellsAll();
     const auto offsets = topo.pinOffsetsAll();
@@ -723,17 +723,17 @@ xt::xtensor<float, 1> MatrixBuilder::solve() {
     return xt::adapt(ret, {nbCells_});
 }
 
-xt::xtensor<float, 1> NetTopology::starSolve() const {
+xt::xtensor<float, 1> NetWirelength::starSolve() const {
     MatrixBuilder bd = MatrixBuilder::createStar(*this);
     return bd.solve();
 }
 
-xt::xtensor<float, 1> NetTopology::starSolve(const xt::xtensor<float, 1> &pl, float epsilon, float relaxation, bool b2bScale) const {
+xt::xtensor<float, 1> NetWirelength::starSolve(const xt::xtensor<float, 1> &pl, float epsilon, float relaxation, bool b2bScale) const {
     MatrixBuilder bd = MatrixBuilder::createStar(*this, pl, epsilon, relaxation, b2bScale);
     return bd.solve();
 }
 
-xt::xtensor<float, 1> NetTopology::b2bSolve(const xt::xtensor<float, 1> &pl, float epsilon) const {
+xt::xtensor<float, 1> NetWirelength::b2bSolve(const xt::xtensor<float, 1> &pl, float epsilon) const {
     MatrixBuilder bd = MatrixBuilder::createB2B(*this, pl, epsilon);
     return bd.solve();
 }
