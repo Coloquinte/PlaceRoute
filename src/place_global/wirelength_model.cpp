@@ -454,12 +454,12 @@ void MatrixBuilder::extendStar(const NetWirelengthFixedSize &topo) {
     const auto &offsets = topo.pinOffsets();
     for (int i = 0; i < topo.nbNets(); ++i) {
         if (topo.netSize() == 2) {
-            addPin(cells(i, 0), cells(i, 1), offsets(i, 0), offsets(i, 1), 0.5);
+            addMovingPin(cells(i, 0), cells(i, 1), offsets(i, 0), offsets(i, 1), 0.5);
         }
         else if (topo.netSize() == 3) {
-            addPin(cells(i, 0), cells(i, 1), offsets(i, 0), offsets(i, 1), 0.5);
-            addPin(cells(i, 0), cells(i, 2), offsets(i, 0), offsets(i, 2), 0.5);
-            addPin(cells(i, 2), cells(i, 1), offsets(i, 2), offsets(i, 1), 0.5);
+            addMovingPin(cells(i, 0), cells(i, 1), offsets(i, 0), offsets(i, 1), 0.5);
+            addMovingPin(cells(i, 0), cells(i, 2), offsets(i, 0), offsets(i, 2), 0.5);
+            addMovingPin(cells(i, 2), cells(i, 1), offsets(i, 2), offsets(i, 1), 0.5);
         }
         else {
             float weight = 1.0 / topo.netSize();
@@ -468,7 +468,7 @@ void MatrixBuilder::extendStar(const NetWirelengthFixedSize &topo) {
             rhs_.push_back(0.0);
             initial_.push_back(0.0);
             for (int j = 0; j < topo.netSize(); ++j) {
-                addPin(cells(i, j), newCell, offsets(i, j), 0.0f, weight);
+                addMovingPin(cells(i, j), newCell, offsets(i, j), 0.0f, weight);
             }
         }
     }
@@ -485,7 +485,7 @@ void MatrixBuilder::extendStar(const NetWirelengthFixedSizeTerminals &topo) {
         else if (topo.netSize() == 2) {
             addFixedPin(cells(i, 1), offsets(i, 1), pos, 0.5);
             addFixedPin(cells(i, 1), offsets(i, 1), pos, 0.5);
-            addPin(cells(i, 0), cells(i, 1), offsets(i, 0), offsets(i, 1), 0.5);
+            addMovingPin(cells(i, 0), cells(i, 1), offsets(i, 0), offsets(i, 1), 0.5);
         }
         else {
             float weight = 1.0 / (topo.netSize() + 1);
@@ -495,7 +495,7 @@ void MatrixBuilder::extendStar(const NetWirelengthFixedSizeTerminals &topo) {
             initial_.push_back(0.0);
             addFixedPin(newCell, 0.0, pos, weight);
             for (int j = 0; j < topo.netSize(); ++j) {
-                addPin(cells(i, j), newCell, offsets(i, j), 0.0f, weight);
+                addMovingPin(cells(i, j), newCell, offsets(i, j), 0.0f, weight);
             }
         }
     }
@@ -525,7 +525,7 @@ void MatrixBuilder::extendStar(const NetWirelengthFixedSize &topo, xt::xtensor<f
     for (int i = 0; i < topo.nbNets(); ++i) {
         if (topo.netSize() == 2) {
             float weight = 1.0 / std::max(pinMax(i) - pinMin(i), epsilon);
-            addPin(cells(i, 0), cells(i, 1), offsets(i, 0), offsets(i, 1), weight);
+            addMovingPin(cells(i, 0), cells(i, 1), offsets(i, 0), offsets(i, 1), weight);
         }
         else {
             int newCell = nbCells_ + nbSupps_;
@@ -536,8 +536,9 @@ void MatrixBuilder::extendStar(const NetWirelengthFixedSize &topo, xt::xtensor<f
             for (int j = 0; j < topo.netSize(); ++j) {
                 if (j == amnt(i) || j == amxt(i)) {
                     // Extreme pins are connected directly (gradient of one)
-                    float weight = 1.0f / std::max(halfDiameter, epsilon);
-                    addPin(cells(i, j), newCell, offsets(i, j), 0.0f, weight);
+                    float weight = 1.0f / std::max(halfDiameter + relaxation * halfDiameter, epsilon);
+                    float anchor = j == amnt(i)  ? relaxation * halfDiameter : -relaxation * halfDiameter;
+                    addMovingPin(cells(i, j), newCell, offsets(i, j), anchor, weight);
                 }
                 else {
                     // Non-extreme pins have a zero force at their current position
@@ -552,14 +553,9 @@ void MatrixBuilder::extendStar(const NetWirelengthFixedSize &topo, xt::xtensor<f
                     }
                     else {
                         float dist = std::min(pinMax(i) - pos, pos - pinMin(i));
-                        weight = 1.0f / std::max(dist, epsilon);
+                        weight = 1.0f / std::max(dist + relaxation * halfDiameter, epsilon);
                     }
-                    if (relaxation > 0.0f) {
-                        float rdist = relaxation * halfDiameter;
-                        float cutoff = 1.0f / std::max(rdist, epsilon);
-                        weight = std::min(weight, cutoff);
-                    }
-                    addPin(cells(i, j), newCell, offsets(i, j), pos - pinMed(i), weight);
+                    addMovingPin(cells(i, j), newCell, offsets(i, j), pos - pinMed(i), weight);
                 }
             }
         }
@@ -604,8 +600,9 @@ void MatrixBuilder::extendStar(const NetWirelengthFixedSizeTerminals &topo, xt::
             for (int j = 0; j < topo.netSize() + nbFixed; ++j) {
                 if (j == amn || j == amx) {
                     // Extreme pins are connected directly (gradient of one)
-                    float weight = 1.0f / std::max(halfDiameter, epsilon);
-                    addPinOrFixed(cells(i, j), newCell, offsets(i, j), 0.0f, weight);
+                    float weight = 1.0f / std::max(halfDiameter + relaxation * halfDiameter, epsilon);
+                    float anchor = j == amnt(i)  ? relaxation * halfDiameter : -relaxation * halfDiameter;
+                    addPin(cells(i, j), newCell, offsets(i, j), anchor, weight);
                 }
                 else {
                     // Non-extreme pins have a zero force at their current position
@@ -620,14 +617,9 @@ void MatrixBuilder::extendStar(const NetWirelengthFixedSizeTerminals &topo, xt::
                     }
                     else {
                         float dist = std::min(pinMax(i) - pos, pos - pinMin(i));
-                        weight = 1.0f / std::max(dist, epsilon);
+                        weight = 1.0f / std::max(dist + relaxation * halfDiameter, epsilon);
                     }
-                    if (relaxation > 0.0f) {
-                        float rdist = relaxation * halfDiameter;
-                        float cutoff = 1.0f / std::max(rdist, epsilon);
-                        weight = std::min(weight, cutoff);
-                    }
-                    addPinOrFixed(cells(i, j), newCell, offsets(i, j), pos - pinMed(i), weight);
+                    addPin(cells(i, j), newCell, offsets(i, j), pos - pinMed(i), weight);
                 }
             }
         }
@@ -660,10 +652,10 @@ void MatrixBuilder::extendB2B(const NetWirelengthFixedSize &topo, xt::xtensor<fl
             float weight;
             if (j == amn) continue;
             weight = factor / std::max(std::abs(coords(i, j) - coords(i, amn)), epsilon);
-            addPin(cells(i, j), cells(i, amn), offsets(i, j), offsets(i, amn), weight);
+            addMovingPin(cells(i, j), cells(i, amn), offsets(i, j), offsets(i, amn), weight);
             if (j == amx) continue;
             weight = factor / std::max(std::abs(coords(i, j) - coords(i, amx)), epsilon);
-            addPin(cells(i, j), cells(i, amx), offsets(i, j), offsets(i, amx), weight);
+            addMovingPin(cells(i, j), cells(i, amx), offsets(i, j), offsets(i, amx), weight);
         }
     }
 }
@@ -692,15 +684,15 @@ void MatrixBuilder::extendB2B(const NetWirelengthFixedSizeTerminals &topo, xt::x
             float weight;
             if (j == amn) continue;
             weight = factor / std::max(std::abs(coords(i, j) - coords(i, amn)), epsilon);
-            addPinOrFixed(cells(i, j), cells(i, amn), offsets(i, j), offsets(i, amn), weight);
+            addPin(cells(i, j), cells(i, amn), offsets(i, j), offsets(i, amn), weight);
             if (j == amx) continue;
             weight = factor / std::max(std::abs(coords(i, j) - coords(i, amx)), epsilon);
-            addPinOrFixed(cells(i, j), cells(i, amx), offsets(i, j), offsets(i, amx), weight);
+            addPin(cells(i, j), cells(i, amx), offsets(i, j), offsets(i, amx), weight);
         }
     }
 }
 
-void MatrixBuilder::addPin(int c1, int c2, float offs1, float offs2, float weight) {
+void MatrixBuilder::addMovingPin(int c1, int c2, float offs1, float offs2, float weight) {
     if (c1 == c2) return;
     assert (c1 >= 0);
     assert (c2 >= 0);
@@ -718,7 +710,7 @@ void MatrixBuilder::addFixedPin(int c1, float offs1, float pos, float weight) {
     rhs_[c1] += weight * (pos - offs1);
 }
 
-void MatrixBuilder::addPinOrFixed(int c1, int c2, float offs1, float offs2, float weight) {
+void MatrixBuilder::addPin(int c1, int c2, float offs1, float offs2, float weight) {
     if (c1 == c2) return;
     if (c1 == -1) {
         addFixedPin(c2, offs2, offs1, weight);
@@ -728,7 +720,7 @@ void MatrixBuilder::addPinOrFixed(int c1, int c2, float offs1, float offs2, floa
         addFixedPin(c1, offs1, offs2, weight);
         return;
     }
-    addPin(c1, c2, offs1, offs2, weight);
+    addMovingPin(c1, c2, offs1, offs2, weight);
 }
 
 xt::xtensor<float, 1> MatrixBuilder::solve() {

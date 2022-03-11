@@ -238,7 +238,7 @@ class MatrixBuilder {
 
   private:
     void addPin(int c1, int c2, float offs1, float offs2, float weight);
-    void addPinOrFixed(int c1, int c2, float offs1, float offs2, float weight);
+    void addMovingPin(int c1, int c2, float offs1, float offs2, float weight);
     void addFixedPin(int c1, float offs1, float pos, float weight);
 
   private:
