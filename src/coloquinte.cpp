@@ -78,6 +78,60 @@ void place_ispd(
         }
     }
 }
+
+void benchmark_quadratic_models(
+    int nb_cells,
+    int nb_nets,
+    int *cell_widths,
+    int *cell_heights,
+    char *cell_fixed,
+    int *net_limits,
+    int *pin_cells,
+    int *pin_x_offsets,
+    int *pin_y_offsets,
+    int *cell_x,
+    int *cell_y,
+    char *cell_flip_x,
+    char *cell_flip_y,
+    int model_type,
+    int nb_steps,
+    float epsilon,
+    float relaxation
+) {
+    Circuit circuit = Circuit::create_ispd(
+        nb_cells,
+        nb_nets,
+        cell_widths,
+        cell_heights,
+        cell_fixed,
+        net_limits,
+        pin_cells,
+        pin_x_offsets,
+        pin_y_offsets,
+        cell_x,
+        cell_y,
+        cell_flip_x,
+        cell_flip_y
+    );
+    auto xtopo = NetWirelength::xTopology(circuit);
+
+    auto starPlace = xtopo.starSolve();
+    std::cout << "INIT\t" << epsilon << "\t" << relaxation << "\t" << 0 << "\t" << xtopo.valueHPWL(starPlace) << std::endl;
+    for (int i = 0; i < nb_steps; ++i) {
+        if (model_type == 0) {
+            starPlace = xtopo.starSolve(starPlace, epsilon, relaxation, false);
+            std::cout << "STAR\t" << epsilon << "\t" << relaxation << "\t" << i + 1 << "\t" << xtopo.valueHPWL(starPlace) << std::endl;
+        }
+        else if (model_type == 1) {
+            starPlace = xtopo.starSolve(starPlace, epsilon, relaxation, true);
+            std::cout << "BSTAR\t" << epsilon << "\t" << relaxation << "\t" << i + 1 << "\t" << xtopo.valueHPWL(starPlace) << std::endl;
+        }
+        else {
+            starPlace = xtopo.b2bSolve(starPlace, epsilon);
+            std::cout << "B2B\t" << epsilon << "\t" << relaxation << "\t" << i + 1 << "\t" << xtopo.valueHPWL(starPlace) << std::endl;
+        }
+    }
+}
 }
 
 Circuit Circuit::create_ispd(
