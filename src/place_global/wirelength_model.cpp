@@ -536,16 +536,29 @@ void MatrixBuilder::extendStar(const NetWirelengthFixedSize &topo, xt::xtensor<f
             for (int j = 0; j < topo.netSize(); ++j) {
                 if (j == amnt(i) || j == amxt(i)) {
                     // Extreme pins are connected directly (gradient of one)
-                    float weight = 1.0 / std::max(halfDiameter, epsilon);
+                    float weight = 1.0f / std::max(halfDiameter, epsilon);
                     addPin(cells(i, j), newCell, offsets(i, j), 0.0f, weight);
                 }
                 else {
                     // Non-extreme pins have a zero force at their current position
                     float pos = coords(i, j);
-                    float dist = std::min(pinMax(i) - pos, pos - pinMin(i));
-                    float rdist = relaxation * halfDiameter;
-                    float weight = 1.0 / std::max(std::max(rdist, dist), epsilon);
-                    if (b2bScale) weight /= (topo.netSize() - 1);
+                    float weight;
+                    if (b2bScale) {
+                        float w1 = 1.0f / std::max(pinMax(i) - pos, epsilon);
+                        float w2 = 1.0f / std::max(pos - pinMin(i), epsilon);
+                        // Other possibility, closer to actual B2B but not as good
+                        // weight = (w1 + w2) / (topo.netSize() - 1);
+                        weight = 2.0 * std::max(w1, w2) / (topo.netSize() - 1);
+                    }
+                    else {
+                        float dist = std::min(pinMax(i) - pos, pos - pinMin(i));
+                        weight = 1.0f / std::max(dist, epsilon);
+                    }
+                    if (relaxation > 0.0f) {
+                        float rdist = relaxation * halfDiameter;
+                        float cutoff = 1.0f / std::max(rdist, epsilon);
+                        weight = std::min(weight, cutoff);
+                    }
                     addPin(cells(i, j), newCell, offsets(i, j), pos - pinMed(i), weight);
                 }
             }
@@ -591,16 +604,29 @@ void MatrixBuilder::extendStar(const NetWirelengthFixedSizeTerminals &topo, xt::
             for (int j = 0; j < topo.netSize() + nbFixed; ++j) {
                 if (j == amn || j == amx) {
                     // Extreme pins are connected directly (gradient of one)
-                    float weight = 1.0 / std::max(halfDiameter, epsilon);
+                    float weight = 1.0f / std::max(halfDiameter, epsilon);
                     addPinOrFixed(cells(i, j), newCell, offsets(i, j), 0.0f, weight);
                 }
                 else {
                     // Non-extreme pins have a zero force at their current position
                     float pos = coords(i, j);
-                    float dist = std::min(pinMax(i) - pos, pos - pinMin(i));
-                    float rdist = relaxation * halfDiameter;
-                    float weight = 1.0 / std::max(std::max(rdist, dist), epsilon);
-                    if (b2bScale) weight /= (topo.netSize() + nbFixed - 1);
+                    float weight;
+                    if (b2bScale) {
+                        float w1 = 1.0f / std::max(pinMax(i) - pos, epsilon);
+                        float w2 = 1.0f / std::max(pos - pinMin(i), epsilon);
+                        // Other possibility, closer to actual B2B but not as good
+                        // weight = (w1 + w2) / (topo.netSize() + nbFixed - 1);
+                        weight = 2.0 * std::max(w1, w2) / (topo.netSize() + nbFixed - 1);
+                    }
+                    else {
+                        float dist = std::min(pinMax(i) - pos, pos - pinMin(i));
+                        weight = 1.0f / std::max(dist, epsilon);
+                    }
+                    if (relaxation > 0.0f) {
+                        float rdist = relaxation * halfDiameter;
+                        float cutoff = 1.0f / std::max(rdist, epsilon);
+                        weight = std::min(weight, cutoff);
+                    }
                     addPinOrFixed(cells(i, j), newCell, offsets(i, j), pos - pinMed(i), weight);
                 }
             }
