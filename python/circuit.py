@@ -151,3 +151,37 @@ class Circuit:
             self._cell_flip_y.ctypes.data_as(c_bool_p),
         )
 
+    def benchmark_quadratic_models(self, model_type, nb_steps, epsilon, relaxation):
+        """
+        Call the C++ library to o
+        """
+        model_types = {"STAR": 0, "BSTAR": 1, "B2B": 2}
+        assert epsilon > 0.0
+        assert 0.0 <= relaxation <= 1.0
+        assert nb_steps > 0
+        assert model_type in model_types.keys()
+
+        import ctypes
+        dll = ctypes.CDLL("./build/libcoloquinte.so")
+        c_bool_p = ctypes.POINTER(ctypes.c_char)
+        c_int_p = ctypes.POINTER(ctypes.c_int)
+        c_float_p = ctypes.POINTER(ctypes.c_float)
+        dll.benchmark_quadratic_models(
+            self.nb_cells,
+            self.nb_nets,
+            self._cell_width.ctypes.data_as(c_int_p),
+            self._cell_height.ctypes.data_as(c_int_p),
+            self._cell_fixed.ctypes.data_as(c_bool_p),
+            self._net_limits.ctypes.data_as(c_int_p),
+            self._pin_cells.ctypes.data_as(c_int_p),
+            self._pin_x.ctypes.data_as(c_int_p),
+            self._pin_y.ctypes.data_as(c_int_p),
+            self._cell_x.ctypes.data_as(c_int_p),
+            self._cell_y.ctypes.data_as(c_int_p),
+            self._cell_flip_x.ctypes.data_as(c_bool_p),
+            self._cell_flip_y.ctypes.data_as(c_bool_p),
+            model_types[model_type],
+            nb_steps,
+            ctypes.c_float(epsilon),
+            ctypes.c_float(relaxation)
+        )

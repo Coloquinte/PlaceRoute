@@ -18,6 +18,25 @@ extern "C" {
         char *cell_flip_x,
         char *cell_flip_y
     );
+    void benchmark_quadratic_models(
+        int nb_cells,
+        int nb_nets,
+        int *cell_widths,
+        int *cell_heights,
+        char *cell_fixed,
+        int *net_limits,
+        int *pin_cells,
+        int *pin_x_offsets,
+        int *pin_y_offsets,
+        int *cell_x,
+        int *cell_y,
+        char *cell_flip_x,
+        char *cell_flip_y,
+        int model_type,
+        int nb_steps,
+        float epsilon,
+        float relaxation
+    );
 }
 
 
