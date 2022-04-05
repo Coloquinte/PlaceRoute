@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(NoRoom2) {
     Rectangle area(0, 1, 0, 1);
     int nbCells = 3;
     std::vector<int> cellDemand = {4, 4, 4};
-    std::vector<float> cellTargetX = {0.0, 0.0, 0.0};
+    std::vector<float> cellTargetX = {1.0, 1.0, 1.0};
     std::vector<float> cellTargetY = {0.0, 0.0, 0.0};
     DensityLegalizer leg(area, nbCells);
     leg.updateCellDemand(cellDemand);
@@ -101,4 +101,40 @@ BOOST_AUTO_TEST_CASE(NoRoom2) {
     BOOST_CHECK_EQUAL(bisect.second.size(), 0);
 }
 
+BOOST_AUTO_TEST_CASE(Sorted1) {
+    Rectangle area(0, 1, 0, 1);
+    int nbCells = 4;
+    std::vector<int> cellDemand = {4, 4, 4, 4};
+    std::vector<float> cellTargetX = {0.0, 0.0, 1.0, 1.0};
+    std::vector<float> cellTargetY = {0.0, 0.0, 0.0, 0.0};
+    DensityLegalizer leg(area, nbCells);
+    leg.updateCellDemand(cellDemand);
+    leg.updateCellTargetX(cellTargetX);
+    leg.updateCellTargetY(cellTargetY);
+    auto bisect = leg.bisect(0.0, 0.0, 1.0, 0.0, 16LL, 16L, {0, 1, 2, 3}, LegalizationModel::L1);
+    BOOST_CHECK_EQUAL(bisect.first.size(), 2);
+    BOOST_CHECK_EQUAL(bisect.second.size(), 2);
+    BOOST_CHECK(bisect.first[0] == 0 || bisect.first[1] == 0);
+    BOOST_CHECK(bisect.first[0] == 1 || bisect.first[1] == 1);
+    BOOST_CHECK(bisect.second[0] == 2 || bisect.second[1] == 2);
+    BOOST_CHECK(bisect.second[0] == 3 || bisect.second[1] == 3);
+}
 
+BOOST_AUTO_TEST_CASE(Sorted2) {
+    Rectangle area(0, 1, 0, 1);
+    int nbCells = 4;
+    std::vector<int> cellDemand = {4, 4, 4, 4};
+    std::vector<float> cellTargetX = {1.0, 1.0, 0.0, 0.0};
+    std::vector<float> cellTargetY = {0.0, 0.0, 0.0, 0.0};
+    DensityLegalizer leg(area, nbCells);
+    leg.updateCellDemand(cellDemand);
+    leg.updateCellTargetX(cellTargetX);
+    leg.updateCellTargetY(cellTargetY);
+    auto bisect = leg.bisect(0.0, 0.0, 1.0, 0.0, 16LL, 16L, {0, 1, 2, 3}, LegalizationModel::L1);
+    BOOST_CHECK_EQUAL(bisect.first.size(), 2);
+    BOOST_CHECK_EQUAL(bisect.second.size(), 2);
+    BOOST_CHECK(bisect.second[0] == 0 || bisect.second[1] == 0);
+    BOOST_CHECK(bisect.second[0] == 1 || bisect.second[1] == 1);
+    BOOST_CHECK(bisect.first[0] == 2 || bisect.first[1] == 2);
+    BOOST_CHECK(bisect.first[0] == 3 || bisect.first[1] == 3);
+}
