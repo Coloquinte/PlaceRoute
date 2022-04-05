@@ -63,9 +63,19 @@ class DensityLegalizer {
     void check() const;
 
   private:
+    // Compute the current usage for each bin
     std::vector<std::vector<long long> > binUsage() const;
+
+    // Redo the bisection for these bins
     void rebisect(int x1, int y1, int x2, int y2, LegalizationModel leg);
+
+    // Bisection algorithm and helpers
     std::pair<std::vector<int>, std::vector<int> > bisect(float cx1, float cy1, float cx2, float cy2, long long capa1, long long capa2, std::vector<int> cells, LegalizationModel leg);
+
+    std::vector<std::pair<float, int> > computeCellCosts(float cx1, float cy1, float cx2, float cy2, std::vector<int> cells, LegalizationModel leg) const;
+    int findIdealSplitPos(const std::vector<std::pair<float, int> > &cellCosts) const;
+    int findConstrainedSplitPos(const std::vector<std::pair<float, int> > &cellCosts, int targetPos, long long capa1, long long capa2) const;
+    std::pair<std::vector<int>, std::vector<int> > doSplit(const std::vector<std::pair<float, int> > &cellCosts, int ind) const;
 
   private:
     // Problem data

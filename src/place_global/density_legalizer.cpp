@@ -200,8 +200,7 @@ std::vector<float> DensityLegalizer::simpleCoordY() const {
     return ret;
 }
 
-std::pair<std::vector<int>, std::vector<int> > DensityLegalizer::bisect(float cx1, float cy1, float cx2, float cy2, long long capa1, long long capa2, std::vector<int> cells, LegalizationModel leg) {
-    // First sort the cells
+std::vector<std::pair<float, int> > DensityLegalizer::computeCellCosts(float cx1, float cy1, float cx2, float cy2, std::vector<int> cells, LegalizationModel leg) const {
     // TODO: always add a secondary objective using squared distance
     std::vector<std::pair<float, int> > cellCosts;
     for (int c : cells) {
@@ -211,37 +210,61 @@ std::pair<std::vector<int>, std::vector<int> > DensityLegalizer::bisect(float cx
         cellCosts.emplace_back(cost, c);
     }
     std::sort(cellCosts.begin(), cellCosts.end(), [](std::pair<float, int> a, std::pair<float, int> b) { return a.first < b.first; });
-    for (int i = 0; i < cells.size(); ++i) {
-        cells[i] = cellCosts[i].second;
-    }
+    return cellCosts;
+}
 
-    // Ideal split: does it honor the capacity constraints?
-    // TODO
-
-    // Space-constrained split: one of the sides is full
-    int usageLeft = 0;
-    int capacityLeft = capa1;
-    int endSplit = 0;
-    while (endSplit < cells.size()) {
-        int demand = cellDemand_[cellCosts[endSplit].second];
-        usageLeft += demand;
-        if (usageLeft > capacityLeft) {
-            if (usageLeft - capacityLeft < demand / 2)
-                ++endSplit;
-            break;
-        }
-        ++endSplit;
-    }
-
-    // Implement the split
+std::pair<std::vector<int>, std::vector<int> > DensityLegalizer::doSplit(const std::vector<std::pair<float, int> > &cellCosts, int ind) const {
     std::pair<std::vector<int>, std::vector<int> > ret;
-    for (int i = 0; i < endSplit; ++i) {
-        ret.first.push_back(cells[i]);
+    for (int i = 0; i < ind; ++i) {
+        ret.first.push_back(cellCosts[i].second);
     }
-    for (int i = endSplit; i < cells.size(); ++i) {
-        ret.second.push_back(cells[i]);
+    for (int i = ind; i < cellCosts.size(); ++i) {
+        ret.second.push_back(cellCosts[i].second);
     }
     return ret;
+}
+
+int DensityLegalizer::findIdealSplitPos(const std::vector<std::pair<float, int> > &cellCosts) const {
+    // Find the ideal split position
+    int splitInd = 0;
+    for (; splitInd < cellCosts.size(); ++splitInd) {
+        if (cellCosts[splitInd].first > 0.0) break;
+    }
+    return splitInd;
+}
+
+int DensityLegalizer::findConstrainedSplitPos(const std::vector<std::pair<float, int> > &cellCosts, int targetPos, long long capa1, long long capa2) const {
+    long long demand1 = 0;
+    long long demand2 = 0;
+    for (int i = 0; i < targetPos; ++i) {
+        demand1 += cellDemand_[cellCosts[i].second];
+    }
+    for (int i = targetPos; i < cellCosts.size(); ++i) {
+        demand2 += cellDemand_[cellCosts[i].second];
+    }
+    int splitPos = targetPos;
+    // Remove from the left if overflowed
+    while (splitPos < cellCosts.size() && demand1 - capa1 > 0 && demand1 - capa1 > demand2 - capa2) {
+        int dem = cellDemand_[cellCosts[splitPos].second];
+        demand1 -= dem;
+        demand2 += dem;
+        ++splitPos;
+    }
+    // Remove from the right if overflowed
+    while (splitPos >= 0 && demand2 - capa2 > 0 && demand2 - capa2 > demand1 - capa1) {
+        int dem = cellDemand_[cellCosts[splitPos].second];
+        demand2 -= dem;
+        demand1 += dem;
+        ++splitPos;
+    }
+    return splitPos;
+}
+
+std::pair<std::vector<int>, std::vector<int> > DensityLegalizer::bisect(float cx1, float cy1, float cx2, float cy2, long long capa1, long long capa2, std::vector<int> cells, LegalizationModel leg) {
+    std::vector<std::pair<float, int> > cellCosts = computeCellCosts(cx1, cy1, cx2, cy2, cells, leg);
+    int idealSplitPos = findIdealSplitPos(cellCosts);
+    int splitPos = findConstrainedSplitPos(cellCosts, idealSplitPos, capa1, capa2);
+    return doSplit(cellCosts, splitPos);
 }
 
 void DensityLegalizer::rebisect(int x1, int y1, int x2, int y2, LegalizationModel leg) {
