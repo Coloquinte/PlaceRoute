@@ -165,7 +165,7 @@ xt::xtensor<float, 1> gradientDescent(const NetWirelength &topo, xt::xtensor<flo
 
 xt::xtensor<float, 1> conjugateGradientDescent(const NetWirelength &topo, xt::xtensor<float, 1> initial, DescentModel model, int nbSteps, float smoothing, float initialStepSize, float stepVariation) {
     assert (initialStepSize > 0.0);
-    assert (momentum >= 0.0 && momentum < 1.0);
+    assert (smoothing >= 0.0 && smoothing < 1.0);
     assert (stepVariation < 1.0);
     assert (initial.size() == topo.nbCells());
     reportHeader();
@@ -193,7 +193,7 @@ xt::xtensor<float, 1> conjugateGradientDescent(const NetWirelength &topo, xt::xt
 
 xt::xtensor<float, 1> nesterovGradientDescent(const NetWirelength &topo, xt::xtensor<float, 1> initial, DescentModel model, int nbSteps, float smoothing, float initialStepSize, float stepVariation) {
     assert (initialStepSize > 0.0);
-    assert (momentum >= 0.0 && momentum < 1.0);
+    assert (smoothing >= 0.0 && smoothing < 1.0);
     assert (stepVariation < 1.0);
     assert (initial.size() == topo.nbCells());
     reportHeader();
