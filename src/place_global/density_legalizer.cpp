@@ -5,8 +5,7 @@
 #include <cmath>
 #include <algorithm>
 
-namespace {
-float distance(float x1, float y1, float x2, float y2, LegalizationModel leg) {
+float DensityLegalizer::distance(float x1, float y1, float x2, float y2, LegalizationModel leg) {
     float dx = x1 - x2;
     float dy = y1 - y2;
     switch (leg) {
@@ -20,25 +19,37 @@ float distance(float x1, float y1, float x2, float y2, LegalizationModel leg) {
         return dx * dx + dy * dy;
     }
 }
+
+DensityLegalizer::DensityLegalizer(Rectangle area, int nbCells) : area_(area) {
+    nbCells_ = nbCells;
+    cellDemand_.assign(nbCells, 0LL);
+    cellTargetX_.assign(nbCells, 0.0f);
+    cellTargetY_.assign(nbCells, 0.0f);
+    updateBins(1, 1);
+    // Dumb initial placement
+    std::vector<int> pl;
+    for (int i = 0; i < nbCells; ++i) {
+        pl.push_back(i);
+    }
+    binCells_.emplace_back();
+    binCells_[0].push_back(pl);
+    check();
 }
 
-DensityLegalizer::DensityLegalizer(Rectangle area, int binsX, int binsY, std::vector<int> cellDemand, std::vector<float> cellTargetX, std::vector<float> cellTargetY) {
+void DensityLegalizer::updateBins(int binsX, int binsY) {
     nbBinsX_ = binsX;
     nbBinsY_ = binsY;
     for (int i = 0; i < binsX; ++i) {
         float n = 2 * i + 1;
-        binX_.push_back((n * area.minX + (2 * binsX - n) * area.maxX) / (2 * binsX));
+        binX_.push_back((n * area_.minX + (2 * binsX - n) * area_.maxX) / (2 * binsX));
     }
     for (int i = 0; i < binsY; ++i) {
         float n = 2 * i + 1;
-        binY_.push_back((n * area.minY + (2 * binsY - n) * area.maxY) / (2 * binsY));
+        binY_.push_back((n * area_.minY + (2 * binsY - n) * area_.maxY) / (2 * binsY));
     }
     // TODO: correctly subdivide the capacity
-    long long capacity = area.area() / (binsX * binsY);
+    long long capacity = area_.area() / (binsX * binsY);
     binCapacity_.assign(binsX, std::vector<long long>(binsY, capacity));
-    cellDemand_ = cellDemand;
-    cellTargetX_ = cellTargetX;
-    cellTargetY_ = cellTargetY;
 }
 
 float DensityLegalizer::distL1() const {
@@ -95,7 +106,11 @@ float DensityLegalizer::distL2() const {
 
 void DensityLegalizer::check() const {
     assert (binCapacity_.size() == nbBinsX());
+    assert (binCells_.size() == nbBinsX());
     for (const auto &bc : binCapacity_) {
+        assert (bc.size() == nbBinsY());
+    }
+    for (const auto &bc : binCells_) {
         assert (bc.size() == nbBinsY());
     }
     assert (binX_.size() == nbBinsX());
@@ -228,7 +243,9 @@ int DensityLegalizer::findIdealSplitPos(const std::vector<std::pair<float, int> 
     // Find the ideal split position
     int splitInd = 0;
     for (; splitInd < cellCosts.size(); ++splitInd) {
-        if (cellCosts[splitInd].first > 0.0) break;
+        if (cellCosts[splitInd].first > 0.0) {
+            break;
+        }
     }
     return splitInd;
 }
@@ -244,14 +261,14 @@ int DensityLegalizer::findConstrainedSplitPos(const std::vector<std::pair<float,
     }
     int splitPos = targetPos;
     // Remove from the left if overflowed
-    while (splitPos < cellCosts.size() && demand1 - capa1 > 0 && demand1 - capa1 > demand2 - capa2) {
-        int dem = cellDemand_[cellCosts[splitPos].second];
+    while (splitPos > 0 && demand1 - capa1 > 0 && demand1 - capa1 > demand2 - capa2) {
+        int dem = cellDemand_[cellCosts[splitPos-1].second];
         demand1 -= dem;
         demand2 += dem;
-        ++splitPos;
+        --splitPos;
     }
     // Remove from the right if overflowed
-    while (splitPos >= 0 && demand2 - capa2 > 0 && demand2 - capa2 > demand1 - capa1) {
+    while (splitPos < cellCosts.size() && demand2 - capa2 > 0 && demand2 - capa2 > demand1 - capa1) {
         int dem = cellDemand_[cellCosts[splitPos].second];
         demand2 -= dem;
         demand1 += dem;
