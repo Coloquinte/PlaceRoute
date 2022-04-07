@@ -57,6 +57,7 @@ class DensityLegalizer {
     float distL2Squared() const;
 
     // Algorithms to create an initial legalization from scratch
+    void assign();
     void bisect(LegalizationModel model);
 
     // Algorithms to improve the current legalization
