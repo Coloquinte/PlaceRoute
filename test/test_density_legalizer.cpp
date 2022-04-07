@@ -21,9 +21,11 @@ BOOST_AUTO_TEST_CASE(OneSide1) {
     leg.updateCellDemand(cellDemand);
     leg.updateCellTargetX(cellTargetX);
     leg.updateCellTargetY(cellTargetY);
-    auto bisect = leg.bisect(0.0, 0.0, 1.0, 0.0, 12LL, 12L, {0, 1, 2}, LegalizationModel::L1);
-    BOOST_CHECK_EQUAL(bisect.first.size(), 3);
-    BOOST_CHECK_EQUAL(bisect.second.size(), 0);
+    for (LegalizationModel mod : {LegalizationModel::L1, LegalizationModel::L2, LegalizationModel::L2Squared, LegalizationModel::LInf}) {
+        auto bisect = leg.bisect(0.0, 0.0, 1.0, 0.0, 12LL, 12L, {0, 1, 2}, mod);
+        BOOST_CHECK_EQUAL(bisect.first.size(), 3);
+        BOOST_CHECK_EQUAL(bisect.second.size(), 0);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(OneSide2) {
@@ -36,9 +38,11 @@ BOOST_AUTO_TEST_CASE(OneSide2) {
     leg.updateCellDemand(cellDemand);
     leg.updateCellTargetX(cellTargetX);
     leg.updateCellTargetY(cellTargetY);
-    auto bisect = leg.bisect(0.0, 0.0, 1.0, 0.0, 12LL, 12L, {0, 1, 2}, LegalizationModel::L1);
-    BOOST_CHECK_EQUAL(bisect.first.size(), 0);
-    BOOST_CHECK_EQUAL(bisect.second.size(), 3);
+    for (LegalizationModel mod : {LegalizationModel::L1, LegalizationModel::L2, LegalizationModel::L2Squared, LegalizationModel::LInf}) {
+        auto bisect = leg.bisect(0.0, 0.0, 1.0, 0.0, 12LL, 12L, {0, 1, 2}, mod);
+        BOOST_CHECK_EQUAL(bisect.first.size(), 0);
+        BOOST_CHECK_EQUAL(bisect.second.size(), 3);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(OneSide3) {
@@ -51,9 +55,11 @@ BOOST_AUTO_TEST_CASE(OneSide3) {
     leg.updateCellDemand(cellDemand);
     leg.updateCellTargetX(cellTargetX);
     leg.updateCellTargetY(cellTargetY);
-    auto bisect = leg.bisect(0.0, 0.0, 0.0, 1.0, 12LL, 12L, {0, 1, 2}, LegalizationModel::L1);
-    BOOST_CHECK_EQUAL(bisect.first.size(), 3);
-    BOOST_CHECK_EQUAL(bisect.second.size(), 0);
+    for (LegalizationModel mod : {LegalizationModel::L1, LegalizationModel::L2, LegalizationModel::L2Squared, LegalizationModel::LInf}) {
+        auto bisect = leg.bisect(0.0, 0.0, 0.0, 1.0, 12LL, 12L, {0, 1, 2}, mod);
+        BOOST_CHECK_EQUAL(bisect.first.size(), 3);
+        BOOST_CHECK_EQUAL(bisect.second.size(), 0);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(OneSide4) {
@@ -66,9 +72,11 @@ BOOST_AUTO_TEST_CASE(OneSide4) {
     leg.updateCellDemand(cellDemand);
     leg.updateCellTargetX(cellTargetX);
     leg.updateCellTargetY(cellTargetY);
-    auto bisect = leg.bisect(0.0, 0.0, 0.0, 1.0, 12LL, 12L, {0, 1, 2}, LegalizationModel::L1);
-    BOOST_CHECK_EQUAL(bisect.first.size(), 0);
-    BOOST_CHECK_EQUAL(bisect.second.size(), 3);
+    for (LegalizationModel mod : {LegalizationModel::L1, LegalizationModel::L2, LegalizationModel::L2Squared, LegalizationModel::LInf}) {
+        auto bisect = leg.bisect(0.0, 0.0, 0.0, 1.0, 12LL, 12L, {0, 1, 2}, mod);
+        BOOST_CHECK_EQUAL(bisect.first.size(), 0);
+        BOOST_CHECK_EQUAL(bisect.second.size(), 3);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(NoRoom1) {
@@ -81,9 +89,11 @@ BOOST_AUTO_TEST_CASE(NoRoom1) {
     leg.updateCellDemand(cellDemand);
     leg.updateCellTargetX(cellTargetX);
     leg.updateCellTargetY(cellTargetY);
-    auto bisect = leg.bisect(0.0, 0.0, 1.0, 0.0, 0LL, 12L, {0, 1, 2}, LegalizationModel::L1);
-    BOOST_CHECK_EQUAL(bisect.first.size(), 0);
-    BOOST_CHECK_EQUAL(bisect.second.size(), 3);
+    for (LegalizationModel mod : {LegalizationModel::L1, LegalizationModel::L2, LegalizationModel::L2Squared, LegalizationModel::LInf}) {
+        auto bisect = leg.bisect(0.0, 0.0, 1.0, 0.0, 0LL, 12L, {0, 1, 2}, mod);
+        BOOST_CHECK_EQUAL(bisect.first.size(), 0);
+        BOOST_CHECK_EQUAL(bisect.second.size(), 3);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(NoRoom2) {
@@ -96,9 +106,11 @@ BOOST_AUTO_TEST_CASE(NoRoom2) {
     leg.updateCellDemand(cellDemand);
     leg.updateCellTargetX(cellTargetX);
     leg.updateCellTargetY(cellTargetY);
-    auto bisect = leg.bisect(0.0, 0.0, 1.0, 0.0, 12LL, 0L, {0, 1, 2}, LegalizationModel::L1);
-    BOOST_CHECK_EQUAL(bisect.first.size(), 3);
-    BOOST_CHECK_EQUAL(bisect.second.size(), 0);
+    for (LegalizationModel mod : {LegalizationModel::L1, LegalizationModel::L2, LegalizationModel::L2Squared, LegalizationModel::LInf}) {
+        auto bisect = leg.bisect(0.0, 0.0, 1.0, 0.0, 12LL, 0L, {0, 1, 2}, mod);
+        BOOST_CHECK_EQUAL(bisect.first.size(), 3);
+        BOOST_CHECK_EQUAL(bisect.second.size(), 0);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(Sorted1) {
@@ -111,13 +123,15 @@ BOOST_AUTO_TEST_CASE(Sorted1) {
     leg.updateCellDemand(cellDemand);
     leg.updateCellTargetX(cellTargetX);
     leg.updateCellTargetY(cellTargetY);
-    auto bisect = leg.bisect(0.0, 0.0, 1.0, 0.0, 16LL, 16L, {0, 1, 2, 3}, LegalizationModel::L1);
-    BOOST_CHECK_EQUAL(bisect.first.size(), 2);
-    BOOST_CHECK_EQUAL(bisect.second.size(), 2);
-    BOOST_CHECK(bisect.first[0] == 0 || bisect.first[1] == 0);
-    BOOST_CHECK(bisect.first[0] == 1 || bisect.first[1] == 1);
-    BOOST_CHECK(bisect.second[0] == 2 || bisect.second[1] == 2);
-    BOOST_CHECK(bisect.second[0] == 3 || bisect.second[1] == 3);
+    for (LegalizationModel mod : {LegalizationModel::L1, LegalizationModel::L2, LegalizationModel::L2Squared, LegalizationModel::LInf}) {
+        auto bisect = leg.bisect(0.0, 0.0, 1.0, 0.0, 16LL, 16L, {0, 1, 2, 3}, mod);
+        BOOST_CHECK_EQUAL(bisect.first.size(), 2);
+        BOOST_CHECK_EQUAL(bisect.second.size(), 2);
+        BOOST_CHECK(bisect.first[0] == 0 || bisect.first[1] == 0);
+        BOOST_CHECK(bisect.first[0] == 1 || bisect.first[1] == 1);
+        BOOST_CHECK(bisect.second[0] == 2 || bisect.second[1] == 2);
+        BOOST_CHECK(bisect.second[0] == 3 || bisect.second[1] == 3);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(Sorted2) {
@@ -130,11 +144,13 @@ BOOST_AUTO_TEST_CASE(Sorted2) {
     leg.updateCellDemand(cellDemand);
     leg.updateCellTargetX(cellTargetX);
     leg.updateCellTargetY(cellTargetY);
-    auto bisect = leg.bisect(0.0, 0.0, 1.0, 0.0, 16LL, 16L, {0, 1, 2, 3}, LegalizationModel::L1);
-    BOOST_CHECK_EQUAL(bisect.first.size(), 2);
-    BOOST_CHECK_EQUAL(bisect.second.size(), 2);
-    BOOST_CHECK(bisect.second[0] == 0 || bisect.second[1] == 0);
-    BOOST_CHECK(bisect.second[0] == 1 || bisect.second[1] == 1);
-    BOOST_CHECK(bisect.first[0] == 2 || bisect.first[1] == 2);
-    BOOST_CHECK(bisect.first[0] == 3 || bisect.first[1] == 3);
+    for (LegalizationModel mod : {LegalizationModel::L1, LegalizationModel::L2, LegalizationModel::L2Squared, LegalizationModel::LInf}) {
+        auto bisect = leg.bisect(0.0, 0.0, 1.0, 0.0, 16LL, 16L, {0, 1, 2, 3}, mod);
+        BOOST_CHECK_EQUAL(bisect.first.size(), 2);
+        BOOST_CHECK_EQUAL(bisect.second.size(), 2);
+        BOOST_CHECK(bisect.second[0] == 0 || bisect.second[1] == 0);
+        BOOST_CHECK(bisect.second[0] == 1 || bisect.second[1] == 1);
+        BOOST_CHECK(bisect.first[0] == 2 || bisect.first[1] == 2);
+        BOOST_CHECK(bisect.first[0] == 3 || bisect.first[1] == 3);
+    }
 }
