@@ -266,15 +266,23 @@ int DensityLegalizer::findConstrainedSplitPos(const std::vector<std::pair<float,
     }
     int splitPos = targetPos;
     // Remove from the left if overflowed
-    while (splitPos > 0 && demand1 - capa1 > 0 && demand1 - capa1 > demand2 - capa2) {
+    while (splitPos > 0 && demand1 - capa1 > 0) {
         int dem = cellDemand_[cellCosts[splitPos-1].second];
+        if (demand1 - capa1 < demand2 - capa2 + dem) {
+            // Stop if overflow would be bigger on the other side
+            break;
+        }
         demand1 -= dem;
         demand2 += dem;
         --splitPos;
     }
     // Remove from the right if overflowed
-    while (splitPos < cellCosts.size() && demand2 - capa2 > 0 && demand2 - capa2 > demand1 - capa1) {
+    while (splitPos < cellCosts.size() && demand2 - capa2 > 0) {
         int dem = cellDemand_[cellCosts[splitPos].second];
+        if (demand2 - capa2 < demand1 - capa1 + dem) {
+            // Stop if overflow would be bigger on the other side
+            break;
+        }
         demand2 -= dem;
         demand1 += dem;
         ++splitPos;
@@ -305,4 +313,12 @@ void DensityLegalizer::rebisect(int x1, int y1, int x2, int y2, LegalizationMode
     );
     binCells_[x1][y1] = b.first;
     binCells_[x2][y2] = b.second;
+}
+
+void DensityLegalizer::assign() {
+    // Just put each cell in the nearest bin
+}
+
+void DensityLegalizer::bisect(LegalizationModel model) {
+    // Recursively apply bisection
 }
