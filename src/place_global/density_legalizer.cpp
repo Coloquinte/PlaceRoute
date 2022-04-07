@@ -20,19 +20,20 @@ float DensityLegalizer::distance(float x1, float y1, float x2, float y2, Legaliz
     }
 }
 
+std::vector<int> DensityLegalizer::allCells() const {
+    std::vector<int> pl;
+    for (int i = 0; i < nbCells_; ++i) {
+        pl.push_back(i);
+    }
+    return pl;
+}
+
 DensityLegalizer::DensityLegalizer(Rectangle area, int nbCells) : area_(area) {
     nbCells_ = nbCells;
     cellDemand_.assign(nbCells, 0LL);
     cellTargetX_.assign(nbCells, 0.0f);
     cellTargetY_.assign(nbCells, 0.0f);
     updateBins(1, 1);
-    // Dumb initial placement
-    std::vector<int> pl;
-    for (int i = 0; i < nbCells; ++i) {
-        pl.push_back(i);
-    }
-    binCells_.emplace_back();
-    binCells_[0].push_back(pl);
     check();
 }
 
@@ -50,6 +51,10 @@ void DensityLegalizer::updateBins(int binsX, int binsY) {
     // TODO: correctly subdivide the capacity
     long long capacity = area_.area() / (binsX * binsY);
     binCapacity_.assign(binsX, std::vector<long long>(binsY, capacity));
+
+    // Dumb initial placement: everything to bin (0, 0)
+    binCells_.emplace_back();
+    binCells_[0].push_back(allCells());
 }
 
 float DensityLegalizer::distL1() const {

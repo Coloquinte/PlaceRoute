@@ -75,6 +75,7 @@ class DensityLegalizer {
 
     // Utilities
     static float distance(float x1, float y1, float x2, float y2, LegalizationModel leg);
+    std::vector<int> allCells() const;
 
     // Bisection algorithm
     std::pair<std::vector<int>, std::vector<int> > bisect(float cx1, float cy1, float cx2, float cy2, long long capa1, long long capa2, std::vector<int> cells, LegalizationModel leg);
@@ -95,9 +96,13 @@ class DensityLegalizer {
     int nbCells_;
     int nbBinsX_;
     int nbBinsY_;
-    std::vector<std::vector<long long> > binCapacity_;
+
+    // Bin properties
     std::vector<float> binX_;
     std::vector<float> binY_;
+    std::vector<std::vector<long long> > binCapacity_;
+
+    // Cell properties
     std::vector<int> cellDemand_;
     std::vector<float> cellTargetX_;
     std::vector<float> cellTargetY_;
