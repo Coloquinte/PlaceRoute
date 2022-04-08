@@ -101,6 +101,8 @@ class DensityLegalizer {
     // Bin properties
     std::vector<float> binX_;
     std::vector<float> binY_;
+    std::vector<int> binLimitX_;
+    std::vector<int> binLimitY_;
     std::vector<std::vector<long long> > binCapacity_;
 
     // Cell properties
