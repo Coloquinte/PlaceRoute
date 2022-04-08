@@ -40,21 +40,28 @@ DensityLegalizer::DensityLegalizer(Rectangle area, int nbCells) : area_(area) {
 void DensityLegalizer::updateBins(int binsX, int binsY) {
     nbBinsX_ = binsX;
     nbBinsY_ = binsY;
+    for (int i = 0; i < binsX + 1; ++i) {
+        binLimitX_.push_back(area_.minX + (i * (area_.maxX - area_.minX) / (binsX + 1)));
+    }
+    for (int i = 0; i < binsY + 1; ++i) {
+        binLimitY_.push_back(area_.minY + (i * (area_.maxY - area_.minY) / (binsY + 1)));
+    }
     for (int i = 0; i < binsX; ++i) {
-        float n = 2 * i + 1;
-        binX_.push_back((n * area_.minX + (2 * binsX - n) * area_.maxX) / (2 * binsX));
+        binX_.push_back(0.5f * (binLimitX_[i] + binLimitX_[i+1]));
     }
     for (int i = 0; i < binsY; ++i) {
-        float n = 2 * i + 1;
-        binY_.push_back((n * area_.minY + (2 * binsY - n) * area_.maxY) / (2 * binsY));
+        binY_.push_back(0.5f * (binLimitY_[i] + binLimitY_[i+1]));
     }
-    // TODO: correctly subdivide the capacity
-    long long capacity = area_.area() / (binsX * binsY);
-    binCapacity_.assign(binsX, std::vector<long long>(binsY, capacity));
+    binCapacity_.assign(binsX, std::vector<long long>(binsY, 0));
+    for (int i = 0; i < binsX; ++i) {
+        for (int j = 0; j < binsY; ++j) {
+            binCapacity_[i][j] = ((long long) binLimitY_[j+1] - binLimitY_[j]) * ((long long) binLimitX_[j+1] - binLimitX_[j]);
+        }
+    }
 
     // Dumb initial placement: everything to bin (0, 0)
-    binCells_.emplace_back();
-    binCells_[0].push_back(allCells());
+    binCells_.assign(binsX, std::vector<std::vector<int> >(binsY));
+    binCells_[0][0] = allCells();
 }
 
 float DensityLegalizer::distL1() const {
