@@ -323,7 +323,25 @@ void DensityLegalizer::rebisect(int x1, int y1, int x2, int y2, LegalizationMode
 }
 
 void DensityLegalizer::assign() {
+    // Clear the allocation
+    for (int i = 0; i < nbBinsX_; ++i) {
+        for (int j = 0; j < nbBinsY_; ++j) {
+            binCells_[i][j].clear();
+        }
+    }
+
     // Just put each cell in the nearest bin
+    for (int c = 0; c < nbCells(); ++c) {
+        long long x = std::round(cellTargetX_[c]);
+        long long y = std::round(cellTargetY_[c]);
+        int i = std::lower_bound(binLimitX_.begin(), binLimitX_.end(), x) - binLimitX_.begin();
+        i = std::max(std::min(i, nbBinsX() - 1), 0);
+        int j = std::lower_bound(binLimitY_.begin(), binLimitY_.end(), y) - binLimitY_.begin();
+        j = std::max(std::min(j, nbBinsY() - 1), 0);
+        assert (i < binCells_.size());
+        assert (j < binCells_[i].size());
+        binCells_[i][j].push_back(c);
+    }
 }
 
 void DensityLegalizer::bisect(LegalizationModel model) {
