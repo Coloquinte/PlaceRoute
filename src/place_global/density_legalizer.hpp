@@ -38,6 +38,8 @@ class DensityLegalizer {
     const std::vector<float> &cellTargetY() const { return cellTargetY_; }
     const std::vector<std::vector<long long> > &binCapacity() const { return binCapacity_; }
     std::vector<std::vector<long long> > binUsage() const;
+    const std::vector<float> &binX() const { return binX_; }
+    const std::vector<float> &binY() const { return binY_; }
 
     // Problem updates
     void updateBins(int binsX, int binsY);
@@ -79,7 +81,7 @@ class DensityLegalizer {
     std::vector<int> allCells() const;
 
     // Bisection algorithm
-    std::pair<std::vector<int>, std::vector<int> > bisect(float cx1, float cy1, float cx2, float cy2, long long capa1, long long capa2, std::vector<int> cells, LegalizationModel leg);
+    std::pair<std::vector<int>, std::vector<int> > bisect(float cx1, float cy1, float cx2, float cy2, long long capa1, long long capa2, std::vector<int> cells, LegalizationModel leg) const;
 
   private:
     // Redo the bisection for these bins

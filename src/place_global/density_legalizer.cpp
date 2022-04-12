@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cmath>
 #include <algorithm>
+#include <iostream>
 
 float DensityLegalizer::distance(float x1, float y1, float x2, float y2, LegalizationModel leg) {
     float dx = x1 - x2;
@@ -297,7 +298,7 @@ int DensityLegalizer::findConstrainedSplitPos(const std::vector<std::pair<float,
     return splitPos;
 }
 
-std::pair<std::vector<int>, std::vector<int> > DensityLegalizer::bisect(float cx1, float cy1, float cx2, float cy2, long long capa1, long long capa2, std::vector<int> cells, LegalizationModel leg) {
+std::pair<std::vector<int>, std::vector<int> > DensityLegalizer::bisect(float cx1, float cy1, float cx2, float cy2, long long capa1, long long capa2, std::vector<int> cells, LegalizationModel leg) const {
     std::vector<std::pair<float, int> > cellCosts = computeCellCosts(cx1, cy1, cx2, cy2, cells, leg);
     int idealSplitPos = findIdealSplitPos(cellCosts);
     int splitPos = findConstrainedSplitPos(cellCosts, idealSplitPos, capa1, capa2);
@@ -344,6 +345,118 @@ void DensityLegalizer::assign() {
     }
 }
 
+
+/*
+ * Representation of an area during recursive split
+ */
+struct SplitArea {
+    const DensityLegalizer &leg;
+    int minI;
+    int maxI;
+    int minJ;
+    int maxJ;
+    std::vector<int> cells;
+
+    SplitArea(const DensityLegalizer &leg, int minI, int maxI, int minJ, int maxJ)
+        : leg(leg), minI(minI), maxI(maxI), minJ(minJ), maxJ(maxJ) {
+        assert (maxI > minI);
+        assert (maxJ > minJ);
+    }
+
+    int nbBins() const {
+        return (maxI - minI) * (maxJ - minJ);
+    }
+
+    long long capacity() const {
+        long long capa = 0;
+        for (int i = minI; i < maxI; ++i) {
+            for (int j = minJ; j < maxJ; ++j) {
+                capa += leg.binCapacity()[i][j];
+            }
+        }
+        return capa;
+    }
+
+    float x() const {
+        float mean = 0.0;
+        for (int i = minI; i < maxI; ++i) {
+            for (int j = minJ; j < maxJ; ++j) {
+                mean += leg.binCapacity()[i][j] * leg.binX()[i];
+            }
+        }
+        return mean / capacity();
+    }
+
+    float y() const {
+        long long totCapa = 0;
+        float mean = 0.0;
+        for (int i = minI; i < maxI; ++i) {
+            for (int j = minJ; j < maxJ; ++j) {
+                mean += leg.binCapacity()[i][j] * leg.binY()[j];
+            }
+        }
+        return mean / capacity();
+    }
+
+    std::pair<SplitArea, SplitArea> splitX(LegalizationModel model) const {
+        assert (maxI - minI > 1);
+        int mid = (maxI + minI) / 2;
+        SplitArea s1(leg, minI, mid, minJ, maxJ);
+        SplitArea s2(leg, mid, maxI, minJ, maxJ);
+        auto p = leg.bisect(s1.x(), s1.y(), s2.x(), s2.y(), s1.capacity(), s2.capacity(), cells, model);
+        s1.cells = p.first;
+        s2.cells = p.second;
+        return std::make_pair(s1, s2);
+    }
+
+    std::pair<SplitArea, SplitArea> splitY(LegalizationModel model) const {
+        assert (maxJ - minJ > 1);
+        int mid = (maxJ + minJ) / 2;
+        SplitArea s1(leg, minI, maxI, minJ, mid);
+        SplitArea s2(leg, minI, maxI, mid, maxJ);
+        auto p = leg.bisect(s1.x(), s1.y(), s2.x(), s2.y(), s1.capacity(), s2.capacity(), cells, model);
+        s1.cells = p.first;
+        s2.cells = p.second;
+        return std::make_pair(s1, s2);
+    }
+
+    std::pair<SplitArea, SplitArea> split(LegalizationModel model) const {
+        assert (maxJ - minJ > 1 || maxI - minI > 1);
+        if (maxJ - minJ < maxI - minI) {
+            return splitX(model);
+        }
+        else {
+            return splitY(model);
+        }
+    }
+};
+
 void DensityLegalizer::bisect(LegalizationModel model) {
     // Recursively apply bisection
+    std::vector<SplitArea> split;
+    split.emplace_back(*this, 0, nbBinsX(), 0, nbBinsY());
+    split.back().cells = allCells();
+    while (true) {
+        bool allDone = true;
+        std::vector<SplitArea> nextSplit;
+        for (const SplitArea &s : split) {
+            if (s.nbBins() > 1) {
+                auto p = s.split(model);
+                nextSplit.push_back(p.first);
+                nextSplit.push_back(p.second);
+                allDone = false;
+            }
+            else {
+                nextSplit.push_back(s);
+            }
+        }
+        std::swap(split, nextSplit);
+        if (allDone) {
+            break;
+        }
+    }
+    for (const SplitArea &s : split) {
+        assert (s.nbBins() == 1);
+        binCells_[s.minI][s.minJ] = s.cells;
+    }
 }
