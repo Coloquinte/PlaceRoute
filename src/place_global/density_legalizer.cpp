@@ -39,13 +39,17 @@ DensityLegalizer::DensityLegalizer(Rectangle area, int nbCells) : area_(area) {
 }
 
 void DensityLegalizer::updateBins(int binsX, int binsY) {
+    binLimitX_.clear();
+    binLimitY_.clear();
+    binX_.clear();
+    binY_.clear();
     nbBinsX_ = binsX;
     nbBinsY_ = binsY;
     for (int i = 0; i < binsX + 1; ++i) {
-        binLimitX_.push_back(area_.minX + (i * (area_.maxX - area_.minX) / (binsX + 1)));
+        binLimitX_.push_back(area_.minX + (i * (area_.maxX - area_.minX) / binsX));
     }
     for (int i = 0; i < binsY + 1; ++i) {
-        binLimitY_.push_back(area_.minY + (i * (area_.maxY - area_.minY) / (binsY + 1)));
+        binLimitY_.push_back(area_.minY + (i * (area_.maxY - area_.minY) / binsY));
     }
     for (int i = 0; i < binsX; ++i) {
         binX_.push_back(0.5f * (binLimitX_[i] + binLimitX_[i+1]));
@@ -56,7 +60,7 @@ void DensityLegalizer::updateBins(int binsX, int binsY) {
     binCapacity_.assign(binsX, std::vector<long long>(binsY, 0));
     for (int i = 0; i < binsX; ++i) {
         for (int j = 0; j < binsY; ++j) {
-            binCapacity_[i][j] = ((long long) binLimitY_[j+1] - binLimitY_[j]) * ((long long) binLimitX_[j+1] - binLimitX_[j]);
+            binCapacity_[i][j] = ((long long) binLimitY_[j+1] - binLimitY_[j]) * ((long long) binLimitX_[i+1] - binLimitX_[i]);
         }
     }
 

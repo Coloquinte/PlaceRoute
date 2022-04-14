@@ -36,8 +36,10 @@ class DensityLegalizer {
     const std::vector<int> &cellDemand() const { return cellDemand_; }
     const std::vector<float> &cellTargetX() const { return cellTargetX_; }
     const std::vector<float> &cellTargetY() const { return cellTargetY_; }
+
     const std::vector<std::vector<long long> > &binCapacity() const { return binCapacity_; }
     std::vector<std::vector<long long> > binUsage() const;
+
     const std::vector<float> &binX() const { return binX_; }
     const std::vector<float> &binY() const { return binY_; }
 
