@@ -227,14 +227,14 @@ BOOST_AUTO_TEST_CASE(LargeAssign) {
 BOOST_AUTO_TEST_CASE(LargeBisect) {
     Rectangle area(-100, 50, 100, 200);
     int nbCells = 10000;
-    int nbBinsX = 20;
-    int nbBinsY = 10;
+    int nbBinsX = 19;
+    int nbBinsY = 11;
     std::vector<int> cellDemand;
     std::vector<float> cellTargetX;
     std::vector<float> cellTargetY;
     std::mt19937 rgen;
     for (int i = 0; i < nbCells; ++i) {
-        cellDemand.push_back(i);
+        cellDemand.push_back(1);
         cellTargetX.push_back(std::uniform_real_distribution<float>(area.minX, area.maxX)(rgen));
         cellTargetY.push_back(std::uniform_real_distribution<float>(area.minY, area.maxY)(rgen));
     }
