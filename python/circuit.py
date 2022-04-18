@@ -185,3 +185,71 @@ class Circuit:
             ctypes.c_float(epsilon),
             ctypes.c_float(relaxation)
         )
+
+    def partition(self):
+        """
+        Try and partition the circuit using KaHypar's interface
+        """
+        import kahypar
+
+        hyperedge_indices = [int(i) for i in self._net_limits]
+        hyperedges = [int(i) for i in self._pin_cells]
+
+        node_weights = [1 for i in range(self.nb_cells)]
+        edge_weights = [1 for i in range(self.nb_nets)]
+
+        k=2
+        hypergraph = kahypar.Hypergraph(self.nb_cells, self.nb_nets, hyperedge_indices, hyperedges, k, edge_weights, node_weights)
+
+        context = kahypar.Context()
+        context.loadINIconfiguration("/home/alnurn/Documents/kahypar/config/km1_kKaHyPar_eco_sea20.ini")
+
+        context.setK(k)
+        context.setEpsilon(0.03)
+
+        kahypar.partition(hypergraph, context)
+
+    def export_hgr(self, filename):
+        """
+        Export the circuit in hgr format for hypergraph partitioning tools.
+
+        Node areas are not exported
+        """
+        edges = []
+        for i in range(self.nb_nets):
+            b = self._net_limits[i]
+            e = self._net_limits[i+1]
+            pins = [int(self._pin_cells[j]) for j in range(b, e)]
+            # Uniquify the pins and ensure that there are at least two
+            pins = list(sorted(set(pins)))
+            if len(pins) < 2:
+                continue
+            edges.append(pins)
+        self.export_hgr_data(filename, self.nb_cells, edges)
+
+    def export_edge_hgr(self, filename):
+        """
+        Export the circuit in hgr format to partition the edges, instead of the nodes
+        """
+        edges = [[] for n in range(self.nb_cells)]
+        net_ind = 0
+        for i in range(self.nb_nets):
+            b = self._net_limits[i]
+            e = self._net_limits[i+1]
+            pins = [int(self._pin_cells[j]) for j in range(b, e)]
+            # Uniquify the pins and ensure that there are at least two
+            pins = list(sorted(set(pins)))
+            if len(pins) < 2:
+                continue
+            for p in pins:
+                edges[p].append(net_ind)
+            net_ind += 1
+        self.export_hgr_data(filename, net_ind, edges)
+
+
+    def export_hgr_data(self, filename, nb_cells, edges):
+        with open(filename, "w") as f:
+            print(f"{len(edges)} {nb_cells}", file=f)
+            for edge in edges:
+                pins = " ".join(str(p + 1) for p in edge)
+                print(pins, file=f)
