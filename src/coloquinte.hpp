@@ -69,6 +69,14 @@ struct Circuit {
         return netLimits.back();
     }
 
+    bool isFixed(int cell) {
+        return cellFixed[cell];
+    }
+
+    long long getArea(int cell) {
+        return static_cast<long long>(cellWidths[cell]) * static_cast<long long>(cellHeights[cell]);
+    }
+
     static Circuit create_ispd(
         int nb_cells,
         int nb_nets,
