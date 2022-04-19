@@ -2,6 +2,7 @@
 #include "coloquinte.hpp"
 #include "place_global/wirelength_model.hpp"
 #include "place_global/gradient_descent.hpp"
+#include "place_global/density_legalizer.hpp"
 
 #include <xtensor/xio.hpp>
 #include <xtensor/xrandom.hpp>
@@ -43,40 +44,29 @@ void place_ispd(
               << circuit.nbNets() << " nets and "
               << circuit.nbPins() << " pins."
               << std::endl;
-    auto xtopo = NetWirelength::xTopology(circuit);
 
-    xt::random::seed(0);
-    //std::cout << "Initial X HPWL: " << xtopo.valueHPWL(xplace) << std::endl;
-    //std::cout << "Initial X LSE: " << xtopo.valueLSE(xplace, 1.0) << std::endl;
-    //std::cout << "Initial X WA: " << xtopo.valueWA(xplace, 1.0) << std::endl;
-    //std::cout << "Gradient X HPWL: " << xtopo.gradHPWL(xplace) << std::endl;
-    //std::cout << "Gradient X LSE: " << xtopo.gradLSE(xplace, 1.0) << std::endl;
-    //std::cout << "Gradient X WA: " << xtopo.gradWA(xplace, 1.0) << std::endl;
-    //std::cout << "Proximal step X: " << xtopo.proximalStep(xplace, 1.0) << std::endl;
-    /*
-    int nbSteps = 20;
-    float epsilon = 1.0;
-    for (float relaxation : {1.0, 0.5, 0.1, 0.0}) {
-        auto starPlace = xtopo.starSolve();
-        std::cout << "INIT\t" << epsilon << "\t" << relaxation << "\t" << 0 << "\t" << xtopo.valueHPWL(starPlace) << std::endl;
-        for (int i = 0; i < nbSteps; ++i) {
-            starPlace = xtopo.starSolve(starPlace, epsilon, relaxation, true);
-            std::cout << "STAR\t" << epsilon << "\t" << relaxation << "\t" << i + 1 << "\t" << xtopo.valueHPWL(starPlace) << std::endl;
-        }
+    auto xtopo = NetWirelength::xTopology(circuit);
+    auto ytopo = NetWirelength::yTopology(circuit);
+
+    auto xplace = xtopo.starSolve();
+    auto yplace = ytopo.starSolve();
+    std::cout << "Initial HPWL: " << xtopo.valueHPWL(xplace) + ytopo.valueHPWL(yplace) << std::endl;
+
+    std::vector<int> cellDemand;
+    std::vector<float> cellTargetX;
+    std::vector<float> cellTargetY;
+    for (int i = 0; i < circuit.nbCells(); ++i) {
+        cellDemand.push_back(circuit.isFixed(i) ? 0 : circuit.getArea(i));
+        cellTargetX.push_back(xplace[i]);
+        cellTargetY.push_back(yplace[i]);
     }
-    */
-    auto starPlace = xtopo.starSolve();
-    int nbSteps = 100;
-    float stepSize = 1.0;
-    float momentum = 0.9;
-    //DescentModel model = DescentModel::Proximal;
-    //for (float momentum : {0.0, 0.9, 0.95, 0.975, 0.9875}) {
-    for (float smoothing : {1.0, 2.0, 4.0}) {
-        for (DescentModel model : {DescentModel::WA, DescentModel::Proximal}) {
-            conjugateGradientDescent(xtopo, starPlace, model, nbSteps, smoothing, stepSize);
-            gradientDescent(xtopo, starPlace, model, nbSteps, momentum, smoothing, stepSize);
-        }
-    }
+    DensityLegalizer leg(Rectangle(0, 10000, 0, 10000), xtopo.nbCells());
+    leg.updateBins(10, 10);
+    leg.updateCellDemand(cellDemand);
+    leg.updateCellTargetX(cellTargetX);
+    leg.updateCellTargetY(cellTargetY);
+    leg.assign();
+    std::cout << "Overflow: " << leg.meanOverflow() << std::endl;
 }
 
 void benchmark_quadratic_models(
