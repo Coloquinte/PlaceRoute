@@ -82,7 +82,7 @@ float DensityLegalizer::distL1() const {
             }
         }
     }
-    return disp;
+    return disp / totalDemand();
 }
 
 float DensityLegalizer::distLInf() const {
@@ -98,7 +98,7 @@ float DensityLegalizer::distLInf() const {
             }
         }
     }
-    return disp;
+    return disp / totalDemand();
 }
 
 float DensityLegalizer::distL2Squared() const {
@@ -114,7 +114,7 @@ float DensityLegalizer::distL2Squared() const {
             }
         }
     }
-    return disp;
+    return disp / totalDemand();
 }
 
 float DensityLegalizer::distL2() const {
