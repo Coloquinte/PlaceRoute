@@ -1,9 +1,11 @@
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.10)
 PROJECT(COLOQUINTE)
 
+add_subdirectory(thirdparty/xtl)
+add_subdirectory(thirdparty/xtensor)
+
 FIND_PACKAGE(Boost REQUIRED COMPONENTS system filesystem iostreams program_options unit_test_framework)
-FIND_PACKAGE(XTensor REQUIRED)
 FIND_PACKAGE(Eigen3 3.3 REQUIRED NO_MODULE)
 
 INCLUDE_DIRECTORIES(
