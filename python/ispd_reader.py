@@ -23,11 +23,20 @@ def read_aux(filename):
     node_files = [n for n in files if n.endswith(".nodes")]
     net_files = [n for n in files if n.endswith(".nets")]
     pl_files = [n for n in files if n.endswith(".pl")]
-    if  len(node_files) != 1 and len(net_files) != 1 and len(pl_files) != 1:
-        raise RuntimeError(f"There should be one file of each type in .aux")
+    scl_files = [n for n in files if n.endswith(".scl")]
+    if  len(node_files) != 1:
+        raise RuntimeError(f"There should be a .nodes file in .aux")
+    if  len(net_files) != 1:
+        raise RuntimeError(f"There should be a .nets file in .aux")
+    if  len(pl_files) != 1:
+        raise RuntimeError(f"There should be a .pl file in .aux")
+    if  len(scl_files) != 1:
+        raise RuntimeError(f"There should be a .scl file in .aux")
     return (os.path.join(dirname, node_files[0]),
             os.path.join(dirname, net_files[0]),
-            os.path.join(dirname, pl_files[0]))
+            os.path.join(dirname, pl_files[0]),
+            os.path.join(dirname, scl_files[0]),
+            )
 
 
 def open_file(name):
@@ -197,11 +206,85 @@ def read_place(filename, cell_names):
     return cell_x, cell_y, flip_x, flip_y
 
 
+def read_rows(filename):
+    nb_rows = None
+    rows = []
+    with open_file(filename) as f:
+        lines = [l.strip() for l in f]
+        for line in lines:
+            if line.startswith("NumRows"):
+                assert nb_rows is None
+                nb_rows = parse_num_line(line)
+        row_descs = []
+        in_row = False
+        for line in lines:
+            if line.startswith("CoreRow"):
+                row_descs.append([])
+                in_row = True
+            elif line.startswith("End"):
+                in_row = False
+            elif in_row:
+                row_descs[-1].extend(line.replace(":", " ").split())
+        for desc in row_descs:
+            min_x = None
+            min_y = None
+            width = None
+            height = None
+            for i in range(1, len(desc)):
+                if desc[i-1] == "Coordinate":
+                    min_y = int(desc[i])
+                if desc[i-1] == "SubrowOrigin":
+                    min_x = int(desc[i])
+                if desc[i-1] == "NumSites":
+                    width = int(desc[i])
+                if desc[i-1] == "Height":
+                    height = int(desc[i])
+
+            assert min_x is not None
+            assert min_y is not None
+            assert width is not None
+            assert height is not None
+            rows.append((min_x, min_y, min_x + width, min_y + height))
+
+        min_x = [row[0] for row in rows]
+        min_y = [row[1] for row in rows]
+        max_x = [row[2] for row in rows]
+        max_y = [row[3] for row in rows]
+        heights = [row[3] - row[1] for row in rows]
+
+        # Various checks, since our placement is simplified
+
+        # All rows have same height
+        heights = list(sorted(set(heights)))
+        if len(set(heights)) != 1:
+            raise RuntimeError(f"Only one row height is supported, got {', '.join([str(i) for i in heights])}")
+        row_height = heights[0]
+
+        # All rows have same min x, otherwise we take the min
+        min_x = list(sorted(set(min_x)))
+        if len(min_x) != 1:
+            print(f"Only one row origin is supported, got {', '.join([str(i) for i in min_x])}")
+
+        # All rows have same max x, otherwise we take the min
+        max_x = list(sorted(set(max_x)))
+        if len(max_x) != 1:
+            print(f"Only one row end is supported, got {', '.join([str(i) for i in max_x])}")
+
+        # Rows are contiguous
+        min_y.sort()
+        for y, nxt_y in zip(min_y[:-1], min_y[1:]):
+            if nxt_y - y  != row_height:
+                raise RuntimeError(f"Hole between rows at coordinates {y} and {nxt_y}")
+
+        return (min(min_x), min(min_y), max(max_x), max(max_y)), row_height
+
+
 def read_ispd(filename):
-    node_filename, net_filename, pl_filename = read_aux(filename)
+    node_filename, net_filename, pl_filename, scl_filename = read_aux(filename)
     cell_names, cell_widths, cell_heights, cell_fixed = read_nodes(node_filename)
     net_names, net_limits, pin_cell, pin_x, pin_y = read_nets(net_filename, cell_names, cell_widths, cell_heights)
     cell_x, cell_y, flip_x, flip_y = read_place(pl_filename, cell_names)
+    pl_area, row_height = read_rows(scl_filename)
     ret = circuit.Circuit()
     ret._nb_cells = len(cell_names)
     ret._nb_nets = len(net_names)
@@ -218,6 +301,8 @@ def read_ispd(filename):
     ret._cell_y = cell_y
     ret._cell_flip_x = flip_x
     ret._cell_flip_y = flip_y
+    ret._pl_area = pl_area
+    ret._row_height = row_height
     ret.check()
     return ret
 

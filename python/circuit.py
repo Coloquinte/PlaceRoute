@@ -19,6 +19,8 @@ class Circuit:
         self._pin_cells = None
         self._pin_x = None
         self._pin_y = None
+        self._pl_area = None
+        self._row_height = None
 
     @property
     def nb_cells(self):
@@ -69,6 +71,14 @@ class Circuit:
     def cell_flip_y(self):
         return self._cell_flip_y
 
+    @property
+    def pl_area(self):
+        return self._pl_area
+
+    @property
+    def row_height(self):
+        return self._row_height
+
     def check(self):
         # No member is None
         assert self._nb_cells is not None
@@ -86,6 +96,8 @@ class Circuit:
         assert self._pin_cells is not None
         assert self._pin_x is not None
         assert self._pin_y is not None
+        assert self._pl_area is not None
+        assert self._row_height is not None
 
         assert isinstance(self._cell_width, np.ndarray)
         assert isinstance(self._cell_height, np.ndarray)
