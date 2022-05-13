@@ -4,6 +4,7 @@ PROJECT(COLOQUINTE)
 
 add_subdirectory(thirdparty/xtl)
 add_subdirectory(thirdparty/xtensor)
+add_subdirectory(thirdparty/kahypar)
 
 FIND_PACKAGE(Boost REQUIRED COMPONENTS system filesystem iostreams program_options unit_test_framework)
 FIND_PACKAGE(Eigen3 3.3 REQUIRED NO_MODULE)

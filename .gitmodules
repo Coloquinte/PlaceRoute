@@ -4,3 +4,6 @@
 [submodule "thirdparty/xtensor/xtensor"]
 	path = thirdparty/xtensor/xtensor
 	url = https://github.com/xtensor-stack/xtensor
+[submodule "thirdparty/kahypar/kahypar"]
+	path = thirdparty/kahypar/kahypar
+	url = https://github.com/kahypar/kahypar
