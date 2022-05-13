@@ -2,6 +2,20 @@
 
 #include <vector>
 
+
+struct Rectangle {
+    Rectangle() : minX(0), maxX(0), minY(0), maxY(0) {}
+    Rectangle(int minX, int maxX, int minY, int maxY) : minX(minX), maxX(maxX), minY(minY), maxY(maxY) {}
+    int minX;
+    int maxX;
+    int minY;
+    int maxY;
+
+    int width() const { return maxX - minX; }
+    int height() const { return maxY - minY; }
+    long long area() const { return (long long) width() * (long long) height(); }
+};
+
 extern "C" {
     void place_ispd(
         int nb_cells,
@@ -16,7 +30,8 @@ extern "C" {
         int *cell_x,
         int *cell_y,
         char *cell_flip_x,
-        char *cell_flip_y
+        char *cell_flip_y,
+        int min_x, int max_x, int min_y, int max_y
     );
     void benchmark_quadratic_models(
         int nb_cells,
@@ -56,6 +71,7 @@ struct Circuit {
     std::vector<int> cellY;
     std::vector<char> cellFlipX;
     std::vector<char> cellFlipY;
+    Rectangle placementArea;
 
     int nbCells() const {
         return cellWidths.size();
@@ -77,7 +93,7 @@ struct Circuit {
         return static_cast<long long>(cellWidths[cell]) * static_cast<long long>(cellHeights[cell]);
     }
 
-    static Circuit create_ispd(
+    static Circuit createIspd(
         int nb_cells,
         int nb_nets,
         int *cell_widths,
@@ -90,7 +106,8 @@ struct Circuit {
         int *cell_x,
         int *cell_y,
         char *cell_flip_x,
-        char *cell_flip_y
+        char *cell_flip_y,
+        int min_x, int max_x, int min_y, int max_y
     );
 
     void check() const;
