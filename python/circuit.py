@@ -161,6 +161,7 @@ class Circuit:
             self._cell_y.ctypes.data_as(c_int_p),
             self._cell_flip_x.ctypes.data_as(c_bool_p),
             self._cell_flip_y.ctypes.data_as(c_bool_p),
+            *self._pl_area
         )
 
     def benchmark_quadratic_models(self, model_type, nb_steps, epsilon, relaxation):

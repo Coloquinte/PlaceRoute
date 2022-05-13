@@ -2,19 +2,6 @@
 
 #include "coloquinte.hpp"
 
-struct Rectangle {
-    Rectangle(int minX, int maxX, int minY, int maxY) : minX(minX), maxX(maxX), minY(minY), maxY(maxY) {}
-    int minX;
-    int maxX;
-    int minY;
-    int maxY;
-
-    int width() const { return maxX - minX; }
-    int height() const { return maxY - minY; }
-    long long area() const { return (long long) width() * (long long) height(); }
-};
-
-
 enum LegalizationModel { L1, L2, LInf, L2Squared };
 
 /**
