@@ -62,13 +62,25 @@ void place_ispd(
         cellTargetX.push_back(xplace[i]);
         cellTargetY.push_back(yplace[i]);
     }
-    DensityLegalizer leg(Rectangle(0, 10000, 0, 10000), xtopo.nbCells());
+    DensityLegalizer leg(circuit.placementArea, xtopo.nbCells());
     leg.updateBins(10, 10);
     leg.updateCellDemand(cellDemand);
     leg.updateCellTargetX(cellTargetX);
     leg.updateCellTargetY(cellTargetY);
     leg.assign();
-    std::cout << "Overflow: " << leg.meanOverflow() << std::endl;
+    std::cout << "Before leg:\n"
+              << "\toverflow " << leg.meanOverflow() << "\n"
+              << "\tL1 " << leg.distL1() << "\n"
+              << "\tL2 " << leg.distL2() << "\n"
+              << "\tLInf " << leg.distLInf() << "\n"
+              << std::endl;
+    leg.bisect(LegalizationModel::L2Squared);
+    std::cout << "After leg:\n"
+              << "\toverflow " << leg.meanOverflow() << "\n"
+              << "\tL1 " << leg.distL1() << "\n"
+              << "\tL2 " << leg.distL2() << "\n"
+              << "\tLInf " << leg.distLInf() << "\n"
+              << std::endl;
 }
 
 void benchmark_quadratic_models(
