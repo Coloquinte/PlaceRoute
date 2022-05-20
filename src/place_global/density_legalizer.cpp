@@ -69,12 +69,25 @@ void DensityLegalizer::updateBins(int binsX, int binsY) {
     binCells_[0][0] = allCells();
 }
 
+float DensityLegalizer::metrics(LegalizationModel model) const {
+    switch (model) {
+        case LegalizationModel::L1:
+        return distL1();
+        case LegalizationModel::L2:
+        return distL2();
+        case LegalizationModel::LInf:
+        return distLInf();
+        default:
+        return distL2Squared();
+    }
+}
+
 float DensityLegalizer::distL1() const {
     float disp = 0.0f;
     for (int i = 0; i < nbBinsX_; ++i) {
         for (int j = 0; j < nbBinsY_; ++j) {
             float x = binX_[i];
-            float y = binY_[i];
+            float y = binY_[j];
             for (int c : binCells_[i][j]) {
                 float dx = cellTargetX_[c] - x;
                 float dy = cellTargetY_[c] - y;
@@ -90,7 +103,7 @@ float DensityLegalizer::distLInf() const {
     for (int i = 0; i < nbBinsX_; ++i) {
         for (int j = 0; j < nbBinsY_; ++j) {
             float x = binX_[i];
-            float y = binY_[i];
+            float y = binY_[j];
             for (int c : binCells_[i][j]) {
                 float dx = cellTargetX_[c] - x;
                 float dy = cellTargetY_[c] - y;
@@ -106,7 +119,7 @@ float DensityLegalizer::distL2Squared() const {
     for (int i = 0; i < nbBinsX_; ++i) {
         for (int j = 0; j < nbBinsY_; ++j) {
             float x = binX_[i];
-            float y = binY_[i];
+            float y = binY_[j];
             for (int c : binCells_[i][j]) {
                 float dx = cellTargetX_[c] - x;
                 float dy = cellTargetY_[c] - y;
@@ -371,6 +384,14 @@ struct SplitArea {
         return (maxI - minI) * (maxJ - minJ);
     }
 
+    long long demand() const {
+        long long demand = 0;
+        for (int c : cells) {
+            demand += leg.cellDemand()[c];
+        }
+        return demand;
+    }
+
     long long capacity() const {
         long long capa = 0;
         for (int i = minI; i < maxI; ++i) {
@@ -392,7 +413,6 @@ struct SplitArea {
     }
 
     float y() const {
-        long long totCapa = 0;
         float mean = 0.0;
         for (int i = minI; i < maxI; ++i) {
             for (int j = minJ; j < maxJ; ++j) {

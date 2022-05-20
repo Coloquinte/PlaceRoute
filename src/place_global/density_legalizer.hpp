@@ -42,6 +42,7 @@ class DensityLegalizer {
     float rmsOverflow() const;
 
     // Quality metrics for the legalization
+    float metrics(LegalizationModel model) const;
     float distL1() const;
     float distL2() const;
     float distLInf() const;
