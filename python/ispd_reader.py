@@ -131,16 +131,24 @@ def read_nets(filename, cell_names, cell_widths, cell_heights):
             line = line.replace(":", " ")
             if line.startswith("NetDegree"):
                 vals = line.split()
-                assert len(vals) == 3
-                net_degree = int(vals[-2])
-                name = vals[-1]
+                assert 2 <= len(vals) <= 3
+                net_degree = int(vals[1])
+                if len(vals) == 3:
+                    name = vals[2]
+                else:
+                    name = f"n{len(nets)}"
                 nets.append((name, net_degree, []))
                 continue
             vals = line.split()
-            assert len(vals) == 4
-            cell, direction, x, y = vals
-            x = float(x)
-            y = float(y)
+            assert len(vals) == 4 or len(vals) == 2
+            if len(vals) == 4:
+                cell, direction, x, y = vals
+                x = float(x)
+                y = float(y)
+            else:
+                cell, direction = vals
+                x = 0.0
+                y = 0.0
             assert cell in name_dir
             nets[-1][2].append((name_dir[cell], direction, x, y))
     total_pins = 0
@@ -183,6 +191,7 @@ def read_place(filename, cell_names):
     cell_y = np.zeros(len(cell_names), dtype=np.int32)
     flip_x = np.zeros(len(cell_names), dtype=np.bool)
     flip_y = np.zeros(len(cell_names), dtype=np.bool)
+    orients = set()
     with open_file(filename) as f:
         first_line_found = False
         for line in f:
@@ -202,7 +211,10 @@ def read_place(filename, cell_names):
             cell_ind = name_dir[cell]
             cell_x[cell_ind] = int(x)
             cell_y[cell_ind] = int(y)
-            assert orient == "N"
+            if orient != "N":
+                orients.add(orient)
+    if len(orients) != 0:
+        print(f"Non-default orientations were encountered in the file: {', '.join(orients)}")
     return cell_x, cell_y, flip_x, flip_y
 
 
@@ -231,13 +243,13 @@ def read_rows(filename):
             width = None
             height = None
             for i in range(1, len(desc)):
-                if desc[i-1] == "Coordinate":
+                if desc[i-1].lower() == "coordinate":
                     min_y = int(desc[i])
-                if desc[i-1] == "SubrowOrigin":
+                if desc[i-1].lower() == "subroworigin":
                     min_x = int(desc[i])
-                if desc[i-1] == "NumSites":
+                if desc[i-1].lower() == "numsites":
                     width = int(desc[i])
-                if desc[i-1] == "Height":
+                if desc[i-1].lower() == "height":
                     height = int(desc[i])
 
             assert min_x is not None
