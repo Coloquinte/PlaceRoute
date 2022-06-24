@@ -169,6 +169,22 @@ void DensityLegalizer::check() const {
     }
 }
 
+void DensityLegalizer::report() const {
+    std::cout << "Total demand " << totalDemand() << std::endl;
+    std::cout << "Total capacity " << totalCapacity() << std::endl;
+    std::cout << "Area (" << area_.minX << ", " << area_.maxX << ") x (" << area_.minY << ", " << area_.maxY << ")" << std::endl;
+    std::cout << "X limits";
+    for (auto l : binLimitX_) {
+        std::cout << " " << l;
+    }
+    std::cout << std::endl;
+    std::cout << "Y limits";
+    for (auto l : binLimitY_) {
+        std::cout << " " << l;
+    }
+    std::cout << std::endl;
+}
+
 std::vector<std::vector<long long> > DensityLegalizer::binUsage() const {
     std::vector<std::vector<long long> > ret(nbBinsX(), std::vector<long long>(nbBinsY()));
     for (int i = 0; i < nbBinsX_; ++i) {
@@ -462,6 +478,7 @@ struct SplitArea {
 };
 
 void DensityLegalizer::bisect(LegalizationModel model) {
+    report();
     // Recursively apply bisection
     std::vector<SplitArea> split;
     split.emplace_back(*this, 0, nbBinsX(), 0, nbBinsY());
@@ -475,6 +492,18 @@ void DensityLegalizer::bisect(LegalizationModel model) {
                 nextSplit.push_back(p.first);
                 nextSplit.push_back(p.second);
                 allDone = false;
+                std::cout << "Split region: "
+                          << "\tcapa " << s.capacity() << std::endl
+                          << "\tdemand " << s.demand() << std::endl
+                          << std::endl;
+                std::cout << "S1: "
+                          << "\tcapa " << p.first.capacity() << std::endl
+                          << "\tdemand " << p.first.demand() << std::endl
+                          << std::endl;
+                std::cout << "S2: "
+                          << "\tcapa " << p.second.capacity() << std::endl
+                          << "\tdemand " << p.second.demand() << std::endl
+                          << std::endl;
             }
             else {
                 nextSplit.push_back(s);
