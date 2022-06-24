@@ -288,7 +288,7 @@ def read_rows(filename):
             if nxt_y - y  != row_height:
                 raise RuntimeError(f"Hole between rows at coordinates {y} and {nxt_y}")
 
-        return (min(min_x), min(max_x), max(min_y), max(max_y)), row_height
+        return (min(min_x), min(max_x), min(min_y), max(max_y)), row_height
 
 
 def read_ispd(filename):
