@@ -48,9 +48,11 @@ void DensityLegalizer::updateBins(int binsX, int binsY) {
     for (int i = 0; i < binsX + 1; ++i) {
         binLimitX_.push_back(area_.minX + (i * (area_.maxX - area_.minX) / binsX));
     }
+    assert (binLimitX_.size() == binsX + 1);
     for (int i = 0; i < binsY + 1; ++i) {
         binLimitY_.push_back(area_.minY + (i * (area_.maxY - area_.minY) / binsY));
     }
+    assert (binLimitY_.size() == binsY + 1);
     for (int i = 0; i < binsX; ++i) {
         binX_.push_back(0.5f * (binLimitX_[i] + binLimitX_[i+1]));
     }
@@ -60,7 +62,11 @@ void DensityLegalizer::updateBins(int binsX, int binsY) {
     binCapacity_.assign(binsX, std::vector<long long>(binsY, 0));
     for (int i = 0; i < binsX; ++i) {
         for (int j = 0; j < binsY; ++j) {
-            binCapacity_[i][j] = ((long long) binLimitY_[j+1] - binLimitY_[j]) * ((long long) binLimitX_[i+1] - binLimitX_[i]);
+            long long w = binLimitX_[i+1] - binLimitX_[i];
+            long long h = binLimitY_[j+1] - binLimitY_[j];
+            assert (w >= 0);
+            assert (h >= 0);
+            binCapacity_[i][j] = w * h;
         }
     }
 
