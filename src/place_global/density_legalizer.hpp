@@ -65,6 +65,7 @@ class DensityLegalizer {
     std::vector<float> spreadCoordY() const;
 
     void check() const;
+    void report() const;
 
     // Utilities
     static float distance(float x1, float y1, float x2, float y2, LegalizationModel leg);
