@@ -249,4 +249,6 @@ class MatrixBuilder {
     std::vector<float> initial_;
 };
 
+std::vector<float> tensorToVector(const xt::xtensor<float, 1> &t);
+xt::xtensor<float, 1> vectorToTensor(const std::vector<float> &t);
 

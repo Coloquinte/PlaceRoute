@@ -18,6 +18,7 @@ SET(SOURCES
   src/place_global/wirelength_model.cpp
   src/place_global/gradient_descent.cpp
   src/place_global/density_legalizer.cpp
+  src/place_global/place_global.cpp
 )
 
 add_library(coloquinte SHARED ${SOURCES})
