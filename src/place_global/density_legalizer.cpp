@@ -173,6 +173,7 @@ void DensityLegalizer::report() const {
     std::cout << "Total demand " << totalDemand() << std::endl;
     std::cout << "Total capacity " << totalCapacity() << std::endl;
     std::cout << "Area (" << area_.minX << ", " << area_.maxX << ") x (" << area_.minY << ", " << area_.maxY << ")" << std::endl;
+    /*
     std::cout << "X limits";
     for (auto l : binLimitX_) {
         std::cout << " " << l;
@@ -183,6 +184,12 @@ void DensityLegalizer::report() const {
         std::cout << " " << l;
     }
     std::cout << std::endl;
+    */
+    std::cout << "Overflow " << meanOverflow() << std::endl;
+    std::cout << "L1 " << distL1() << std::endl;
+    std::cout << "L2 " << distL2() << std::endl;
+    std::cout << "LInf " << distLInf() << std::endl;
+
 }
 
 std::vector<std::vector<long long> > DensityLegalizer::binUsage() const {
@@ -478,7 +485,6 @@ struct SplitArea {
 };
 
 void DensityLegalizer::bisect(LegalizationModel model) {
-    report();
     // Recursively apply bisection
     std::vector<SplitArea> split;
     split.emplace_back(*this, 0, nbBinsX(), 0, nbBinsY());
@@ -492,18 +498,6 @@ void DensityLegalizer::bisect(LegalizationModel model) {
                 nextSplit.push_back(p.first);
                 nextSplit.push_back(p.second);
                 allDone = false;
-                std::cout << "Split region: "
-                          << "\tcapa " << s.capacity() << std::endl
-                          << "\tdemand " << s.demand() << std::endl
-                          << std::endl;
-                std::cout << "S1: "
-                          << "\tcapa " << p.first.capacity() << std::endl
-                          << "\tdemand " << p.first.demand() << std::endl
-                          << std::endl;
-                std::cout << "S2: "
-                          << "\tcapa " << p.second.capacity() << std::endl
-                          << "\tdemand " << p.second.demand() << std::endl
-                          << std::endl;
             }
             else {
                 nextSplit.push_back(s);
