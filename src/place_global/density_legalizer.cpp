@@ -38,6 +38,11 @@ DensityLegalizer::DensityLegalizer(Rectangle area, int nbCells) : area_(area) {
     check();
 }
 
+DensityLegalizer::DensityLegalizer(const Circuit &circuit) : DensityLegalizer(circuit.placementArea, circuit.nbCells()) {
+    // TODO: setup to the right size
+    updateBins(10, 10);
+}
+
 void DensityLegalizer::updateBins(int binsX, int binsY) {
     binLimitX_.clear();
     binLimitY_.clear();

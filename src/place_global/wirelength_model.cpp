@@ -755,3 +755,11 @@ xt::xtensor<float, 1> NetWirelength::b2bSolve(const xt::xtensor<float, 1> &pl, f
     MatrixBuilder bd = MatrixBuilder::createB2B(*this, pl, epsilon);
     return bd.solve();
 }
+
+std::vector<float> tensorToVector(const xt::xtensor<float, 1> &t) {
+    return std::vector<float>(t.begin(), t.end());
+}
+
+xt::xtensor<float, 1> vectorToTensor(const std::vector<float> &t) {
+    return xt::adapt(t.data(), {t.size()});
+}

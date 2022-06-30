@@ -10,6 +10,7 @@ enum LegalizationModel { L1, L2, LInf, L2Squared };
 class DensityLegalizer {
   public:
     DensityLegalizer(Rectangle area, int nbCells);
+    DensityLegalizer(const Circuit &circuit);
 
     // Accessors
     int nbCells() const { return nbCells_; }
