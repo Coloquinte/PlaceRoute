@@ -3,6 +3,7 @@
 #include "place_global/wirelength_model.hpp"
 #include "place_global/gradient_descent.hpp"
 #include "place_global/density_legalizer.hpp"
+#include "place_global/place_global.hpp"
 
 #include <xtensor/xio.hpp>
 #include <xtensor/xrandom.hpp>
@@ -46,41 +47,7 @@ void place_ispd(
               << circuit.nbNets() << " nets and "
               << circuit.nbPins() << " pins."
               << std::endl;
-
-    auto xtopo = NetWirelength::xTopology(circuit);
-    auto ytopo = NetWirelength::yTopology(circuit);
-
-    auto xplace = xtopo.starSolve();
-    auto yplace = ytopo.starSolve();
-    std::cout << "Initial HPWL: " << xtopo.valueHPWL(xplace) + ytopo.valueHPWL(yplace) << std::endl;
-
-    std::vector<int> cellDemand;
-    std::vector<float> cellTargetX;
-    std::vector<float> cellTargetY;
-    for (int i = 0; i < circuit.nbCells(); ++i) {
-        cellDemand.push_back(circuit.isFixed(i) ? 0 : circuit.getArea(i));
-        cellTargetX.push_back(xplace[i]);
-        cellTargetY.push_back(yplace[i]);
-    }
-    DensityLegalizer leg(circuit.placementArea, xtopo.nbCells());
-    leg.updateBins(10, 10);
-    leg.updateCellDemand(cellDemand);
-    leg.updateCellTargetX(cellTargetX);
-    leg.updateCellTargetY(cellTargetY);
-    leg.assign();
-    std::cout << "Before leg:\n"
-              << "\toverflow " << leg.meanOverflow() << "\n"
-              << "\tL1 " << leg.distL1() << "\n"
-              << "\tL2 " << leg.distL2() << "\n"
-              << "\tLInf " << leg.distLInf() << "\n"
-              << std::endl;
-    leg.bisect(LegalizationModel::L2Squared);
-    std::cout << "After leg:\n"
-              << "\toverflow " << leg.meanOverflow() << "\n"
-              << "\tL1 " << leg.distL1() << "\n"
-              << "\tL2 " << leg.distL2() << "\n"
-              << "\tLInf " << leg.distLInf() << "\n"
-              << std::endl;
+    GlobalPlacer::place(circuit);
 }
 
 void benchmark_quadratic_models(

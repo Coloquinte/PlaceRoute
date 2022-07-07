@@ -45,7 +45,9 @@ class NetWirelength {
     // Direct solutions
     xt::xtensor<float, 1> starSolve() const;
     xt::xtensor<float, 1> starSolve(const xt::xtensor<float, 1> &pl, float epsilon, float relaxation=0.0, bool b2bScale=false) const;
+    xt::xtensor<float, 1> starSolvePenalized(const xt::xtensor<float, 1> &pl, float epsilon, const xt::xtensor<float, 1> &targets, const xt::xtensor<float, 1> &forces, float cutoffDistance, float relaxation=0.0, bool b2bScale=false) const;
     xt::xtensor<float, 1> b2bSolve(const xt::xtensor<float, 1> &pl, float epsilon) const;
+    xt::xtensor<float, 1> b2bSolvePenalized(const xt::xtensor<float, 1> &pl, float epsilon, const xt::xtensor<float, 1> &targets, const xt::xtensor<float, 1> &forces, float cutoffDistance) const;
 
     // Consistency checker
     void check() const;
@@ -230,6 +232,8 @@ class MatrixBuilder {
     static MatrixBuilder createStar(const NetWirelength &topo, xt::xtensor<float, 1> pl, float epsilon, float relaxation, bool b2bScale);
     void extendStar(const NetWirelengthFixedSize &topo, xt::xtensor<float, 1> pl, float epsilon, float relaxation, bool b2bScale);
     void extendStar(const NetWirelengthFixedSizeTerminals &topo, xt::xtensor<float, 1> pl, float epsilon, float relaxation, bool b2bScale);
+    void addQuadraticPenalty(xt::xtensor<float, 1> target, xt::xtensor<float, 1> forceConstants);
+    void addLinearPenalty(xt::xtensor<float, 1> target, xt::xtensor<float, 1> pl, xt::xtensor<float, 1> forces, float cutoffDistance);
 
     // Bound to bound model, with local approximation from the current placement
     static MatrixBuilder createB2B(const NetWirelength &topo, xt::xtensor<float, 1> pl, float epsilon);

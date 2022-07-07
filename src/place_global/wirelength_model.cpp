@@ -626,6 +626,23 @@ void MatrixBuilder::extendStar(const NetWirelengthFixedSizeTerminals &topo, xt::
     }
 }
 
+void MatrixBuilder::addQuadraticPenalty(xt::xtensor<float, 1> target, xt::xtensor<float, 1> forceConstants) {
+    // Placement target + spring constants
+    for (int c = 0; c < target.size(); ++c) {
+        rhs_[c] += forceConstants[c] * target[c];
+        mat_.emplace_back(c, c, forceConstants[c]);
+    }
+}
+
+void MatrixBuilder::addLinearPenalty(xt::xtensor<float, 1> target, xt::xtensor<float, 1> pl, xt::xtensor<float, 1> forces, float cutoffDistance) {
+    // Placement target + strengths at cutoff distance
+    xt::xtensor<float, 1> forceConstants = xt::zeros<float>({pl.size()});
+    for (size_t c = 0; c < target.size(); ++c) {
+        forceConstants[c] = forces[c] / std::max(cutoffDistance, std::abs(target[c] - pl[c]));
+    }
+    addQuadraticPenalty(target, forceConstants);
+}
+
 MatrixBuilder MatrixBuilder::createB2B(const NetWirelength &topo, xt::xtensor<float, 1> pl, float epsilon) {
     MatrixBuilder bd(topo.nbCells());
     bd.initial_ = std::vector<float>(pl.begin(), pl.end());
@@ -751,8 +768,20 @@ xt::xtensor<float, 1> NetWirelength::starSolve(const xt::xtensor<float, 1> &pl, 
     return bd.solve();
 }
 
+xt::xtensor<float, 1> NetWirelength::starSolvePenalized(const xt::xtensor<float, 1> &pl, float epsilon, const xt::xtensor<float, 1> &targets, const xt::xtensor<float, 1> &forces, float cutoffDistance, float relaxation, bool b2bScale) const {
+    MatrixBuilder bd = MatrixBuilder::createStar(*this, pl, epsilon, relaxation, b2bScale);
+    bd.addLinearPenalty(targets, pl, forces, cutoffDistance);
+    return bd.solve();
+}
+
 xt::xtensor<float, 1> NetWirelength::b2bSolve(const xt::xtensor<float, 1> &pl, float epsilon) const {
     MatrixBuilder bd = MatrixBuilder::createB2B(*this, pl, epsilon);
+    return bd.solve();
+}
+
+xt::xtensor<float, 1> NetWirelength::b2bSolvePenalized(const xt::xtensor<float, 1> &pl, float epsilon, const xt::xtensor<float, 1> &targets, const xt::xtensor<float, 1> &forces, float cutoffDistance) const {
+    MatrixBuilder bd = MatrixBuilder::createB2B(*this, pl, epsilon);
+    bd.addLinearPenalty(targets, pl, forces, cutoffDistance);
     return bd.solve();
 }
 

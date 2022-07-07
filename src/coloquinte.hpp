@@ -89,7 +89,7 @@ struct Circuit {
         return cellFixed[cell];
     }
 
-    long long getArea(int cell) {
+    long long getArea(int cell) const {
         return static_cast<long long>(cellWidths[cell]) * static_cast<long long>(cellHeights[cell]);
     }
 
