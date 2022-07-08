@@ -164,6 +164,11 @@ class Circuit:
             *self._pl_area
         )
 
+    def benchmark_all_quadratic_models(self):
+        for model_type in ["STAR", "BSTAR", "B2B"]:
+            for epsilon in [0.1, 1.0, 10.0]:
+                self.benchmark_quadratic_models(model_type, 20, epsilon, 0.0)
+
     def benchmark_quadratic_models(self, model_type, nb_steps, epsilon, relaxation):
         """
         Call the C++ library to o
