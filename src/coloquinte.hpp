@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <cmath>
 
 
 struct Rectangle {
@@ -15,6 +16,8 @@ struct Rectangle {
     int height() const { return maxY - minY; }
     long long area() const { return (long long) width() * (long long) height(); }
 };
+
+enum LegalizationModel { L1, L2, LInf, L2Squared };
 
 extern "C" {
     void place_ispd(

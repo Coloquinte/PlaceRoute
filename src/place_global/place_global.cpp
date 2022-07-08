@@ -33,7 +33,7 @@ std::pair<std::vector<float>, std::vector<float> > GlobalPlacer::place(const Cir
         leg.updateCellTargetX(tensorToVector(xplace));
         leg.updateCellTargetY(tensorToVector(yplace));
         leg.assign();
-        float forceFactor = 0.01 * i;
+        float forceFactor = 0.001 * i;
         auto xtarget = vectorToTensor(leg.simpleCoordX());
         auto ytarget = vectorToTensor(leg.simpleCoordY());
         float wirelengthPlace = xtopo.valueHPWL(xplace) + ytopo.valueHPWL(yplace);
