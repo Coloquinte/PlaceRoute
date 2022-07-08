@@ -2,8 +2,6 @@
 
 #include "coloquinte.hpp"
 
-enum LegalizationModel { L1, L2, LInf, L2Squared };
-
 /**
  * Representation of an almost legalized placement, where density constraints are met per bin
  */
