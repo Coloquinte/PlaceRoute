@@ -257,38 +257,54 @@ def read_rows(filename):
             assert width is not None
             assert height is not None
             rows.append((min_x, min_y, min_x + width, min_y + height))
+        return rows
 
-        min_x = [row[0] for row in rows]
-        min_y = [row[1] for row in rows]
-        max_x = [row[2] for row in rows]
-        max_y = [row[3] for row in rows]
-        heights = [row[3] - row[1] for row in rows]
 
-        # Various checks, since our placement is simplified
+def rows_to_numpy(rows):
+    min_x = np.array([row[0] for row in rows], dtype=np.int32)
+    min_y = np.array([row[1] for row in rows], dtype=np.int32)
+    max_x = np.array([row[2] for row in rows], dtype=np.int32)
+    max_y = np.array([row[3] for row in rows], dtype=np.int32)
+    return min_x, min_y, max_x, max_y
 
-        # All rows have same height
-        heights = list(sorted(set(heights)))
-        if len(set(heights)) != 1:
-            raise RuntimeError(f"Only one row height is supported, got {', '.join([str(i) for i in heights])}")
-        row_height = heights[0]
 
-        # All rows have same min x, otherwise we take the min
-        min_x = list(sorted(set(min_x)))
-        if len(min_x) != 1:
-            print(f"Only one row origin is supported, got {', '.join([str(i) for i in min_x])}")
+def rows_to_area(rows):
+    min_x = [row[0] for row in rows]
+    min_y = [row[1] for row in rows]
+    max_x = [row[2] for row in rows]
+    max_y = [row[3] for row in rows]
 
-        # All rows have same max x, otherwise we take the min
-        max_x = list(sorted(set(max_x)))
-        if len(max_x) != 1:
-            print(f"Only one row end is supported, got {', '.join([str(i) for i in max_x])}")
+    # Various checks, since our placement is simplified
 
-        # Rows are contiguous
-        min_y.sort()
-        for y, nxt_y in zip(min_y[:-1], min_y[1:]):
-            if nxt_y - y  != row_height:
-                raise RuntimeError(f"Hole between rows at coordinates {y} and {nxt_y}")
+    # All rows have same min x, otherwise we take the min
+    min_x = list(sorted(set(min_x)))
+    if len(min_x) != 1:
+        print(f"Only one row origin is supported, got {', '.join([str(i) for i in min_x])}")
 
-        return (min(min_x), min(max_x), min(min_y), max(max_y)), row_height
+    # All rows have same max x, otherwise we take the min
+    max_x = list(sorted(set(max_x)))
+    if len(max_x) != 1:
+        print(f"Only one row end is supported, got {', '.join([str(i) for i in max_x])}")
+
+    # Rows are contiguous
+    row_y = [p for p in zip(min_y, max_y)]
+    row_y.sort()
+    for i in range(len(row_y)-1):
+        y_b = row_y[i+1][0]
+        y_e = row_y[i][1]
+        if y_b != y_e:
+            print(f"Hole between rows at coordinates {y_b} and {y_e}")
+
+    return (min(min_x), min(max_x), min(min_y), max(max_y))
+
+
+def rows_to_height(rows):
+    heights = [row[3] - row[1] for row in rows]
+    # All rows have same height
+    heights = list(sorted(set(heights)))
+    if len(set(heights)) != 1:
+        raise RuntimeError(f"Only one row height is supported, got {', '.join([str(i) for i in heights])}")
+    return heights[0]
 
 
 def read_ispd(filename):
@@ -296,25 +312,43 @@ def read_ispd(filename):
     cell_names, cell_widths, cell_heights, cell_fixed = read_nodes(node_filename)
     net_names, net_limits, pin_cell, pin_x, pin_y = read_nets(net_filename, cell_names, cell_widths, cell_heights)
     cell_x, cell_y, flip_x, flip_y = read_place(pl_filename, cell_names)
-    pl_area, row_height = read_rows(scl_filename)
+    rows = read_rows(scl_filename)
+
     ret = circuit.Circuit()
     ret._nb_cells = len(cell_names)
     ret._nb_nets = len(net_names)
+
+    # Setup cell properties
     ret._cell_name = cell_names
     ret._cell_width = cell_widths
     ret._cell_height = cell_heights
     ret._cell_fixed = cell_fixed
+
+    # Setup nets and pins
     ret._net_name = net_names
     ret._net_limits = net_limits
     ret._pin_cells = pin_cell
     ret._pin_x = pin_x
     ret._pin_y = pin_y
+
+    # Setup initial cell placement
     ret._cell_x = cell_x
     ret._cell_y = cell_y
     ret._cell_flip_x = flip_x
     ret._cell_flip_y = flip_y
+
+    # Setup simplified placement area
+    pl_area = rows_to_area(rows)
+    row_height = rows_to_height(rows)
     ret._pl_area = pl_area
     ret._row_height = row_height
+
+    # Setup rows
+    r_min_x, r_min_y, r_max_x, r_max_y = rows_to_numpy(rows)
+    ret._row_min_x = r_min_x
+    ret._row_min_y = r_min_y
+    ret._row_max_x = r_max_x
+    ret._row_max_y = r_max_y
     ret.check()
     return ret
 
