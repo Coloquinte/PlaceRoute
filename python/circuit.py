@@ -21,6 +21,10 @@ class Circuit:
         self._pin_y = None
         self._pl_area = None
         self._row_height = None
+        self._row_min_x = None
+        self._row_min_y = None
+        self._row_max_x = None
+        self._row_max_y = None
 
     @property
     def nb_cells(self):
@@ -109,6 +113,10 @@ class Circuit:
         assert isinstance(self._pin_cells, np.ndarray)
         assert isinstance(self._pin_x, np.ndarray)
         assert isinstance(self._pin_y, np.ndarray)
+        assert isinstance(self._row_min_x, np.ndarray)
+        assert isinstance(self._row_min_y, np.ndarray)
+        assert isinstance(self._row_max_x, np.ndarray)
+        assert isinstance(self._row_max_y, np.ndarray)
 
         assert self._cell_width.dtype == np.int32
         assert self._cell_height.dtype == np.int32
@@ -120,6 +128,10 @@ class Circuit:
         assert self._pin_cells.dtype == np.int32
         assert self._pin_x.dtype == np.int32
         assert self._pin_y.dtype == np.int32
+        assert self._row_min_x.dtype == np.int32
+        assert self._row_min_y.dtype == np.int32
+        assert self._row_max_x.dtype == np.int32
+        assert self._row_max_y.dtype == np.int32
 
         # Check the dimensions
         assert len(self._cell_name) == self.nb_cells
@@ -137,6 +149,11 @@ class Circuit:
         # Pin cells must be valid
         assert np.all(self._pin_cells >= 0)
         assert np.all(self._pin_cells < self.nb_cells)
+
+        # Rows must have correct dimensions
+        assert (self._row_min_x <= self._row_max_x).all()
+        assert (self._row_min_y <= self._row_max_y).all()
+
 
     def place(self):
         """
