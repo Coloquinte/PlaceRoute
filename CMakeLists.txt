@@ -19,6 +19,7 @@ SET(SOURCES
   src/place_global/gradient_descent.cpp
   src/place_global/density_legalizer.cpp
   src/place_global/place_global.cpp
+  src/place_detailed/legalizer.cpp
 )
 
 add_library(coloquinte SHARED ${SOURCES})
