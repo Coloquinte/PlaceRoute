@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-#include <cmath>
 
 
 /**
@@ -10,8 +9,6 @@
 struct Point {
     int x;
     int y;
-
-    static int distance(Point a, Point b) { return std::abs(a.x - b.x) + std::abs(a.y - b.y); }
 };
 
 /**
@@ -40,6 +37,8 @@ struct Rectangle {
  * Cost model to use when doing legalization
  */
 enum LegalizationModel { L1, L2, LInf, L2Squared };
+float norm(float x, float y, LegalizationModel leg);
+long long norm(int x, int y, LegalizationModel leg);
 
 /**
  * Representation of a flat circuit from an ISPD benchmark

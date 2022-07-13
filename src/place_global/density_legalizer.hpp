@@ -67,7 +67,6 @@ class DensityLegalizer {
     void report() const;
 
     // Utilities
-    static float distance(float x1, float y1, float x2, float y2, LegalizationModel leg);
     std::vector<int> allCells() const;
 
     // Bisection algorithm

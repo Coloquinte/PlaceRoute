@@ -6,21 +6,6 @@
 #include <algorithm>
 #include <iostream>
 
-float DensityLegalizer::distance(float x1, float y1, float x2, float y2, LegalizationModel leg) {
-    float dx = x1 - x2;
-    float dy = y1 - y2;
-    switch (leg) {
-        case LegalizationModel::L1:
-        return std::abs(dx) + std::abs(dy);
-        case LegalizationModel::L2:
-        return std::sqrt(dx * dx + dy * dy);
-        case LegalizationModel::LInf:
-        return std::max(std::abs(dx), std::abs(dy));
-        default:
-        return dx * dx + dy * dy;
-    }
-}
-
 std::vector<int> DensityLegalizer::allCells() const {
     std::vector<int> pl;
     for (int i = 0; i < nbCells_; ++i) {
@@ -285,7 +270,7 @@ std::vector<std::pair<float, int> > DensityLegalizer::computeCellCosts(float cx1
     for (int c : cells) {
         float x = cellTargetX_[c];
         float y = cellTargetY_[c];
-        float cost = distance(x, y, cx1, cy1, leg) - distance(x, y, cx2, cy2, leg);
+        float cost = norm(x - cx1, y - cy1, leg) - norm(x - cx2, y - cy2, leg);
         cellCosts.emplace_back(cost, c);
     }
     std::sort(cellCosts.begin(), cellCosts.end(), [](std::pair<float, int> a, std::pair<float, int> b) { return a.first < b.first; });
