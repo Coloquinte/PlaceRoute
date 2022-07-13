@@ -28,7 +28,7 @@ std::pair<std::vector<float>, std::vector<float> > GlobalPlacer::place(const Cir
     auto xplace = xtopo.starSolve();
     auto yplace = ytopo.starSolve();
 
-    DensityLegalizer leg(circuit);
+    DensityLegalizer leg = DensityLegalizer::fromIspdCircuit(circuit);
     for (int i = 0; i < 100; ++i) {
         leg.updateCellTargetX(tensorToVector(xplace));
         leg.updateCellTargetY(tensorToVector(yplace));

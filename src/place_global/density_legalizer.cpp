@@ -18,18 +18,19 @@ DensityLegalizer::DensityLegalizer(Rectangle area, int nbCells)
 : DensityLegalizer(std::vector<Rectangle>({area}), nbCells) {
 }
 
-DensityLegalizer::DensityLegalizer(std::vector<Rectangle> rows, int nbCells) {
+DensityLegalizer::DensityLegalizer(std::vector<Rectangle> regions, int nbCells) {
+    regions_ = regions;
     int minX = std::numeric_limits<int>::max();
     int maxX = std::numeric_limits<int>::min();
     int minY = std::numeric_limits<int>::max();
     int maxY = std::numeric_limits<int>::min();
-    for (Rectangle row: rows) {
+    for (Rectangle row: regions) {
         minX = std::min(row.minX, minX);
         maxX = std::max(row.maxX, maxX);
         minY = std::min(row.minY, minY);
         maxY = std::max(row.maxY, maxY);
     }
-    area_ = Rectangle(minX, maxX, minY, maxY);
+    placementArea_ = Rectangle(minX, maxX, minY, maxY);
     nbCells_ = nbCells;
     cellDemand_.assign(nbCells, 0LL);
     cellTargetX_.assign(nbCells, 0.0f);
@@ -38,9 +39,11 @@ DensityLegalizer::DensityLegalizer(std::vector<Rectangle> rows, int nbCells) {
     check();
 }
 
-DensityLegalizer::DensityLegalizer(const Circuit &circuit) : DensityLegalizer(circuit.rows, circuit.nbCells()) {
+DensityLegalizer DensityLegalizer::fromIspdCircuit(const Circuit &circuit) {
+    DensityLegalizer ret(circuit.rows, circuit.nbCells());
     // TODO: setup to the right size
-    updateBins(10, 10);
+    ret.updateBins(10, 10);
+    return ret;
 }
 
 void DensityLegalizer::updateBins(int binsX, int binsY) {
@@ -51,11 +54,11 @@ void DensityLegalizer::updateBins(int binsX, int binsY) {
     nbBinsX_ = binsX;
     nbBinsY_ = binsY;
     for (int i = 0; i < binsX + 1; ++i) {
-        binLimitX_.push_back(area_.minX + (i * (area_.maxX - area_.minX) / binsX));
+        binLimitX_.push_back(placementArea_.minX + (i * (placementArea_.maxX - placementArea_.minX) / binsX));
     }
     assert (binLimitX_.size() == binsX + 1);
     for (int i = 0; i < binsY + 1; ++i) {
-        binLimitY_.push_back(area_.minY + (i * (area_.maxY - area_.minY) / binsY));
+        binLimitY_.push_back(placementArea_.minY + (i * (placementArea_.maxY - placementArea_.minY) / binsY));
     }
     assert (binLimitY_.size() == binsY + 1);
     for (int i = 0; i < binsX; ++i) {
@@ -177,7 +180,7 @@ void DensityLegalizer::check() const {
 void DensityLegalizer::report() const {
     std::cout << "Total demand " << totalDemand() << std::endl;
     std::cout << "Total capacity " << totalCapacity() << std::endl;
-    std::cout << "Area (" << area_.minX << ", " << area_.maxX << ") x (" << area_.minY << ", " << area_.maxY << ")" << std::endl;
+    std::cout << "Area (" << placementArea_.minX << ", " << placementArea_.maxX << ") x (" << placementArea_.minY << ", " << placementArea_.maxY << ")" << std::endl;
     /*
     std::cout << "X limits";
     for (auto l : binLimitX_) {
