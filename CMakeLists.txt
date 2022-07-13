@@ -24,7 +24,8 @@ SET(SOURCES
 )
 
 add_library(coloquinte SHARED ${SOURCES})
-target_include_directories(coloquinte PUBLIC ${xtensor_INCLUDE_DIRS})
+target_compile_features(coloquinte PRIVATE cxx_std_17)
+target_include_directories(coloquinte PRIVATE ${xtensor_INCLUDE_DIRS})
 target_link_libraries(coloquinte
   ${Boost_LIBRARIES}
   xtensor)
