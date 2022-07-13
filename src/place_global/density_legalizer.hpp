@@ -8,8 +8,9 @@
 class DensityLegalizer {
   public:
     DensityLegalizer(Rectangle area, int nbCells);
-    DensityLegalizer(std::vector<Rectangle> rows, int nbCells);
-    DensityLegalizer(const Circuit &circuit);
+    DensityLegalizer(std::vector<Rectangle> regions, int nbCells);
+
+    static DensityLegalizer fromIspdCircuit(const Circuit &circuit);
 
     // Accessors
     int nbCells() const { return nbCells_; }
@@ -85,7 +86,8 @@ class DensityLegalizer {
 
   private:
     // Problem data
-    Rectangle area_;
+    Rectangle placementArea_;
+    std::vector<Rectangle> regions_;
     int nbCells_;
     int nbBinsX_;
     int nbBinsY_;
