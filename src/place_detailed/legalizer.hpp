@@ -28,7 +28,7 @@ class Legalizer {
      */
     static Legalizer fromIspdCircuit(const Circuit &circuit);
     Legalizer(const std::vector<Rectangle> & rows,
-              const std::vector<int> &widths,
+              const std::vector<int> &width,
               const std::vector<int> &targetX,
               const std::vector<int> &targetY);
 
@@ -60,26 +60,30 @@ class Legalizer {
 
   private:
     /**
-     * Place a single cell to the datastructure
+     * Compute the distance with the current cost model
      */
-    void placeCell(int cell);
+    long long distance(int x1, int x2, int y1, int y2) const;
 
     /**
-     * Place a single cell in a given row; return the success and the coordinates
+     * Place a single cell optimally; return true if successful
      */
-    std::pair<bool, long long> placeCell(int cell, int row);
+    bool placeCellOptimally(int cell);
 
     /**
-     * Place multiple cells in the datastructure with branch-and-bound
+     * Simulate placing a single cell in a given row
+     * Return true if successful and the X coordinate
      */
-    void placeCells(const std::vector<int> &cells, LegalizationModel model);
+    std::pair<bool, int> placeCellOptimally(int cell, int row) const;
+
+    /**
+     * Materialize the placement of a cell
+     */
+    void doPlacement(int cell, int row, int x);
 
     /**
      * Export the placement obtained to the circuit datastructure
      */
     void exportPlacement(Circuit &circuit);
-
-    
 
   private:
     // Placement data
