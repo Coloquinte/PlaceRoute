@@ -25,7 +25,11 @@ void place_ispd(
     int *cell_y,
     char *cell_flip_x,
     char *cell_flip_y,
-    int min_x, int max_x, int min_y, int max_y
+    int nb_rows,
+    int *row_min_x,
+    int *row_max_x,
+    int *row_min_y,
+    int *row_max_y
 ) {
     Circuit circuit = Circuit::createIspd(
         nb_cells,
@@ -41,7 +45,11 @@ void place_ispd(
         cell_y,
         cell_flip_x,
         cell_flip_y,
-        min_x, max_x, min_y, max_y
+        nb_rows,
+        row_min_x,
+        row_min_y,
+        row_max_x,
+        row_max_y
     );
     std::cout << "Placing circuit with " << circuit.nbCells() << " cells, "
               << circuit.nbNets() << " nets and "
@@ -83,7 +91,7 @@ void benchmark_quadratic_models(
         cell_y,
         cell_flip_x,
         cell_flip_y,
-        0, 0, 0, 0
+        0, NULL, NULL, NULL, NULL
     );
     auto xtopo = NetWirelength::xTopology(circuit);
 
@@ -120,7 +128,11 @@ Circuit Circuit::createIspd(
     int *cell_y,
     char *cell_flip_x,
     char *cell_flip_y,
-    int min_x, int max_x, int min_y, int max_y
+    int nb_rows,
+    int *row_min_x,
+    int *row_max_x,
+    int *row_min_y,
+    int *row_max_y
 ) {
     Circuit ret;
     ret.cellWidths.assign(cell_widths, cell_widths + nb_cells);
@@ -135,7 +147,9 @@ Circuit Circuit::createIspd(
     ret.cellY.assign(cell_y, cell_y + nb_cells);
     ret.cellFlipX.assign(cell_flip_x, cell_flip_x + nb_cells);
     ret.cellFlipY.assign(cell_flip_y, cell_flip_y + nb_cells);
-    ret.placementArea = Rectangle(min_x, max_x, min_y, max_y);
+    for (int i = 0; i < nb_rows; ++i) {
+        ret.rows.emplace_back(row_min_x[i], row_max_x[i], row_min_y[i], row_max_y[i]);
+    }
     ret.check();
     return ret;
 }

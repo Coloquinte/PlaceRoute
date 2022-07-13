@@ -19,11 +19,10 @@ class Circuit:
         self._pin_cells = None
         self._pin_x = None
         self._pin_y = None
-        self._pl_area = None
-        self._row_height = None
+        self._nb_rows = None
         self._row_min_x = None
-        self._row_min_y = None
         self._row_max_x = None
+        self._row_min_y = None
         self._row_max_y = None
 
     @property
@@ -33,6 +32,10 @@ class Circuit:
     @property
     def nb_nets(self):
         return self._nb_nets
+
+    @property
+    def nb_rows(self):
+        return self._nb_rows
 
     @property
     def cell_name(self):
@@ -75,18 +78,11 @@ class Circuit:
     def cell_flip_y(self):
         return self._cell_flip_y
 
-    @property
-    def pl_area(self):
-        return self._pl_area
-
-    @property
-    def row_height(self):
-        return self._row_height
-
     def check(self):
         # No member is None
         assert self._nb_cells is not None
         assert self._nb_nets is not None
+        assert self._nb_rows is not None
         assert self._cell_name is not None
         assert self._cell_height is not None
         assert self._cell_width is not None
@@ -100,8 +96,10 @@ class Circuit:
         assert self._pin_cells is not None
         assert self._pin_x is not None
         assert self._pin_y is not None
-        assert self._pl_area is not None
-        assert self._row_height is not None
+        assert self._row_min_x is not None
+        assert self._row_max_x is not None
+        assert self._row_min_y is not None
+        assert self._row_max_y is not None
 
         assert isinstance(self._cell_width, np.ndarray)
         assert isinstance(self._cell_height, np.ndarray)
@@ -114,8 +112,8 @@ class Circuit:
         assert isinstance(self._pin_x, np.ndarray)
         assert isinstance(self._pin_y, np.ndarray)
         assert isinstance(self._row_min_x, np.ndarray)
-        assert isinstance(self._row_min_y, np.ndarray)
         assert isinstance(self._row_max_x, np.ndarray)
+        assert isinstance(self._row_min_y, np.ndarray)
         assert isinstance(self._row_max_y, np.ndarray)
 
         assert self._cell_width.dtype == np.int32
@@ -129,8 +127,8 @@ class Circuit:
         assert self._pin_x.dtype == np.int32
         assert self._pin_y.dtype == np.int32
         assert self._row_min_x.dtype == np.int32
-        assert self._row_min_y.dtype == np.int32
         assert self._row_max_x.dtype == np.int32
+        assert self._row_min_y.dtype == np.int32
         assert self._row_max_y.dtype == np.int32
 
         # Check the dimensions
@@ -145,6 +143,10 @@ class Circuit:
         assert len(self._net_limits) == self.nb_nets + 1
         assert len(self._pin_cells) == len(self._pin_x)
         assert len(self._pin_cells) == len(self._pin_y)
+        assert len(self._row_min_x) == self.nb_rows
+        assert len(self._row_max_x) == self.nb_rows
+        assert len(self._row_min_y) == self.nb_rows
+        assert len(self._row_max_y) == self.nb_rows
 
         # Pin cells must be valid
         assert np.all(self._pin_cells >= 0)
@@ -153,7 +155,6 @@ class Circuit:
         # Rows must have correct dimensions
         assert (self._row_min_x <= self._row_max_x).all()
         assert (self._row_min_y <= self._row_max_y).all()
-
 
     def place(self):
         """
@@ -178,7 +179,11 @@ class Circuit:
             self._cell_y.ctypes.data_as(c_int_p),
             self._cell_flip_x.ctypes.data_as(c_bool_p),
             self._cell_flip_y.ctypes.data_as(c_bool_p),
-            *self._pl_area
+            self.nb_rows,
+            self._row_min_x.ctypes.data_as(c_int_p),
+            self._row_max_x.ctypes.data_as(c_int_p),
+            self._row_min_y.ctypes.data_as(c_int_p),
+            self._row_max_y.ctypes.data_as(c_int_p),
         )
 
     def benchmark_all_quadratic_models(self):
