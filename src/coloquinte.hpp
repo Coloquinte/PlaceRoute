@@ -56,7 +56,7 @@ struct Circuit {
     std::vector<int> cellY;
     std::vector<char> cellFlipX;
     std::vector<char> cellFlipY;
-    Rectangle placementArea;
+    std::vector<Rectangle> rows;
 
     int nbCells() const {
         return cellWidths.size();
@@ -92,7 +92,11 @@ struct Circuit {
         int *cell_y,
         char *cell_flip_x,
         char *cell_flip_y,
-        int min_x, int max_x, int min_y, int max_y
+        int nb_rows,
+        int *row_min_x,
+        int *row_max_x,
+        int *row_min_y,
+        int *row_max_y
     );
 
     void check() const;
@@ -113,7 +117,11 @@ extern "C" {
         int *cell_y,
         char *cell_flip_x,
         char *cell_flip_y,
-        int min_x, int max_x, int min_y, int max_y
+        int nb_rows,
+        int *row_min_x,
+        int *row_max_x,
+        int *row_min_y,
+        int *row_max_y
     );
     void benchmark_quadratic_models(
         int nb_cells,

@@ -14,7 +14,22 @@ std::vector<int> DensityLegalizer::allCells() const {
     return pl;
 }
 
-DensityLegalizer::DensityLegalizer(Rectangle area, int nbCells) : area_(area) {
+DensityLegalizer::DensityLegalizer(Rectangle area, int nbCells)
+: DensityLegalizer(std::vector<Rectangle>({area}), nbCells) {
+}
+
+DensityLegalizer::DensityLegalizer(std::vector<Rectangle> rows, int nbCells) {
+    int minX = std::numeric_limits<int>::max();
+    int maxX = std::numeric_limits<int>::min();
+    int minY = std::numeric_limits<int>::max();
+    int maxY = std::numeric_limits<int>::min();
+    for (Rectangle row: rows) {
+        minX = std::min(row.minX, minX);
+        maxX = std::max(row.maxX, maxX);
+        minY = std::min(row.minY, minY);
+        maxY = std::max(row.maxY, maxY);
+    }
+    area_ = Rectangle(minX, maxX, minY, maxY);
     nbCells_ = nbCells;
     cellDemand_.assign(nbCells, 0LL);
     cellTargetX_.assign(nbCells, 0.0f);
@@ -23,7 +38,7 @@ DensityLegalizer::DensityLegalizer(Rectangle area, int nbCells) : area_(area) {
     check();
 }
 
-DensityLegalizer::DensityLegalizer(const Circuit &circuit) : DensityLegalizer(circuit.placementArea, circuit.nbCells()) {
+DensityLegalizer::DensityLegalizer(const Circuit &circuit) : DensityLegalizer(circuit.rows, circuit.nbCells()) {
     // TODO: setup to the right size
     updateBins(10, 10);
 }

@@ -337,17 +337,12 @@ def read_ispd(filename):
     ret._cell_flip_x = flip_x
     ret._cell_flip_y = flip_y
 
-    # Setup simplified placement area
-    pl_area = rows_to_area(rows)
-    row_height = rows_to_height(rows)
-    ret._pl_area = pl_area
-    ret._row_height = row_height
-
     # Setup rows
     r_min_x, r_min_y, r_max_x, r_max_y = rows_to_numpy(rows)
+    ret._nb_rows = len(rows)
     ret._row_min_x = r_min_x
-    ret._row_min_y = r_min_y
     ret._row_max_x = r_max_x
+    ret._row_min_y = r_min_y
     ret._row_max_y = r_max_y
     ret.check()
     return ret

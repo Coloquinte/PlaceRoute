@@ -8,6 +8,7 @@
 class DensityLegalizer {
   public:
     DensityLegalizer(Rectangle area, int nbCells);
+    DensityLegalizer(std::vector<Rectangle> rows, int nbCells);
     DensityLegalizer(const Circuit &circuit);
 
     // Accessors
