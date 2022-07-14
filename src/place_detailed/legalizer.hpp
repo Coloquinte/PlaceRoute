@@ -2,16 +2,6 @@
 
 #include "coloquinte.hpp"
 
-
-class LegalizerRow {
-  public:
-    Rectangle area;
-    std::vector<int> cellIds;
-    std::vector<int> cellX;
-
-    int nbCells() const { return cellIds.size(); }
-};
-
 /**
  * Algorithms to obtain a legal placement for standard cells
  *
@@ -19,28 +9,56 @@ class LegalizerRow {
 class Legalizer {
   public:
     /**
-     * Run the whole legalization algorithm
+     * Initialize the datastructure from a circuit
      */
-    static void legalize(Circuit &circuit);
+    static Legalizer fromIspdCircuit(const Circuit &circuit);
 
     /**
      * Initialize the datastructure
+     *      @param rows: Available rows for placement; must all be the right height for the cells
+     *      @param width: Width of the cells when placed in a row
+     *      @param targetX: Target x coordinate for legalization
+     *      @param targetY: Target y coordinate for legalization
      */
-    static Legalizer fromIspdCircuit(const Circuit &circuit);
     Legalizer(const std::vector<Rectangle> & rows,
               const std::vector<int> &width,
               const std::vector<int> &targetX,
               const std::vector<int> &targetY);
 
+    /**
+     * Return the number of rows
+     */
     int nbRows() const { return rows_.size(); }
+
+    /**
+     * Return the number of cells
+     */
     int nbCells() const { return cellWidth_.size(); }
 
-    LegalizationModel costModel() const { return costModel_; }
-    void setCostModel(LegalizationModel m) { costModel_ = m; }
-
+    /**
+     * Return the width of the cells
+     */
     const std::vector<int> &cellWidth() const { return cellWidth_; }
+
+    /**
+     * Return the target x coordinates for legalization
+     */
     const std::vector<int> &cellTargetX() const { return cellTargetX_; }
+
+    /**
+     * Return the target y coordinates for legalization
+     */
     const std::vector<int> &cellTargetY() const { return cellTargetY_; }
+
+    /**
+     * Return the cost model used by the algorithm
+     */
+    LegalizationModel costModel() const { return costModel_; }
+
+    /**
+     * Set the cost model used by the algorithm
+     */
+    void setCostModel(LegalizationModel m) { costModel_ = m; }
 
     /**
      * Run the algorithm
@@ -48,9 +66,13 @@ class Legalizer {
     void run();
 
     /**
-     * Compute the coordinates associated with the legalization
+     * Compute the x coordinates after legalization
      */
     std::vector<int> cellLegalX() const;
+
+    /**
+     * Compute the y coordinates after legalization
+     */
     std::vector<int> cellLegalY() const;
 
     /**
