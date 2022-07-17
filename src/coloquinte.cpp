@@ -4,6 +4,7 @@
 #include "place_global/gradient_descent.hpp"
 #include "place_global/density_legalizer.hpp"
 #include "place_global/place_global.hpp"
+#include "place_detailed/place_detailed.hpp"
 
 #include <xtensor/xio.hpp>
 #include <xtensor/xrandom.hpp>
@@ -56,6 +57,7 @@ void place_ispd(
               << circuit.nbPins() << " pins."
               << std::endl;
     GlobalPlacer::place(circuit);
+    DetailedPlacer::place(circuit);
 }
 
 void benchmark_quadratic_models(

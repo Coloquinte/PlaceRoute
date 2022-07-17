@@ -14,6 +14,11 @@ class Legalizer {
     static Legalizer fromIspdCircuit(const Circuit &circuit);
 
     /**
+     * Export the placement obtained to the circuit datastructure
+     */
+    void exportPlacement(Circuit &circuit);
+
+    /**
      * Initialize the datastructure
      *      @param rows: Available rows for placement; must all be the right height for the cells
      *      @param width: Width of the cells when placed in a row
@@ -82,20 +87,26 @@ class Legalizer {
 
   private:
     /**
-     * Compute the distance with the current cost model
-     */
-    long long distance(int x1, int x2, int y1, int y2) const;
-
-    /**
-     * Place a single cell optimally; return true if successful
+     * Place a single cell optimally
+     * Return true if successful
      */
     bool placeCellOptimally(int cell);
 
     /**
      * Simulate placing a single cell in a given row
-     * Return true if successful and the X coordinate
+     * Return a pair: true if successful and the X coordinate
      */
     std::pair<bool, int> placeCellOptimally(int cell, int row) const;
+
+    /**
+     * Compute the ordering of the cells
+     */
+    std::vector<int> computeCellOrder(float weightX, float weightWidth, float weightY) const;
+
+    /**
+     * Returns true if the cell is to be ignored by legalization
+     */
+    bool isIgnored(int cell) const { return cellWidth_[cell] == -1; }
 
     /**
      * Materialize the placement of a cell
@@ -103,19 +114,19 @@ class Legalizer {
     void doPlacement(int cell, int row, int x);
 
     /**
-     * Export the placement obtained to the circuit datastructure
+     * Undo the placement of a cell
      */
-    void exportPlacement(Circuit &circuit);
+    void undoPlacement(int cell);
 
   private:
     // Placement data
     LegalizationModel costModel_;
+    std::vector<Rectangle> rows_;
     std::vector<int> cellWidth_;
     std::vector<int> cellTargetX_;
     std::vector<int> cellTargetY_;
 
     // Placement status
-    std::vector<Rectangle> rows_;
     std::vector<std::vector<int> > rowToCells_;
     std::vector<std::vector<int> > rowToX_;
     std::vector<int> cellToRow_;

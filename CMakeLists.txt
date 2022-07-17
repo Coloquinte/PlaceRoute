@@ -21,6 +21,7 @@ SET(SOURCES
   src/place_global/density_legalizer.cpp
   src/place_global/place_global.cpp
   src/place_detailed/legalizer.cpp
+  src/place_detailed/place_detailed.cpp
 )
 
 add_library(coloquinte SHARED ${SOURCES})

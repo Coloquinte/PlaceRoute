@@ -6,7 +6,6 @@
 #include <limits>
 
 Legalizer Legalizer::fromIspdCircuit(const Circuit &circuit) {
-    // TODO
     std::vector<Rectangle> rows;
     Legalizer ret = Legalizer(rows, circuit.cellWidths, circuit.cellX, circuit.cellY);
     // Represent fixed cells with -1 width so they are not considered
@@ -23,6 +22,9 @@ Legalizer::Legalizer(const std::vector<Rectangle> &rows,
                      const std::vector<int> &targetX,
                      const std::vector<int> &targetY)
     : costModel_(LegalizationModel::L1)
+    , cellWidth_(width)
+    , cellTargetX_(targetX)
+    , cellTargetY_(targetY)
     {
     assert (width.size() == targetX.size());
     assert (width.size() == targetY.size());
@@ -31,18 +33,24 @@ Legalizer::Legalizer(const std::vector<Rectangle> &rows,
     std::stable_sort(rows_.begin(), rows_.end(), [](Rectangle a, Rectangle b) -> bool {
         return a.minY < b.minY || (a.minY == b.minY && a.minX < b.minX);
     });
+}
 
-    // Sort the cells by target X coordinate
-    std::vector<std::pair<int, int> > sortedCells;
-    for (int i = 0; i < targetX.size(); ++i) {
-        sortedCells.emplace_back(targetX[i], i);
+void Legalizer::run() {
+    std::vector<int> cellOrder = computeCellOrder(1.0, 0.5, 0.01);
+    for (int c : cellOrder) {
+        placeCellOptimally(c);
     }
-    std::stable_sort(sortedCells.begin(), sortedCells.end());
-    for (auto p : sortedCells) {
-        int c = p.second;
-        cellWidth_.push_back(width[c]);
-        cellTargetX_.push_back(targetX[c]);
-        cellTargetY_.push_back(targetY[c]);
+}
+
+void Legalizer::check() const {
+    if (cellWidth_.size() != nbCells()) {
+        throw std::runtime_error("Number of cell widths does not match");
+    }
+    if (cellTargetX_.size() != nbCells()) {
+        throw std::runtime_error("Number of cell x targets does not match");
+    }
+    if (cellTargetY_.size() != nbCells()) {
+        throw std::runtime_error("Number of cell y targets does not match");
     }
 }
 
@@ -51,6 +59,9 @@ bool Legalizer::placeCellOptimally(int cell) {
      * Very naive algorithm that tries every possible position
      * TODO: Start from the optimal y position and work from there
      */
+    if (isIgnored(cell)) {
+        return true;
+    }
     int targetX = cellTargetX_[cell];
     int targetY = cellTargetY_[cell];
     int bestX = 0;
@@ -101,12 +112,32 @@ std::pair<bool, int> Legalizer::placeCellOptimally(int cell, int row) const {
     return std::make_pair(true, coord);
 }
 
+std::vector<int> Legalizer::computeCellOrder(float weightX, float weightWidth, float weightY) const {
+    // Sort the cells by target X coordinate
+    std::vector<std::pair<float, int> > sortedCells;
+    for (int i = 0; i < nbCells(); ++i) {
+        float val = weightX * cellTargetX_[i] + weightWidth * cellWidth_[i] + weightY * cellTargetY_[i];
+        sortedCells.emplace_back(val, i);
+    }
+    std::stable_sort(sortedCells.begin(), sortedCells.end());
+    std::vector<int> cells;
+    for (auto p : sortedCells) {
+        cells.push_back(p.second);
+    }
+    return cells;
+}
+
 void Legalizer::doPlacement(int cell, int row, int x) {
     rowToCells_[row].push_back(cell);
     rowToX_[row].push_back(x);
     cellToRow_[cell] = row;
     cellToX_[cell] = x;
     cellToY_[cell] = rows_[row].minY;
+}
+
+void Legalizer::undoPlacement(int cell) {
+    // TODO
+    throw std::runtime_error("Not yet implemented");
 }
 
 std::vector<int> Legalizer::cellLegalX() const {
