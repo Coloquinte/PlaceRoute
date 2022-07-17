@@ -17,9 +17,10 @@ std::vector<float> getBaseForces(const Circuit &circuit) {
 }
 
 
-std::pair<std::vector<float>, std::vector<float> > GlobalPlacer::place(const Circuit &circuit) {
+void GlobalPlacer::place(Circuit &circuit) {
     float epsilon = 1.0;
     float cutoffDistance = 1000.0;
+    int nbSteps = 10;
     auto baseForces = vectorToTensor(getBaseForces(circuit));
 
     auto xtopo = NetWirelength::xTopology(circuit);
@@ -29,7 +30,7 @@ std::pair<std::vector<float>, std::vector<float> > GlobalPlacer::place(const Cir
     auto yplace = ytopo.starSolve();
 
     DensityLegalizer leg = DensityLegalizer::fromIspdCircuit(circuit);
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < nbSteps; ++i) {
         leg.updateCellTargetX(tensorToVector(xplace));
         leg.updateCellTargetY(tensorToVector(yplace));
         leg.assign();
@@ -44,5 +45,10 @@ std::pair<std::vector<float>, std::vector<float> > GlobalPlacer::place(const Cir
         yplace = ytopo.b2bSolvePenalized(yplace, epsilon, ytarget, baseForces * forceFactor, cutoffDistance);
     }
 
-    return std::make_pair(tensorToVector(xplace), tensorToVector(yplace));
+    for (int i = 0; i < circuit.nbCells(); ++i) {
+        if (!circuit.isFixed(i)) {
+            circuit.cellX[i] = std::round(xplace[i]);
+            circuit.cellY[i] = std::round(yplace[i]);
+        }
+    }
 }

@@ -3,7 +3,7 @@
 #include "coloquinte.hpp"
 
 
-class GlobalPlacer {
+class DetailedPlacer {
   public:
     static void place(Circuit &circuit);
 };
