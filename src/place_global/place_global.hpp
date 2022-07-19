@@ -2,11 +2,7 @@
 
 #include "coloquinte.hpp"
 
-
 class GlobalPlacer {
-  public:
-    static void place(Circuit &circuit);
+ public:
+  static void place(Circuit &circuit);
 };
-
-
-
