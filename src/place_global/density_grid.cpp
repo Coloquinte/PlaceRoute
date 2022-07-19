@@ -94,6 +94,16 @@ long long DensityGrid::totalCapacity() const {
   return ret;
 }
 
+long long DensityGrid::binCapacity(BinGroup g) const {
+  long long ret = 0;
+  for (int i = g.minXCoord; i < g.maxXCoord; ++i) {
+    for (int j = g.minYCoord; j < g.maxYCoord; ++j) {
+      ret += binCapacity_[i][j];
+    }
+  }
+  return ret;
+}
+
 float DensityGrid::groupCenterX(DensityGrid::BinGroup g) const {
   float capa = 0.0;
   float coord = 0.0;
@@ -202,6 +212,59 @@ std::vector<float> DensityPlacement::simpleCoordY() const {
   return ret;
 }
 
-void DensityPlacement::check() const {
-  DensityGrid::check();
+void DensityPlacement::check() const { DensityGrid::check(); }
+
+HierarchicalDensityState::HierarchicalDensityState(DensityGrid grid,
+                                                   std::vector<int> cellDemand)
+    : DensityGrid(grid), cellDemand_(cellDemand) {
+  xLimits_.push_back(0);
+  xLimits_.push_back(nbBinsX());
+  yLimits_.push_back(0);
+  yLimits_.push_back(nbBinsY());
+  std::vector<int> allCells;
+  for (int c = 0; c < nbCells(); ++c) {
+    allCells.push_back(c);
+  }
+  binCells_.emplace_back();
+  binCells_.back().push_back(allCells);
+  check();
+}
+
+HierarchicalDensityState::HierarchicalDensityState(DensityPlacement placement)
+    : DensityGrid(placement) {
+  for (int i = 0; i <= nbBinsX(); ++i) {
+    xLimits_.push_back(i);
+  }
+  for (int i = 0; i <= nbBinsY(); ++i) {
+    yLimits_.push_back(i);
+  }
+  binCells_ = placement.binCells_;
+}
+
+long long HierarchicalDensityState::hBinUsage(int x, int y) const {
+  long long usage = 0;
+  for (int c : binCells(x, y)) {
+    usage += cellDemand(c);
+  }
+  return usage;
+}
+
+void HierarchicalDensityState::check() const {
+  assert(binCells_.size() == nbBinxX());
+  for (auto &bc : binCells_) {
+    assert(bc.size() == nbBinxY());
+  }
+  std::vector<int> nbPlaced(nbCells(), 0);
+  for (auto &bc : binCells_) {
+    for (auto &bcc : bc) {
+      for (int c : bcc) {
+        assert(c >= 0);
+        assert(c < nbCells());
+        nbPlaced[c]++;
+      }
+    }
+  }
+  for (int nb : nbPlaced) {
+    assert(nb == 1);
+  }
 }
