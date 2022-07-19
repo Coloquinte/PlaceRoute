@@ -371,7 +371,9 @@ class HierarchicalDensityState : public DensityGrid {
   /**
    * @brief Get the capacity of a given bin in the current view
    */
-  long long hBinCapacity(int x, int y) const { return binCapacity(getGroup(x, y)); }
+  long long hBinCapacity(int x, int y) const {
+    return binCapacity(getGroup(x, y));
+  }
 
   /**
    * @brief Get the usage of a given bin in the current view
@@ -387,12 +389,35 @@ class HierarchicalDensityState : public DensityGrid {
   std::vector<int> &binCells(int x, int y) { return binCells_[x][y]; }
 
   /**
+   * @brief Split the hierarchical bins vertically (more bins in the x
+   * direction). The cells are assigned to one side without rebalancing.
+   *
+   * @return A vector describing the association from old bins to new bins. The
+   * new bins b corresponding to old bin i are from ret[i] <= b < ret[i+1], with
+   * 1 <= ret[i+1] - ret[i] <= 2
+   */
+  std::vector<int> splitX();
+
+  /**
+   * @brief Split the hierarchical bins horizontally (more bins in the y
+   * direction). The cells are assigned to one side without rebalancing.
+   *
+   * @return A vector describing the association from old bins to new bins. The
+   * new bins b corresponding to old bin i are from ret[i] <= b < ret[i+1], with
+   * 1 <= ret[i+1] - ret[i] <= 2
+   */
+  std::vector<int> splitY();
+
+  /**
    * @brief Check the consistency of the datastructure
    */
   void check() const;
 
  private:
-  BinGroup getGroup(int x, int y) const { return BinGroup({xLimits_[x], xLimits_[x+1], yLimits_[y], yLimits_[y+1]}); }
+  BinGroup getGroup(int x, int y) const {
+    return BinGroup(
+        {xLimits_[x], xLimits_[x + 1], yLimits_[y], yLimits_[y + 1]});
+  }
 
  private:
   std::vector<int> xLimits_;
