@@ -198,3 +198,108 @@ class DensityGrid {
    */
   std::vector<std::vector<long long> > binCapacity_;
 };
+
+/**
+ * @brief Represent the approximate legalization of cells in bins, respecting
+ * density constraints
+ *
+ */
+class DensityPlacement : public DensityGrid {
+ public:
+  /**
+   * @brief Initialize a grid with a simple placement area
+   */
+  DensityPlacement(std::vector<long long> demands, Rectangle placementArea);
+
+  /**
+   * @brief Initialize a grid with placement regions (usually rows) and
+   * obstacles
+   */
+  DensityPlacement(std::vector<long long> demands,
+                   std::vector<Rectangle> regions,
+                   std::vector<Rectangle> obstacles = std::vector<Rectangle>());
+
+  /**
+   * @brief Initialize a grid from a circuit, and initialize the bins from the
+   * standard cell height
+   */
+  static DensityPlacement fromIspdCircuit(const Circuit &circuit,
+                                          float sizeFactor = 10.0);
+
+  /**
+   * @brief Get the total number of cells
+   */
+  int nbCells() const { return cellDemand_.size(); }
+
+  /**
+   * @brief Get the demand for a given cell
+   */
+  int cellDemand(int c) const {
+    assert(c < nbCells());
+    return cellDemand_[c];
+  }
+
+  /**
+   * @brief Get the sum of the demands of the cells
+   */
+  long long totalDemand() const;
+
+  /**
+   * @brief Compute the total overflowing area of this placement
+   */
+  long long totalOverflow() const;
+
+  /**
+   * @brief Compute the overflowing area of this placement, relative to the
+   * total demand
+   */
+  float overflowRatio() const;
+
+  /**
+   * @brief Return the cells currently allocated to a given bin
+   */
+  const std::vector<int> &binCells(int x, int y) const {
+    return binCells_[x][y];
+  }
+  std::vector<int> &binCells(int x, int y) { return binCells_[x][y]; }
+
+  /**
+   * @brief Return the sum of demands of the cells currently allocated to a
+   * given bin
+   */
+  long long binUsage(int x, int y) const;
+
+  /**
+   * @brief Return the x coordinates for the cells (center of the bin)
+   */
+  std::vector<float> simpleCoordX() const;
+
+  /**
+   * @brief Return the y coordinates for the cells (center of the bin)
+   */
+  std::vector<float> simpleCoordY() const;
+
+  /**
+   * @brief Return the x coordinates for the cells (spread in the bin according
+   * to the target coordinates)
+   */
+  std::vector<float> spreadCoordX(const std::vector<float> &target) const;
+
+  /**
+   * @brief Return the y coordinates for the cells (spread in the bin according
+   * to the target coordinates)
+   */
+  std::vector<float> spreadCoordY(const std::vector<float> &target) const;
+
+  /**
+   * @brief Check the consistency of the datastructure
+   */
+  void check() const;
+
+ private:
+  // Cell properties
+  std::vector<int> cellDemand_;
+
+  // Problem status
+  std::vector<std::vector<std::vector<int> > > binCells_;
+};

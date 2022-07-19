@@ -142,3 +142,66 @@ Rectangle DensityGrid::computePlacementArea() const {
   }
   return Rectangle(minX, maxX, minY, maxY);
 }
+
+long long DensityPlacement::totalDemand() const {
+  long long ret = 0;
+  for (int demand : cellDemand_) {
+    ret += demand;
+  }
+  return ret;
+}
+
+long long DensityPlacement::totalOverflow() const {
+  long long ret = 0;
+  for (int i = 0; i < nbBinsX(); ++i) {
+    for (int j = 0; j < nbBinsY(); ++j) {
+      ret += std::max(binUsage(i, j) - binCapacity(i, j), 0LL);
+    }
+  }
+  return ret;
+}
+
+float DensityPlacement::overflowRatio() const {
+  float demand = totalDemand();
+  if (demand > 0) {
+    return totalOverflow() / demand;
+  } else {
+    return 0.0;
+  }
+}
+
+long long DensityPlacement::binUsage(int x, int y) const {
+  long long usage = 0;
+  for (int c : binCells(x, y)) {
+    usage += cellDemand(c);
+  }
+  return usage;
+}
+
+std::vector<float> DensityPlacement::simpleCoordX() const {
+  std::vector<float> ret(nbCells(), 0.0f);
+  for (int i = 0; i < nbBinsX(); ++i) {
+    for (int j = 0; j < nbBinsY(); ++j) {
+      for (int c : binCells_[i][j]) {
+        ret[c] = binX(i);
+      }
+    }
+  }
+  return ret;
+}
+
+std::vector<float> DensityPlacement::simpleCoordY() const {
+  std::vector<float> ret(nbCells(), 0.0f);
+  for (int i = 0; i < nbBinsY(); ++i) {
+    for (int j = 0; j < nbBinsX(); ++j) {
+      for (int c : binCells_[i][j]) {
+        ret[c] = binY(i);
+      }
+    }
+  }
+  return ret;
+}
+
+void DensityPlacement::check() const {
+  DensityGrid::check();
+}
