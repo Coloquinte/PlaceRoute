@@ -23,13 +23,13 @@ class DensityGrid {
   /**
    * @brief Initialize a grid with a simple placement area
    */
-  DensityGrid(Rectangle placementArea);
+  DensityGrid(float binSize, Rectangle placementArea);
 
   /**
    * @brief Initialize a grid with placement regions (usually rows) and
    * obstacles
    */
-  DensityGrid(std::vector<Rectangle> regions,
+  DensityGrid(float binSize, std::vector<Rectangle> regions,
               std::vector<Rectangle> obstacles = std::vector<Rectangle>());
 
   /**
@@ -115,6 +115,12 @@ class DensityGrid {
   float groupCenterY(BinGroup g) const;
 
   /**
+   * @brief Check the consistency of the datastructure
+   */
+  void check() const;
+
+ private:
+  /**
    * @brief Update the density grid to this exact number of bins
    */
   void updateBinsToNumber(int binsX, int binsY);
@@ -123,55 +129,31 @@ class DensityGrid {
    * @brief Update the density grid so the bins are of the given dimension or
    * smaller
    */
-  void updateBinsToSize(int maxBinSize) {
-    updateBinsToSize(maxBinSize, maxBinSize);
-  }
+  void updateBinsToSize(int maxSize);
 
-  /**
-   * @brief Update the density grid so the bins are of the given dimensions or
-   * smaller
-   */
-  void updateBinsToSize(int maxXSize, int maxYSize);
-
-  /**
-   * @brief Check the consistency of the datastructure
-   */
-  void check() const;
-
- private:
   /**
    * @brief Compute the boundaries of the placement area
    */
-  Rectangle computePlacementArea() const;
+  static Rectangle computePlacementArea(const std::vector<Rectangle> &regions);
 
   /**
    * @brief Obtain cleaned-up placement regions by removing any overlap between
    * regions and obstacles
    */
-  // TODO
-  std::vector<Rectangle> computeActualRegions() const;
+  static std::vector<Rectangle> computeActualRegions(
+      const std::vector<Rectangle> &regions,
+      const std::vector<Rectangle> &obstacles);
 
   /**
    * @brief Compute the bin capacity from the cleaned-up placement regions
    */
-  // TODO
-  std::vector<std::vector<long long> > computeBinCapacity() const;
+  void updateBinCapacity(const std::vector<Rectangle> &regions);
 
  private:
   /**
    * @brief Boundaries of the placement area
    */
   Rectangle placementArea_;
-
-  /**
-   * @brief Regions where placement is possible
-   */
-  std::vector<Rectangle> regions_;
-
-  /**
-   * @brief Obstacles, where nothing can be placed
-   */
-  std::vector<Rectangle> obstacles_;
 
   /**
    * @brief Cleaned-up placement regions, with obstacles removed and no overlap

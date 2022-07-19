@@ -5,21 +5,21 @@
 #include <cmath>
 #include <iostream>
 
-DensityGrid::DensityGrid(Rectangle area)
-    : DensityGrid(std::vector<Rectangle>({area})) {}
+DensityGrid::DensityGrid(float binSize, Rectangle area)
+    : DensityGrid(binSize, std::vector<Rectangle>({area})) {}
 
-DensityGrid::DensityGrid(std::vector<Rectangle> regions,
+DensityGrid::DensityGrid(float binSize, std::vector<Rectangle> regions,
                          std::vector<Rectangle> obstacles) {
-  regions_ = regions;
-  obstacles_ = obstacles;
-  placementArea_ = computePlacementArea();
-  updateBinsToNumber(1, 1);
+  placementArea_ = computePlacementArea(regions);
+  updateBinsToSize(binSize);
+  std::vector<Rectangle> actualRegions =
+      computeActualRegions(regions, obstacles);
+  updateBinCapacity(regions);
   check();
 }
 
 DensityGrid DensityGrid::fromIspdCircuit(const Circuit &circuit,
                                          float sizeFactor) {
-  DensityGrid ret(circuit.rows);
   int minCellHeight = std::numeric_limits<int>::max();
   for (int i = 0; i < circuit.nbCells(); ++i) {
     int height = circuit.cellHeights[i];
@@ -27,8 +27,18 @@ DensityGrid DensityGrid::fromIspdCircuit(const Circuit &circuit,
       minCellHeight = std::min(height, minCellHeight);
     }
   }
-  ret.updateBinsToSize(sizeFactor * minCellHeight);
-  return ret;
+  return DensityGrid(sizeFactor * minCellHeight, circuit.rows);
+}
+
+std::vector<Rectangle> DensityGrid::computeActualRegions(
+    const std::vector<Rectangle> &regions,
+    const std::vector<Rectangle> &obstacles) {
+  // TODO
+  return regions;
+}
+
+void DensityGrid::updateBinCapacity(const std::vector<Rectangle> &regions) {
+  // TODO
 }
 
 void DensityGrid::updateBinsToNumber(int binsX, int binsY) {
@@ -67,9 +77,9 @@ void DensityGrid::updateBinsToNumber(int binsX, int binsY) {
   }
 }
 
-void DensityGrid::updateBinsToSize(int maxXSize, int maxYSize) {
-  int binsX = placementArea_.width() / maxXSize;
-  int binsY = placementArea_.height() / maxYSize;
+void DensityGrid::updateBinsToSize(int maxSize) {
+  int binsX = std::max(1, placementArea_.width() / maxSize);
+  int binsY = std::max(1, placementArea_.height() / maxSize);
   updateBinsToNumber(binsX, binsY);
 }
 
@@ -142,15 +152,16 @@ float DensityGrid::groupCenterY(DensityGrid::BinGroup g) const {
   }
 }
 
-Rectangle DensityGrid::computePlacementArea() const {
+Rectangle DensityGrid::computePlacementArea(
+    const std::vector<Rectangle> &regions) {
   int minX = std::numeric_limits<int>::max();
   int maxX = std::numeric_limits<int>::min();
   int minY = std::numeric_limits<int>::max();
   int maxY = std::numeric_limits<int>::min();
-  if (regions_.empty()) {
+  if (regions.empty()) {
     return Rectangle(0, 0, 0, 0);
   }
-  for (Rectangle row : regions_) {
+  for (Rectangle row : regions) {
     minX = std::min(row.minX, minX);
     maxX = std::max(row.maxX, maxX);
     minY = std::min(row.minY, minY);
@@ -275,12 +286,11 @@ std::vector<int> hierarchicalSplitHelper(std::vector<int> &limits) {
     int sz = limits[i + 1] - limits[i];
     if (sz < minSplitSize) {
       ret.push_back(1);
-      newLimits.push_back(limits[i+1]);
-    }
-    else {
+      newLimits.push_back(limits[i + 1]);
+    } else {
       ret.push_back(2);
-      newLimits.push_back((limits[i] + limits[i+1]) / 2);
-      newLimits.push_back(limits[i+1]);
+      newLimits.push_back((limits[i] + limits[i + 1]) / 2);
+      newLimits.push_back(limits[i + 1]);
     }
   }
   limits = newLimits;
