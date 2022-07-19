@@ -82,6 +82,12 @@ void DensityGrid::check() const {
   assert(binY_.size() == nbBinsY());
   assert(binLimitX_.size() == nbBinsX() + 1);
   assert(binLimitY_.size() == nbBinsY() + 1);
+  for (int i = 0; i < nbBinsX(); ++i) {
+    assert(binLimitX_[i] <= binLimitX_[i + 1]);
+  }
+  for (int i = 0; i < nbBinsY(); ++i) {
+    assert(binLimitY_[i] <= binLimitY_[i + 1]);
+  }
 }
 
 long long DensityGrid::totalCapacity() const {
@@ -249,7 +255,85 @@ long long HierarchicalDensityState::hBinUsage(int x, int y) const {
   return usage;
 }
 
+namespace {
+/**
+ * @brief Update the limits between bins after a split is done, and return the
+ * number of bins split
+ */
+std::vector<int> hierarchicalSplitHelper(std::vector<int> &limits) {
+  int maxSz = 1;
+  for (int i = 0; i + 1 < limits.size(); ++i) {
+    int sz = limits[i + 1] - limits[i];
+    maxSz = std::max(maxSz, sz);
+  }
+  // Minimum number of bins to split: only split the larger ones
+  int minSplitSize = std::max(2, maxSz / 2 + 1);
+  std::vector<int> ret;
+  std::vector<int> newLimits;
+  newLimits.push_back(limits.front());
+  for (int i = 0; i + 1 < limits.size(); ++i) {
+    int sz = limits[i + 1] - limits[i];
+    if (sz < minSplitSize) {
+      ret.push_back(1);
+      newLimits.push_back(limits[i+1]);
+    }
+    else {
+      ret.push_back(2);
+      newLimits.push_back((limits[i] + limits[i+1]) / 2);
+      newLimits.push_back(limits[i+1]);
+    }
+  }
+  limits = newLimits;
+  return ret;
+}
+
+std::vector<int> numberOfSplitToAssociation(const std::vector<int> &nb) {
+  std::vector<int> ret;
+  ret.push_back(0);
+  for (int n : nb) {
+    ret.push_back(ret.back() + n);
+  }
+  return ret;
+}
+}  // namespace
+
+std::vector<int> HierarchicalDensityState::splitX() {
+  std::vector<int> nbSplit = hierarchicalSplitHelper(xLimits_);
+  std::vector<std::vector<std::vector<int> > > newBinCells;
+  for (int i = 0; i < binCells_.size(); ++i) {
+    newBinCells.push_back(binCells_[i]);
+    if (nbSplit[i] > 1) {
+      newBinCells.emplace_back();
+    }
+  }
+  binCells_ = newBinCells;
+  check();
+  return numberOfSplitToAssociation(nbSplit);
+}
+
+std::vector<int> HierarchicalDensityState::splitY() {
+  std::vector<int> nbSplit = hierarchicalSplitHelper(yLimits_);
+  std::vector<std::vector<std::vector<int> > > newBinCells(binCells_.size());
+  for (int i = 0; i < binCells_.size(); ++i) {
+    for (int j = 0; j < binCells_[i].size(); ++j) {
+      newBinCells[i].push_back(binCells_[i][j]);
+      if (nbSplit[j] > 1) {
+        newBinCells[i].emplace_back();
+      }
+    }
+  }
+  binCells_ = newBinCells;
+  check();
+  return numberOfSplitToAssociation(nbSplit);
+}
+
 void HierarchicalDensityState::check() const {
+  for (int i = 0; i < hNbBinsX(); ++i) {
+    assert(xLimits_[i] < xLimits_[i + 1]);
+  }
+  for (int i = 0; i < hNbBinsY(); ++i) {
+    assert(yLimits_[i] < yLimits_[i + 1]);
+  }
   assert(binCells_.size() == nbBinxX());
   for (auto &bc : binCells_) {
     assert(bc.size() == nbBinxY());
