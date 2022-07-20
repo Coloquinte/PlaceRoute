@@ -302,7 +302,7 @@ class DensityPlacement : public DensityGrid {
  * superimposed on a density grid
  *
  */
-class HierarchicalDensityPlacement : public DensityGrid {
+class HierarchicalDensityPlacement {
  public:
   /**
    * @brief Initialize the datastructure from the grid and the cell demands
@@ -315,6 +315,21 @@ class HierarchicalDensityPlacement : public DensityGrid {
    * bins fully developed)
    */
   HierarchicalDensityPlacement(DensityPlacement placement);
+
+  /**
+   * @brief Get the total number of bins
+   */
+  int nbBins() const { return nbBinsX() * nbBinsY(); }
+
+  /**
+   * @brief Get the number of bins in the x direction with the current view
+   */
+  int nbBinsX() const { return xLimits_.size() - 1; };
+
+  /**
+   * @brief Get the number of bins in the y direction with the current view
+   */
+  int nbBinsY() const { return yLimits_.size() - 1; };
 
   /**
    * @brief Get the number of cells
@@ -330,38 +345,28 @@ class HierarchicalDensityPlacement : public DensityGrid {
   }
 
   /**
-   * @brief Get the number of bins in the x direction with the current view
-   */
-  int hNbBinsX() const { return xLimits_.size() - 1; };
-
-  /**
-   * @brief Get the number of bins in the y direction with the current view
-   */
-  int hNbBinsY() const { return yLimits_.size() - 1; };
-
-  /**
    * @brief Get the x coordinate of the boundary between bins with the current
    * view
    */
-  int hBinLimitX(int x) const {
+  int binLimitX(int x) const {
     assert(x <= currentBinsX());
-    return binLimitX(xLimits_[x]);
+    return grid_.binLimitX(xLimits_[x]);
   }
 
   /**
    * @brief Get the y coordinate of the boundary between bins with the current
    * view
    */
-  int hBinLimitY(int y) const {
+  int binLimitY(int y) const {
     assert(y <= currentBinsY());
-    return binLimitY(yLimits_[y]);
+    return grid_.binLimitY(yLimits_[y]);
   }
 
   /**
    * @brief Get the capacity of a given bin in the current view
    */
-  long long hBinCapacity(int x, int y) const {
-    return binCapacity(getGroup(x, y));
+  long long binCapacity(int x, int y) const {
+    return grid_.binCapacity(getGroup(x, y));
   }
 
   /**
@@ -408,12 +413,13 @@ class HierarchicalDensityPlacement : public DensityGrid {
   void check() const;
 
  private:
-  BinGroup getGroup(int x, int y) const {
-    return BinGroup(
+  DensityGrid::BinGroup getGroup(int x, int y) const {
+    return DensityGrid::BinGroup(
         {xLimits_[x], xLimits_[x + 1], yLimits_[y], yLimits_[y + 1]});
   }
 
  private:
+  DensityGrid grid_;
   std::vector<int> xLimits_;
   std::vector<int> yLimits_;
 
