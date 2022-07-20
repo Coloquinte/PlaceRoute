@@ -30,11 +30,45 @@ DensityGrid DensityGrid::fromIspdCircuit(const Circuit &circuit,
   return DensityGrid(sizeFactor * minCellHeight, circuit.rows);
 }
 
+DensityGrid::DensityGrid(std::vector<int> xLimits, std::vector<int> yLimits,
+                         std::vector<std::vector<long long> > binCapacity) {
+  binLimitX_ = xLimits;
+  binLimitY_ = yLimits;
+  binCapacity_ = binCapacity;
+  updateBinCenters();
+}
+
 std::vector<Rectangle> DensityGrid::computeActualRegions(
     const std::vector<Rectangle> &regions,
     const std::vector<Rectangle> &obstacles) {
   // TODO
   return regions;
+}
+
+void DensityGrid::updateBinCenters() {
+  int binsX = binLimitX_.size() - 1;
+  for (int i = 0; i < binsX; ++i) {
+    binX_.push_back(0.5f * (binLimitX_[i] + binLimitX_[i + 1]));
+  }
+  int binsY = binLimitY_.size() - 1;
+  for (int i = 0; i < binsY; ++i) {
+    binY_.push_back(0.5f * (binLimitY_[i] + binLimitY_[i + 1]));
+  }
+}
+
+void DensityGrid::updateBinCapacity() {
+  int binsX = binLimitX_.size() - 1;
+  int binsY = binLimitY_.size() - 1;
+  binCapacity_.assign(binsX, std::vector<long long>(binsY, 0));
+  for (int i = 0; i < binsX; ++i) {
+    for (int j = 0; j < binsY; ++j) {
+      long long w = binLimitX_[i + 1] - binLimitX_[i];
+      long long h = binLimitY_[j + 1] - binLimitY_[j];
+      assert(w >= 0);
+      assert(h >= 0);
+      binCapacity_[i][j] = w * h;
+    }
+  }
 }
 
 void DensityGrid::updateBinCapacity(const std::vector<Rectangle> &regions) {
@@ -58,23 +92,8 @@ void DensityGrid::updateBinsToNumber(int binsX, int binsY) {
         (i * (placementArea_.maxY - placementArea_.minY) / binsY));
   }
   assert(binLimitY_.size() == binsY + 1);
-  for (int i = 0; i < binsX; ++i) {
-    binX_.push_back(0.5f * (binLimitX_[i] + binLimitX_[i + 1]));
-  }
-  for (int i = 0; i < binsY; ++i) {
-    binY_.push_back(0.5f * (binLimitY_[i] + binLimitY_[i + 1]));
-  }
-  // TODO: actually compute bin capacity from rows
-  binCapacity_.assign(binsX, std::vector<long long>(binsY, 0));
-  for (int i = 0; i < binsX; ++i) {
-    for (int j = 0; j < binsY; ++j) {
-      long long w = binLimitX_[i + 1] - binLimitX_[i];
-      long long h = binLimitY_[j + 1] - binLimitY_[j];
-      assert(w >= 0);
-      assert(h >= 0);
-      binCapacity_[i][j] = w * h;
-    }
-  }
+  updateBinCenters();
+  updateBinCapacity();
 }
 
 void DensityGrid::updateBinsToSize(int maxSize) {
@@ -170,6 +189,25 @@ Rectangle DensityGrid::computePlacementArea(
   return Rectangle(minX, maxX, minY, maxY);
 }
 
+DensityPlacement::DensityPlacement(DensityGrid grid, std::vector<int> demands)
+    : DensityGrid(grid), cellDemand_(demands) {
+  binCells_.assign(nbBinsX(), std::vector<std::vector<int> >(nbBinsY()));
+}
+
+DensityPlacement DensityPlacement::fromIspdCircuit(const Circuit &circuit,
+                                                   float sizeFactor) {
+  DensityGrid grid = DensityGrid::fromIspdCircuit(circuit, sizeFactor);
+  std::vector<int> demands;
+  for (int i = 0; i < circuit.nbCells(); ++i) {
+    if (circuit.isFixed(i)) {
+      demands.push_back(0LL);
+    } else {
+      demands.push_back(circuit.getArea(i));
+    }
+  }
+  return DensityPlacement(grid, demands);
+}
+
 long long DensityPlacement::totalDemand() const {
   long long ret = 0;
   for (int demand : cellDemand_) {
@@ -231,8 +269,8 @@ std::vector<float> DensityPlacement::simpleCoordY() const {
 
 void DensityPlacement::check() const { DensityGrid::check(); }
 
-HierarchicalDensityState::HierarchicalDensityState(DensityGrid grid,
-                                                   std::vector<int> cellDemand)
+HierarchicalDensityPlacement::HierarchicalDensityPlacement(
+    DensityGrid grid, std::vector<int> cellDemand)
     : DensityGrid(grid), cellDemand_(cellDemand) {
   xLimits_.push_back(0);
   xLimits_.push_back(nbBinsX());
@@ -247,7 +285,8 @@ HierarchicalDensityState::HierarchicalDensityState(DensityGrid grid,
   check();
 }
 
-HierarchicalDensityState::HierarchicalDensityState(DensityPlacement placement)
+HierarchicalDensityPlacement::HierarchicalDensityPlacement(
+    DensityPlacement placement)
     : DensityGrid(placement) {
   for (int i = 0; i <= nbBinsX(); ++i) {
     xLimits_.push_back(i);
@@ -258,7 +297,7 @@ HierarchicalDensityState::HierarchicalDensityState(DensityPlacement placement)
   binCells_ = placement.binCells_;
 }
 
-long long HierarchicalDensityState::hBinUsage(int x, int y) const {
+long long HierarchicalDensityPlacement::binUsage(int x, int y) const {
   long long usage = 0;
   for (int c : binCells(x, y)) {
     usage += cellDemand(c);
@@ -307,7 +346,7 @@ std::vector<int> numberOfSplitToAssociation(const std::vector<int> &nb) {
 }
 }  // namespace
 
-std::vector<int> HierarchicalDensityState::splitX() {
+std::vector<int> HierarchicalDensityPlacement::splitX() {
   std::vector<int> nbSplit = hierarchicalSplitHelper(xLimits_);
   std::vector<std::vector<std::vector<int> > > newBinCells;
   for (int i = 0; i < binCells_.size(); ++i) {
@@ -321,7 +360,7 @@ std::vector<int> HierarchicalDensityState::splitX() {
   return numberOfSplitToAssociation(nbSplit);
 }
 
-std::vector<int> HierarchicalDensityState::splitY() {
+std::vector<int> HierarchicalDensityPlacement::splitY() {
   std::vector<int> nbSplit = hierarchicalSplitHelper(yLimits_);
   std::vector<std::vector<std::vector<int> > > newBinCells(binCells_.size());
   for (int i = 0; i < binCells_.size(); ++i) {
@@ -337,7 +376,36 @@ std::vector<int> HierarchicalDensityState::splitY() {
   return numberOfSplitToAssociation(nbSplit);
 }
 
-void HierarchicalDensityState::check() const {
+DensityPlacement HierarchicalDensityPlacement::toDensityPlacement() const {
+  std::vector<int> gridLimitX;
+  for (int i = 0; i <= hNbBinsX(); ++i) {
+    gridLimitX.push_back(hBinLimitX(i));
+  }
+  std::vector<int> gridLimitY;
+  for (int i = 0; i <= hNbBinsY(); ++i) {
+    gridLimitY.push_back(hBinLimitY(i));
+  }
+
+  std::vector<std::vector<long long> > gridCapacity(
+      hNbBinsX(), std::vector<long long>(hNbBinsY()));
+  for (int i = 0; i < hNbBinsX(); ++i) {
+    for (int j = 0; j < hNbBinsY(); ++j) {
+      gridCapacity[i][j] = binCapacity(i, j);
+    }
+  }
+
+  DensityPlacement ret(DensityGrid(gridLimitX, gridLimitY, gridCapacity),
+                       cellDemand_);
+  for (int i = 0; i < hNbBinsX(); ++i) {
+    for (int j = 0; j < hNbBinsY(); ++j) {
+      ret.binCells(i, j) = binCells(i, j);
+    }
+  }
+  ret.check();
+  return ret;
+}
+
+void HierarchicalDensityPlacement::check() const {
   for (int i = 0; i < hNbBinsX(); ++i) {
     assert(xLimits_[i] < xLimits_[i + 1]);
   }

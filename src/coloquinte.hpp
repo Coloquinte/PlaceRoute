@@ -61,7 +61,7 @@ struct Circuit {
 
   int nbPins() const { return netLimits.back(); }
 
-  bool isFixed(int cell) { return cellFixed[cell]; }
+  bool isFixed(int cell) const { return cellFixed[cell]; }
 
   long long getArea(int cell) const {
     return static_cast<long long>(cellWidths[cell]) *
