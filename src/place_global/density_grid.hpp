@@ -121,6 +121,27 @@ class DensityGrid {
 
  private:
   /**
+   * @brief Initialize a grid from limits and capacity
+   */
+  DensityGrid(std::vector<int> xLimits, std::vector<int> yLimits,
+              std::vector<std::vector<long long> > binCapacity);
+
+  /**
+   * @brief Compute the centers of the bins
+   */
+  void updateBinCenters();
+
+  /**
+   * @brief Compute the bin capacity from their sizes
+   */
+  void updateBinCapacity();
+
+  /**
+   * @brief Compute the bin capacity from the cleaned-up placement regions
+   */
+  void updateBinCapacity(const std::vector<Rectangle> &regions);
+
+  /**
    * @brief Update the density grid to this exact number of bins
    */
   void updateBinsToNumber(int binsX, int binsY);
@@ -144,21 +165,11 @@ class DensityGrid {
       const std::vector<Rectangle> &regions,
       const std::vector<Rectangle> &obstacles);
 
-  /**
-   * @brief Compute the bin capacity from the cleaned-up placement regions
-   */
-  void updateBinCapacity(const std::vector<Rectangle> &regions);
-
  private:
   /**
    * @brief Boundaries of the placement area
    */
   Rectangle placementArea_;
-
-  /**
-   * @brief Cleaned-up placement regions, with obstacles removed and no overlap
-   */
-  std::vector<Rectangle> actualRegions_;
 
   /**
    * Center x coordinates of the bins
@@ -184,6 +195,8 @@ class DensityGrid {
    * @brief Placement capacity of the bins (i.e. area available for placement)
    */
   std::vector<std::vector<long long> > binCapacity_;
+
+  friend class HierarchicalDensityPlacement;
 };
 
 /**
@@ -194,16 +207,9 @@ class DensityGrid {
 class DensityPlacement : public DensityGrid {
  public:
   /**
-   * @brief Initialize with a simple placement area
+   * @brief Initialize with a density grid
    */
-  DensityPlacement(std::vector<long long> demands, Rectangle placementArea);
-
-  /**
-   * @brief Initialize with placement regions (usually rows) and obstacles
-   */
-  DensityPlacement(std::vector<long long> demands,
-                   std::vector<Rectangle> regions,
-                   std::vector<Rectangle> obstacles = std::vector<Rectangle>());
+  DensityPlacement(DensityGrid grid, std::vector<int> demands);
 
   /**
    * @brief Initialize from a circuit
@@ -288,7 +294,7 @@ class DensityPlacement : public DensityGrid {
   // Problem status
   std::vector<std::vector<std::vector<int> > > binCells_;
 
-  friend class HierarchicalDensityState;
+  friend class HierarchicalDensityPlacement;
 };
 
 /**
@@ -296,18 +302,19 @@ class DensityPlacement : public DensityGrid {
  * superimposed on a density grid
  *
  */
-class HierarchicalDensityState : public DensityGrid {
+class HierarchicalDensityPlacement : public DensityGrid {
+ public:
   /**
    * @brief Initialize the datastructure from the grid and the cell demands
    * (single bin)
    */
-  HierarchicalDensityState(DensityGrid grid, std::vector<int> cellDemand);
+  HierarchicalDensityPlacement(DensityGrid grid, std::vector<int> cellDemand);
 
   /**
    * @brief Initialize the datastructure with a complete placement state (all
    * bins fully developed)
    */
-  HierarchicalDensityState(DensityPlacement placement);
+  HierarchicalDensityPlacement(DensityPlacement placement);
 
   /**
    * @brief Get the number of cells
@@ -360,7 +367,7 @@ class HierarchicalDensityState : public DensityGrid {
   /**
    * @brief Get the usage of a given bin in the current view
    */
-  long long hBinUsage(int x, int y) const;
+  long long binUsage(int x, int y) const;
 
   /**
    * @brief Return the cells currently allocated to a given bin
@@ -389,6 +396,11 @@ class HierarchicalDensityState : public DensityGrid {
    * 1 <= ret[i+1] - ret[i] <= 2
    */
   std::vector<int> splitY();
+
+  /**
+   * @brief Return a non-hierarchical view of this placement
+   */
+  DensityPlacement toDensityPlacement() const;
 
   /**
    * @brief Check the consistency of the datastructure
