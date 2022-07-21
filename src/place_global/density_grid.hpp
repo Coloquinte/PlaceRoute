@@ -409,6 +409,16 @@ class HierarchicalDensityPlacement {
   int parentY(int y) const { return parentY(levelY_, y); }
 
   /**
+   * @brief Get the bin index corresponding to this x coordinate
+   */
+  int findBinX(int x) const;
+
+  /**
+   * @brief Get the bin index corresponding to this y coordinate
+   */
+  int findBinY(int y) const;
+
+  /**
    * @brief Get the capacity of a given bin in the current view
    */
   long long binCapacity(int x, int y) const {
