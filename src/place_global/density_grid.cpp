@@ -5,10 +5,10 @@
 #include <cmath>
 #include <iostream>
 
-DensityGrid::DensityGrid(float binSize, Rectangle area)
+DensityGrid::DensityGrid(int binSize, Rectangle area)
     : DensityGrid(binSize, std::vector<Rectangle>({area})) {}
 
-DensityGrid::DensityGrid(float binSize, std::vector<Rectangle> regions,
+DensityGrid::DensityGrid(int binSize, std::vector<Rectangle> regions,
                          std::vector<Rectangle> obstacles) {
   placementArea_ = computePlacementArea(regions);
   updateBinsToSize(binSize);

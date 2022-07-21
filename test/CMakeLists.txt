@@ -4,6 +4,7 @@ FIND_PACKAGE(Boost REQUIRED COMPONENTS unit_test_framework)
 SET(TESTS
     test_wirelength_model
     test_density_legalizer
+    test_density_grid
 )
 
 FOREACH(TEST IN LISTS TESTS)
