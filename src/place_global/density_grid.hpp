@@ -23,13 +23,13 @@ class DensityGrid {
   /**
    * @brief Initialize a grid with a simple placement area
    */
-  DensityGrid(float binSize, Rectangle placementArea);
+  DensityGrid(int binSize, Rectangle placementArea);
 
   /**
    * @brief Initialize a grid with placement regions (usually rows) and
    * obstacles
    */
-  DensityGrid(float binSize, std::vector<Rectangle> regions,
+  DensityGrid(int binSize, std::vector<Rectangle> regions,
               std::vector<Rectangle> obstacles = std::vector<Rectangle>());
 
   /**
