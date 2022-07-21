@@ -252,6 +252,10 @@ class DensityPlacement : public DensityGrid {
   const std::vector<int> &binCells(int x, int y) const {
     return binCells_[x][y];
   }
+
+  /**
+   *
+   */
   std::vector<int> &binCells(int x, int y) { return binCells_[x][y]; }
 
   /**
@@ -422,7 +426,21 @@ class HierarchicalDensityPlacement {
   const std::vector<int> &binCells(int x, int y) const {
     return binCells_[x][y];
   }
-  std::vector<int> &binCells(int x, int y) { return binCells_[x][y]; }
+
+  /**
+   * @brief Update the cells in the given bin
+   */
+  void setBinCells(int x, int y, std::vector<int> cells);
+
+  /**
+   * @brief Return the x index of the bin where the cell is located
+   */
+  int cellBinX(int c) const { return cellBinX_[c]; }
+
+  /**
+   * @brief Return the y index of the bin where the cell is located
+   */
+  int cellBinY(int c) const { return cellBinY_[c]; }
 
   /**
    * @brief Refine vertically (more bins in the x direction). The cells are
@@ -463,7 +481,15 @@ class HierarchicalDensityPlacement {
          yLimits_[levelY_][y + 1]});
   }
 
+  /**
+   * @brief Construct the datastructures describing the hierarchy
+   */
   void setupHierarchy();
+
+  /**
+   * @brief Update the cell locations
+   */
+  void updateCellToBin();
 
   /**
    * @brief Get the number of bins in the x direction at the given level
@@ -534,4 +560,7 @@ class HierarchicalDensityPlacement {
    * @brief Allocation of the cells to the bins
    */
   std::vector<std::vector<std::vector<int> > > binCells_;
+
+  std::vector<int> cellBinX_;
+  std::vector<int> cellBinY_;
 };

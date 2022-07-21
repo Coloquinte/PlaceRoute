@@ -299,6 +299,7 @@ HierarchicalDensityPlacement::HierarchicalDensityPlacement(
   }
   binCells_.emplace_back();
   binCells_.back().push_back(allCells);
+  updateCellToBin();
   check();
 }
 
@@ -310,6 +311,8 @@ HierarchicalDensityPlacement::HierarchicalDensityPlacement(
   levelY_ = 0;
   cellDemand_ = placement.cellDemand_;
   binCells_ = placement.binCells_;
+  updateCellToBin();
+  check();
 }
 
 long long HierarchicalDensityPlacement::binUsage(int x, int y) const {
@@ -318,6 +321,16 @@ long long HierarchicalDensityPlacement::binUsage(int x, int y) const {
     usage += cellDemand(c);
   }
   return usage;
+}
+
+void HierarchicalDensityPlacement::setBinCells(int x, int y, std::vector<int> cells) {
+  assert (x < nbBinsX());
+  assert (y < nbBinsY());
+  for (int c : cells) {
+    cellBinX_[c] = x;
+    cellBinY_[c] = y;
+  }
+  binCells_[x][y] = cells;
 }
 
 namespace {
@@ -364,6 +377,19 @@ void HierarchicalDensityPlacement::setupHierarchy() {
   setupHierarchyHelper(grid_.nbBinsY(), yLimits_, parentY_);
 }
 
+void HierarchicalDensityPlacement::updateCellToBin() {
+  cellBinX_.assign(nbCells(), -1);
+  cellBinY_.assign(nbCells(), -1);
+  for (int i = 0; i < nbBinsX(); ++i) {
+    for (int j = 0; j < nbBinsY(); ++j) {
+      for (int c : binCells_[i][j]) {
+        cellBinX_[c] = i;
+        cellBinY_[c] = j;
+      }
+    }
+  }
+}
+
 void HierarchicalDensityPlacement::coarsenX() {
   assert(levelX_ + 1 < nbLevelX());
   std::vector<std::vector<std::vector<int> > > newCells;
@@ -379,6 +405,7 @@ void HierarchicalDensityPlacement::coarsenX() {
   }
   binCells_ = newCells;
   levelX_++;
+  updateCellToBin();
   check();
 }
 
@@ -397,6 +424,7 @@ void HierarchicalDensityPlacement::coarsenY() {
   }
   binCells_ = newCells;
   levelY_++;
+  updateCellToBin();
   check();
 }
 
@@ -419,6 +447,7 @@ void HierarchicalDensityPlacement::refineX() {
   }
   binCells_ = newCells;
   levelX_--;
+  updateCellToBin();
   check();
 }
 
@@ -441,6 +470,7 @@ void HierarchicalDensityPlacement::refineY() {
   }
   binCells_ = newCells;
   levelY_--;
+  updateCellToBin();
   check();
 }
 
@@ -503,16 +533,14 @@ void HierarchicalDensityPlacement::check() const {
     assert(bc.size() == nbBinsY());
   }
   std::vector<int> nbPlaced(nbCells(), 0);
-  for (auto &bc : binCells_) {
-    for (auto &bcc : bc) {
-      for (int c : bcc) {
+  for (int i = 0; i < nbBinsX(); ++i) {
+    for (int j = 0; j < nbBinsY(); ++j) {
+      for (int c : binCells_[i][j]) {
         assert(c >= 0);
         assert(c < nbCells());
-        nbPlaced[c]++;
+        assert (cellBinX(c) == i);
+        assert (cellBinY(c) == j);
       }
     }
-  }
-  for (int nb : nbPlaced) {
-    assert(nb == 1);
   }
 }
