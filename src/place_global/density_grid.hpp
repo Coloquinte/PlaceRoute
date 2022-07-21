@@ -298,8 +298,8 @@ class DensityPlacement : public DensityGrid {
 };
 
 /**
- * @brief Represent the state of a hierarchical legalizer or partitioner
- * superimposed on a density grid
+ * @brief Represent the state of a hierarchical legalizer or partitioner, with a
+ * density grid that can be refined and coarsened at will.
  *
  */
 class HierarchicalDensityPlacement {
@@ -317,6 +317,12 @@ class HierarchicalDensityPlacement {
   HierarchicalDensityPlacement(DensityPlacement placement);
 
   /**
+   * @brief Access the underlying grid
+   */
+  const DensityGrid &grid() const { return grid_; }
+  DensityGrid &grid() { return grid_; }
+
+  /**
    * @brief Get the total number of bins
    */
   int nbBins() const { return nbBinsX() * nbBinsY(); }
@@ -324,17 +330,39 @@ class HierarchicalDensityPlacement {
   /**
    * @brief Get the number of bins in the x direction with the current view
    */
-  int nbBinsX() const { return xLimits_.size() - 1; };
+  int nbBinsX() const { return nbBinsX(levelX_); };
 
   /**
    * @brief Get the number of bins in the y direction with the current view
    */
-  int nbBinsY() const { return yLimits_.size() - 1; };
+  int nbBinsY() const { return nbBinsY(levelY_); };
 
   /**
    * @brief Get the number of cells
    */
   int nbCells() const { return cellDemand_.size(); }
+
+  /**
+   * @brief Get the current coarsening level in the x direction. 0 is the fully
+   * refined grid.
+   */
+  int levelX() const { return levelX_; }
+
+  /**
+   * @brief Get the current coarsening level in the y direction. 0 is the fully
+   * refined grid.
+   */
+  int levelY() const { return levelY_; }
+
+  /**
+   * @brief Get the total number of coarsening levels in the x direction
+   */
+  int nbLevelX() const { return xLimits_.size(); }
+
+  /**
+   * @brief Get the total number of coarsening levels in the y direction
+   */
+  int nbLevelY() const { return yLimits_.size(); }
 
   /**
    * @brief Get the demand for a given cell
@@ -350,7 +378,7 @@ class HierarchicalDensityPlacement {
    */
   int binLimitX(int x) const {
     assert(x <= nbBinsX());
-    return grid_.binLimitX(xLimits_[x]);
+    return grid_.binLimitX(xLimits_[levelX_][x]);
   }
 
   /**
@@ -359,8 +387,22 @@ class HierarchicalDensityPlacement {
    */
   int binLimitY(int y) const {
     assert(y <= nbBinsY());
-    return grid_.binLimitY(yLimits_[y]);
+    return grid_.binLimitY(yLimits_[levelY_][y]);
   }
+
+  /**
+   * @brief Index of the parent bin at the upper level of coarsening (x
+   * direction). This is useful to decide which bins to reoptimize after a
+   * refinement step.
+   */
+  int parentX(int x) const { return parentX(levelX_, x); }
+
+  /**
+   * @brief Index of the parent bin at the upper level of coarsening (y
+   * direction). This is useful to decide which bins to reoptimize after a
+   * refinement step.
+   */
+  int parentY(int y) const { return parentY(levelY_, y); }
 
   /**
    * @brief Get the capacity of a given bin in the current view
@@ -375,7 +417,7 @@ class HierarchicalDensityPlacement {
   long long binUsage(int x, int y) const;
 
   /**
-   * @brief Return the cells currently allocated to a given bin
+   * @brief Return the cells allocated to a given bin in the current view
    */
   const std::vector<int> &binCells(int x, int y) const {
     return binCells_[x][y];
@@ -383,24 +425,26 @@ class HierarchicalDensityPlacement {
   std::vector<int> &binCells(int x, int y) { return binCells_[x][y]; }
 
   /**
-   * @brief Split the hierarchical bins vertically (more bins in the x
-   * direction). The cells are assigned to one side without rebalancing.
-   *
-   * @return A vector describing the association from old bins to new bins. The
-   * new bins b corresponding to old bin i are from ret[i] <= b < ret[i+1], with
-   * 1 <= ret[i+1] - ret[i] <= 2
+   * @brief Refine vertically (more bins in the x direction). The cells are
+   * assigned to one side without rebalancing.
    */
-  std::vector<int> splitX();
+  void refineX();
 
   /**
-   * @brief Split the hierarchical bins horizontally (more bins in the y
-   * direction). The cells are assigned to one side without rebalancing.
-   *
-   * @return A vector describing the association from old bins to new bins. The
-   * new bins b corresponding to old bin i are from ret[i] <= b < ret[i+1], with
-   * 1 <= ret[i+1] - ret[i] <= 2
+   * @brief Refine horizontally (more bins in the y direction). The cells are
+   * assigned to one side without rebalancing.
    */
-  std::vector<int> splitY();
+  void refineY();
+
+  /**
+   * @brief Coarsen vertically (less bins in the x direction).
+   */
+  void coarsenX();
+
+  /**
+   * @brief Coarsen horizontally (less bins in the y direction).
+   */
+  void coarsenY();
 
   /**
    * @brief Return a non-hierarchical view of this placement
@@ -415,14 +459,79 @@ class HierarchicalDensityPlacement {
  private:
   DensityGrid::BinGroup getGroup(int x, int y) const {
     return DensityGrid::BinGroup(
-        {xLimits_[x], xLimits_[x + 1], yLimits_[y], yLimits_[y + 1]});
+        {xLimits_[levelX_][x], xLimits_[levelX_][x + 1], yLimits_[levelY_][y],
+         yLimits_[levelY_][y + 1]});
   }
 
- private:
-  DensityGrid grid_;
-  std::vector<int> xLimits_;
-  std::vector<int> yLimits_;
+  void setupHierarchy();
 
+  /**
+   * @brief Get the number of bins in the x direction at the given level
+   */
+  int nbBinsX(int lvl) const { return xLimits_[lvl].size() - 1; };
+
+  /**
+   * @brief Get the number of bins in the y direction at the given level
+   */
+  int nbBinsY(int lvl) const { return yLimits_[lvl].size() - 1; };
+
+  /**
+   * @brief Index of the parent bin at the upper level of coarsening (x
+   * direction).
+   */
+  int parentX(int lvl, int x) const { return parentX_[lvl][x]; }
+
+  /**
+   * @brief Index of the parent bin at the upper level of coarsening (y
+   * direction).
+   */
+  int parentY(int lvl, int y) const { return parentY_[lvl][y]; }
+
+ private:
+  /**
+   * @brief Underlying density grid
+   */
+  DensityGrid grid_;
+
+  /**
+   * @brief Level of coarsening in the x direction
+   */
+  int levelX_;
+
+  /**
+   * @brief Level of coarsening in the y direction
+   */
+  int levelY_;
+
+  /**
+   * @brief Index of the bin boundaries at each coarsening level in the x
+   * direction
+   */
+  std::vector<std::vector<int> > xLimits_;
+
+  /**
+   * @brief Index of the bin boundaries at each coarsening level in the y
+   * direction
+   */
+  std::vector<std::vector<int> > yLimits_;
+
+  /**
+   * @brief Index of the parent in the x direction
+   */
+  std::vector<std::vector<int> > parentX_;
+
+  /**
+   * @brief Index of the parent in the y direction
+   */
+  std::vector<std::vector<int> > parentY_;
+
+  /**
+   * @brief Demand of the cells
+   */
   std::vector<int> cellDemand_;
+
+  /**
+   * @brief Allocation of the cells to the bins
+   */
   std::vector<std::vector<std::vector<int> > > binCells_;
 };
