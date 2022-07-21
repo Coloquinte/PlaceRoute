@@ -188,13 +188,8 @@ Rectangle DensityGrid::computePlacementArea(
   return Rectangle(minX, maxX, minY, maxY);
 }
 
-DensityPlacement::DensityPlacement(DensityGrid grid, std::vector<int> demands)
-    : DensityGrid(grid), cellDemand_(demands) {
-  binCells_.assign(nbBinsX(), std::vector<std::vector<int> >(nbBinsY()));
-}
-
-DensityPlacement DensityPlacement::fromIspdCircuit(const Circuit &circuit,
-                                                   float sizeFactor) {
+HierarchicalDensityPlacement HierarchicalDensityPlacement::fromIspdCircuit(
+    const Circuit &circuit, float sizeFactor) {
   DensityGrid grid = DensityGrid::fromIspdCircuit(circuit, sizeFactor);
   std::vector<int> demands;
   for (int i = 0; i < circuit.nbCells(); ++i) {
@@ -204,10 +199,10 @@ DensityPlacement DensityPlacement::fromIspdCircuit(const Circuit &circuit,
       demands.push_back(circuit.getArea(i));
     }
   }
-  return DensityPlacement(grid, demands);
+  return HierarchicalDensityPlacement(grid, demands);
 }
 
-long long DensityPlacement::totalDemand() const {
+long long HierarchicalDensityPlacement::totalDemand() const {
   long long ret = 0;
   for (int demand : cellDemand_) {
     ret += demand;
@@ -215,7 +210,7 @@ long long DensityPlacement::totalDemand() const {
   return ret;
 }
 
-long long DensityPlacement::totalOverflow() const {
+long long HierarchicalDensityPlacement::totalOverflow() const {
   long long ret = 0;
   for (int i = 0; i < nbBinsX(); ++i) {
     for (int j = 0; j < nbBinsY(); ++j) {
@@ -225,7 +220,7 @@ long long DensityPlacement::totalOverflow() const {
   return ret;
 }
 
-float DensityPlacement::overflowRatio() const {
+float HierarchicalDensityPlacement::overflowRatio() const {
   float demand = totalDemand();
   if (demand > 0) {
     return totalOverflow() / demand;
@@ -234,57 +229,30 @@ float DensityPlacement::overflowRatio() const {
   }
 }
 
-long long DensityPlacement::binUsage(int x, int y) const {
-  long long usage = 0;
-  for (int c : binCells(x, y)) {
-    usage += cellDemand(c);
-  }
-  return usage;
-}
-
-std::vector<float> DensityPlacement::simpleCoordX() const {
+std::vector<float> HierarchicalDensityPlacement::simpleCoordX() const {
   std::vector<float> ret(nbCells(), 0.0f);
   for (int i = 0; i < nbBinsX(); ++i) {
     for (int j = 0; j < nbBinsY(); ++j) {
+      float coord = binX(i, j);
       for (int c : binCells_[i][j]) {
-        ret[c] = binX(i);
+        ret[c] = coord;
       }
     }
   }
   return ret;
 }
 
-std::vector<float> DensityPlacement::simpleCoordY() const {
+std::vector<float> HierarchicalDensityPlacement::simpleCoordY() const {
   std::vector<float> ret(nbCells(), 0.0f);
   for (int i = 0; i < nbBinsY(); ++i) {
     for (int j = 0; j < nbBinsX(); ++j) {
+      float coord = binY(i, j);
       for (int c : binCells_[i][j]) {
-        ret[c] = binY(i);
+        ret[c] = coord;
       }
     }
   }
   return ret;
-}
-
-void DensityPlacement::check() const {
-  DensityGrid::check();
-  assert(binCells_.size() == nbBinsX());
-  for (auto &bc : binCells_) {
-    assert(bc.size() == nbBinsY());
-  }
-  std::vector<int> nbPlaced(nbCells(), 0);
-  for (auto &bc : binCells_) {
-    for (auto &bcc : bc) {
-      for (int c : bcc) {
-        assert(c >= 0);
-        assert(c < nbCells());
-        nbPlaced[c]++;
-      }
-    }
-  }
-  for (int nb : nbPlaced) {
-    assert(nb <= 1);
-  }
 }
 
 HierarchicalDensityPlacement::HierarchicalDensityPlacement(
@@ -303,19 +271,7 @@ HierarchicalDensityPlacement::HierarchicalDensityPlacement(
   check();
 }
 
-HierarchicalDensityPlacement::HierarchicalDensityPlacement(
-    DensityPlacement placement)
-    : grid_(placement) {
-  setupHierarchy();
-  levelX_ = 0;
-  levelY_ = 0;
-  cellDemand_ = placement.cellDemand_;
-  binCells_ = placement.binCells_;
-  updateCellToBin();
-  check();
-}
-
-int HierarchicalDensityPlacement::findBinX(int coord) const {
+int HierarchicalDensityPlacement::findBinByX(int coord) const {
   int mn = 0;
   int mx = nbBinsX() - 1;
   while (mx > mn) {
@@ -329,7 +285,7 @@ int HierarchicalDensityPlacement::findBinX(int coord) const {
   return mn;
 }
 
-int HierarchicalDensityPlacement::findBinY(int coord) const {
+int HierarchicalDensityPlacement::findBinByY(int coord) const {
   int mn = 0;
   int mx = nbBinsY() - 1;
   while (mx > mn) {
@@ -501,35 +457,6 @@ void HierarchicalDensityPlacement::refineY() {
   levelY_--;
   updateCellToBin();
   check();
-}
-
-DensityPlacement HierarchicalDensityPlacement::toDensityPlacement() const {
-  std::vector<int> gridLimitX;
-  for (int i = 0; i <= nbBinsX(); ++i) {
-    gridLimitX.push_back(binLimitX(i));
-  }
-  std::vector<int> gridLimitY;
-  for (int i = 0; i <= nbBinsY(); ++i) {
-    gridLimitY.push_back(binLimitY(i));
-  }
-
-  std::vector<std::vector<long long> > gridCapacity(
-      nbBinsX(), std::vector<long long>(nbBinsY()));
-  for (int i = 0; i < nbBinsX(); ++i) {
-    for (int j = 0; j < nbBinsY(); ++j) {
-      gridCapacity[i][j] = binCapacity(i, j);
-    }
-  }
-
-  DensityPlacement ret(DensityGrid(gridLimitX, gridLimitY, gridCapacity),
-                       cellDemand_);
-  for (int i = 0; i < nbBinsX(); ++i) {
-    for (int j = 0; j < nbBinsY(); ++j) {
-      ret.binCells(i, j) = binCells(i, j);
-    }
-  }
-  ret.check();
-  return ret;
 }
 
 void HierarchicalDensityPlacement::check() const {
