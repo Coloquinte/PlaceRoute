@@ -267,7 +267,26 @@ std::vector<float> DensityPlacement::simpleCoordY() const {
   return ret;
 }
 
-void DensityPlacement::check() const { DensityGrid::check(); }
+void DensityPlacement::check() const {
+  DensityGrid::check();
+  assert(binCells_.size() == nbBinsX());
+  for (auto &bc : binCells_) {
+    assert(bc.size() == nbBinsY());
+  }
+  std::vector<int> nbPlaced(nbCells(), 0);
+  for (auto &bc : binCells_) {
+    for (auto &bcc : bc) {
+      for (int c : bcc) {
+        assert(c >= 0);
+        assert(c < nbCells());
+        nbPlaced[c]++;
+      }
+    }
+  }
+  for (int nb : nbPlaced) {
+    assert(nb <= 1);
+  }
+}
 
 HierarchicalDensityPlacement::HierarchicalDensityPlacement(
     DensityGrid grid, std::vector<int> cellDemand)
@@ -407,21 +426,21 @@ DensityPlacement HierarchicalDensityPlacement::toDensityPlacement() const {
 }
 
 void HierarchicalDensityPlacement::check() const {
-  assert (xLimits_.size() >= 1);
-  assert (xLimits_.front() == 0);
-  assert (xLimits_.back() == grid_.nbBinsX());
+  assert(xLimits_.size() >= 1);
+  assert(xLimits_.front() == 0);
+  assert(xLimits_.back() == grid_.nbBinsX());
   for (int i = 0; i < nbBinsX(); ++i) {
     assert(xLimits_[i] < xLimits_[i + 1]);
   }
-  assert (yLimits_.size() >= 1);
-  assert (yLimits_.front() == 0);
-  assert (yLimits_.back() == grid_.nbBinsY());
+  assert(yLimits_.size() >= 1);
+  assert(yLimits_.front() == 0);
+  assert(yLimits_.back() == grid_.nbBinsY());
   for (int i = 0; i < nbBinsY(); ++i) {
     assert(yLimits_[i] < yLimits_[i + 1]);
   }
-  assert(binCells_.size() == hNbBinxX());
+  assert(binCells_.size() == nbBinsX());
   for (auto &bc : binCells_) {
-    assert(bc.size() == hNbBinxY());
+    assert(bc.size() == nbBinsY());
   }
   std::vector<int> nbPlaced(nbCells(), 0);
   for (auto &bc : binCells_) {

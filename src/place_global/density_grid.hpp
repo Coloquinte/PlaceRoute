@@ -349,7 +349,7 @@ class HierarchicalDensityPlacement {
    * view
    */
   int binLimitX(int x) const {
-    assert(x <= currentBinsX());
+    assert(x <= nbBinsX());
     return grid_.binLimitX(xLimits_[x]);
   }
 
@@ -358,7 +358,7 @@ class HierarchicalDensityPlacement {
    * view
    */
   int binLimitY(int y) const {
-    assert(y <= currentBinsY());
+    assert(y <= nbBinsY());
     return grid_.binLimitY(yLimits_[y]);
   }
 
