@@ -200,108 +200,6 @@ class DensityGrid {
 };
 
 /**
- * @brief Represent the approximate legalization of cells in bins, respecting
- * density constraints
- *
- */
-class DensityPlacement : public DensityGrid {
- public:
-  /**
-   * @brief Initialize with a density grid
-   */
-  DensityPlacement(DensityGrid grid, std::vector<int> demands);
-
-  /**
-   * @brief Initialize from a circuit
-   */
-  static DensityPlacement fromIspdCircuit(const Circuit &circuit,
-                                          float sizeFactor = 10.0);
-
-  /**
-   * @brief Get the number of cells
-   */
-  int nbCells() const { return cellDemand_.size(); }
-
-  /**
-   * @brief Get the demand for a given cell
-   */
-  int cellDemand(int c) const {
-    assert(c < nbCells());
-    return cellDemand_[c];
-  }
-
-  /**
-   * @brief Get the sum of the demands of the cells
-   */
-  long long totalDemand() const;
-
-  /**
-   * @brief Compute the total overflowing area of this placement
-   */
-  long long totalOverflow() const;
-
-  /**
-   * @brief Compute the overflowing area of this placement, relative to the
-   * total demand
-   */
-  float overflowRatio() const;
-
-  /**
-   * @brief Return the cells currently allocated to a given bin
-   */
-  const std::vector<int> &binCells(int x, int y) const {
-    return binCells_[x][y];
-  }
-
-  /**
-   *
-   */
-  std::vector<int> &binCells(int x, int y) { return binCells_[x][y]; }
-
-  /**
-   * @brief Return the sum of demands of the cells currently allocated to a
-   * given bin
-   */
-  long long binUsage(int x, int y) const;
-
-  /**
-   * @brief Return the x coordinates for the cells (center of the bin)
-   */
-  std::vector<float> simpleCoordX() const;
-
-  /**
-   * @brief Return the y coordinates for the cells (center of the bin)
-   */
-  std::vector<float> simpleCoordY() const;
-
-  /**
-   * @brief Return the x coordinates for the cells (spread in the bin according
-   * to the target coordinates)
-   */
-  std::vector<float> spreadCoordX(const std::vector<float> &target) const;
-
-  /**
-   * @brief Return the y coordinates for the cells (spread in the bin according
-   * to the target coordinates)
-   */
-  std::vector<float> spreadCoordY(const std::vector<float> &target) const;
-
-  /**
-   * @brief Check the consistency of the datastructure
-   */
-  void check() const;
-
- private:
-  // Cell properties
-  std::vector<int> cellDemand_;
-
-  // Problem status
-  std::vector<std::vector<std::vector<int> > > binCells_;
-
-  friend class HierarchicalDensityPlacement;
-};
-
-/**
  * @brief Represent the state of a hierarchical legalizer or partitioner, with a
  * density grid that can be refined and coarsened at will.
  *
@@ -315,10 +213,10 @@ class HierarchicalDensityPlacement {
   HierarchicalDensityPlacement(DensityGrid grid, std::vector<int> cellDemand);
 
   /**
-   * @brief Initialize the datastructure with a complete placement state (all
-   * bins fully developed)
+   * @brief Initialize from a circuit
    */
-  HierarchicalDensityPlacement(DensityPlacement placement);
+  static HierarchicalDensityPlacement fromIspdCircuit(const Circuit &circuit,
+                                                      float sizeFactor = 10.0);
 
   /**
    * @brief Access the underlying grid
@@ -411,12 +309,12 @@ class HierarchicalDensityPlacement {
   /**
    * @brief Get the bin index corresponding to this x coordinate
    */
-  int findBinX(int x) const;
+  int findBinByX(int x) const;
 
   /**
    * @brief Get the bin index corresponding to this y coordinate
    */
-  int findBinY(int y) const;
+  int findBinByY(int y) const;
 
   /**
    * @brief Get the capacity of a given bin in the current view
@@ -424,11 +322,58 @@ class HierarchicalDensityPlacement {
   long long binCapacity(int x, int y) const {
     return grid_.binCapacity(getGroup(x, y));
   }
+  /**
+   * @brief Get the x center of a given bin in the current view
+   */
+  float binX(int x, int y) const { return grid_.groupCenterX(getGroup(x, y)); }
+
+  /**
+   * @brief Get the x center of a given bin in the current view
+   */
+  float binY(int x, int y) const { return grid_.groupCenterY(getGroup(x, y)); }
 
   /**
    * @brief Get the usage of a given bin in the current view
    */
   long long binUsage(int x, int y) const;
+
+  /**
+   * @brief Return the x coordinates for the cells (center of the bin)
+   */
+  std::vector<float> simpleCoordX() const;
+
+  /**
+   * @brief Return the y coordinates for the cells (center of the bin)
+   */
+  std::vector<float> simpleCoordY() const;
+
+  /**
+   * @brief Return the x coordinates for the cells (spread in the bin according
+   * to the target coordinates)
+   */
+  std::vector<float> spreadCoordX(const std::vector<float> &target) const;
+
+  /**
+   * @brief Return the y coordinates for the cells (spread in the bin according
+   * to the target coordinates)
+   */
+  std::vector<float> spreadCoordY(const std::vector<float> &target) const;
+
+  /**
+   * @brief Get the sum of the demands of the cells
+   */
+  long long totalDemand() const;
+
+  /**
+   * @brief Compute the total overflowing area of this placement
+   */
+  long long totalOverflow() const;
+
+  /**
+   * @brief Compute the overflowing area of this placement, relative to the
+   * total demand
+   */
+  float overflowRatio() const;
 
   /**
    * @brief Return the cells allocated to a given bin in the current view
@@ -473,11 +418,6 @@ class HierarchicalDensityPlacement {
    * @brief Coarsen horizontally (less bins in the y direction).
    */
   void coarsenY();
-
-  /**
-   * @brief Return a non-hierarchical view of this placement
-   */
-  DensityPlacement toDensityPlacement() const;
 
   /**
    * @brief Check the consistency of the datastructure
