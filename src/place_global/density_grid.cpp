@@ -3,7 +3,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 
 DensityGrid::DensityGrid(int binSize, Rectangle area)
     : DensityGrid(binSize, std::vector<Rectangle>({area})) {}
@@ -291,10 +290,9 @@ void DensityPlacement::check() const {
 HierarchicalDensityPlacement::HierarchicalDensityPlacement(
     DensityGrid grid, std::vector<int> cellDemand)
     : grid_(grid), cellDemand_(cellDemand) {
-  xLimits_.push_back(0);
-  xLimits_.push_back(grid_.nbBinsX());
-  yLimits_.push_back(0);
-  yLimits_.push_back(grid_.nbBinsY());
+  setupHierarchy();
+  levelX_ = nbLevelX() - 1;
+  levelY_ = nbLevelY() - 1;
   std::vector<int> allCells;
   for (int c = 0; c < nbCells(); ++c) {
     allCells.push_back(c);
@@ -307,12 +305,9 @@ HierarchicalDensityPlacement::HierarchicalDensityPlacement(
 HierarchicalDensityPlacement::HierarchicalDensityPlacement(
     DensityPlacement placement)
     : grid_(placement) {
-  for (int i = 0; i <= grid_.nbBinsX(); ++i) {
-    xLimits_.push_back(i);
-  }
-  for (int i = 0; i <= grid_.nbBinsY(); ++i) {
-    yLimits_.push_back(i);
-  }
+  setupHierarchy();
+  levelX_ = 0;
+  levelY_ = 0;
   cellDemand_ = placement.cellDemand_;
   binCells_ = placement.binCells_;
 }
@@ -326,74 +321,127 @@ long long HierarchicalDensityPlacement::binUsage(int x, int y) const {
 }
 
 namespace {
-/**
- * @brief Update the limits between bins after a split is done, and return the
- * number of bins split
- */
-std::vector<int> hierarchicalSplitHelper(std::vector<int> &limits) {
-  int maxSz = 1;
+bool canRefine(const std::vector<int> &limits) {
   for (int i = 0; i + 1 < limits.size(); ++i) {
-    int sz = limits[i + 1] - limits[i];
-    maxSz = std::max(maxSz, sz);
+    if (limits[i + 1] - limits[i] > 1) return true;
   }
-  // Minimum number of bins to split: only split the larger ones
-  int minSplitSize = std::max(2, maxSz / 2 + 1);
-  std::vector<int> ret;
-  std::vector<int> newLimits;
-  newLimits.push_back(limits.front());
-  for (int i = 0; i + 1 < limits.size(); ++i) {
-    int sz = limits[i + 1] - limits[i];
-    if (sz < minSplitSize) {
-      ret.push_back(1);
-      newLimits.push_back(limits[i + 1]);
-    } else {
-      ret.push_back(2);
-      newLimits.push_back((limits[i] + limits[i + 1]) / 2);
-      newLimits.push_back(limits[i + 1]);
-    }
-  }
-  limits = newLimits;
-  return ret;
+  return false;
 }
-
-std::vector<int> numberOfSplitToAssociation(const std::vector<int> &nb) {
-  std::vector<int> ret;
-  ret.push_back(0);
-  for (int n : nb) {
-    ret.push_back(ret.back() + n);
+void refine(const std::vector<int> &oldLimits, std::vector<int> &limits,
+            std::vector<int> &parents) {
+  limits.push_back(0);
+  int minSplitSize = 2;
+  for (int i = 0; i + 1 < oldLimits.size(); ++i) {
+    int e = oldLimits[i + 1];
+    int b = oldLimits[i];
+    if (e - b >= minSplitSize) {
+      limits.push_back((e + b) / 2);
+      parents.push_back(i);
+    }
+    limits.push_back(e);
+    parents.push_back(i);
   }
-  return ret;
+}
+void setupHierarchyHelper(int nbBins, std::vector<std::vector<int> > &limits,
+                          std::vector<std::vector<int> > &parents) {
+  limits.clear();
+  parents.clear();
+  limits.push_back(std::vector<int>({0, nbBins}));
+  parents.push_back(std::vector<int>({0}));
+  while (canRefine(limits.back())) {
+    std::vector<int> nextLimits, nextParents;
+    refine(limits.back(), nextLimits, nextParents);
+    limits.push_back(nextLimits);
+    parents.push_back(nextParents);
+  }
+  std::reverse(limits.begin(), limits.end());
+  std::reverse(parents.begin(), parents.end());
 }
 }  // namespace
 
-std::vector<int> HierarchicalDensityPlacement::splitX() {
-  std::vector<int> nbSplit = hierarchicalSplitHelper(xLimits_);
-  std::vector<std::vector<std::vector<int> > > newBinCells;
-  for (int i = 0; i < binCells_.size(); ++i) {
-    newBinCells.push_back(binCells_[i]);
-    if (nbSplit[i] > 1) {
-      newBinCells.emplace_back();
-    }
-  }
-  binCells_ = newBinCells;
-  check();
-  return numberOfSplitToAssociation(nbSplit);
+void HierarchicalDensityPlacement::setupHierarchy() {
+  setupHierarchyHelper(grid_.nbBinsX(), xLimits_, parentX_);
+  setupHierarchyHelper(grid_.nbBinsY(), yLimits_, parentY_);
 }
 
-std::vector<int> HierarchicalDensityPlacement::splitY() {
-  std::vector<int> nbSplit = hierarchicalSplitHelper(yLimits_);
-  std::vector<std::vector<std::vector<int> > > newBinCells(binCells_.size());
-  for (int i = 0; i < binCells_.size(); ++i) {
-    for (int j = 0; j < binCells_[i].size(); ++j) {
-      newBinCells[i].push_back(binCells_[i][j]);
-      if (nbSplit[j] > 1) {
-        newBinCells[i].emplace_back();
+void HierarchicalDensityPlacement::coarsenX() {
+  assert(levelX_ + 1 < nbLevelX());
+  std::vector<std::vector<std::vector<int> > > newCells;
+  newCells.assign(nbBinsX(levelX_ + 1),
+                  std::vector<std::vector<int> >(nbBinsY()));
+  for (int i = 0; i < nbBinsX(); ++i) {
+    for (int j = 0; j < nbBinsY(); ++j) {
+      int p = parentX(i);
+      for (int c : binCells(i, j)) {
+        newCells[p][j].push_back(c);
       }
     }
   }
-  binCells_ = newBinCells;
+  binCells_ = newCells;
+  levelX_++;
   check();
-  return numberOfSplitToAssociation(nbSplit);
+}
+
+void HierarchicalDensityPlacement::coarsenY() {
+  assert(levelY_ + 1 < nbLevelY());
+  std::vector<std::vector<std::vector<int> > > newCells;
+  newCells.assign(nbBinsX(),
+                  std::vector<std::vector<int> >(nbBinsY(levelY_ + 1)));
+  for (int i = 0; i < nbBinsX(); ++i) {
+    for (int j = 0; j < nbBinsY(); ++j) {
+      int p = parentY(j);
+      for (int c : binCells(i, j)) {
+        newCells[i][p].push_back(c);
+      }
+    }
+  }
+  binCells_ = newCells;
+  levelY_++;
+  check();
+}
+
+void HierarchicalDensityPlacement::refineX() {
+  assert(levelX_ >= 1);
+  std::vector<std::vector<std::vector<int> > > newCells;
+  newCells.assign(nbBinsX(levelX_ - 1),
+                  std::vector<std::vector<int> >(nbBinsY()));
+  for (int i = 0; i < nbBinsX(); ++i) {
+    for (int j = 0; j < nbBinsY(); ++j) {
+      // Only assign the cells to the first child bin
+      if (i != 0 && parentX(i) == parentX(i - 1)) {
+        continue;
+      }
+      int p = parentX(i);
+      for (int c : binCells(i, j)) {
+        newCells[p][j].push_back(c);
+      }
+    }
+  }
+  binCells_ = newCells;
+  levelX_--;
+  check();
+}
+
+void HierarchicalDensityPlacement::refineY() {
+  assert(levelY_ >= 1);
+  std::vector<std::vector<std::vector<int> > > newCells;
+  newCells.assign(nbBinsX(),
+                  std::vector<std::vector<int> >(nbBinsY(levelY_ - 1)));
+  for (int i = 0; i < nbBinsX(); ++i) {
+    for (int j = 0; j < nbBinsY(); ++j) {
+      // Only assign the cells to the first child bin
+      if (j != 0 && parentY(j) == parentY(j - 1)) {
+        continue;
+      }
+      int p = parentY(j);
+      for (int c : binCells(i, j)) {
+        newCells[i][p].push_back(c);
+      }
+    }
+  }
+  binCells_ = newCells;
+  levelY_--;
+  check();
 }
 
 DensityPlacement HierarchicalDensityPlacement::toDensityPlacement() const {
@@ -426,17 +474,29 @@ DensityPlacement HierarchicalDensityPlacement::toDensityPlacement() const {
 }
 
 void HierarchicalDensityPlacement::check() const {
-  assert(xLimits_.size() >= 1);
-  assert(xLimits_.front() == 0);
-  assert(xLimits_.back() == grid_.nbBinsX());
-  for (int i = 0; i < nbBinsX(); ++i) {
-    assert(xLimits_[i] < xLimits_[i + 1]);
+  for (auto &l : xLimits_) {
+    assert(l.size() >= 1);
+    assert(l.front() == 0);
+    assert(l.back() == grid_.nbBinsX());
+    for (int i = 0; i + 1 < l.size(); ++i) {
+      assert(l[i] < l[i + 1]);
+    }
   }
-  assert(yLimits_.size() >= 1);
-  assert(yLimits_.front() == 0);
-  assert(yLimits_.back() == grid_.nbBinsY());
-  for (int i = 0; i < nbBinsY(); ++i) {
-    assert(yLimits_[i] < yLimits_[i + 1]);
+  for (auto &l : yLimits_) {
+    assert(l.size() >= 1);
+    assert(l.front() == 0);
+    assert(l.back() == grid_.nbBinsY());
+    for (int i = 0; i + 1 < l.size(); ++i) {
+      assert(l[i] < l[i + 1]);
+    }
+  }
+  assert(xLimits_.size() == parentX_.size());
+  for (int i = 0; i < nbLevelX(); ++i) {
+    assert(xLimits_[i].size() == parentX_[i].size() + 1);
+  }
+  assert(yLimits_.size() == parentY_.size());
+  for (int i = 0; i < nbLevelY(); ++i) {
+    assert(yLimits_[i].size() == parentY_[i].size() + 1);
   }
   assert(binCells_.size() == nbBinsX());
   for (auto &bc : binCells_) {
