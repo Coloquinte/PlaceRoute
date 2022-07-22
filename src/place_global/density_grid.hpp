@@ -55,6 +55,14 @@ class DensityGrid {
   int nbBinsY() const { return binY_.size(); }
 
   /**
+   * @brief Get the complete placement area
+   */
+  Rectangle placementArea() const {
+    return Rectangle(binLimitX_.front(), binLimitX_.back(), binLimitY_.front(),
+                     binLimitY_.back());
+  }
+
+  /**
    * @brief Get the sum of the capacities of the bins
    */
   long long totalCapacity() const;
@@ -365,6 +373,11 @@ class HierarchicalDensityPlacement {
   long long totalDemand() const;
 
   /**
+   * @brief Get the sum of the capacities of the bins
+   */
+  long long totalCapacity() const { return grid_.totalCapacity(); }
+
+  /**
    * @brief Compute the total overflowing area of this placement
    */
   long long totalOverflow() const;
@@ -420,6 +433,11 @@ class HierarchicalDensityPlacement {
   void coarsenY();
 
   /**
+   * @brief Set to the highest coarsening level (single bin)
+   */
+  void coarsenFully();
+
+  /**
    * @brief Check the consistency of the datastructure
    */
   void check() const;
@@ -463,7 +481,7 @@ class HierarchicalDensityPlacement {
    */
   int parentY(int lvl, int y) const { return parentY_[lvl][y]; }
 
- private:
+ protected:
   /**
    * @brief Underlying density grid
    */

@@ -1,98 +1,128 @@
 #pragma once
 
 #include "coloquinte.hpp"
+#include "place_global/density_grid.hpp"
 
 /**
  * Representation of an almost legalized placement, where density constraints
  * are met per bin
  */
-class DensityLegalizer {
+class DensityLegalizer : public HierarchicalDensityPlacement {
  public:
-  DensityLegalizer(Rectangle area, int nbCells);
-  DensityLegalizer(std::vector<Rectangle> regions, int nbCells);
+  /**
+   * @brief Initialize the datastructure from the grid and the cell demands
+   * (single bin)
+   */
+  DensityLegalizer(DensityGrid grid, std::vector<int> cellDemand);
 
-  static DensityLegalizer fromIspdCircuit(const Circuit &circuit);
+  /**
+   * @brief Initialize from an existing hierarchical placement
+   */
+  DensityLegalizer(HierarchicalDensityPlacement pl);
 
-  // Accessors
-  int nbCells() const { return nbCells_; }
-  int nbBins() const { return nbBinsX_ * nbBinsY_; }
-  int nbBinsX() const { return nbBinsX_; }
-  int nbBinsY() const { return nbBinsY_; }
+  /**
+   * @brief Initialize from a circuit
+   */
+  static DensityLegalizer fromIspdCircuit(const Circuit &circuit,
+                                          float sizeFactor = 10.0);
 
-  long long totalCapacity() const;
-  long long totalDemand() const;
+  /**
+   * @brief Target x position for the cell
+   */
+  float cellTargetX(int c) const { return cellTargetX_[c]; }
 
-  const std::vector<int> &cellDemand() const { return cellDemand_; }
-  const std::vector<float> &cellTargetX() const { return cellTargetX_; }
-  const std::vector<float> &cellTargetY() const { return cellTargetY_; }
+  /**
+   * @brief Target y position for the cell
+   */
+  float cellTargetY(int c) const { return cellTargetY_[c]; }
 
-  const std::vector<std::vector<long long> > &binCapacity() const {
-    return binCapacity_;
-  }
-  std::vector<std::vector<long long> > binUsage() const;
+  /**
+   * @brief Get the cost model used
+   */
+  LegalizationModel costModel() const { return costModel_; }
 
-  const std::vector<float> &binX() const { return binX_; }
-  const std::vector<float> &binY() const { return binY_; }
+  /**
+   * @brief Set the cost model to use
+   */
+  void setCostModel(LegalizationModel model) { costModel_ = model; }
 
-  // Problem updates
-  void updateBins(int binsX, int binsY);
+  /**
+   * @brief Update the demands of the cells
+   */
   void updateCellDemand(std::vector<int> cellDemand) {
+    assert(cellDemand.size() == nbCells());
     cellDemand_ = cellDemand;
   }
+
+  /**
+   * @brief Update the x coordinates to target
+   */
   void updateCellTargetX(std::vector<float> cellTargetX) {
+    assert(cellTargetX.size() == nbCells());
     cellTargetX_ = cellTargetX;
   }
+  /**
+   * @brief Update the y coordinates to target
+   */
   void updateCellTargetY(std::vector<float> cellTargetY) {
+    assert(cellTargetY.size() == nbCells());
     cellTargetY_ = cellTargetY;
   }
 
-  // How much capacity is overflowing the bins
-  long long totalOverflow() const;
-  float meanOverflow() const;
-  float rmsOverflow() const;
+  /**
+   * @brief Return the quality with the current cost model
+   */
+  float quality() const;
 
-  // Quality metrics for the legalization
-  float metrics(LegalizationModel model) const;
-  float distL1() const;
-  float distL2() const;
-  float distLInf() const;
-  float distL2Squared() const;
+  /**
+   * @brief Return the quality with the given cost model
+   */
+  float quality(LegalizationModel model) const;
 
-  // Algorithms to create an initial legalization from scratch
-  void assign();
-  void bisect(LegalizationModel model);
+  /**
+   * @brief Run the whole legalization process
+   */
+  void run();
 
-  // Algorithms to improve the current legalization
-  void redistributeBisect(LegalizationModel model);
-  void redistributeX(LegalizationModel model);
-  void redistributeY(LegalizationModel model);
+  /**
+   * @brief Do one refinement step
+   */
+  void refine();
 
-  // Obtain coordinates for the cells from the legalization
-  std::vector<float> simpleCoordX() const;
-  std::vector<float> simpleCoordY() const;
-  // TODO: coordinates with spreading
-  std::vector<float> spreadCoordX() const;
-  std::vector<float> spreadCoordY() const;
+  /**
+   * @brief Improve the solution at the current refinement level
+   */
+  void improve();
 
+  /**
+   * @brief Check the consistency of the datastructure
+   */
   void check() const;
+
+  /**
+   * @brief Report on stdout
+   */
   void report() const;
 
-  // Utilities
-  std::vector<int> allCells() const;
-
-  // Bisection algorithm
-  std::pair<std::vector<int>, std::vector<int> > bisect(
-      float cx1, float cy1, float cx2, float cy2, long long capa1,
-      long long capa2, std::vector<int> cells, LegalizationModel leg) const;
-
  private:
-  // Redo the bisection for these bins
-  void rebisect(int x1, int y1, int x2, int y2, LegalizationModel leg);
+  /**
+   * @brief Improve all neighbouring bins in the x direction
+   */
+  void improveX(bool sameParent);
+
+  /**
+   * @brief Improve all neighbouring bins in the y direction
+   */
+  void improveY(bool sameParent);
+
+  /**
+   * @brief Redo the bisection for two bins
+   */
+  void rebisect(int x1, int y1, int x2, int y2);
 
   // Bisection algorithm helpers
   std::vector<std::pair<float, int> > computeCellCosts(
-      float cx1, float cy1, float cx2, float cy2, std::vector<int> cells,
-      LegalizationModel leg) const;
+      float cx1, float cy1, float cx2, float cy2, std::vector<int> cells) const;
   int findIdealSplitPos(
       const std::vector<std::pair<float, int> > &cellCosts) const;
   int findConstrainedSplitPos(
@@ -102,25 +132,7 @@ class DensityLegalizer {
       const std::vector<std::pair<float, int> > &cellCosts, int ind) const;
 
  private:
-  // Problem data
-  Rectangle placementArea_;
-  std::vector<Rectangle> regions_;
-  int nbCells_;
-  int nbBinsX_;
-  int nbBinsY_;
-
-  // Bin properties
-  std::vector<float> binX_;
-  std::vector<float> binY_;
-  std::vector<int> binLimitX_;
-  std::vector<int> binLimitY_;
-  std::vector<std::vector<long long> > binCapacity_;
-
-  // Cell properties
-  std::vector<int> cellDemand_;
+  LegalizationModel costModel_;
   std::vector<float> cellTargetX_;
   std::vector<float> cellTargetY_;
-
-  // Problem status
-  std::vector<std::vector<std::vector<int> > > binCells_;
 };
