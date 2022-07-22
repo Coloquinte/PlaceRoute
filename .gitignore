@@ -1,2 +1,3 @@
 build/
 python/__pycache__
+.vscode
