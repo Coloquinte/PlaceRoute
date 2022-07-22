@@ -160,7 +160,7 @@ float DensityGrid::groupCenterY(DensityGrid::BinGroup g) const {
   for (int i = g.minXCoord; i < g.maxXCoord; ++i) {
     for (int j = g.minYCoord; j < g.maxYCoord; ++j) {
       capa += binCapacity(i, j);
-      coord += binY(i) * binCapacity(i, j);
+      coord += binY(j) * binCapacity(i, j);
     }
   }
   if (capa > 0) {
@@ -411,6 +411,15 @@ void HierarchicalDensityPlacement::coarsenY() {
   levelY_++;
   updateCellToBin();
   check();
+}
+
+void HierarchicalDensityPlacement::coarsenFully() {
+  while (levelX() + 1 < nbLevelX()) {
+    coarsenX();
+  }
+  while (levelY() + 1 < nbLevelY()) {
+    coarsenY();
+  }
 }
 
 void HierarchicalDensityPlacement::refineX() {

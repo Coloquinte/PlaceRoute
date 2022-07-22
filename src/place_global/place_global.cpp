@@ -33,7 +33,7 @@ void GlobalPlacer::place(Circuit &circuit) {
   for (int i = 0; i < nbSteps; ++i) {
     leg.updateCellTargetX(tensorToVector(xplace));
     leg.updateCellTargetY(tensorToVector(yplace));
-    leg.assign();
+    leg.run();
     float forceFactor = 0.001 * i;
     auto xtarget = vectorToTensor(leg.simpleCoordX());
     auto ytarget = vectorToTensor(leg.simpleCoordY());
