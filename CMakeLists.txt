@@ -23,6 +23,7 @@ SET(SOURCES
   src/place_global/density_legalizer.cpp
   src/place_global/density_grid.cpp
   src/place_global/place_global.cpp
+  src/place_global/partitioning.cpp
   src/place_detailed/legalizer.cpp
   src/place_detailed/row_legalizer.cpp
   src/place_detailed/place_detailed.cpp
@@ -35,9 +36,11 @@ SET(SOURCES
 add_library(coloquinte STATIC ${SOURCES})
 set_target_properties(coloquinte PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 target_compile_features(coloquinte PRIVATE cxx_std_17)
+target_include_directories(coloquinte PRIVATE ${kahypar_INCLUDE_DIRS})
 target_link_libraries(coloquinte
   PRIVATE
   ${Boost_LIBRARIES}
+  kahypar
   lemon
   Threads::Threads
 )
