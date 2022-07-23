@@ -50,7 +50,7 @@ class NetModel {
    */
   void addNet(const std::vector<int> &cells,
               const std::vector<float> &pinOffsets, float minPin, float maxPin,
-              float weight);
+              float weight=1.0f);
 
   /**
    * @brief Compute the length for a given placement
@@ -131,6 +131,16 @@ class NetModel {
    *
    */
   std::vector<float> pinPositions(const std::vector<float> &pl) const;
+
+  /**
+   * @brief Helper function to create the model from ISPD data
+   */
+  static NetModel fromData(const std::vector<int> &cellSizes,
+                           const std::vector<int> &pl,
+                           const std::vector<char> &cellFixed,
+                           const std::vector<int> &netLimits,
+                           const std::vector<int> &pinCells,
+                           const std::vector<int> &pinOffsets);
 
  private:
   int nbCells_;
