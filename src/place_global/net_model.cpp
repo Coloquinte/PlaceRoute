@@ -5,6 +5,49 @@
 #include <eigen3/Eigen/Sparse>
 #include <limits>
 
+NetModel NetModel::xTopology(const Circuit &circuit) {
+  return fromData(circuit.cellWidths, circuit.cellX, circuit.cellFixed,
+                  circuit.netLimits, circuit.pinCells, circuit.pinXOffsets);
+}
+
+NetModel NetModel::yTopology(const Circuit &circuit) {
+  return fromData(circuit.cellHeights, circuit.cellY, circuit.cellFixed,
+                  circuit.netLimits, circuit.pinCells, circuit.pinYOffsets);
+}
+
+NetModel NetModel::fromData(const std::vector<int> &cellSizes,
+                            const std::vector<int> &pl,
+                            const std::vector<char> &cellFixed,
+                            const std::vector<int> &netLimits,
+                            const std::vector<int> &pinCells,
+                            const std::vector<int> &pinOffsets) {
+  NetModel ret(cellSizes.size());
+  for (int i = 0; i + 1 < netLimits.size(); ++i) {
+    float minPos = std::numeric_limits<float>::infinity();
+    float maxPos = -std::numeric_limits<float>::infinity();
+    int b = netLimits[i];
+    int e = netLimits[i + 1];
+    std::vector<int> cells;
+    std::vector<float> offsets;
+    for (int j = b; j < e; ++j) {
+      int cell = pinCells[j];
+      int offset = pinOffsets[j];
+      if (cellFixed[cell]) {
+        int pos = pl[cell] + offset;
+        minPos = std::min(minPos, (float)pos);
+        maxPos = std::max(maxPos, (float)pos);
+      } else {
+        cells.push_back(cell);
+        // Offset to center of cell instead of lower-left
+        offsets.push_back(offset - 0.5f * cellSizes[cell]);
+      }
+    }
+    ret.addNet(cells, offsets, minPos, maxPos);
+  }
+  ret.check();
+  return ret;
+}
+
 NetModel::NetModel(int nbCells) : nbCells_(nbCells) { netLimits_.push_back(0); }
 
 void NetModel::addNet(const std::vector<int> &cells) {
@@ -15,7 +58,7 @@ void NetModel::addNet(const std::vector<int> &cells) {
 void NetModel::addNet(const std::vector<int> &cells,
                       const std::vector<float> &pinOffsets) {
   addNet(cells, pinOffsets, std::numeric_limits<float>::infinity(),
-         -std::numeric_limits<float>::infinity(), 1.0f);
+         -std::numeric_limits<float>::infinity());
 }
 
 void NetModel::addNet(const std::vector<int> &cells,
@@ -49,4 +92,12 @@ void NetModel::check() const {
   }
   assert(netLimits_.front() == 0);
   assert(netLimits.back() == netCells_.size());
+}
+
+std::vector<float> NetModel::pinPositions(const std::vector<float> &pl) const {
+  std::vector<float> ret(netCells_.size());
+  for (int i = 0; i < netCells_.size(); ++i) {
+    ret[i] = pl[netCells_[i]] + netPinOffsets_[i];
+  }
+  return ret;
 }
