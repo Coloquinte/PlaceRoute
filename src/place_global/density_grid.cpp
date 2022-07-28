@@ -234,7 +234,7 @@ std::vector<float> HierarchicalDensityPlacement::simpleCoordX() const {
   for (int i = 0; i < nbBinsX(); ++i) {
     for (int j = 0; j < nbBinsY(); ++j) {
       float coord = binX(i, j);
-      for (int c : binCells_[i][j]) {
+      for (int c : binCells(i, j)) {
         ret[c] = coord;
       }
     }
@@ -244,10 +244,10 @@ std::vector<float> HierarchicalDensityPlacement::simpleCoordX() const {
 
 std::vector<float> HierarchicalDensityPlacement::simpleCoordY() const {
   std::vector<float> ret(nbCells(), 0.0f);
-  for (int i = 0; i < nbBinsY(); ++i) {
-    for (int j = 0; j < nbBinsX(); ++j) {
+  for (int i = 0; i < nbBinsX(); ++i) {
+    for (int j = 0; j < nbBinsY(); ++j) {
       float coord = binY(i, j);
-      for (int c : binCells_[i][j]) {
+      for (int c : binCells(i, j)) {
         ret[c] = coord;
       }
     }
