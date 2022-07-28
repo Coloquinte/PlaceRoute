@@ -1,9 +1,11 @@
 #include "place_global.hpp"
 
+#include <cmath>
 #include <iostream>
+#include <numeric>
 
 #include "density_legalizer.hpp"
-#include "wirelength_model.hpp"
+#include "net_model.hpp"
 
 std::vector<float> getBaseForces(const Circuit &circuit) {
   std::vector<float> ret;
@@ -21,32 +23,31 @@ void GlobalPlacer::place(Circuit &circuit) {
   float epsilon = 1.0;
   float cutoffDistance = 1000.0;
   int nbSteps = 10;
-  auto baseForces = vectorToTensor(getBaseForces(circuit));
+  auto baseForces = getBaseForces(circuit);
 
-  auto xtopo = NetWirelength::xTopology(circuit);
-  auto ytopo = NetWirelength::yTopology(circuit);
+  auto xtopo = NetModel::xTopology(circuit);
+  auto ytopo = NetModel::yTopology(circuit);
 
-  auto xplace = xtopo.starSolve();
-  auto yplace = ytopo.starSolve();
+  auto xplace = xtopo.solveStar();
+  auto yplace = ytopo.solveStar();
 
   DensityLegalizer leg = DensityLegalizer::fromIspdCircuit(circuit);
   for (int i = 0; i < nbSteps; ++i) {
-    leg.updateCellTargetX(tensorToVector(xplace));
-    leg.updateCellTargetY(tensorToVector(yplace));
+    leg.updateCellTargetX(xplace);
+    leg.updateCellTargetY(yplace);
     leg.run();
     float forceFactor = 0.001 * i;
-    auto xtarget = vectorToTensor(leg.simpleCoordX());
-    auto ytarget = vectorToTensor(leg.simpleCoordY());
-    float wirelengthPlace = xtopo.valueHPWL(xplace) + ytopo.valueHPWL(yplace);
-    float wirelengthTarget =
-        xtopo.valueHPWL(xtarget) + ytopo.valueHPWL(ytarget);
+    auto xtarget = leg.simpleCoordX();
+    auto ytarget = leg.simpleCoordY();
+    float wirelengthPlace = xtopo.value(xplace) + ytopo.value(yplace);
+    float wirelengthTarget = xtopo.value(xtarget) + ytopo.value(ytarget);
     std::cout << "LB wirelength #" << i << ": " << wirelengthPlace << std::endl;
     std::cout << "UB wirelength #" << i << ": " << wirelengthTarget
               << std::endl;
-    xplace = xtopo.b2bSolvePenalized(xplace, epsilon, xtarget,
-                                     baseForces * forceFactor, cutoffDistance);
-    yplace = ytopo.b2bSolvePenalized(yplace, epsilon, ytarget,
-                                     baseForces * forceFactor, cutoffDistance);
+    std::vector<float> strength = baseForces;
+    for (float &s : strength) s *= forceFactor;
+    xplace = xtopo.solveB2B(xplace, epsilon, xtarget, strength, cutoffDistance);
+    yplace = ytopo.solveB2B(yplace, epsilon, ytarget, strength, cutoffDistance);
   }
 
   for (int i = 0; i < circuit.nbCells(); ++i) {
