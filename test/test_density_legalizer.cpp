@@ -74,3 +74,21 @@ BOOST_AUTO_TEST_CASE(Random) {
   BOOST_CHECK_EQUAL(leg.cellBinX(2), 0);
   BOOST_CHECK_EQUAL(leg.cellBinX(3), 1);
 }
+
+
+BOOST_AUTO_TEST_CASE(Coord) {
+  Rectangle area(0, 10, 0, 5);
+  DensityGrid grid(1, area);
+  HierarchicalDensityPlacement pl(grid, 0);
+  pl.refineX();
+  pl.refineY();
+  pl.refineX();
+  BOOST_CHECK_EQUAL(pl.nbBinsX(), 4);
+  BOOST_CHECK_EQUAL(pl.nbBinsY(), 2);
+  BOOST_CHECK_CLOSE(pl.binX(0, 0), 1.0f, 0.0001f);
+  BOOST_CHECK_CLOSE(pl.binX(1, 0), 3.5f, 0.0001f);
+  BOOST_CHECK_CLOSE(pl.binX(2, 0), 6.0f, 0.0001f);
+  BOOST_CHECK_CLOSE(pl.binX(3, 0), 8.5f, 0.0001f);
+  BOOST_CHECK_CLOSE(pl.binY(0, 0), 1.0f, 0.0001f);
+  BOOST_CHECK_CLOSE(pl.binY(0, 1), 3.5f, 0.0001f);
+}

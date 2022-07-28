@@ -271,6 +271,7 @@ void MatrixCreator::addPenalty(const std::vector<float> &netPlacement,
     addFixedPin(i, 0.0f, placementTarget[i], strength);
   }
 }
+
 int MatrixCreator::addCell(float initialPos) {
   initial_.push_back(initialPos);
   rhs_.push_back(0.0f);
@@ -426,8 +427,8 @@ std::vector<float> MatrixCreator::solve() {
 }
 
 void MatrixCreator::check() const {
-  assert (matSize() == initial_.size());
-  assert (matSize() == rhs_.size());
+  assert(matSize() == initial_.size());
+  assert(matSize() == rhs_.size());
 }
 
 std::vector<float> NetModel::solveStar() const {

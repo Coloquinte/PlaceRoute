@@ -255,6 +255,10 @@ std::vector<float> HierarchicalDensityPlacement::simpleCoordY() const {
   return ret;
 }
 
+HierarchicalDensityPlacement::HierarchicalDensityPlacement(DensityGrid grid,
+                                                           int nbCells)
+    : HierarchicalDensityPlacement(grid, std::vector<int>(nbCells, 0)) {}
+
 HierarchicalDensityPlacement::HierarchicalDensityPlacement(
     DensityGrid grid, std::vector<int> cellDemand)
     : grid_(grid), cellDemand_(cellDemand) {
