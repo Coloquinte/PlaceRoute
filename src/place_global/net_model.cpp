@@ -123,7 +123,7 @@ float NetModel::value(const std::vector<float> &pl) const {
     float mx = -std::numeric_limits<float>::infinity();
     for (int j = b; j < e; ++j) {
       mn = std::min(mn, pos[j]);
-      mx = std::min(mx, pos[j]);
+      mx = std::max(mx, pos[j]);
     }
     ret += (mx - mn);
   }
