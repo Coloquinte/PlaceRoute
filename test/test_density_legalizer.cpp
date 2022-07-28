@@ -92,3 +92,15 @@ BOOST_AUTO_TEST_CASE(Coord) {
   BOOST_CHECK_CLOSE(pl.binY(0, 0), 1.0f, 0.0001f);
   BOOST_CHECK_CLOSE(pl.binY(0, 1), 3.5f, 0.0001f);
 }
+
+
+BOOST_AUTO_TEST_CASE(UnitArea) {
+  Rectangle area(0, 10, 0, 5);
+  DensityGrid grid(1, area);
+  DensityLegalizer pl(grid, std::vector<int>(50, 1));
+  pl.run();
+  pl.check();
+  BOOST_CHECK_EQUAL(pl.totalOverflow(), 0);
+  pl.coarsenFully();
+  pl.check();
+}
