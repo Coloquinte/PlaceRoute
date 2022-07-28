@@ -51,6 +51,7 @@ void DensityLegalizer::report() const {
   Rectangle a = grid_.placementArea();
   std::cout << "Area (" << a.minX << ", " << a.maxX << ") x (" << a.minY << ", "
             << a.maxY << ")" << std::endl;
+  std::cout << "Bins " << nbBinsX() << " x " << nbBinsY() << std::endl;
   /*
   std::cout << "X limits";
   for (auto l : binLimitX_) {
