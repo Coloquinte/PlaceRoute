@@ -443,6 +443,11 @@ class HierarchicalDensityPlacement {
   void coarsenFully();
 
   /**
+   * @brief Set to the lowest coarsening level (all bins developed)
+   */
+  void refineFully();
+
+  /**
    * @brief Check the consistency of the datastructure
    */
   void check() const;
