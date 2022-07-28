@@ -512,4 +512,18 @@ void HierarchicalDensityPlacement::check() const {
       }
     }
   }
+  long long usage = 0;
+  for (int i = 0; i < nbBinsX(); ++i) {
+    for (int j = 0; j < nbBinsY(); ++j) {
+      usage += binUsage(i, j);
+    }
+  }
+  assert(usage == totalDemand());
+  long long capacity = 0;
+  for (int i = 0; i < nbBinsX(); ++i) {
+    for (int j = 0; j < nbBinsY(); ++j) {
+      capacity += binCapacity(i, j);
+    }
+  }
+  assert(capacity == totalCapacity());
 }
