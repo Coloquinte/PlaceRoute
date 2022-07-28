@@ -214,6 +214,11 @@ class DensityGrid {
  */
 class HierarchicalDensityPlacement {
  public:
+ /**
+   * @brief Initialize the datastructure from the grid
+   */
+  HierarchicalDensityPlacement(DensityGrid grid, int nbCells);
+
   /**
    * @brief Initialize the datastructure from the grid and the cell demands
    * (single bin)
