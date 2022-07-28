@@ -52,18 +52,13 @@ void DensityLegalizer::report() const {
   std::cout << "Area (" << a.minX << ", " << a.maxX << ") x (" << a.minY << ", "
             << a.maxY << ")" << std::endl;
   std::cout << "Bins " << nbBinsX() << " x " << nbBinsY() << std::endl;
-  /*
-  std::cout << "X limits";
-  for (auto l : binLimitX_) {
-      std::cout << " " << l;
+  for (int j = 0; j < nbBinsY(); ++j) {
+    for (int i = 0; i < nbBinsX(); ++i) {
+      std::cout << "\t" << binUsage(i, j) << "/" << binCapacity(i, j);
+    }
+    std::cout << std::endl;
   }
   std::cout << std::endl;
-  std::cout << "Y limits";
-  for (auto l : binLimitY_) {
-      std::cout << " " << l;
-  }
-  std::cout << std::endl;
-  */
   std::cout << "Overflow " << overflowRatio() << std::endl;
   std::cout << "L1 " << quality(LegalizationModel::L1) << std::endl;
   std::cout << "L2 " << quality(LegalizationModel::L2) << std::endl;
