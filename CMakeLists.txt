@@ -2,8 +2,6 @@
 cmake_minimum_required(VERSION 3.10)
 PROJECT(COLOQUINTE)
 
-add_subdirectory(thirdparty/xtl)
-add_subdirectory(thirdparty/xtensor)
 add_subdirectory(thirdparty/kahypar)
 
 FIND_PACKAGE(Boost REQUIRED COMPONENTS system filesystem iostreams program_options unit_test_framework)
@@ -26,10 +24,9 @@ SET(SOURCES
 
 add_library(coloquinte SHARED ${SOURCES})
 target_compile_features(coloquinte PRIVATE cxx_std_17)
-target_include_directories(coloquinte PRIVATE ${xtensor_INCLUDE_DIRS})
 target_link_libraries(coloquinte
   ${Boost_LIBRARIES}
-  xtensor)
+)
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     enable_testing()

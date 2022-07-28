@@ -2,13 +2,11 @@
 #include "coloquinte.hpp"
 
 #include <iostream>
-#include <xtensor/xio.hpp>
-#include <xtensor/xrandom.hpp>
 
 #include "place_detailed/place_detailed.hpp"
 #include "place_global/density_legalizer.hpp"
-#include "place_global/place_global.hpp"
 #include "place_global/net_model.hpp"
+#include "place_global/place_global.hpp"
 
 extern "C" {
 void place_ispd(int nb_cells, int nb_nets, int *cell_widths, int *cell_heights,
