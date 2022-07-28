@@ -268,7 +268,7 @@ void MatrixCreator::addPenalty(const std::vector<float> &netPlacement,
   for (int i = 0; i < nbCells_; ++i) {
     float dist = std::abs(netPlacement[i] - placementTarget[i]);
     float strength = penaltyStrength[i] / std::max(dist, cutoffDistance);
-    addFixedPin(i, 0.0f, 0.0f, strength);
+    addFixedPin(i, 0.0f, placementTarget[i], strength);
   }
 }
 int MatrixCreator::addCell(float initialPos) {
