@@ -70,14 +70,24 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
   }
 
   /**
-   * @brief Return the quality with the current cost model
+   * @brief Return the mean displacement with the current cost model
    */
-  float quality() const;
+  float quality() const { return meanDistance(costModel_); }
 
   /**
-   * @brief Return the quality with the given cost model
+   * @brief Return the mean displacement with the given cost model
    */
-  float quality(LegalizationModel model) const;
+  float meanDistance(LegalizationModel model) const;
+
+  /**
+   * @brief Return the root-mean-square displacement with the given cost model
+   */
+  float rmsDistance(LegalizationModel model) const;
+
+  /**
+   * @brief Return the maximum displacement with the given cost model
+   */
+  float maxDistance(LegalizationModel model) const;
 
   /**
    * @brief Run the whole legalization process
@@ -102,7 +112,7 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
   /**
    * @brief Report on stdout
    */
-  void report() const;
+  void report(bool verbose=false) const;
 
  private:
   /**
@@ -130,6 +140,11 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
       long long capa1, long long capa2) const;
   std::pair<std::vector<int>, std::vector<int> > doSplit(
       const std::vector<std::pair<float, int> > &cellCosts, int ind) const;
+
+  /**
+   * @brief Return all distances with a given cost model
+   */
+  std::vector<float> allDistances(LegalizationModel model) const;
 
  private:
   LegalizationModel costModel_;

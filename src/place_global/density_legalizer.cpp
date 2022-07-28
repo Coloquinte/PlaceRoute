@@ -27,31 +27,58 @@ DensityLegalizer DensityLegalizer::fromIspdCircuit(const Circuit &circuit,
       HierarchicalDensityPlacement::fromIspdCircuit(circuit, sizeFactor));
 }
 
-float DensityLegalizer::quality(LegalizationModel model) const {
+std::vector<float> DensityLegalizer::allDistances(
+    LegalizationModel model) const {
+  std::vector<float> cellX = simpleCoordX();
+  std::vector<float> cellY = simpleCoordY();
+  std::vector<float> distances;
+  distances.reserve(nbCells());
+  for (int i = 0; i < nbCells(); ++i) {
+    float dx = cellTargetX(i) - cellX[i];
+    float dy = cellTargetY(i) - cellY[i];
+    distances.push_back(norm(dx, dy, model));
+  }
+  return distances;
+}
+
+float DensityLegalizer::meanDistance(LegalizationModel model) const {
+  std::vector<float> dist = allDistances(model);
   float disp = 0.0f;
-  for (int i = 0; i < nbBinsX(); ++i) {
-    for (int j = 0; j < nbBinsY(); ++j) {
-      float x = binX(i, j);
-      float y = binY(i, j);
-      for (int c : binCells(i, j)) {
-        float dx = cellTargetX(c) - x;
-        float dy = cellTargetY(c) - y;
-        disp += cellDemand(c) * norm(dx, dy, model);
-      }
-    }
+  for (int i = 0; i < nbCells(); ++i) {
+    disp += cellDemand(i) * dist[i];
   }
   return disp / totalDemand();
 }
 
+float DensityLegalizer::rmsDistance(LegalizationModel model) const {
+  std::vector<float> dist = allDistances(model);
+  float disp = 0.0f;
+  for (int i = 0; i < nbCells(); ++i) {
+    disp += cellDemand(i) * dist[i] * dist[i];
+  }
+  return std::sqrt(disp / totalDemand());
+}
+
+float DensityLegalizer::maxDistance(LegalizationModel model) const {
+  std::vector<float> dist = allDistances(model);
+  return *std::max_element(dist.begin(), dist.end());
+}
+
 void DensityLegalizer::check() const { HierarchicalDensityPlacement::check(); }
 
-void DensityLegalizer::report() const {
+void DensityLegalizer::report(bool verbose) const {
   std::cout << "Total demand " << totalDemand() << std::endl;
   std::cout << "Total capacity " << totalCapacity() << std::endl;
   Rectangle a = grid_.placementArea();
   std::cout << "Area (" << a.minX << ", " << a.maxX << ") x (" << a.minY << ", "
             << a.maxY << ")" << std::endl;
   std::cout << "Bins " << nbBinsX() << " x " << nbBinsY() << std::endl;
+  std::cout << "Overflow: " << overflowRatio() << std::endl;
+  std::cout << "Mean dist: " << meanDistance(costModel_) << std::endl;
+  std::cout << "RMS dist " << rmsDistance(costModel_) << std::endl;
+  std::cout << "Max dist " << maxDistance(costModel_) << std::endl;
+  if (!verbose) return;
+  std::cout << std::endl;
   for (int j = 0; j < nbBinsY(); ++j) {
     for (int i = 0; i < nbBinsX(); ++i) {
       std::cout << "\t" << binUsage(i, j) << "/" << binCapacity(i, j);
@@ -59,10 +86,6 @@ void DensityLegalizer::report() const {
     std::cout << std::endl;
   }
   std::cout << std::endl;
-  std::cout << "Overflow " << overflowRatio() << std::endl;
-  std::cout << "L1 " << quality(LegalizationModel::L1) << std::endl;
-  std::cout << "L2 " << quality(LegalizationModel::L2) << std::endl;
-  std::cout << "LInf " << quality(LegalizationModel::LInf) << std::endl;
 }
 
 std::vector<std::pair<float, int> > DensityLegalizer::computeCellCosts(
