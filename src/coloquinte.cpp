@@ -18,7 +18,7 @@ void place_ispd(int nb_cells, int nb_nets, int *cell_widths, int *cell_heights,
   Circuit circuit = Circuit::createIspd(
       nb_cells, nb_nets, cell_widths, cell_heights, cell_fixed, net_limits,
       pin_cells, pin_x_offsets, pin_y_offsets, cell_x, cell_y, cell_flip_x,
-      cell_flip_y, nb_rows, row_min_x, row_min_y, row_max_x, row_max_y);
+      cell_flip_y, nb_rows, row_min_x, row_max_x, row_min_y, row_max_y);
   std::cout << "Placing circuit with " << circuit.nbCells() << " cells, "
             << circuit.nbNets() << " nets and " << circuit.nbPins() << " pins."
             << std::endl;
