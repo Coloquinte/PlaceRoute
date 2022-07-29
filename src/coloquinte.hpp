@@ -28,6 +28,10 @@ struct Rectangle {
   bool intersects(Rectangle o) const {
     return minX < o.maxX && o.minX < maxX && minY < o.maxY && o.minY < maxY;
   }
+  static Rectangle intersection(Rectangle a, Rectangle b) {
+    return Rectangle(std::max(a.minX, b.minX), std::min(a.maxX, b.maxX),
+                     std::max(a.minY, b.minY), std::min(a.maxY, b.maxY));
+  }
 };
 
 /**
