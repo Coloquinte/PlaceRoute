@@ -74,11 +74,6 @@ class DensityGrid {
   long long &binCapacity(int x, int y) { return binCapacity_[x][y]; }
 
   /**
-   * @brief Compute the total capacity of a group of bins
-   */
-  long long binCapacity(BinGroup g) const;
-
-  /**
    * @brief Get the center x coordinate of a given bin
    */
   float binX(int x) const {
@@ -98,7 +93,7 @@ class DensityGrid {
    * @brief Get the x coordinate of the limit between bins at positions x and
    * x+1
    */
-  float binLimitX(int x) const {
+  int binLimitX(int x) const {
     assert(x <= nbBinsX());
     return binLimitX_[x];
   }
@@ -107,20 +102,18 @@ class DensityGrid {
    * @brief Get the y coordinate of the limit between bins at positions y and
    * y+1
    */
-  float binLimitY(int y) const {
+  int binLimitY(int y) const {
     assert(y <= nbBinsY());
     return binLimitY_[y];
   }
 
   /**
-   * @brief Compute the x coordinate of the center of mass of a group of bins
+   * @brief Return the region corresponding to a bin
    */
-  float groupCenterX(BinGroup g) const;
-
-  /**
-   * @brief Compute the y coordinate of the center of mass of a group of bins
-   */
-  float groupCenterY(BinGroup g) const;
+  Rectangle region(int i, int j) const {
+    return Rectangle(binLimitX(i), binLimitX(i + 1), binLimitY(j),
+                     binLimitY(j + 1));
+  }
 
   /**
    * @brief Check the consistency of the datastructure
@@ -133,6 +126,20 @@ class DensityGrid {
    */
   DensityGrid(std::vector<int> xLimits, std::vector<int> yLimits,
               std::vector<std::vector<long long> > binCapacity);
+
+  /**
+   * @brief Compute the total capacity of a group of bins
+   */
+  long long binCapacity(BinGroup g) const;
+  /**
+   * @brief Compute the x coordinate of the center of mass of a group of bins
+   */
+  float groupCenterX(BinGroup g) const;
+
+  /**
+   * @brief Compute the y coordinate of the center of mass of a group of bins
+   */
+  float groupCenterY(BinGroup g) const;
 
   /**
    * @brief Compute the centers of the bins
@@ -214,7 +221,7 @@ class DensityGrid {
  */
 class HierarchicalDensityPlacement {
  public:
- /**
+  /**
    * @brief Initialize the datastructure from the grid
    */
   HierarchicalDensityPlacement(DensityGrid grid, int nbCells);
@@ -320,12 +327,14 @@ class HierarchicalDensityPlacement {
   int parentY(int y) const { return parentY(levelY_, y); }
 
   /**
-   * @brief Get the bin index corresponding to this x coordinate
+   * @brief Get the bin index corresponding to this x coordinate. If the
+   * coordinate is out of the grid, return the closest valid bin
    */
   int findBinByX(int x) const;
 
   /**
-   * @brief Get the bin index corresponding to this y coordinate
+   * @brief Get the bin index corresponding to this y coordinate. If the
+   * coordinate is out of the grid, return the closest valid bin
    */
   int findBinByY(int y) const;
 

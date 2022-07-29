@@ -2,7 +2,10 @@
 #include "place_global/density_grid.hpp"
 
 #include <algorithm>
+#include <boost/polygon/polygon.hpp>
 #include <cmath>
+
+namespace bpl = boost::polygon;
 
 DensityGrid::DensityGrid(int binSize, Rectangle area)
     : DensityGrid(binSize, std::vector<Rectangle>({area})) {}
@@ -13,7 +16,7 @@ DensityGrid::DensityGrid(int binSize, std::vector<Rectangle> regions,
   updateBinsToSize(binSize);
   std::vector<Rectangle> actualRegions =
       computeActualRegions(regions, obstacles);
-  updateBinCapacity(regions);
+  updateBinCapacity(actualRegions);
   check();
 }
 
@@ -26,7 +29,15 @@ DensityGrid DensityGrid::fromIspdCircuit(const Circuit &circuit,
       minCellHeight = std::min(height, minCellHeight);
     }
   }
-  return DensityGrid(sizeFactor * minCellHeight, circuit.rows);
+  std::vector<Rectangle> obstacles;
+  for (int i = 0; i < circuit.nbCells(); ++i) {
+    if (!circuit.isFixed(i)) continue;
+    int x = circuit.cellX[i];
+    int y = circuit.cellY[i];
+    obstacles.emplace_back(x, x + circuit.cellWidths[i], y,
+                           y + circuit.cellHeights[i]);
+  }
+  return DensityGrid(sizeFactor * minCellHeight, circuit.rows, obstacles);
 }
 
 DensityGrid::DensityGrid(std::vector<int> xLimits, std::vector<int> yLimits,
@@ -40,8 +51,21 @@ DensityGrid::DensityGrid(std::vector<int> xLimits, std::vector<int> yLimits,
 std::vector<Rectangle> DensityGrid::computeActualRegions(
     const std::vector<Rectangle> &regions,
     const std::vector<Rectangle> &obstacles) {
-  // TODO
-  return regions;
+  bpl::polygon_90_set_data<int> region_set;
+  for (Rectangle r : regions) {
+    region_set.insert(bpl::rectangle_data<int>(r.minX, r.minY, r.maxX, r.maxY));
+  }
+  for (Rectangle r : obstacles) {
+    region_set.insert(bpl::rectangle_data<int>(r.minX, r.minY, r.maxX, r.maxY),
+                      true);
+  }
+  std::vector<bpl::rectangle_data<int> > diff;
+  bpl::get_rectangles(diff, region_set);
+  std::vector<Rectangle> ret;
+  for (auto r : diff) {
+    ret.emplace_back(bpl::xl(r), bpl::xh(r), bpl::yl(r), bpl::yh(r));
+  }
+  return ret;
 }
 
 void DensityGrid::updateBinCenters() {
@@ -71,7 +95,21 @@ void DensityGrid::updateBinCapacity() {
 }
 
 void DensityGrid::updateBinCapacity(const std::vector<Rectangle> &regions) {
-  // TODO
+  for (int i = 0; i < nbBinsX(); ++i) {
+    for (int j = 0; j < nbBinsY(); ++j) {
+      binCapacity_[i][j] = 0;
+    }
+  }
+  for (Rectangle reg : regions) {
+    for (int i = 0; i < nbBinsX(); ++i) {
+      for (int j = 0; j < nbBinsY(); ++j) {
+        Rectangle binReg = region(i, j);
+        if (reg.intersects(binReg)) {
+          binCapacity_[i][j] += Rectangle::intersection(reg, binReg).area();
+        }
+      }
+    }
+  }
 }
 
 void DensityGrid::updateBinsToNumber(int binsX, int binsY) {
@@ -277,29 +315,33 @@ HierarchicalDensityPlacement::HierarchicalDensityPlacement(
 
 int HierarchicalDensityPlacement::findBinByX(int coord) const {
   int mn = 0;
-  int mx = nbBinsX() - 1;
-  while (mx > mn) {
+  int mx = nbBinsX();
+  while (mx > mn + 1) {
     int mid = (mx + mn) / 2;
-    if (binLimitX(mid + 1) > coord) {
+    if (binLimitX(mid) > coord) {
       mx = mid;
     } else {
       mn = mid;
     }
   }
+  assert(binLimitX(mn) <= coord || mn == 0);
+  assert(binLimitX(mn + 1) > coord || mn == nbBinsX() - 1);
   return mn;
 }
 
 int HierarchicalDensityPlacement::findBinByY(int coord) const {
   int mn = 0;
-  int mx = nbBinsY() - 1;
-  while (mx > mn) {
+  int mx = nbBinsY();
+  while (mx > mn + 1) {
     int mid = (mx + mn) / 2;
-    if (binLimitY(mid + 1) > coord) {
+    if (binLimitY(mid) > coord) {
       mx = mid;
     } else {
       mn = mid;
     }
   }
+  assert(binLimitY(mn) <= coord || mn == 0);
+  assert(binLimitY(mn + 1) > coord || mn == nbBinsY() - 1);
   return mn;
 }
 
