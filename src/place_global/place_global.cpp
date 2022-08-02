@@ -10,7 +10,7 @@
 std::vector<float> getBaseForces(const Circuit &circuit) {
   std::vector<float> ret;
   for (int i = 0; i < circuit.nbCells(); ++i) {
-    ret.push_back(circuit.getArea(i));
+    ret.push_back(circuit.area(i));
   }
   float totArea = std::accumulate(ret.begin(), ret.end(), 0.0f);
   for (float &a : ret) {
