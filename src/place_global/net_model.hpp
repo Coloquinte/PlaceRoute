@@ -21,6 +21,16 @@ class NetModel {
   static NetModel yTopology(const Circuit &);
 
   /**
+   * @brief Export the horizontal placement to the ISPD circuit
+   */
+  void exportPlacementX(Circuit &circuit, const std::vector<float> &xplace) const;
+
+  /**
+   * @brief Export the horizontal placement to the ISPD circuit
+   */
+  void exportPlacementY(Circuit &circuit, const std::vector<float> &yplace) const;
+
+  /**
    * @brief Return the number of cells
    */
   int nbCells() const { return nbCells_; }
@@ -200,16 +210,6 @@ class NetModel {
    */
   std::tuple<int, int, float, float> maxPin(int net,
                                             const std::vector<float> &pl) const;
-
-  /**
-   * @brief Helper function to create the model from ISPD data
-   */
-  static NetModel fromData(const std::vector<int> &cellSizes,
-                           const std::vector<int> &pl,
-                           const std::vector<char> &cellFixed,
-                           const std::vector<int> &netLimits,
-                           const std::vector<int> &pinCells,
-                           const std::vector<int> &pinOffsets);
 
  private:
   int nbCells_;

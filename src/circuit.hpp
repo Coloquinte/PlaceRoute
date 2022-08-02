@@ -113,6 +113,11 @@ struct Circuit {
   int nbNets() const { return netLimits.size() - 1; }
 
   /**
+   * @brief Return the number of rows
+   */
+  int nbRows() const { return rows.size(); }
+
+  /**
    * @brief Return the total number of pins
    */
   int nbPins() const { return netLimits.back(); }
@@ -163,7 +168,7 @@ struct Circuit {
   /**
    * @brief Return true if a cell is fixed
    */
-  bool isFixed(int cell) const {
+  bool fixed(int cell) const {
     assert(cell < nbCells());
     return cellFixed[cell];
   }
@@ -201,6 +206,22 @@ struct Circuit {
   long long hpwl() const;
 
   /**
+   * @brief Set the x position for a cell
+   */
+  void setCellX(int cell, float pos) {
+    assert(cell < nbCells());
+    cellX[cell] = pos;
+  }
+
+  /**
+   * @brief Set the y position for a cell
+   */
+  void setCellY(int cell, float pos) {
+    assert(cell < nbCells());
+    cellY[cell] = pos;
+  }
+
+  /**
    * @brief Set the x position for all cells
    */
   void setCellX(const std::vector<int> &x) {
@@ -222,6 +243,14 @@ struct Circuit {
   void setCellFixed(const std::vector<char> &f) {
     assert(f.size() == nbCells());
     cellFixed = f;
+  }
+
+  /**
+   * @brief Set the orientation for all cells
+   */
+  void setOrientation(const std::vector<CellOrientation> &orient) {
+    assert(orient.size() == nbCells());
+    cellOrientation = orient;
   }
 
   /**
@@ -248,12 +277,9 @@ struct Circuit {
                const std::vector<int> &yOffsets);
 
   /**
-   * @brief Set the orientation for all cells
+   * @brief Set all rows
    */
-  void setOrientation(const std::vector<CellOrientation> &orient) {
-    assert(orient.size() == nbCells());
-    cellOrientation = orient;
-  }
+  void setRows(const std::vector<Rectangle> &r) { rows = r; }
 
   static Circuit createIspd(int nb_cells, int nb_nets, int *cell_widths,
                             int *cell_heights, char *cell_fixed,

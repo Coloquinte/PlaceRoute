@@ -33,15 +33,15 @@ void GlobalPlacer::place(Circuit &circuit) {
 
   DensityLegalizer leg = DensityLegalizer::fromIspdCircuit(circuit);
   for (int i = 0; i < nbSteps; ++i) {
+    float wirelengthPlace = xtopo.value(xplace) + ytopo.value(yplace);
+    std::cout << "LB wirelength #" << i << ": " << wirelengthPlace << std::endl;
     leg.updateCellTargetX(xplace);
     leg.updateCellTargetY(yplace);
     leg.run();
     float forceFactor = 0.001 * i;
     auto xtarget = leg.simpleCoordX();
     auto ytarget = leg.simpleCoordY();
-    float wirelengthPlace = xtopo.value(xplace) + ytopo.value(yplace);
     float wirelengthTarget = xtopo.value(xtarget) + ytopo.value(ytarget);
-    std::cout << "LB wirelength #" << i << ": " << wirelengthPlace << std::endl;
     std::cout << "UB wirelength #" << i << ": " << wirelengthTarget
               << std::endl;
     std::vector<float> strength = baseForces;
@@ -50,10 +50,11 @@ void GlobalPlacer::place(Circuit &circuit) {
     yplace = ytopo.solveB2B(yplace, epsilon, ytarget, strength, cutoffDistance);
   }
 
-  for (int i = 0; i < circuit.nbCells(); ++i) {
-    if (!circuit.isFixed(i)) {
-      circuit.cellX[i] = std::round(xplace[i]);
-      circuit.cellY[i] = std::round(yplace[i]);
-    }
-  }
+  std::cout << "LB wirelength final: "
+            << xtopo.value(xplace) + ytopo.value(yplace) << std::endl;
+
+  xtopo.exportPlacementX(circuit, xplace);
+  ytopo.exportPlacementY(circuit, yplace);
+
+  std::cout << "Circuit wirelength : " << circuit.hpwl() << std::endl;
 }
