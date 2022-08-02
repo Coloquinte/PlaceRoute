@@ -12,13 +12,12 @@ extern "C" {
 void place_ispd(int nb_cells, int nb_nets, int *cell_widths, int *cell_heights,
                 char *cell_fixed, int *net_limits, int *pin_cells,
                 int *pin_x_offsets, int *pin_y_offsets, int *cell_x,
-                int *cell_y, char *cell_flip_x, char *cell_flip_y, int nb_rows,
-                int *row_min_x, int *row_max_x, int *row_min_y,
-                int *row_max_y) {
+                int *cell_y, int *cell_orientation, int nb_rows, int *row_min_x,
+                int *row_max_x, int *row_min_y, int *row_max_y) {
   Circuit circuit = Circuit::createIspd(
       nb_cells, nb_nets, cell_widths, cell_heights, cell_fixed, net_limits,
-      pin_cells, pin_x_offsets, pin_y_offsets, cell_x, cell_y, cell_flip_x,
-      cell_flip_y, nb_rows, row_min_x, row_max_x, row_min_y, row_max_y);
+      pin_cells, pin_x_offsets, pin_y_offsets, cell_x, cell_y, cell_orientation,
+      nb_rows, row_min_x, row_max_x, row_min_y, row_max_y);
   std::cout << "Placing circuit with " << circuit.nbCells() << " cells, "
             << circuit.nbNets() << " nets and " << circuit.nbPins() << " pins."
             << std::endl;
@@ -30,13 +29,13 @@ void benchmark_quadratic_models(int nb_cells, int nb_nets, int *cell_widths,
                                 int *cell_heights, char *cell_fixed,
                                 int *net_limits, int *pin_cells,
                                 int *pin_x_offsets, int *pin_y_offsets,
-                                int *cell_x, int *cell_y, char *cell_flip_x,
-                                char *cell_flip_y, int model_type, int nb_steps,
-                                float epsilon, float relaxation) {
+                                int *cell_x, int *cell_y, int *cell_orientation,
+                                int model_type, int nb_steps, float epsilon,
+                                float relaxation) {
   Circuit circuit = Circuit::createIspd(
       nb_cells, nb_nets, cell_widths, cell_heights, cell_fixed, net_limits,
-      pin_cells, pin_x_offsets, pin_y_offsets, cell_x, cell_y, cell_flip_x,
-      cell_flip_y, 0, NULL, NULL, NULL, NULL);
+      pin_cells, pin_x_offsets, pin_y_offsets, cell_x, cell_y, cell_orientation,
+      0, NULL, NULL, NULL, NULL);
   auto xtopo = NetModel::xTopology(circuit);
 
   auto starPlace = xtopo.solveStar();
@@ -64,10 +63,9 @@ Circuit Circuit::createIspd(int nb_cells, int nb_nets, int *cell_widths,
                             int *cell_heights, char *cell_fixed,
                             int *net_limits, int *pin_cells, int *pin_x_offsets,
                             int *pin_y_offsets, int *cell_x, int *cell_y,
-                            char *cell_flip_x, char *cell_flip_y, int nb_rows,
-                            int *row_min_x, int *row_max_x, int *row_min_y,
-                            int *row_max_y) {
-  Circuit ret;
+                            int *cell_orientation, int nb_rows, int *row_min_x,
+                            int *row_max_x, int *row_min_y, int *row_max_y) {
+  Circuit ret(nb_cells);
   ret.cellWidths.assign(cell_widths, cell_widths + nb_cells);
   ret.cellHeights.assign(cell_heights, cell_heights + nb_cells);
   ret.cellFixed.assign(cell_fixed, cell_fixed + nb_cells);
@@ -78,8 +76,9 @@ Circuit Circuit::createIspd(int nb_cells, int nb_nets, int *cell_widths,
   ret.pinYOffsets.assign(pin_y_offsets, pin_y_offsets + nbPins);
   ret.cellX.assign(cell_x, cell_x + nb_cells);
   ret.cellY.assign(cell_y, cell_y + nb_cells);
-  ret.cellFlipX.assign(cell_flip_x, cell_flip_x + nb_cells);
-  ret.cellFlipY.assign(cell_flip_y, cell_flip_y + nb_cells);
+  for (int i = 0; i < nb_cells; ++i) {
+    ret.cellOrientation.emplace_back(static_cast<CellOrientation>(cell_orientation[i]));
+  }
   for (int i = 0; i < nb_rows; ++i) {
     ret.rows.emplace_back(row_min_x[i], row_max_x[i], row_min_y[i],
                           row_max_y[i]);

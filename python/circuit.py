@@ -12,8 +12,7 @@ class Circuit:
         self._cell_fixed = None
         self._cell_x = None
         self._cell_y = None
-        self._cell_flip_x = None
-        self._cell_flip_y = None
+        self._cell_orient = None
         self._net_name = None
         self._net_limits = None
         self._pin_cells = None
@@ -71,12 +70,8 @@ class Circuit:
         return self._cell_y
 
     @property
-    def cell_flip_x(self):
-        return self._cell_flip_x
-
-    @property
-    def cell_flip_y(self):
-        return self._cell_flip_y
+    def cell_orient(self):
+        return self._cell_orient
 
     def check(self):
         # No member is None
@@ -89,8 +84,7 @@ class Circuit:
         assert self._cell_fixed is not None
         assert self._cell_x is not None
         assert self._cell_y is not None
-        assert self._cell_flip_x is not None
-        assert self._cell_flip_y is not None
+        assert self._cell_orient is not None
         assert self._net_name is not None
         assert self._net_limits is not None
         assert self._pin_cells is not None
@@ -106,8 +100,7 @@ class Circuit:
         assert isinstance(self._cell_fixed, np.ndarray)
         assert isinstance(self._cell_x, np.ndarray)
         assert isinstance(self._cell_y, np.ndarray)
-        assert isinstance(self._cell_flip_x, np.ndarray)
-        assert isinstance(self._cell_flip_y, np.ndarray)
+        assert isinstance(self._cell_orient, np.ndarray)
         assert isinstance(self._pin_cells, np.ndarray)
         assert isinstance(self._pin_x, np.ndarray)
         assert isinstance(self._pin_y, np.ndarray)
@@ -121,8 +114,7 @@ class Circuit:
         assert self._cell_fixed.dtype == np.bool
         assert self._cell_x.dtype == np.int32
         assert self._cell_y.dtype == np.int32
-        assert self._cell_flip_x.dtype == np.bool
-        assert self._cell_flip_y.dtype == np.bool
+        assert self._cell_orient.dtype == np.int32
         assert self._pin_cells.dtype == np.int32
         assert self._pin_x.dtype == np.int32
         assert self._pin_y.dtype == np.int32
@@ -138,8 +130,7 @@ class Circuit:
         assert len(self._cell_fixed) == self.nb_cells
         assert len(self._cell_x) == self.nb_cells
         assert len(self._cell_y) == self.nb_cells
-        assert len(self._cell_flip_x) == self.nb_cells
-        assert len(self._cell_flip_y) == self.nb_cells
+        assert len(self._cell_orient) == self.nb_cells
         assert len(self._net_limits) == self.nb_nets + 1
         assert len(self._pin_cells) == len(self._pin_x)
         assert len(self._pin_cells) == len(self._pin_y)
@@ -177,8 +168,7 @@ class Circuit:
             self._pin_y.ctypes.data_as(c_int_p),
             self._cell_x.ctypes.data_as(c_int_p),
             self._cell_y.ctypes.data_as(c_int_p),
-            self._cell_flip_x.ctypes.data_as(c_bool_p),
-            self._cell_flip_y.ctypes.data_as(c_bool_p),
+            self._cell_orient.ctypes.data_as(c_int_p),
             self.nb_rows,
             self._row_min_x.ctypes.data_as(c_int_p),
             self._row_max_x.ctypes.data_as(c_int_p),
@@ -218,8 +208,7 @@ class Circuit:
             self._pin_y.ctypes.data_as(c_int_p),
             self._cell_x.ctypes.data_as(c_int_p),
             self._cell_y.ctypes.data_as(c_int_p),
-            self._cell_flip_x.ctypes.data_as(c_bool_p),
-            self._cell_flip_y.ctypes.data_as(c_bool_p),
+            self._cell_orient.ctypes.data_as(c_int_p),
             model_types[model_type],
             nb_steps,
             ctypes.c_float(epsilon),
