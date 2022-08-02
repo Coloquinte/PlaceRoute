@@ -101,6 +101,8 @@ void DensityGrid::updateBinCapacity(const std::vector<Rectangle> &regions) {
     }
   }
   for (Rectangle reg : regions) {
+    // TODO: this should do a binary search first to limit the number of bins
+    // that are accessed
     for (int i = 0; i < nbBinsX(); ++i) {
       for (int j = 0; j < nbBinsY(); ++j) {
         Rectangle binReg = region(i, j);
