@@ -84,19 +84,8 @@ long long norm(int x, int y, LegalizationModel leg);
  * Representation of a flat circuit from an ISPD benchmark
  */
 
-struct Circuit {
-  std::vector<int> cellWidths;
-  std::vector<int> cellHeights;
-  std::vector<char> cellFixed;
-  std::vector<int> netLimits;
-  std::vector<int> pinCells;
-  std::vector<int> pinXOffsets;
-  std::vector<int> pinYOffsets;
-  std::vector<int> cellX;
-  std::vector<int> cellY;
-  std::vector<CellOrientation> cellOrientation;
-  std::vector<Rectangle> rows;
-
+class Circuit {
+ public:
   /**
    * @brief Initialize a circuit
    */
@@ -281,6 +270,19 @@ struct Circuit {
    */
   void setRows(const std::vector<Rectangle> &r) { rows = r; }
 
+  /**
+   * @brief Return a bounding box of the placement area
+   */
+  Rectangle computePlacementArea() const;
+
+  /**
+   * @brief Return the rows after removing the obstacles
+   */
+  std::vector<Rectangle> computeRows() const;
+
+  /**
+   * @brief Direct creation for the C API
+   */
   static Circuit createIspd(int nb_cells, int nb_nets, int *cell_widths,
                             int *cell_heights, char *cell_fixed,
                             int *net_limits, int *pin_cells, int *pin_x_offsets,
@@ -292,4 +294,17 @@ struct Circuit {
    * @brief Check the consistency of the datastructure
    */
   void check() const;
+
+ public:
+  std::vector<int> cellWidths;
+  std::vector<int> cellHeights;
+  std::vector<char> cellFixed;
+  std::vector<int> netLimits;
+  std::vector<int> pinCells;
+  std::vector<int> pinXOffsets;
+  std::vector<int> pinYOffsets;
+  std::vector<int> cellX;
+  std::vector<int> cellY;
+  std::vector<CellOrientation> cellOrientation;
+  std::vector<Rectangle> rows;
 };

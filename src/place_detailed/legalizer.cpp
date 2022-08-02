@@ -6,9 +6,8 @@
 #include <limits>
 
 Legalizer Legalizer::fromIspdCircuit(const Circuit &circuit) {
-  std::vector<Rectangle> rows;
   Legalizer ret =
-      Legalizer(rows, circuit.cellWidths, circuit.cellX, circuit.cellY);
+      Legalizer(circuit.computeRows(), circuit.cellWidths, circuit.cellX, circuit.cellY);
   // Represent fixed cells with -1 width so they are not considered
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (circuit.cellFixed[i]) {
