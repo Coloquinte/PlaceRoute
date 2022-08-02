@@ -189,9 +189,11 @@ def read_place(filename, cell_names):
     name_dir = dict((name, i) for i, name in enumerate(cell_names))
     cell_x = np.zeros(len(cell_names), dtype=np.int32)
     cell_y = np.zeros(len(cell_names), dtype=np.int32)
-    flip_x = np.zeros(len(cell_names), dtype=np.bool)
-    flip_y = np.zeros(len(cell_names), dtype=np.bool)
-    orients = set()
+    cell_orient = np.zeros(len(cell_names), dtype=np.int32)
+    orient_map = {
+        "N": 0, "S": 1, "W": 2, "E": 3,
+        "FN": 4, "FS": 5, "FW": 6, "FE": 7
+    }
     with open_file(filename) as f:
         first_line_found = False
         for line in f:
@@ -211,11 +213,11 @@ def read_place(filename, cell_names):
             cell_ind = name_dir[cell]
             cell_x[cell_ind] = int(x)
             cell_y[cell_ind] = int(y)
-            if orient != "N":
-                orients.add(orient)
-    if len(orients) != 0:
-        print(f"Non-default orientations were encountered in the file: {', '.join(orients)}")
-    return cell_x, cell_y, flip_x, flip_y
+            if orient in orient_map:
+                cell_orient[cell_ind] = orient_map[orient]
+            else:
+                print(f"Unknown orientation encountered {orient}")
+    return cell_x, cell_y, cell_orient
 
 
 def read_rows(filename):
@@ -311,7 +313,7 @@ def read_ispd(filename):
     node_filename, net_filename, pl_filename, scl_filename = read_aux(filename)
     cell_names, cell_widths, cell_heights, cell_fixed = read_nodes(node_filename)
     net_names, net_limits, pin_cell, pin_x, pin_y = read_nets(net_filename, cell_names, cell_widths, cell_heights)
-    cell_x, cell_y, flip_x, flip_y = read_place(pl_filename, cell_names)
+    cell_x, cell_y, cell_orient = read_place(pl_filename, cell_names)
     rows = read_rows(scl_filename)
 
     ret = circuit.Circuit()
@@ -334,8 +336,7 @@ def read_ispd(filename):
     # Setup initial cell placement
     ret._cell_x = cell_x
     ret._cell_y = cell_y
-    ret._cell_flip_x = flip_x
-    ret._cell_flip_y = flip_y
+    ret._cell_orient = cell_orient
 
     # Setup rows
     r_min_x, r_min_y, r_max_x, r_max_y = rows_to_numpy(rows)

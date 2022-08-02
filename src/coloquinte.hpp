@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <vector>
 
 /**
@@ -35,10 +36,49 @@ struct Rectangle {
 };
 
 /**
- * Cost model to use when doing legalization
+ * @brief Cost model to use when doing legalization
  */
-enum LegalizationModel { L1, L2, LInf, L2Squared };
+enum class LegalizationModel {
+  /// L1 norm (sum of absolute values)
+  L1,
+  /// L2 norm (euclidean norm)
+  L2,
+  /// LInf norm (maximum of absolute values)
+  LInf,
+  /// Square of euclidean norm
+  L2Squared
+};
+
+/**
+ * @brief Orientation of a cell
+ */
+enum class CellOrientation {
+  /// North (default orientation)
+  N,
+  /// South
+  S,
+  /// West
+  W,
+  /// East
+  E,
+  /// Flip + North
+  FN,
+  /// Flip + South
+  FS,
+  /// Flip + West
+  FW,
+  /// Flip + East
+  FE
+};
+
+/**
+ * @brief Compute the norm of the 2D vector with the given cost model
+ */
 float norm(float x, float y, LegalizationModel leg);
+
+/**
+ * @brief Compute the norm of the 2D vector with the given cost model
+ */
 long long norm(int x, int y, LegalizationModel leg);
 
 /**
@@ -55,9 +95,10 @@ struct Circuit {
   std::vector<int> pinYOffsets;
   std::vector<int> cellX;
   std::vector<int> cellY;
-  std::vector<char> cellFlipX;
-  std::vector<char> cellFlipY;
+  std::vector<CellOrientation> cellOrientation;
   std::vector<Rectangle> rows;
+
+  Circuit(int nbCells) {}
 
   int nbCells() const { return cellWidths.size(); }
 
@@ -72,13 +113,42 @@ struct Circuit {
            static_cast<long long>(cellHeights[cell]);
   }
 
+  void setCellX(const std::vector<int> &x) {
+    assert(x.size() == nbCells());
+    cellX = x;
+  }
+
+  void setCellY(const std::vector<int> &y) {
+    assert(y.size() == nbCells());
+    cellY = y;
+  }
+
+  void setCellWidths(const std::vector<int> &widths) {
+    assert(widths.size() == nbCells());
+    cellWidths = widths;
+  }
+
+  void setCellHeights(const std::vector<int> &heights) {
+    assert(heights.size() == nbCells());
+    cellHeights = heights;
+  }
+
+  void setNets(const std::vector<int> &netLimits,
+               const std::vector<int> &pinCells,
+               const std::vector<int> &pinXOffsets,
+               const std::vector<int> &pinYOffsets);
+
+  void setOrientation(const std::vector<CellOrientation> &orient) {
+    assert(orient.size() == nbCells());
+    cellOrientation = orient;
+  }
+
   static Circuit createIspd(int nb_cells, int nb_nets, int *cell_widths,
                             int *cell_heights, char *cell_fixed,
                             int *net_limits, int *pin_cells, int *pin_x_offsets,
                             int *pin_y_offsets, int *cell_x, int *cell_y,
-                            char *cell_flip_x, char *cell_flip_y, int nb_rows,
-                            int *row_min_x, int *row_max_x, int *row_min_y,
-                            int *row_max_y);
+                            int *cell_orientation, int nb_rows, int *row_min_x,
+                            int *row_max_x, int *row_min_y, int *row_max_y);
 
   void check() const;
 };
@@ -87,13 +157,13 @@ extern "C" {
 void place_ispd(int nb_cells, int nb_nets, int *cell_widths, int *cell_heights,
                 char *cell_fixed, int *net_limits, int *pin_cells,
                 int *pin_x_offsets, int *pin_y_offsets, int *cell_x,
-                int *cell_y, char *cell_flip_x, char *cell_flip_y, int nb_rows,
-                int *row_min_x, int *row_max_x, int *row_min_y, int *row_max_y);
+                int *cell_y, int *cell_orientation, int nb_rows, int *row_min_x,
+                int *row_max_x, int *row_min_y, int *row_max_y);
 void benchmark_quadratic_models(int nb_cells, int nb_nets, int *cell_widths,
                                 int *cell_heights, char *cell_fixed,
                                 int *net_limits, int *pin_cells,
                                 int *pin_x_offsets, int *pin_y_offsets,
-                                int *cell_x, int *cell_y, char *cell_flip_x,
-                                char *cell_flip_y, int model_type, int nb_steps,
-                                float epsilon, float relaxation);
+                                int *cell_x, int *cell_y, int *cell_orientation,
+                                int model_type, int nb_steps, float epsilon,
+                                float relaxation);
 }
