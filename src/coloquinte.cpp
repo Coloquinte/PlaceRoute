@@ -58,33 +58,3 @@ void benchmark_quadratic_models(int nb_cells, int nb_nets, int *cell_widths,
   }
 }
 }
-
-Circuit Circuit::createIspd(int nb_cells, int nb_nets, int *cell_widths,
-                            int *cell_heights, char *cell_fixed,
-                            int *net_limits, int *pin_cells, int *pin_x_offsets,
-                            int *pin_y_offsets, int *cell_x, int *cell_y,
-                            int *cell_orientation, int nb_rows, int *row_min_x,
-                            int *row_max_x, int *row_min_y, int *row_max_y) {
-  Circuit ret(nb_cells);
-  ret.cellWidths.assign(cell_widths, cell_widths + nb_cells);
-  ret.cellHeights.assign(cell_heights, cell_heights + nb_cells);
-  ret.cellFixed.assign(cell_fixed, cell_fixed + nb_cells);
-  ret.netLimits.assign(net_limits, net_limits + nb_nets + 1);
-  int nbPins = ret.netLimits.back();
-  ret.pinCells.assign(pin_cells, pin_cells + nbPins);
-  ret.pinXOffsets.assign(pin_x_offsets, pin_x_offsets + nbPins);
-  ret.pinYOffsets.assign(pin_y_offsets, pin_y_offsets + nbPins);
-  ret.cellX.assign(cell_x, cell_x + nb_cells);
-  ret.cellY.assign(cell_y, cell_y + nb_cells);
-  for (int i = 0; i < nb_cells; ++i) {
-    ret.cellOrientation.emplace_back(static_cast<CellOrientation>(cell_orientation[i]));
-  }
-  for (int i = 0; i < nb_rows; ++i) {
-    ret.rows.emplace_back(row_min_x[i], row_max_x[i], row_min_y[i],
-                          row_max_y[i]);
-  }
-  ret.check();
-  return ret;
-}
-
-void Circuit::check() const {}
