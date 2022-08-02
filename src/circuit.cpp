@@ -1,7 +1,9 @@
 
-#include <iostream>
+#include <boost/polygon/polygon.hpp>
 
 #include "coloquinte.hpp"
+
+namespace bpl = boost::polygon;
 
 Circuit Circuit::createIspd(int nb_cells, int nb_nets, int *cell_widths,
                             int *cell_heights, char *cell_fixed,
@@ -119,6 +121,53 @@ long long Circuit::hpwl() const {
     ret += (maxX - minX);
     ret += (maxY - minY);
   }
+  return ret;
+}
+
+Rectangle Circuit::computePlacementArea() const {
+  int minX = std::numeric_limits<int>::max();
+  int maxX = std::numeric_limits<int>::min();
+  int minY = std::numeric_limits<int>::max();
+  int maxY = std::numeric_limits<int>::min();
+  if (rows.empty()) {
+    return Rectangle(0, 0, 0, 0);
+  }
+  for (Rectangle row : rows) {
+    minX = std::min(row.minX, minX);
+    maxX = std::max(row.maxX, maxX);
+    minY = std::min(row.minY, minY);
+    maxY = std::max(row.maxY, maxY);
+  }
+  return Rectangle(minX, maxX, minY, maxY);
+}
+
+std::vector<Rectangle> Circuit::computeRows() const {
+  std::vector<Rectangle> obstacles;
+  for (int i = 0; i < nbCells(); ++i) {
+    if (!fixed(i)) continue;
+    obstacles.emplace_back(x(i), x(i) + width(i), y(i), y(i) + height(i));
+  }
+  std::vector<Rectangle> ret;
+  for (Rectangle row : rows) {
+    bpl::polygon_90_set_data<int> row_set;
+    row_set.insert(
+        bpl::rectangle_data<int>(row.minX, row.minY, row.maxX, row.maxY));
+    for (Rectangle r : obstacles) {
+      row_set.insert(bpl::rectangle_data<int>(r.minX, r.minY, r.maxX, r.maxY),
+                     true);
+    }
+
+    std::vector<bpl::rectangle_data<int> > diff;
+    bpl::get_rectangles(diff, row_set);
+    for (auto r : diff) {
+      Rectangle newRow(bpl::xl(r), bpl::xh(r), bpl::yl(r), bpl::yh(r));
+      // Filter out partially covered rows
+      if (newRow.height() == row.height()) {
+        ret.push_back(newRow);
+      }
+    }
+  }
+
   return ret;
 }
 

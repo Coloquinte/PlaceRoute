@@ -22,7 +22,9 @@ void place_ispd(int nb_cells, int nb_nets, int *cell_widths, int *cell_heights,
             << circuit.nbNets() << " nets and " << circuit.nbPins() << " pins."
             << std::endl;
   GlobalPlacer::place(circuit);
+  std::cout << "Wirelength after global placement: " << circuit.hpwl() << std::endl;
   DetailedPlacer::place(circuit);
+  std::cout << "Wirelength after detailed placement: " << circuit.hpwl() << std::endl;
 }
 
 void benchmark_quadratic_models(int nb_cells, int nb_nets, int *cell_widths,
