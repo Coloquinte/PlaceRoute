@@ -106,9 +106,13 @@ struct Circuit {
 
   int nbPins() const { return netLimits.back(); }
 
-  bool isFixed(int cell) const { return cellFixed[cell]; }
+  bool isFixed(int cell) const {
+    assert(cell < nbCells());
+    return cellFixed[cell];
+  }
 
-  long long getArea(int cell) const {
+  long long area(int cell) const {
+    assert(cell < nbCells());
     return static_cast<long long>(cellWidths[cell]) *
            static_cast<long long>(cellHeights[cell]);
   }
@@ -141,6 +145,40 @@ struct Circuit {
   void setOrientation(const std::vector<CellOrientation> &orient) {
     assert(orient.size() == nbCells());
     cellOrientation = orient;
+  }
+
+  /**
+   * @brief Return the current orientation of the cell
+   */
+  CellOrientation orientation(int cell) const {
+    assert(cell < nbCells());
+    return cellOrientation[cell];
+  }
+
+  /**
+   * @brief Return the current width of the cell (depends on its orientation)
+   */
+  int width(int cell) const;
+
+  /**
+   * @brief Return the current height of the cell (depends on its orientation)
+   */
+  int height(int cell) const;
+
+  /**
+   * @brief Return the current x position of the cell
+   */
+  int x(int cell) const {
+    assert(cell < nbCells());
+    return cellX[cell];
+  }
+
+  /**
+   * @brief Return the current y position of the cell
+   */
+  int y(int cell) const {
+    assert(cell < nbCells());
+    return cellY[cell];
   }
 
   static Circuit createIspd(int nb_cells, int nb_nets, int *cell_widths,

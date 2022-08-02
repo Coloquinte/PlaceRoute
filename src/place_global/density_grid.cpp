@@ -236,7 +236,7 @@ HierarchicalDensityPlacement HierarchicalDensityPlacement::fromIspdCircuit(
     if (circuit.isFixed(i)) {
       demands.push_back(0LL);
     } else {
-      demands.push_back(circuit.getArea(i));
+      demands.push_back(circuit.area(i));
     }
   }
   return HierarchicalDensityPlacement(grid, demands);
