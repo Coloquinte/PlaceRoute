@@ -90,11 +90,18 @@ bool Legalizer::placeCellOptimally(int cell) {
   int bestX = 0;
   int bestRow = -1;
   long long bestDist = std::numeric_limits<long long>::max();
-  for (int row = 0; row < nbRows(); ++row) {
+
+  auto tryPlace = [&] (int row) {
     int y = rows_[row].minY;
+    if (bestRow != -1 && norm(0, y - targetY, costModel_) > bestDist) {
+      // Not possible to do better since the rows are sorted
+      return true;
+    }
+    // Find the best position fo the cell
     auto [ok, x] = placeCellOptimally(cell, row);
     if (!ok) {
-      continue;
+      // Not possible to place in this row, but cannot stop yet
+      return false;
     }
     auto dist = norm(x - targetX, y - targetY, costModel_);
     if (bestRow == -1 || dist < bestDist) {
@@ -102,10 +109,28 @@ bool Legalizer::placeCellOptimally(int cell) {
       bestRow = row;
       bestDist = dist;
     }
+    // Cannot stop yet
+    return false;
+  };
+
+  // Try promising candidates first
+  int initialRow = closestRow(targetY);
+  for (int row = initialRow; row < nbRows(); ++row) {
+    bool canStop = tryPlace(row);
+    if (canStop) {
+      break;
+    }
   }
+  for (int row = initialRow - 1; row >= 0; --row) {
+    bool canStop = tryPlace(row);
+    if (canStop) {
+      break;
+    }
+  }
+
   if (bestRow == -1) {
     throw std::runtime_error(
-        "Unable to place a cell with the naive placement algorithm");
+        "Unable to place a cell with the naive legalization algorithm");
   }
   doPlacement(cell, bestRow, bestX);
   return true;
@@ -173,6 +198,20 @@ int Legalizer::firstFreeX(int row) const {
   }
   int cell = rowToCells_[row].back();
   return cellToX_[cell] + cellWidth_[cell];
+}
+
+int Legalizer::closestRow(int y) const {
+  auto it = std::lower_bound(rows_.begin(), rows_.end(), y, [](Rectangle r, int v) { return r.minY < v; });
+  if (it == rows_.end()) return nbRows() - 1;
+  if (it == rows_.begin()) return 0;
+  int row = it - rows_.begin();
+  assert (row >= 1);
+  if (rows_[row].minX - y > y - rows_[row-1].minX) {
+    return row - 1;
+  }
+  else {
+    return row;
+  }
 }
 
 std::vector<int> Legalizer::cellLegalX() const {

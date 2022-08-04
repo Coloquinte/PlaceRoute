@@ -138,6 +138,11 @@ class Legalizer {
   void undoPlacement(int cell);
 
   /**
+   * @brief Find the row that is closest to the target position
+   */
+  int closestRow(int y) const;
+
+  /**
    * @brief Return the first free position in the row
    */
   int firstFreeX(int row) const;
