@@ -72,7 +72,25 @@ void Legalizer::check() const {
   }
   for (int i = 0; i < nbRows(); ++i) {
     for (int c : rowToCells_[i]) {
-      assert(cellToRow_[c] == i);
+      if (cellToRow_[c] != i) {
+        throw std::runtime_error(
+            "Cell allocation does not match row allocation");
+      }
+      if (cellToX_[c] < rows_[i].minX) {
+        throw std::runtime_error("Cell placed before the row");
+      }
+      if (cellToX_[c] + cellWidth_[c] > rows_[i].maxX) {
+        throw std::runtime_error("Cell placed after the row");
+      }
+    }
+  }
+  for (int i = 0; i < nbRows(); ++i) {
+    for (int j = 0; j + 1 < rowToCells_[i].size(); ++j) {
+      int c1 = rowToCells_[i][j];
+      int c2 = rowToCells_[i][j + 1];
+      if (cellToX_[c1] + cellWidth_[c1] > cellToX_[c2]) {
+        throw std::runtime_error("Cell overlap detected");
+      }
     }
   }
 }
@@ -80,7 +98,6 @@ void Legalizer::check() const {
 bool Legalizer::placeCellOptimally(int cell) {
   /**
    * Very naive algorithm that tries every possible position
-   * TODO: Start from the optimal y position and work from there
    */
   if (isIgnored(cell)) {
     return true;
@@ -91,7 +108,7 @@ bool Legalizer::placeCellOptimally(int cell) {
   int bestRow = -1;
   long long bestDist = std::numeric_limits<long long>::max();
 
-  auto tryPlace = [&] (int row) {
+  auto tryPlace = [&](int row) {
     int y = rows_[row].minY;
     if (bestRow != -1 && norm(0, y - targetY, costModel_) > bestDist) {
       // Not possible to do better since the rows are sorted
@@ -129,6 +146,8 @@ bool Legalizer::placeCellOptimally(int cell) {
   }
 
   if (bestRow == -1) {
+    report();
+    check();
     throw std::runtime_error(
         "Unable to place a cell with the naive legalization algorithm");
   }
@@ -185,6 +204,7 @@ void Legalizer::undoPlacement(int cell) {
   auto pos = std::find(rowToCells_[row].begin(), rowToCells_[row].end(), cell);
   assert(pos != rowToCells_[row].end());
   rowToCells_[row].erase(pos);
+  cellToRow_[cell] = -1;
 
   // Back to default
   cellToX_[cell] = cellTargetX_[cell];
@@ -201,15 +221,15 @@ int Legalizer::firstFreeX(int row) const {
 }
 
 int Legalizer::closestRow(int y) const {
-  auto it = std::lower_bound(rows_.begin(), rows_.end(), y, [](Rectangle r, int v) { return r.minY < v; });
+  auto it = std::lower_bound(rows_.begin(), rows_.end(), y,
+                             [](Rectangle r, int v) { return r.minY < v; });
   if (it == rows_.end()) return nbRows() - 1;
   if (it == rows_.begin()) return 0;
   int row = it - rows_.begin();
-  assert (row >= 1);
-  if (rows_[row].minX - y > y - rows_[row-1].minX) {
+  assert(row >= 1);
+  if (rows_[row].minX - y > y - rows_[row - 1].minX) {
     return row - 1;
-  }
-  else {
+  } else {
     return row;
   }
 }
@@ -245,7 +265,18 @@ void Legalizer::exportPlacement(Circuit &circuit) {
   }
 }
 
-void Legalizer::report() const {
+void Legalizer::report(bool verbose) const {
   std::cout << "Legalizer with " << nbCells() << " cells on " << nbRows()
             << " rows" << std::endl;
+  if (!verbose) return;
+  for (int row = 0; row < nbRows(); ++row) {
+    std::cout << "Row " << rows_[row].minY << ", " << rows_[row].minX << " to "
+              << rows_[row].maxX << ": ";
+    for (int c : rowToCells_[row]) {
+      int x = cellToX_[c];
+      int w = cellWidth_[c];
+      std::cout << c << " (" << x << " - " << x + w << ") ";
+    }
+    std::cout << std::endl;
+  }
 }

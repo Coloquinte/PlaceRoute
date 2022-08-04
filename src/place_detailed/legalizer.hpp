@@ -87,7 +87,7 @@ class Legalizer {
   /**
    * @brief Report on the datastructure on stdout
    */
-  void report() const;
+  void report(bool verbose=false) const;
 
  private:
   /**
