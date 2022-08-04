@@ -84,6 +84,11 @@ class Legalizer {
    */
   void check() const;
 
+  /**
+   * @brief Report on the datastructure on stdout
+   */
+  void report() const;
+
  private:
   /**
    * @brief Place a single cell optimally
@@ -99,6 +104,15 @@ class Legalizer {
 
   /**
    * @brief Compute the ordering of the cells
+   *
+   * @param weightX Weight allocated to the target x coordinate; main ordering
+   * component, should usually be 1
+   * @param weightWidth Weight allocated to the width; allows ordering by left
+   * side (0), center (0.5) or right side (1)
+   * @param weightY Weight allocated to the target y coordinate; allows diagonal
+   * ordering, should usually be close to 0
+   *
+   * @return An ordering of the cell indices
    */
   std::vector<int> computeCellOrder(float weightX, float weightWidth,
                                     float weightY) const;
@@ -107,6 +121,11 @@ class Legalizer {
    * @brief Returns true if the cell is to be ignored by legalization
    */
   bool isIgnored(int cell) const { return cellWidth_[cell] == -1; }
+
+  /**
+   * @brief Returns true if the cell is already placed by the algorithm
+   */
+  bool isPlaced(int cell) const { return cellToRow_[cell] != -1; }
 
   /**
    * @brief Materialize the placement of a cell
@@ -118,6 +137,11 @@ class Legalizer {
    */
   void undoPlacement(int cell);
 
+  /**
+   * @brief Return the first free position in the row
+   */
+  int firstFreeX(int row) const;
+
  private:
   // Placement data
   LegalizationModel costModel_;
@@ -128,7 +152,6 @@ class Legalizer {
 
   // Placement status
   std::vector<std::vector<int> > rowToCells_;
-  std::vector<std::vector<int> > rowToX_;
   std::vector<int> cellToRow_;
   std::vector<int> cellToX_;
   std::vector<int> cellToY_;

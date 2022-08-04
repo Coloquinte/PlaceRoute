@@ -3,11 +3,12 @@
 
 #include <algorithm>
 #include <cassert>
+#include <iostream>
 #include <limits>
 
 Legalizer Legalizer::fromIspdCircuit(const Circuit &circuit) {
-  Legalizer ret =
-      Legalizer(circuit.computeRows(), circuit.cellWidths, circuit.cellX, circuit.cellY);
+  Legalizer ret = Legalizer(circuit.computeRows(), circuit.cellWidths,
+                            circuit.cellX, circuit.cellY);
   // Represent fixed cells with -1 width so they are not considered
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (circuit.cellFixed[i]) {
@@ -33,10 +34,15 @@ Legalizer::Legalizer(const std::vector<Rectangle> &rows,
       rows_.begin(), rows_.end(), [](Rectangle a, Rectangle b) -> bool {
         return a.minY < b.minY || (a.minY == b.minY && a.minX < b.minX);
       });
+  rowToCells_.resize(rows.size());
+  cellToX_ = cellTargetX_;
+  cellToY_ = cellTargetY_;
+  cellToRow_.assign(width.size(), -1);
 }
 
 void Legalizer::run() {
   std::vector<int> cellOrder = computeCellOrder(1.0, 0.5, 0.01);
+
   for (int c : cellOrder) {
     placeCellOptimally(c);
   }
@@ -51,6 +57,23 @@ void Legalizer::check() const {
   }
   if (cellTargetY_.size() != nbCells()) {
     throw std::runtime_error("Number of cell y targets does not match");
+  }
+  if (cellToX_.size() != nbCells()) {
+    throw std::runtime_error("Number of cell x positions does not match");
+  }
+  if (cellToY_.size() != nbCells()) {
+    throw std::runtime_error("Number of cell y positions does not match");
+  }
+  if (cellToRow_.size() != nbCells()) {
+    throw std::runtime_error("Number of cell row positions does not match");
+  }
+  if (rowToCells_.size() != nbRows()) {
+    throw std::runtime_error("Number of row cells does not match");
+  }
+  for (int i = 0; i < nbRows(); ++i) {
+    for (int c : rowToCells_[i]) {
+      assert(cellToRow_[c] == i);
+    }
   }
 }
 
@@ -81,22 +104,15 @@ bool Legalizer::placeCellOptimally(int cell) {
     }
   }
   if (bestRow == -1) {
-    return false;
+    throw std::runtime_error(
+        "Unable to place a cell with the naive placement algorithm");
   }
   doPlacement(cell, bestRow, bestX);
   return true;
 }
 
 std::pair<bool, int> Legalizer::placeCellOptimally(int cell, int row) const {
-  int minCoord;
-  if (rowToCells_[row].empty()) {
-    minCoord = rows_[row].minX;
-  } else {
-    int pred = rowToCells_[row].back();
-    int x = rowToX_[row].back();
-    minCoord = x + cellWidth_[pred];
-  }
-
+  int minCoord = firstFreeX(row);
   int maxCoord = rows_[row].maxX - cellWidth_[cell];
 
   if (minCoord > maxCoord) {
@@ -129,16 +145,34 @@ std::vector<int> Legalizer::computeCellOrder(float weightX, float weightWidth,
 }
 
 void Legalizer::doPlacement(int cell, int row, int x) {
+  assert(row >= 0 && row < nbRows());
   rowToCells_[row].push_back(cell);
-  rowToX_[row].push_back(x);
   cellToRow_[cell] = row;
   cellToX_[cell] = x;
   cellToY_[cell] = rows_[row].minY;
 }
 
 void Legalizer::undoPlacement(int cell) {
-  // TODO
-  throw std::runtime_error("Not yet implemented");
+  int row = cellToRow_[cell];
+  if (row == -1) return;  // Not placed
+
+  // Remove from the row
+  auto pos = std::find(rowToCells_[row].begin(), rowToCells_[row].end(), cell);
+  assert(pos != rowToCells_[row].end());
+  rowToCells_[row].erase(pos);
+
+  // Back to default
+  cellToX_[cell] = cellTargetX_[cell];
+  cellToY_[cell] = cellTargetY_[cell];
+}
+
+int Legalizer::firstFreeX(int row) const {
+  assert(row >= 0 && row < nbRows());
+  if (rowToCells_[row].empty()) {
+    return rows_[row].minX;
+  }
+  int cell = rowToCells_[row].back();
+  return cellToX_[cell] + cellWidth_[cell];
 }
 
 std::vector<int> Legalizer::cellLegalX() const {
@@ -146,7 +180,7 @@ std::vector<int> Legalizer::cellLegalX() const {
   for (int r = 0; r < nbRows(); ++r) {
     for (int i = 0; i < rowToCells_[r].size(); ++i) {
       int c = rowToCells_[r][i];
-      ret[c] = rowToX_[r][i];
+      ret[c] = cellToX_[c];
     }
   }
   return ret;
@@ -170,4 +204,9 @@ void Legalizer::exportPlacement(Circuit &circuit) {
     circuit.cellX[i] = cellX[i];
     circuit.cellY[i] = cellY[i];
   }
+}
+
+void Legalizer::report() const {
+  std::cout << "Legalizer with " << nbCells() << " cells on " << nbRows()
+            << " rows" << std::endl;
 }
