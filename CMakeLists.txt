@@ -20,6 +20,7 @@ SET(SOURCES
   src/place_global/density_grid.cpp
   src/place_global/place_global.cpp
   src/place_detailed/legalizer.cpp
+  src/place_detailed/row_legalizer.cpp
   src/place_detailed/place_detailed.cpp
 )
 
