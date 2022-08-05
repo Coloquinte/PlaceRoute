@@ -53,8 +53,9 @@ void GlobalPlacer::place(Circuit &circuit) {
   std::cout << "LB wirelength final: "
             << xtopo.value(xplace) + ytopo.value(yplace) << std::endl;
 
-  xtopo.exportPlacementX(circuit, xplace);
-  ytopo.exportPlacementY(circuit, yplace);
+  //xtopo.exportPlacementX(circuit, xplace);
+  //ytopo.exportPlacementY(circuit, yplace);
+  leg.exportPlacement(circuit);
 
   std::cout << "Circuit wirelength : " << circuit.hpwl() << std::endl;
 }

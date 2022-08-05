@@ -27,6 +27,11 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
                                           float sizeFactor = 10.0);
 
   /**
+   * @brief Export the placement to the ISPD circuit
+   */
+  void exportPlacement(Circuit &circuit);
+
+  /**
    * @brief Target x position for the cell
    */
   float cellTargetX(int c) const { return cellTargetX_[c]; }
@@ -112,7 +117,7 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
   /**
    * @brief Report on stdout
    */
-  void report(bool verbose=false) const;
+  void report(bool verbose = false) const;
 
  private:
   /**

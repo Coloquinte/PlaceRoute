@@ -1,10 +1,15 @@
 #pragma once
 
 #include "coloquinte.hpp"
+#include "place_detailed/row_legalizer.hpp"
 
 /**
  * @brief Algorithms to obtain a legal placement for standard cells
  *
+ * TODO: Create a separate template class to handle more cost models with
+ * Abacus-like legalization
+ * TODO: Create a separate class to handle backtracking during legalization for
+ * hard cases
  */
 class Legalizer {
  public:
@@ -65,6 +70,26 @@ class Legalizer {
   void setCostModel(LegalizationModel m) { costModel_ = m; }
 
   /**
+   * @brief Return the mean displacement with the given cost model
+   */
+  float meanDistance(LegalizationModel model) const;
+
+  /**
+   * @brief Return the root-mean-square displacement with the given cost model
+   */
+  float rmsDistance(LegalizationModel model) const;
+
+  /**
+   * @brief Return the maximum displacement with the given cost model
+   */
+  float maxDistance(LegalizationModel model) const;
+
+  /**
+   * @brief Return the sum of the widths of the cells
+   */
+  int totalCellWidth() const;
+
+  /**
    * @brief Run the algorithm
    */
   void run();
@@ -87,9 +112,14 @@ class Legalizer {
   /**
    * @brief Report on the datastructure on stdout
    */
-  void report(bool verbose=false) const;
+  void report(bool verbose = false) const;
 
  private:
+  /**
+   * @brief Return all distances with a given cost model
+   */
+  std::vector<float> allDistances(LegalizationModel model) const;
+
   /**
    * @brief Place a single cell optimally
    * Return true if successful
@@ -97,10 +127,10 @@ class Legalizer {
   bool placeCellOptimally(int cell);
 
   /**
-   * @brief Simulate placing a single cell in a given row
-   * Return a pair: true if successful and the X coordinate
+   * @brief Simulate placing a single cell in a given row, pushing other cells
+   * as needed Return a pair: true if successful and the added distance
    */
-  std::pair<bool, int> placeCellOptimally(int cell, int row) const;
+  std::pair<bool, int> placeCellOptimally(int cell, int row);
 
   /**
    * @brief Compute the ordering of the cells
@@ -128,24 +158,9 @@ class Legalizer {
   bool isPlaced(int cell) const { return cellToRow_[cell] != -1; }
 
   /**
-   * @brief Materialize the placement of a cell
-   */
-  void doPlacement(int cell, int row, int x);
-
-  /**
-   * @brief Undo the placement of a cell
-   */
-  void undoPlacement(int cell);
-
-  /**
    * @brief Find the row that is closest to the target position
    */
   int closestRow(int y) const;
-
-  /**
-   * @brief Return the first free position in the row
-   */
-  int firstFreeX(int row) const;
 
  private:
   // Placement data
@@ -157,6 +172,7 @@ class Legalizer {
 
   // Placement status
   std::vector<std::vector<int> > rowToCells_;
+  std::vector<RowLegalizer> rowLegalizers_;
   std::vector<int> cellToRow_;
   std::vector<int> cellToX_;
   std::vector<int> cellToY_;

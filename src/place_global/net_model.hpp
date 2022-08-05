@@ -23,12 +23,14 @@ class NetModel {
   /**
    * @brief Export the horizontal placement to the ISPD circuit
    */
-  void exportPlacementX(Circuit &circuit, const std::vector<float> &xplace) const;
+  void exportPlacementX(Circuit &circuit,
+                        const std::vector<float> &xplace) const;
 
   /**
-   * @brief Export the horizontal placement to the ISPD circuit
+   * @brief Export the vertical placement to the ISPD circuit
    */
-  void exportPlacementY(Circuit &circuit, const std::vector<float> &yplace) const;
+  void exportPlacementY(Circuit &circuit,
+                        const std::vector<float> &yplace) const;
 
   /**
    * @brief Return the number of cells
