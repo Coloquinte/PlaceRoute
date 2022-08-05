@@ -5,6 +5,7 @@ SET(TESTS
     test_net_model
     test_density_legalizer
     test_density_grid
+    test_row_legalizer
 )
 
 FOREACH(TEST IN LISTS TESTS)

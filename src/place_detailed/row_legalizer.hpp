@@ -1,70 +1,88 @@
 #pragma once
 
-#include <vector>
 #include <queue>
-
-
-struct legalizable_task {
-  int width;
-  int target_pos;
-  int ind;
-  legalizable_task(int w, int p, int i) : width(w), target_pos(p), ind(i) {}
-  bool operator<(legalizable_task const o) const {
-    return target_pos < o.target_pos;
-  }
-};
+#include <vector>
 
 /**
  * @brief Obtain the positions minimizing total weighted displacement along a
- *row.
+ * row.
  *
  * It is an ordered single row problem/fixed order single machine scheduling
- *problem, solved by the clumping/specialized cascading descent algorithm.
+ * problem, solved by the specialized cascading descent algorithm.
  *
  * The cost model is linear in the distance to the target position, weighted by
- *the width of the cells
+ * the width of the cells
  **/
-class OSRP_leg {
-  struct OSRP_bound {
-    int absolute_pos;  // Will be the target absolute position of the cell
-    int weight;        // Will be the width of the cell
+class RowLegalizer {
+ public:
+  /// Initialize
+  RowLegalizer(int b, int e) : begin_(b), end_(e), cumWidth_(1, 0) {}
 
-    bool operator<(OSRP_bound const o) const {
-      return absolute_pos < o.absolute_pos;
-    }
-    OSRP_bound(int w, int abs_pos) : absolute_pos(abs_pos), weight(w) {}
+  /**
+   * @brief Return the space already used in the row
+   */
+  int usedSpace() const { return cumWidth_.back(); }
+
+  /**
+   * @brief Return the space remaining in the row
+   */
+  int remainingSpace() const { return end_ - begin_ - usedSpace(); }
+
+  /**
+   * @brief Return the current last position
+   */
+  int lastAvailablePos() const { return constrainingPos_.back() + usedSpace(); }
+
+  /**
+   * @brief Return the cost of pushing a new cell, without updating the
+   * datastructure
+   */
+  int getCost(int width, int targetPos);
+
+  /**
+   * @brief Update the datastructure with a new cell and return the cost
+   */
+  int push(int width, int targetPos);
+
+  /**
+   * @brief Return the placement of each cell in the datastructure
+   */
+  std::vector<int> getPlacement() const;
+
+  /**
+   * @brief Remove all cells from the datastructure
+   */
+  void clear();
+
+ private:
+  /**
+   * @brief Representation of the events in the cascading descent algorithm
+   */
+  struct Bound {
+    /// Will be the target absolute position of the cell
+    int absolutePos;
+    /// Will be proportional to the width of the cell
+    int weight;
+
+    bool operator<(Bound const o) const { return absolutePos < o.absolutePos; }
+    Bound(int w, int absPos) : absolutePos(absPos), weight(w) {}
   };
 
-  int begin, end;
+  /// Get the cost of pushing a cell on the row
+  int getDisplacement(int width, int targetPos, bool update);
 
-  std::vector<int> cells;  // The indexes in the circuit
-  std::vector<int>
-      constraining_pos;  // Where the cells have been pushed and constrain the
-                         // positions of preceding cells
-  std::vector<int> prev_width;  // Cumulative width of the cells: calculates the
-                                // absolute position of new cells
+  /// Leftmost coordinate of the region
+  int begin_;
 
-  std::priority_queue<OSRP_bound> bounds;
+  /// Rightmost coordinate of the region
+  int end_;
 
-  // Get the cost of pushing a cell on the row
-  int get_displacement(legalizable_task const newly_pushed, bool update);
+  /// Where the cells constrain the positions of preceding cells
+  std::vector<int> constrainingPos_;
 
- public:
-  int current_width() const { return prev_width.back(); }
-  int remaining_space() const { return end - begin - current_width(); }
-  int last_available_pos() const {
-    return constraining_pos.back() + current_width();
-  }
+  /// Cumulative width of the cells
+  std::vector<int> cumWidth_;
 
-  int get_cost(legalizable_task const task) {
-    return get_displacement(task, false);
-  }
-  void push(legalizable_task const task) { get_displacement(task, true); }
-
-  // Initialize
-  OSRP_leg(int b, int e) : begin(b), end(e), prev_width(1, 0) {}
-  OSRP_leg() {}
-
-  // Get the resulting placement
-  std::vector<std::pair<int, int> > get_placement() const;
+  /// Priority queue for the cascading descent algorithm
+  std::priority_queue<Bound> bounds;
 };
