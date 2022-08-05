@@ -73,7 +73,6 @@ void RowLegalizer::clear() {
   cumWidth_.assign(1, 0);
   bounds = std::priority_queue<Bound>();
   constrainingPos_.clear();
-
 }
 
 std::vector<int> RowLegalizer::getPlacement() const {
@@ -82,8 +81,8 @@ std::vector<int> RowLegalizer::getPlacement() const {
                    finalAbsPos.rbegin(),
                    [](int a, int b) -> int { return std::min(a, b); });
 
-  std::vector<int> ret(cumWidth_.size());
-  for (int i = 0; i < cumWidth_.size(); ++i) {
+  std::vector<int> ret(finalAbsPos.size());
+  for (int i = 0; i < finalAbsPos.size(); ++i) {
     ret[i] = finalAbsPos[i] + cumWidth_[i];
 
     assert(finalAbsPos[i] >= begin_);
