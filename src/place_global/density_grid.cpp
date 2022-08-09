@@ -242,6 +242,14 @@ HierarchicalDensityPlacement HierarchicalDensityPlacement::fromIspdCircuit(
   return HierarchicalDensityPlacement(grid, demands);
 }
 
+int HierarchicalDensityPlacement::nbNonEmptyCells() const {
+  int ret;
+  for (int i = 0; i < nbCells(); ++i) {
+    if (cellDemand(i) > 0) ret++;
+  }
+  return ret;
+}
+
 long long HierarchicalDensityPlacement::totalDemand() const {
   long long ret = 0;
   for (int demand : cellDemand_) {

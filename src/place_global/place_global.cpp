@@ -7,55 +7,81 @@
 #include "density_legalizer.hpp"
 #include "net_model.hpp"
 
-std::vector<float> getBaseForces(const Circuit &circuit) {
-  std::vector<float> ret;
-  for (int i = 0; i < circuit.nbCells(); ++i) {
-    ret.push_back(circuit.area(i));
+void GlobalPlacer::place(Circuit &circuit) {
+  GlobalPlacer pl(circuit);
+  pl.initParameters();
+  pl.runInitialLB();
+  for (pl.step_ = 1; pl.step_ <= pl.maxNbSteps_; ++pl.step_) {
+    pl.runUB();
+    pl.runLB();
+    std::cout << "#" << pl.step_ << ":\tLB " << pl.valueLB() << "\tUB "
+              << pl.valueUB() << std::endl;
+    pl.updateParameters();
   }
-  float totArea = std::accumulate(ret.begin(), ret.end(), 0.0f);
-  for (float &a : ret) {
-    a /= totArea;
+  pl.runUB();
+  pl.leg_.exportPlacement(circuit);
+}
+
+GlobalPlacer::GlobalPlacer(Circuit &circuit)
+    : circuit_(circuit),
+      leg_(DensityLegalizer::fromIspdCircuit(circuit)),
+      xtopo_(NetModel::xTopology(circuit)),
+      ytopo_(NetModel::yTopology(circuit)) {
+  leg_ = DensityLegalizer::fromIspdCircuit(circuit);
+  initParameters();
+}
+
+std::vector<float> GlobalPlacer::computeBaseForces() const {
+  int nbCells = leg_.nbNonEmptyCells();
+  float meanArea = leg_.totalDemand() / std::max(1, nbCells);
+  std::vector<float> ret;
+  for (int i = 0; i < leg_.nbCells(); ++i) {
+    ret.push_back(std::sqrt(leg_.cellDemand(i) / meanArea));
   }
   return ret;
 }
 
-void GlobalPlacer::place(Circuit &circuit) {
-  float epsilon = 1.0;
-  float cutoffDistance = 1000.0;
-  int nbSteps = 10;
-  auto baseForces = getBaseForces(circuit);
+void GlobalPlacer::initParameters() {
+  baseForces_ = computeBaseForces();
+  float totalDemand = leg_.totalDemand();
+  float avgDemand = totalDemand == 0.0 ? 0.0 : totalDemand / leg_.nbCells();
+  float avgDist = std::sqrt(avgDemand);
+  epsilon_ = avgDist / 2.0;
+  cutoffDistance_ = avgDist * 10.0;
+  updateFactor_ = 1.2;
+  maxNbSteps_ = 30;
+  forceFactor_ = 0.02;
+  step_ = 0;
+}
 
-  auto xtopo = NetModel::xTopology(circuit);
-  auto ytopo = NetModel::yTopology(circuit);
+void GlobalPlacer::updateParameters() { forceFactor_ *= updateFactor_; }
 
-  auto xplace = xtopo.solveStar();
-  auto yplace = ytopo.solveStar();
+float GlobalPlacer::valueLB() const {
+  return xtopo_.value(xPlacementLB_) + ytopo_.value(yPlacementLB_);
+}
 
-  DensityLegalizer leg = DensityLegalizer::fromIspdCircuit(circuit);
-  for (int i = 0; i < nbSteps; ++i) {
-    float wirelengthPlace = xtopo.value(xplace) + ytopo.value(yplace);
-    std::cout << "LB wirelength #" << i << ": " << wirelengthPlace << std::endl;
-    leg.updateCellTargetX(xplace);
-    leg.updateCellTargetY(yplace);
-    leg.run();
-    float forceFactor = 0.001 * i;
-    auto xtarget = leg.simpleCoordX();
-    auto ytarget = leg.simpleCoordY();
-    float wirelengthTarget = xtopo.value(xtarget) + ytopo.value(ytarget);
-    std::cout << "UB wirelength #" << i << ": " << wirelengthTarget
-              << std::endl;
-    std::vector<float> strength = baseForces;
-    for (float &s : strength) s *= forceFactor;
-    xplace = xtopo.solveB2B(xplace, epsilon, xtarget, strength, cutoffDistance);
-    yplace = ytopo.solveB2B(yplace, epsilon, ytarget, strength, cutoffDistance);
-  }
+float GlobalPlacer::valueUB() const {
+  return xtopo_.value(xPlacementUB_) + ytopo_.value(yPlacementUB_);
+}
 
-  std::cout << "LB wirelength final: "
-            << xtopo.value(xplace) + ytopo.value(yplace) << std::endl;
+void GlobalPlacer::runInitialLB() {
+  xPlacementLB_ = xtopo_.solveStar();
+  yPlacementLB_ = ytopo_.solveStar();
+}
 
-  //xtopo.exportPlacementX(circuit, xplace);
-  //ytopo.exportPlacementY(circuit, yplace);
-  leg.exportPlacement(circuit);
+void GlobalPlacer::runLB() {
+  std::vector<float> strength = baseForces_;
+  for (float &s : strength) s *= forceFactor_;
+  xPlacementLB_ = xtopo_.solveB2B(xPlacementLB_, epsilon_, xPlacementUB_,
+                                  strength, cutoffDistance_);
+  yPlacementLB_ = ytopo_.solveB2B(yPlacementLB_, epsilon_, yPlacementUB_,
+                                  strength, cutoffDistance_);
+}
 
-  std::cout << "Circuit wirelength : " << circuit.hpwl() << std::endl;
+void GlobalPlacer::runUB() {
+  leg_.updateCellTargetX(xPlacementLB_);
+  leg_.updateCellTargetY(yPlacementLB_);
+  leg_.run();
+  xPlacementUB_ = leg_.simpleCoordX();
+  yPlacementUB_ = leg_.simpleCoordY();
 }

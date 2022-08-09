@@ -265,6 +265,11 @@ class HierarchicalDensityPlacement {
   int nbCells() const { return cellDemand_.size(); }
 
   /**
+   * @brief Get the number of cells with non-zero demand
+   */
+  int nbNonEmptyCells() const;
+
+  /**
    * @brief Get the current coarsening level in the x direction. 0 is the fully
    * refined grid.
    */
