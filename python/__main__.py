@@ -1,11 +1,17 @@
 
-import sys
+import argparse
 
 import numpy as np
 
-from .ispd_reader import read_ispd
+from .circuit import Circuit
 
-circuit = read_ispd(sys.argv[1])
+parser = argparse.ArgumentParser()
+parser.add_argument("instance", help="Benchmark instance")
+parser.add_argument("solution_file", help="Placement result")
+args = parser.parse_args()
+
+circuit = Circuit.read_ispd(args.instance)
 circuit.place()
+circuit.write_pl(args.solution_file)
 #circuit.benchmark_quadratic_models()
 
