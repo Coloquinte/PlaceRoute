@@ -218,7 +218,7 @@ class NetModel {
   std::vector<int> netLimits_;
   std::vector<int> netWeight_;
   std::vector<int> netCells_;
-  std::vector<int> netPinOffsets_;
+  std::vector<float> netPinOffsets_;
 
   friend class MatrixCreator;
 };
