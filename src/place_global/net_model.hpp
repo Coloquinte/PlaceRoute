@@ -6,7 +6,7 @@
 #include "coloquinte.hpp"
 
 /**
- * Representation of the nets as 1D HPWL for optimization algorithms
+ * Representation of the nets as 1D HPWL for global placement algorithms
  */
 class NetModel {
  public:

@@ -121,19 +121,32 @@ void NetModel::addNet(const std::vector<int> &cells,
 }
 
 void NetModel::check() const {
-  assert(netCells_.size() == netPinOffsets_.size());
-  assert(netLimits_.size() == nbNets() + 1);
-  assert(netWeight_.size() == nbNets());
+  if (netCells_.size() != netPinOffsets_.size()) {
+    throw std::runtime_error("Pin number mismatch");
+  }
+  if (netLimits_.size() != nbNets() + 1) {
+    throw std::runtime_error("Net number mismatch");
+  }
+  if (netWeight_.size() != nbNets()) {
+    throw std::runtime_error("Net number mismatch");
+  }
   for (int c : netCells_) {
-    assert(c >= -1);
-    assert(c < nbCells());
+    if (c < -1 || c >= nbCells()) {
+      throw std::runtime_error("Invalid cell number");
+    }
   }
   for (int i = 0; i < nbNets(); ++i) {
     // At least two cells per net
-    assert(netLimits_[i] + 2 <= netLimits_[i + 1]);
+    if (netLimits_[i] + 2 > netLimits_[i + 1]) {
+      throw std::runtime_error("Invalid number of pins in nets");
+    }
   }
-  assert(netLimits_.front() == 0);
-  assert(netLimits_.back() == netCells_.size());
+  if (netLimits_.front() != 0) {
+    throw std::runtime_error("Invalid net limit");
+  }
+  if (netLimits_.back() != netCells_.size()) {
+    throw std::runtime_error("Invalid net limit");
+  }
 }
 
 std::vector<float> NetModel::pinPositions(const std::vector<float> &pl) const {
