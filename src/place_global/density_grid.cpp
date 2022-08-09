@@ -244,7 +244,7 @@ HierarchicalDensityPlacement HierarchicalDensityPlacement::fromIspdCircuit(
 }
 
 int HierarchicalDensityPlacement::nbNonEmptyCells() const {
-  int ret;
+  int ret = 0;
   for (int i = 0; i < nbCells(); ++i) {
     if (cellDemand(i) > 0) ret++;
   }
