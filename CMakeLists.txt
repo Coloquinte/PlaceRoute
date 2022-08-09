@@ -21,6 +21,8 @@ SET(SOURCES
   src/place_detailed/legalizer.cpp
   src/place_detailed/row_legalizer.cpp
   src/place_detailed/place_detailed.cpp
+  src/place_detailed/detailed_placement.cpp
+  src/place_detailed/incr_net_model.cpp
 )
 
 add_library(coloquinte SHARED ${SOURCES})

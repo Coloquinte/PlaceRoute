@@ -122,11 +122,14 @@ void NetModel::addNet(const std::vector<int> &cells,
 }
 
 void NetModel::check() const {
-  if (netCells_.size() != netPinOffsets_.size()) {
-    throw std::runtime_error("Pin number mismatch");
-  }
   if (netLimits_.size() != nbNets() + 1) {
     throw std::runtime_error("Net number mismatch");
+  }
+  if (netLimits_.front() != 0 || netLimits_.back() != netCells_.size()) {
+    throw std::runtime_error("Pin number mismatch");
+  }
+  if (netCells_.size() != netPinOffsets_.size()) {
+    throw std::runtime_error("Pin number mismatch");
   }
   if (netWeight_.size() != nbNets()) {
     throw std::runtime_error("Net number mismatch");
