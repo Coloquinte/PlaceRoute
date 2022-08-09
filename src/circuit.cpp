@@ -92,8 +92,8 @@ int Circuit::pinYOffset(int net, int i) const {
   CellOrientation orient = orientation(cell);
   bool turned = orient == CellOrientation::E || orient == CellOrientation::W ||
                 orient == CellOrientation::FW || orient == CellOrientation::FE;
-  int offs = turned ? pinYOffsets[netLimits[net] + i]
-                    : pinXOffsets[netLimits[net] + i];
+  int offs = turned ? pinXOffsets[netLimits[net] + i]
+                    : pinYOffsets[netLimits[net] + i];
   bool flipped = orient == CellOrientation::S || orient == CellOrientation::E ||
                  orient == CellOrientation::FS || orient == CellOrientation::FE;
   return flipped ? height(cell) - offs : offs;

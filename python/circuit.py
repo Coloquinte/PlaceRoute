@@ -120,7 +120,7 @@ def read_nodes(filename):
     return names, widths, heights, fixed
 
 
-def read_nets(filename, cell_names, cell_widths, cell_heights):
+def read_nets(filename, cell_names, cell_widths, cell_heights, sort_entries=False):
     name_dir = dict((name, i) for i, name in enumerate(cell_names))
     nb_nets = None
     nb_pins = None
@@ -178,10 +178,11 @@ def read_nets(filename, cell_names, cell_widths, cell_heights):
         assert len(nets) == nb_nets
     if nb_pins is not None:
         assert total_pins == nb_pins
-    # Sort so that same-size nets are contiguous
+    if sort_entries:
+        # Sort so that same-size nets are contiguous
+        nets.sort(key=lambda net: len(net[-1]))
     cell_x_offset = 0.5 * cell_widths
     cell_y_offset = 0.5 * cell_heights
-    nets.sort(key=lambda net: len(net[-1]))
     names = [n[0] for n in nets]
     degrees = [n[1] for n in nets]
     net_limits = [0]
