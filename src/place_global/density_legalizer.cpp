@@ -28,9 +28,9 @@ DensityLegalizer DensityLegalizer::fromIspdCircuit(const Circuit &circuit,
 }
 
 void DensityLegalizer::exportPlacement(Circuit &circuit) {
-  std::vector<float> cellX = simpleCoordX();
-  std::vector<float> cellY = simpleCoordY();
-  assert (nbCells() == circuit.nbCells());
+  std::vector<float> cellX = spreadCoordX(cellTargetX_);
+  std::vector<float> cellY = spreadCoordY(cellTargetY_);
+  assert(nbCells() == circuit.nbCells());
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (circuit.fixed(i)) continue;
     circuit.cellX[i] = std::round(cellX[i]);

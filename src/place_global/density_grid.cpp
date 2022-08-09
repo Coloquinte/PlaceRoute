@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <boost/polygon/polygon.hpp>
 #include <cmath>
+#include <numeric>
 
 namespace bpl = boost::polygon;
 
@@ -297,6 +298,72 @@ std::vector<float> HierarchicalDensityPlacement::simpleCoordY() const {
       float coord = binY(i, j);
       for (int c : binCells(i, j)) {
         ret[c] = coord;
+      }
+    }
+  }
+  return ret;
+}
+
+namespace {
+std::vector<float> spreadCells(const std::vector<float> &targets,
+                               const std::vector<float> &demands,
+                               float minCoord, float maxCoord) {
+  assert(targets.size() == demands.size());
+  std::vector<std::pair<float, int> > order;
+  for (int i = 0; i < targets.size(); ++i) {
+    order.emplace_back(targets[i], i);
+  }
+  std::sort(order.begin(), order.end());
+  float invTotalDemand =
+      1.0f / std::accumulate(demands.begin(), demands.end(), 0.0f);
+  float dem = 0.0f;
+  std::vector<float> coords(order.size(), 0.0f);
+  for (int i = 0; i < order.size(); ++i) {
+    int c = order[i].second;
+    dem += 0.5f * demands[c] * invTotalDemand;
+    coords[c] = dem * maxCoord + (1.0f - dem) * minCoord;
+    dem += 0.5f * demands[c] * invTotalDemand;
+  }
+  return coords;
+}
+}  // namespace
+
+std::vector<float> HierarchicalDensityPlacement::spreadCoordX(
+    const std::vector<float> &target) const {
+  std::vector<float> ret(nbCells(), 0.0f);
+  for (int i = 0; i < nbBinsX(); ++i) {
+    for (int j = 0; j < nbBinsY(); ++j) {
+      std::vector<float> binTargets;
+      std::vector<float> binDemands;
+      for (int c : binCells(i, j)) {
+        binTargets.push_back(target[c]);
+        binDemands.push_back(cellDemand(c));
+      }
+      std::vector<float> coords =
+          spreadCells(binTargets, binDemands, binLimitX(i), binLimitX(i + 1));
+      for (int k = 0; k < coords.size(); ++k) {
+        ret[binCells(i, j)[k]] = coords[k];
+      }
+    }
+  }
+  return ret;
+}
+
+std::vector<float> HierarchicalDensityPlacement::spreadCoordY(
+    const std::vector<float> &target) const {
+  std::vector<float> ret(nbCells(), 0.0f);
+  for (int i = 0; i < nbBinsX(); ++i) {
+    for (int j = 0; j < nbBinsY(); ++j) {
+      std::vector<float> binTargets;
+      std::vector<float> binDemands;
+      for (int c : binCells(i, j)) {
+        binTargets.push_back(target[c]);
+        binDemands.push_back(cellDemand(c));
+      }
+      std::vector<float> coords =
+          spreadCells(binTargets, binDemands, binLimitY(j), binLimitY(j + 1));
+      for (int k = 0; k < coords.size(); ++k) {
+        ret[binCells(i, j)[k]] = coords[k];
       }
     }
   }
