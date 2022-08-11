@@ -7,7 +7,7 @@
 #include "density_legalizer.hpp"
 #include "net_model.hpp"
 
-void GlobalPlacer::place(Circuit &circuit) {
+void GlobalPlacer::place(Circuit &circuit, int effort) {
   GlobalPlacer pl(circuit);
   pl.initParameters();
   pl.runInitialLB();

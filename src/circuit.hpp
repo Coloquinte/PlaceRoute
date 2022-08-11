@@ -81,9 +81,8 @@ float norm(float x, float y, LegalizationModel leg);
 long long norm(int x, int y, LegalizationModel leg);
 
 /**
- * Representation of a flat circuit from an ISPD benchmark
+ * @brief Flat representation of a circuit
  */
-
 class Circuit {
  public:
   /**

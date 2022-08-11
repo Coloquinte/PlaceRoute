@@ -21,13 +21,15 @@ void place_ispd(int nb_cells, int nb_nets, int *cell_widths, int *cell_heights,
   std::cout << "Placing circuit with " << circuit.nbCells() << " cells, "
             << circuit.nbNets() << " nets and " << circuit.nbPins() << " pins."
             << std::endl;
-  GlobalPlacer::place(circuit);
-  std::cout << "Wirelength after global placement: " << circuit.hpwl() << std::endl;
-  DetailedPlacer::place(circuit);
-  std::cout << "Wirelength after detailed placement: " << circuit.hpwl() << std::endl;
+  GlobalPlacer::place(circuit, 3);
+  std::cout << "Wirelength after global placement: " << circuit.hpwl()
+            << std::endl;
+  DetailedPlacer::place(circuit, 3);
+  std::cout << "Wirelength after detailed placement: " << circuit.hpwl()
+            << std::endl;
   for (int i = 0; i < nb_cells; ++i) {
-      cell_x[i] = circuit.cellX[i];
-      cell_y[i] = circuit.cellY[i];
+    cell_x[i] = circuit.cellX[i];
+    cell_y[i] = circuit.cellY[i];
   }
 }
 

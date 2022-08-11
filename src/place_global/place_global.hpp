@@ -6,11 +6,23 @@
 #include "place_global/density_legalizer.hpp"
 #include "place_global/net_model.hpp"
 
+/**
+ * @brief Main class for global placement
+ */
 class GlobalPlacer {
  public:
-  static void place(Circuit &circuit);
+  /**
+   * @brief Run global placement on the circuit representation
+   *
+   * @param circuit The circuit to be modified
+   * @param effort Effort level, between 0 and 9
+   */
+  static void place(Circuit &circuit, int effort);
 
  private:
+  /**
+   * @brief Initialize the datastructure
+   */
   GlobalPlacer(Circuit &circuit);
 
   /**
