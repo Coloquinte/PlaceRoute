@@ -3,6 +3,7 @@
 
 #include "coloquinte.hpp"
 
+namespace coloquinte {
 float norm(float x, float y, LegalizationModel leg) {
   switch (leg) {
     case LegalizationModel::L1:
@@ -29,4 +30,5 @@ long long norm(int x, int y, LegalizationModel leg) {
     default:
       return std::max(std::abs(lx), std::abs(ly));
   }
+}
 }

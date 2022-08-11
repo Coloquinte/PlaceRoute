@@ -3,6 +3,7 @@
 #include <queue>
 #include <vector>
 
+namespace coloquinte {
 /**
  * @brief Obtain the positions minimizing total weighted displacement along a
  * row.
@@ -86,3 +87,4 @@ class RowLegalizer {
   /// Priority queue for the cascading descent algorithm
   std::priority_queue<Bound> bounds;
 };
+}

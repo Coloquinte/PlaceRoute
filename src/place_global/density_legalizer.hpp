@@ -3,6 +3,7 @@
 #include "coloquinte.hpp"
 #include "place_global/density_grid.hpp"
 
+namespace coloquinte {
 /**
  * Representation of an almost legalized placement, where density constraints
  * are met per bin
@@ -156,3 +157,4 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
   std::vector<float> cellTargetX_;
   std::vector<float> cellTargetY_;
 };
+}

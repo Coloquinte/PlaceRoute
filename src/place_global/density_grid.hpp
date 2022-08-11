@@ -4,6 +4,7 @@
 
 #include "coloquinte.hpp"
 
+namespace coloquinte {
 /**
  * @brief Representation of the density available for placement on a grid
  */
@@ -556,3 +557,4 @@ class HierarchicalDensityPlacement {
   std::vector<int> cellBinX_;
   std::vector<int> cellBinY_;
 };
+}

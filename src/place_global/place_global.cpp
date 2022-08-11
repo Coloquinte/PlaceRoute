@@ -7,6 +7,7 @@
 #include "density_legalizer.hpp"
 #include "net_model.hpp"
 
+namespace coloquinte {
 void GlobalPlacer::place(Circuit &circuit, int effort) {
   GlobalPlacer pl(circuit);
   pl.initParameters();
@@ -84,4 +85,5 @@ void GlobalPlacer::runUB() {
   leg_.run();
   xPlacementUB_ = leg_.simpleCoordX();
   yPlacementUB_ = leg_.simpleCoordY();
+}
 }

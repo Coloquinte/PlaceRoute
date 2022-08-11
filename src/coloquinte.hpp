@@ -3,6 +3,7 @@
 #include <cassert>
 #include <vector>
 
+namespace coloquinte {
 /**
  * 2D point
  */
@@ -313,4 +314,5 @@ void place_ispd(int nb_cells, int nb_nets, int *cell_widths, int *cell_heights,
                 int *pin_x_offsets, int *pin_y_offsets, int *cell_x,
                 int *cell_y, int *cell_orientation, int nb_rows, int *row_min_x,
                 int *row_max_x, int *row_min_y, int *row_max_y, int effort);
+}
 }

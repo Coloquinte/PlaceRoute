@@ -5,6 +5,7 @@
 
 #include "coloquinte.hpp"
 
+namespace coloquinte {
 /**
  * Representation of the nets as 1D HPWL for global placement algorithms
  */
@@ -222,3 +223,4 @@ class NetModel {
 
   friend class MatrixCreator;
 };
+}

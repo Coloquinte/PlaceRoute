@@ -2,6 +2,7 @@
 
 #include "coloquinte.hpp"
 
+namespace coloquinte {
 /**
  * @brief Main class for detailed placement
  */
@@ -15,3 +16,4 @@ class DetailedPlacer {
    */
   static void place(Circuit &circuit, int effort);
 };
+}

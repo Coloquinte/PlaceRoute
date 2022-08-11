@@ -8,6 +8,7 @@
 
 namespace bpl = boost::polygon;
 
+namespace coloquinte {
 DensityGrid::DensityGrid(int binSize, Rectangle area)
     : DensityGrid(binSize, std::vector<Rectangle>({area})) {}
 
@@ -667,4 +668,5 @@ void HierarchicalDensityPlacement::check() const {
     }
   }
   assert(capacity == totalCapacity());
+}
 }

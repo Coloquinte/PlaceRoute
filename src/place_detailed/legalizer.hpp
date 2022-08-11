@@ -3,6 +3,7 @@
 #include "coloquinte.hpp"
 #include "place_detailed/row_legalizer.hpp"
 
+namespace coloquinte {
 /**
  * @brief Algorithms to obtain a legal placement for standard cells
  *
@@ -177,3 +178,4 @@ class Legalizer {
   std::vector<int> cellToX_;
   std::vector<int> cellToY_;
 };
+}

@@ -10,6 +10,8 @@
 
 #include "place_global/net_model.hpp"
 
+using namespace coloquinte;
+
 BOOST_AUTO_TEST_CASE(b2b_singlepin) {
   int nbCells = 4;
   NetModel model(nbCells);

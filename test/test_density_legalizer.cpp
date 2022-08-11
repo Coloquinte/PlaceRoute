@@ -11,6 +11,8 @@
 
 #include "place_global/density_legalizer.hpp"
 
+using namespace coloquinte;
+
 BOOST_AUTO_TEST_CASE(EqualSplit) {
   Rectangle area(0, 10, 0, 5);
   int nbCells = 4;
@@ -75,7 +77,6 @@ BOOST_AUTO_TEST_CASE(Random) {
   BOOST_CHECK_EQUAL(leg.cellBinX(3), 1);
 }
 
-
 BOOST_AUTO_TEST_CASE(Coord) {
   Rectangle area(0, 10, 0, 5);
   DensityGrid grid(1, area);
@@ -92,7 +93,6 @@ BOOST_AUTO_TEST_CASE(Coord) {
   BOOST_CHECK_CLOSE(pl.binY(0, 0), 1.0f, 0.0001f);
   BOOST_CHECK_CLOSE(pl.binY(0, 1), 3.5f, 0.0001f);
 }
-
 
 BOOST_AUTO_TEST_CASE(UnitArea) {
   Rectangle area(0, 10, 0, 5);

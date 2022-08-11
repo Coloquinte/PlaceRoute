@@ -6,6 +6,7 @@
 #include "place_global/density_legalizer.hpp"
 #include "place_global/net_model.hpp"
 
+namespace coloquinte {
 /**
  * @brief Main class for global placement
  */
@@ -85,3 +86,4 @@ class GlobalPlacer {
   float forceFactor_;
   int step_;
 };
+}

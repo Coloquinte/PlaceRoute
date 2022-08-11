@@ -5,6 +5,7 @@
 #include <numeric>
 #include <utility>
 
+namespace coloquinte {
 inline int RowLegalizer::getDisplacement(int width, int targetPos,
                                          bool update) {
   int targetAbsPos = targetPos - usedSpace();
@@ -89,4 +90,5 @@ std::vector<int> RowLegalizer::getPlacement() const {
     assert(finalAbsPos[i] + cumWidth_[i + 1] <= end_);
   }
   return ret;
+}
 }

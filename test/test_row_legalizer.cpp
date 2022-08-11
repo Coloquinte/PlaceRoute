@@ -5,6 +5,8 @@
 
 #include "place_detailed/row_legalizer.hpp"
 
+using namespace coloquinte;
+
 BOOST_AUTO_TEST_CASE(TestMiddle) {
   RowLegalizer leg(-10, 20);
   leg.push(8, -5);

@@ -5,6 +5,8 @@
 
 #include "place_global/density_grid.hpp"
 
+using namespace coloquinte;
+
 BOOST_AUTO_TEST_CASE(BasicGrid) {
   Rectangle area(0, 49, 0, 70);
   DensityGrid grid(7, area);
@@ -12,7 +14,6 @@ BOOST_AUTO_TEST_CASE(BasicGrid) {
   BOOST_CHECK_EQUAL(grid.nbBinsX(), 7);
   BOOST_CHECK_EQUAL(grid.nbBinsY(), 10);
 }
-
 
 BOOST_AUTO_TEST_CASE(BasicHierarchicalPlacement1) {
   Rectangle area(0, 49, 0, 70);
@@ -42,7 +43,6 @@ BOOST_AUTO_TEST_CASE(BasicHierarchicalPlacement1) {
     hpl.check();
   }
 }
-
 
 BOOST_AUTO_TEST_CASE(HierarchicalPlacementFindCoord) {
   Rectangle area(0, 49, -20, 70);

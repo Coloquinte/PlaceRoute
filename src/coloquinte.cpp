@@ -11,6 +11,7 @@
 #include "place_global/place_global.hpp"
 
 namespace bpl = boost::polygon;
+namespace coloquinte {
 
 Circuit::Circuit(int nbCells) {
   cellWidths.resize(nbCells);
@@ -207,5 +208,6 @@ void place_ispd(int nb_cells, int nb_nets, int *cell_widths, int *cell_heights,
     cell_x[i] = circuit.cellX[i];
     cell_y[i] = circuit.cellY[i];
   }
+}
 }
 }

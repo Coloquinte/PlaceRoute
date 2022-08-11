@@ -6,6 +6,7 @@
 #include <cmath>
 #include <iostream>
 
+namespace coloquinte {
 DensityLegalizer::DensityLegalizer(DensityGrid grid,
                                    std::vector<int> cellDemand)
     : HierarchicalDensityPlacement(grid, cellDemand) {
@@ -241,4 +242,5 @@ void DensityLegalizer::run() {
     refine();
     improve();
   }
+}
 }

@@ -7,6 +7,7 @@
 #include <iostream>
 #include <limits>
 
+namespace coloquinte {
 Legalizer Legalizer::fromIspdCircuit(const Circuit &circuit) {
   Legalizer ret = Legalizer(circuit.computeRows(), circuit.cellWidths,
                             circuit.cellX, circuit.cellY);
@@ -310,4 +311,5 @@ int Legalizer::totalCellWidth() const {
     ret += cellWidth_[c];
   }
   return ret;
+}
 }

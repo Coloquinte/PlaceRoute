@@ -5,6 +5,7 @@
 #include <eigen3/Eigen/Sparse>
 #include <limits>
 
+namespace coloquinte {
 NetModel NetModel::xTopology(const Circuit &circuit) {
   NetModel ret(circuit.nbCells());
   for (int i = 0; i < circuit.nbNets(); ++i) {
@@ -513,4 +514,5 @@ std::vector<float> NetModel::solveB2B(const std::vector<float> &netPlacement,
   builder.addPenalty(netPlacement, placementTarget, penaltyStrength,
                      cutoffDistance);
   return builder.solve();
+}
 }
