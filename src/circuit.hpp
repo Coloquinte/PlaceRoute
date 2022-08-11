@@ -280,16 +280,6 @@ class Circuit {
   std::vector<Rectangle> computeRows() const;
 
   /**
-   * @brief Direct creation for the C API
-   */
-  static Circuit createIspd(int nb_cells, int nb_nets, int *cell_widths,
-                            int *cell_heights, char *cell_fixed,
-                            int *net_limits, int *pin_cells, int *pin_x_offsets,
-                            int *pin_y_offsets, int *cell_x, int *cell_y,
-                            int *cell_orientation, int nb_rows, int *row_min_x,
-                            int *row_max_x, int *row_min_y, int *row_max_y);
-
-  /**
    * @brief Check the consistency of the datastructure
    */
   void check() const;
