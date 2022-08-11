@@ -2,11 +2,20 @@
 # Coloquinte Place&Route
 
 Coloquinte is a Place&Route tool for electronic circuits.
+Its goal is to provide a single package of well-tested and well-tuned Place&Route algorithms, to be used in open source electronic design toolchains.
 
-Individual steps in Place&Route are well understood, but their interaction is fragile.
-Co-design of Place&Route algorithms is necessary to get more robust and performant tools.
-Coloquinte's aim is to provide a single package of well-tested and well-tuned Place&Route algorithms, to be used in open source CAD chains.
+## Using Coloquinte
 
-## Benchmarks
+Build Coloquinte using CMake :
+```
+cmake -B build; cmake --build build
+```
 
-To simplify development, ISPD placement and routing benchmarks are available directly in this repository using Git LFS.
+
+ISPD placement and routing benchmarks are available directly in this repository using Git LFS. Currently, only placement benchmarks can be run.
+```
+python -m pycoloquinte benchmarks/ISPD06/adaptec1/adaptec1.aux
+```
+
+
+To use Coloquinte as a library, setup a `coloquinte::Circuit` object, and call `coloquinte::place`.

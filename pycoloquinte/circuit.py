@@ -473,7 +473,7 @@ class Circuit:
         assert (self._row_min_x <= self._row_max_x).all()
         assert (self._row_min_y <= self._row_max_y).all()
 
-    def place(self):
+    def place(self, effort):
         """
         Call the C++ library to place the circuit
         """
@@ -500,6 +500,7 @@ class Circuit:
             self._row_max_x.ctypes.data_as(c_int_p),
             self._row_min_y.ctypes.data_as(c_int_p),
             self._row_max_y.ctypes.data_as(c_int_p),
+            effort
         )
 
     def benchmark_all_quadratic_models(self):
@@ -625,6 +626,7 @@ class Circuit:
         rows = read_rows(scl_filename)
 
         ret = Circuit()
+        ret._filename = filename
         ret._nb_cells = len(cell_names)
         ret._nb_nets = len(net_names)
 
@@ -657,6 +659,10 @@ class Circuit:
         return ret
 
     def write_pl(self, filename):
+        if filename is None:
+            if self._filename is None:
+                raise RuntimeError("No filename to export placement to")
+            filename = os.path.splitext(self._filename)[0] + ".sol.pl"
         with open_file(filename, True) as f:
             print("UCLA pl 1.0", file=f)
             print("# Created by Coloquinte", file=f)
