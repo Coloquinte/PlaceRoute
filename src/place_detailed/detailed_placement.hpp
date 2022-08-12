@@ -24,12 +24,12 @@ class DetailedPlacement {
    *      @param rows: Available rows for placement; must all be the right
    * height for the cells
    *      @param width: Width of the cells when placed in a row
-   *      @param targetX: Target x coordinate for legalization
-   *      @param targetY: Target y coordinate for legalization
+   *      @param targetX: X coordinate (must be legal)
+   *      @param targetY: Y coordinate (must be legal)
    */
   DetailedPlacement(const std::vector<Rectangle> &rows,
-                 const std::vector<int> &width, const std::vector<int> &targetX,
-                 const std::vector<int> &targetY);
+                    const std::vector<int> &width, const std::vector<int> &posX,
+                    const std::vector<int> &posY);
 
   /**
    * @brief Return the number of rows
@@ -139,4 +139,4 @@ class DetailedPlacement {
   std::vector<int> cellX_;
   std::vector<int> cellY_;
 };
-}
+}  // namespace coloquinte
