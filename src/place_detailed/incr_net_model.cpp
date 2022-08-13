@@ -1,5 +1,6 @@
 #include "place_detailed/incr_net_model.hpp"
 
+#include <limits>
 #include <numeric>
 #include <stdexcept>
 
