@@ -54,3 +54,24 @@ BOOST_AUTO_TEST_CASE(TestOverlap) {
   BOOST_CHECK_THROW(DetailedPlacement(rows, widths, cellX, cellY),
                     std::runtime_error);
 }
+
+BOOST_AUTO_TEST_CASE(TestChanges) {
+  std::vector<int> widths = {8, 8, 8};
+  std::vector<int> cellX = {0, 8, 16};
+  std::vector<int> cellY = {10, 10, 10};
+  std::vector<Rectangle> rows = {{0, 32, 10, 20}, {0, 32, 20, 30}};
+  DetailedPlacement pl(rows, widths, cellX, cellY);
+  pl.check();
+  pl.unplace(0);
+  pl.check();
+  pl.place(0, 0, 2, 24);
+  pl.check();
+  pl.unplace(0);
+  pl.check();
+  pl.unplace(2);
+  pl.check();
+  pl.place(2, 1, -1, 12);
+  pl.check();
+  pl.place(0, 1, 2, 22);
+  pl.check();
+}

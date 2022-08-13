@@ -47,6 +47,11 @@ class DetailedPlacement {
   bool isIgnored(int cell) const { return cellWidth_[cell] == -1; }
 
   /**
+   * @brief Returns true if the cell is assigned a placement
+   */
+  bool isPlaced(int cell) const { return cellRow_[cell] != -1; }
+
+  /**
    * @brief Return the width of the cell
    */
   int cellWidth(int cell) const { return cellWidth_[cell]; }
@@ -110,17 +115,12 @@ class DetailedPlacement {
   /**
    * @brief Do placement of a single cell
    */
-  void place(int c, int row, int pred, int next, int x);
+  void place(int c, int row, int pred, int x);
 
   /**
    * @brief Undo placement of a single cell
    */
   void unplace(int c);
-
-  /**
-   * @brief Remove the placement of the cell
-   */
-  void remove(int c);
 
   /**
    * @brief Run the algorithm

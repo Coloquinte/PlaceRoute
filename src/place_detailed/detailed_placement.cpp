@@ -176,4 +176,45 @@ void DetailedPlacement::check() const {
     }
   }
 }
+
+void DetailedPlacement::place(int c, int row, int pred, int x) {
+  if (isPlaced(c)) {
+    throw std::runtime_error("Must first undo placement before placing a cell");
+  }
+  cellRow_[c] = row;
+  int next = pred == -1 ? rowFirstCell(row) : cellNext(pred);
+  if (pred == -1) {
+    rowFirstCell_[row] = c;
+  } else {
+    cellNext_[pred] = c;
+  }
+  cellPred_[c] = pred;
+  if (next == -1) {
+    rowLastCell_[row] = c;
+  } else {
+    cellPred_[next] = c;
+  }
+  cellNext_[c] = next;
+  cellX_[c] = x;
+  cellY_[c] = rows_[row].minY;
+}
+
+void DetailedPlacement::unplace(int c) {
+  int row = cellRow(c);
+  int pred = cellPred(c);
+  int next = cellNext(c);
+  cellRow_[c] = -1;
+  if (pred == -1) {
+    rowFirstCell_[row] = next;
+  } else {
+    cellNext_[pred] = next;
+  }
+  cellPred_[c] = -1;
+  if (next == -1) {
+    rowLastCell_[row] = pred;
+  } else {
+    cellPred_[next] = pred;
+  }
+  cellNext_[c] = -1;
+}
 }  // namespace coloquinte
