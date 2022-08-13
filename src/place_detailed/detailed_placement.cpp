@@ -13,7 +13,8 @@ DetailedPlacement fromIspdCircuit(const Circuit &circuit) {
       widths[i] = -1;
     }
   }
-  return DetailedPlacement(circuit.computeRows(), widths, circuit.cellX, circuit.cellY);
+  return DetailedPlacement(circuit.computeRows(), widths, circuit.cellX,
+                           circuit.cellY);
 }
 
 DetailedPlacement::DetailedPlacement(const std::vector<Rectangle> &rows,
@@ -68,16 +69,23 @@ DetailedPlacement::DetailedPlacement(const std::vector<Rectangle> &rows,
 
   cellPred_.assign(nbCells(), -1);
   cellNext_.assign(nbCells(), -1);
+  cellRow_.assign(nbCells(), -1);
   rowFirstCell_.assign(nbRows(), -1);
   rowLastCell_.assign(nbRows(), -1);
   // Now setup the cells in the rows
   for (int row = 0; row < nbRows(); ++row) {
     if (rowToCells[row].empty()) continue;
+    for (int c : rowToCells[row]) {
+      cellRow_[c] = row;
+    }
     for (int i = 0; i + 1 < rowToCells[row].size(); ++i) {
       int c1 = rowToCells[row][i];
-      int c2 = rowToCells[row][i];
-      cellNext_[c1] = c1;
+      int c2 = rowToCells[row][i + 1];
+      cellNext_[c1] = c2;
       cellPred_[c2] = c1;
+      if (cellX_[c1] + cellWidth_[c1] > cellX_[c2]) {
+        throw std::runtime_error("Overlap between cells");
+      }
     }
     rowFirstCell_[row] = rowToCells[row].front();
     rowLastCell_[row] = rowToCells[row].back();
@@ -144,7 +152,7 @@ void DetailedPlacement::check() const {
         throw std::runtime_error("Overlap with the predecessor");
       }
     } else {
-      if (rowFirstCell(i) != row) {
+      if (rowFirstCell(row) != i) {
         throw std::runtime_error("Inconsistent first row cell");
       }
       if (cellX(i) < rows_[row].minX) {
@@ -159,7 +167,7 @@ void DetailedPlacement::check() const {
         throw std::runtime_error("Overlap with the successor");
       }
     } else {
-      if (rowLastCell(i) != row) {
+      if (rowLastCell(row) != i) {
         throw std::runtime_error("Inconsistent last row cell");
       }
       if (cellX(i) + cellWidth(i) > rows_[row].maxX) {

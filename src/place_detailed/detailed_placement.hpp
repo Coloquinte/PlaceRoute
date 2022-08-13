@@ -108,9 +108,14 @@ class DetailedPlacement {
   }
 
   /**
-   * @brief Place a single cell
+   * @brief Do placement of a single cell
    */
   void place(int c, int row, int pred, int next, int x);
+
+  /**
+   * @brief Undo placement of a single cell
+   */
+  void unplace(int c);
 
   /**
    * @brief Remove the placement of the cell
