@@ -10,15 +10,13 @@ Its goal is to provide a single package of well-tested and well-tuned Place&Rout
 ## Using Coloquinte
 
 Build Coloquinte using CMake :
-```
+``` bash
 cmake -B build; cmake --build build
 ```
 
-
 ISPD placement and routing benchmarks are available directly in this repository using Git LFS. Currently, only placement benchmarks can be run.
-```
+``` bash
 python -m pycoloquinte benchmarks/ISPD06/adaptec1/adaptec1.aux
 ```
-
 
 To use Coloquinte as a library, setup a `coloquinte::Circuit` object, and call `coloquinte::place`.
