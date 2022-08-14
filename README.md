@@ -1,4 +1,7 @@
 
+![build](https://github.com/Coloquinte/PlaceRoute/actions/workflows/build.yml/badge.svg)
+[![GitHub](https://img.shields.io/github/license/coloquinte/torchsr?color=blue)](https://opensource.org/licenses/MIT)
+
 # Coloquinte Place&Route
 
 Coloquinte is a Place&Route tool for electronic circuits.
