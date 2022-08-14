@@ -1,4 +1,5 @@
-![build](https://github.com/Coloquinte/PlaceRoute/actions/workflows/build.yml/badge.svg)
+![Build](https://github.com/Coloquinte/PlaceRoute/actions/workflows/build.yml/badge.svg)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/8cfe5dc06da74f399fc007e69b742cdc)](https://www.codacy.com/gh/Coloquinte/PlaceRoute/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Coloquinte/PlaceRoute&amp;utm_campaign=Badge_Grade)
 [![GitHub](https://img.shields.io/github/license/coloquinte/torchsr?color=blue)](https://opensource.org/licenses/MIT)
 
 # Coloquinte Place&Route
