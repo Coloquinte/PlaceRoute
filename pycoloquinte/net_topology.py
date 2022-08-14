@@ -148,14 +148,14 @@ class NetTopology:
                 pin_pos = x[pins] + offsets
                 mx = np.argmax(pin_pos)
                 mn = np.argmin(pin_pos)
-                for p in range(len(pins)):
+                for p, pin in enumerate(pins):
                     if p != mn and p != mx:
                         w = weight / \
                             max(abs(pin_pos[p] - pin_pos[mn]), epsilon)
                         w /= (len(pins) - 1)
-                        data.append((pins[p], pins[mn], -w))
+                        data.append((pin, pins[mn], -w))
                         data.append((pins[mn], pins[p], -w))
-                        data.append((pins[p], pins[p], w))
+                        data.append((pin, pin, w))
                         data.append((pins[mn], pins[mn], w))
                         y[p] += w * (offsets[mn] - offsets[p])
                         y[mn] += w * (offsets[p] - offsets[mn])
@@ -163,9 +163,9 @@ class NetTopology:
                         w = weight / \
                             max(abs(pin_pos[p] - pin_pos[mx]), epsilon)
                         w /= (len(pins) - 1)
-                        data.append((pins[p], pins[mx], -w))
+                        data.append((pin, pins[mx], -w))
                         data.append((pins[mx], pins[p], -w))
-                        data.append((pins[p], pins[p], w))
+                        data.append((pin, pin, w))
                         data.append((pins[mx], pins[mx], w))
                         y[p] += w * (offsets[mx] - offsets[p])
                         y[mx] += w * (offsets[p] - offsets[mx])
@@ -208,27 +208,27 @@ class NetTopology:
             res += w * (np.max(pos) - np.min(pos))
         return res
 
-    def val_lse(self, epsilon):
+    def val_lse(self, x, epsilon):
         """
         Smoothed value with the log-sum-exp approximation
         """
         res = 0.0
         for i, w in enumerate(self.net_weight):
             pos = self._pin_pos(i, x)
-            res += w * (_lse(pos) - _lse(-pos))
+            res += w * (_lse(pos, epsilon) - _lse(-pos, epsilon))
         return res
 
-    def val_wa(self, epsilon):
+    def val_wa(self, x, epsilon):
         """
         Smoothed value with the weighted average approximation
         """
         res = 0.0
         for i, w in enumerate(self.net_weight):
             pos = self._pin_pos(i, x)
-            res += w * (_wa(pos) - _wa(-pos))
+            res += w * (_wa(pos, epsilon) - _wa(-pos, epsilon))
         return res
 
-    def grad(self):
+    def grad(self, x):
         """
         Gradient using the actual objective function
         """
@@ -259,10 +259,9 @@ class NetTopology:
             val_penalty = penalty * np.sum((x - target)**2)
             val_hpwl = self.val(x)
             mat, y = self.matrix_b2b(x, epsilon, target, penalty)
-            x, info = scipy.sparse.linalg.cg(mat, y, x0=x)
+            x, _ = scipy.sparse.linalg.cg(mat, y, x0=x)
             print(
                 f"Iter #{i+1}: HPWL {val_hpwl:.3E}, penalty {val_penalty:.3E}")
-            #import pdb; pdb.set_trace()
 
     def check(self):
         # No member is None

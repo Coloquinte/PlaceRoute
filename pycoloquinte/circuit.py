@@ -521,7 +521,6 @@ class Circuit:
         dll = ctypes.CDLL("./build/libcoloquinte.so")
         c_bool_p = ctypes.POINTER(ctypes.c_char)
         c_int_p = ctypes.POINTER(ctypes.c_int)
-        c_float_p = ctypes.POINTER(ctypes.c_float)
         dll.benchmark_quadratic_models(
             self.nb_cells,
             self.nb_nets,
@@ -601,9 +600,10 @@ class Circuit:
             for p in pins:
                 edges[p].append(net_ind)
             net_ind += 1
-        self.export_hgr_data(filename, net_ind, edges)
+        Circuit.export_hgr_data(filename, net_ind, edges)
 
-    def export_hgr_data(self, filename, nb_cells, edges):
+    @staticmethod
+    def export_hgr_data(filename, nb_cells, edges):
         with open(filename, "w") as f:
             print(f"{len(edges)} {nb_cells}", file=f)
             for edge in edges:

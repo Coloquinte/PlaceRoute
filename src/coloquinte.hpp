@@ -5,14 +5,6 @@
 
 namespace coloquinte {
 /**
- * 2D point
- */
-struct Point {
-  int x;
-  int y;
-};
-
-/**
  * 2D rectangle
  */
 struct Rectangle {
@@ -90,7 +82,7 @@ class Circuit {
   /**
    * @brief Initialize a circuit
    */
-  Circuit(int nbCells);
+  explicit Circuit(int nbCells);
 
   /**
    * @brief Return the number of cells
@@ -310,9 +302,9 @@ extern "C" {
  * @brief Ugly interface to easily call Coloquinte from external code
  */
 int place_ispd(int nb_cells, int nb_nets, int *cell_widths, int *cell_heights,
-                char *cell_fixed, int *net_limits, int *pin_cells,
-                int *pin_x_offsets, int *pin_y_offsets, int *cell_x,
-                int *cell_y, int *cell_orientation, int nb_rows, int *row_min_x,
-                int *row_max_x, int *row_min_y, int *row_max_y, int effort);
+               char *cell_fixed, int *net_limits, int *pin_cells,
+               int *pin_x_offsets, int *pin_y_offsets, int *cell_x, int *cell_y,
+               int *cell_orientation, int nb_rows, int *row_min_x,
+               int *row_max_x, int *row_min_y, int *row_max_y, int effort);
 }
-}
+}  // namespace coloquinte

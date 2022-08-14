@@ -28,7 +28,6 @@ GlobalPlacer::GlobalPlacer(Circuit &circuit)
       leg_(DensityLegalizer::fromIspdCircuit(circuit)),
       xtopo_(NetModel::xTopology(circuit)),
       ytopo_(NetModel::yTopology(circuit)) {
-  leg_ = DensityLegalizer::fromIspdCircuit(circuit);
   initParameters();
 }
 
