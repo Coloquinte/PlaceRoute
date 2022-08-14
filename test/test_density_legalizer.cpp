@@ -15,7 +15,6 @@ using namespace coloquinte;
 
 BOOST_AUTO_TEST_CASE(EqualSplit) {
   Rectangle area(0, 10, 0, 5);
-  int nbCells = 4;
   std::vector<int> cellDemand = {4, 4, 4, 4};
   std::vector<float> cellTargetX = {0.0, 0.0, 6.0, 6.0};
   std::vector<float> cellTargetY = {0.0, 0.0, 0.0, 0.0};
@@ -37,7 +36,6 @@ BOOST_AUTO_TEST_CASE(EqualSplit) {
 
 BOOST_AUTO_TEST_CASE(OneSide) {
   Rectangle area(0, 8, 0, 2);
-  int nbCells = 4;
   std::vector<int> cellDemand = {4, 4, 4, 4};
   std::vector<float> cellTargetX = {0.0, 6.0, 6.0, 6.0};
   std::vector<float> cellTargetY = {0.0, 0.0, 0.0, 0.0};
@@ -61,7 +59,6 @@ BOOST_AUTO_TEST_CASE(OneSide) {
 
 BOOST_AUTO_TEST_CASE(Random) {
   Rectangle area(0, 10, 0, 10);
-  int nbCells = 4;
   std::vector<int> cellDemand = {4, 4, 4, 4};
   std::vector<float> cellTargetX = {0.0, 6.0, 0.0, 6.0};
   std::vector<float> cellTargetY = {0.0, 0.0, 0.0, 0.0};

@@ -18,7 +18,7 @@ class IncrNetModelBuilder {
   /**
    * @brief Initialize the datastructure
    */
-  IncrNetModelBuilder(int nbCells);
+  explicit IncrNetModelBuilder(int nbCells);
 
   /**
    * @brief Return the number of cells

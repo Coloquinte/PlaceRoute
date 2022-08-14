@@ -19,7 +19,7 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
   /**
    * @brief Initialize from an existing hierarchical placement
    */
-  DensityLegalizer(HierarchicalDensityPlacement pl);
+  explicit DensityLegalizer(HierarchicalDensityPlacement pl);
 
   /**
    * @brief Initialize from a circuit

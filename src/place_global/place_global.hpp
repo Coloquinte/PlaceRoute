@@ -24,7 +24,7 @@ class GlobalPlacer {
   /**
    * @brief Initialize the datastructure
    */
-  GlobalPlacer(Circuit &circuit);
+  explicit GlobalPlacer(Circuit &circuit);
 
   /**
    * @brief Return the net model length of the lower-bound placement

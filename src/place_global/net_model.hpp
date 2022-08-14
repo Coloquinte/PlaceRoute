@@ -92,7 +92,7 @@ class NetModel {
   /**
    * @brief Initialize the datastructure
    */
-  NetModel(int nbCells);
+  explicit NetModel(int nbCells);
 
   /**
    * @brief Add a new net
