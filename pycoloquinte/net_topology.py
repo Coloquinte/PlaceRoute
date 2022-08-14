@@ -8,6 +8,7 @@ class NetTopology:
     """
     Local representation of the objective function as the sum of lengths of 1D nets
     """
+
     def __init__(self):
         self._nb_nets = None
         self._nb_cells = None
@@ -149,25 +150,28 @@ class NetTopology:
                 mn = np.argmin(pin_pos)
                 for p in range(len(pins)):
                     if p != mn and p != mx:
-                        w = weight / max(abs(pin_pos[p] - pin_pos[mn]), epsilon)
+                        w = weight / \
+                            max(abs(pin_pos[p] - pin_pos[mn]), epsilon)
                         w /= (len(pins) - 1)
                         data.append((pins[p], pins[mn], -w))
                         data.append((pins[mn], pins[p], -w))
                         data.append((pins[p], pins[p], w))
                         data.append((pins[mn], pins[mn], w))
-                        y[p]  += w * (offsets[mn] - offsets[p])
+                        y[p] += w * (offsets[mn] - offsets[p])
                         y[mn] += w * (offsets[p] - offsets[mn])
                     if p != mx:
-                        w = weight / max(abs(pin_pos[p] - pin_pos[mx]), epsilon)
+                        w = weight / \
+                            max(abs(pin_pos[p] - pin_pos[mx]), epsilon)
                         w /= (len(pins) - 1)
                         data.append((pins[p], pins[mx], -w))
                         data.append((pins[mx], pins[p], -w))
                         data.append((pins[p], pins[p], w))
                         data.append((pins[mx], pins[mx], w))
-                        y[p]  += w * (offsets[mx] - offsets[p])
+                        y[p] += w * (offsets[mx] - offsets[p])
                         y[mx] += w * (offsets[p] - offsets[mx])
         rows, cols, vals = zip(*data)
-        mat = scipy.sparse.coo_matrix((vals, (rows, cols)), shape=(self.nb_cells, self.nb_cells)).tocsr()
+        mat = scipy.sparse.coo_matrix((vals, (rows, cols)), shape=(
+            self.nb_cells, self.nb_cells)).tocsr()
         return mat, y
 
     def matrix_star(self, x, epsilon):
@@ -256,7 +260,8 @@ class NetTopology:
             val_hpwl = self.val(x)
             mat, y = self.matrix_b2b(x, epsilon, target, penalty)
             x, info = scipy.sparse.linalg.cg(mat, y, x0=x)
-            print(f"Iter #{i+1}: HPWL {val_hpwl:.3E}, penalty {val_penalty:.3E}")
+            print(
+                f"Iter #{i+1}: HPWL {val_hpwl:.3E}, penalty {val_penalty:.3E}")
             #import pdb; pdb.set_trace()
 
     def check(self):
@@ -291,10 +296,9 @@ def _lse(data, epsilon):
     data = data - cmax
     return cmax + epsilon * np.log(np.exp(data / epsilon).sum())
 
+
 def _wa(data, epsilon):
     cmax = np.max(data)
     data = data - cmax
     e = np.exp(data / epsilon)
     return cmax + (data * e).sum() / e.sum()
-
-

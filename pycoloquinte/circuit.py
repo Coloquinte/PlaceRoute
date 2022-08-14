@@ -2,8 +2,8 @@
 import gzip
 import lzma
 import os
-import numpy as np
 
+import numpy as np
 
 orient_map = {
     "N": 0, "S": 1, "W": 2, "E": 3,
@@ -55,13 +55,13 @@ def read_aux(filename):
     pl_files = [n for n in files if n.endswith(".pl")]
     scl_files = [n for n in files if n.endswith(".scl")]
     if len(node_files) != 1:
-        raise RuntimeError(f"There should be a .nodes file in .aux")
+        raise RuntimeError("There should be a .nodes file in .aux")
     if len(net_files) != 1:
-        raise RuntimeError(f"There should be a .nets file in .aux")
+        raise RuntimeError("There should be a .nets file in .aux")
     if len(pl_files) != 1:
-        raise RuntimeError(f"There should be a .pl file in .aux")
+        raise RuntimeError("There should be a .pl file in .aux")
     if len(scl_files) != 1:
-        raise RuntimeError(f"There should be a .scl file in .aux")
+        raise RuntimeError("There should be a .scl file in .aux")
     return (os.path.join(dirname, node_files[0]),
             os.path.join(dirname, net_files[0]),
             os.path.join(dirname, pl_files[0]),
@@ -481,7 +481,6 @@ class Circuit:
         dll = ctypes.CDLL("./build/libcoloquinte.so")
         c_bool_p = ctypes.POINTER(ctypes.c_char)
         c_int_p = ctypes.POINTER(ctypes.c_int)
-        c_float_p = ctypes.POINTER(ctypes.c_float)
         dll.place_ispd(
             self.nb_cells,
             self.nb_nets,

@@ -2,7 +2,6 @@
 import unittest
 
 import numpy as np
-
 from net_topology import NetTopology
 
 
@@ -35,7 +34,7 @@ class TestNetTopology(unittest.TestCase):
         mat, y = topo.matrix_b2b(np.array([0.0, 0.01, 2.0, 3.0]), 0.1)
         self.assertEqual(mat.shape, (4, 4))
         self.assertEqual(y.shape, (4,))
- 
+
     def test_b2b_pen(self):
         """
         Test that the B2B model with penalty yields a correct matrix
@@ -47,7 +46,7 @@ class TestNetTopology(unittest.TestCase):
         self.assertEqual(topo.nb_cells, 4)
         self.assertEqual(topo.nb_nets, 1)
         penalty = 0.01
-        pos = np.array([0.0, 1.0, 2.0, 3.0]) 
+        pos = np.array([0.0, 1.0, 2.0, 3.0])
         mat, y = topo.matrix_b2b(
             pos, 0.1,
             pos, penalty
@@ -69,7 +68,8 @@ class TestNetTopology(unittest.TestCase):
         mat, y = topo.matrix_b2b(x, 0.1)
         self.assertEqual(mat.shape, (3, 3))
         self.assertEqual(y.shape, (3,))
-        np.testing.assert_allclose(mat.todense(), np.array([[0.75, -0.5, -0.25], [-0.5, 1, -0.5], [-0.25, -0.5, 0.75]]))
+        np.testing.assert_allclose(mat.todense(), np.array(
+            [[0.75, -0.5, -0.25], [-0.5, 1, -0.5], [-0.25, -0.5, 0.75]]))
         np.testing.assert_allclose(y, np.zeros(3))
         np.testing.assert_allclose(mat * x, np.array([-1, 0, 1]))
 
@@ -80,7 +80,7 @@ class TestNetTopology(unittest.TestCase):
         nets = [
             [0, 1, 2],
         ]
-        offsets= [
+        offsets = [
             [0.0, 1.0, 2.0],
         ]
         topo = NetTopology.from_nets(nets, offsets)
@@ -90,9 +90,9 @@ class TestNetTopology(unittest.TestCase):
         mat, y = topo.matrix_b2b(x, 0.1)
         self.assertEqual(mat.shape, (3, 3))
         self.assertEqual(y.shape, (3,))
-        np.testing.assert_allclose(mat.todense(), np.array([[0.75, -0.5, -0.25], [-0.5, 1, -0.5], [-0.25, -0.5, 0.75]]))
+        np.testing.assert_allclose(mat.todense(), np.array(
+            [[0.75, -0.5, -0.25], [-0.5, 1, -0.5], [-0.25, -0.5, 0.75]]))
         np.testing.assert_allclose(mat * x - y, np.array([-1, 0, 1]))
-
 
 
 if __name__ == '__main__':

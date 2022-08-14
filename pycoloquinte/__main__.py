@@ -1,8 +1,6 @@
 
 import argparse
 
-import numpy as np
-
 from .circuit import Circuit
 
 parser = argparse.ArgumentParser()
