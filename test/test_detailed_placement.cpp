@@ -75,3 +75,63 @@ BOOST_AUTO_TEST_CASE(TestChanges) {
   pl.place(0, 1, 2, 22);
   pl.check();
 }
+
+BOOST_AUTO_TEST_CASE(TestSwap) {
+  std::vector<int> widths = {4, 5, 6, 7, 8};
+  std::vector<int> cellX = {0, 8, 16, 4, 14};
+  std::vector<int> cellY = {10, 10, 10, 20, 20};
+  std::vector<Rectangle> rows = {{0, 32, 10, 20}, {0, 32, 20, 30}};
+  DetailedPlacement pl(rows, widths, cellX, cellY);
+  pl.check();
+  BOOST_CHECK(pl.canSwap(0, 1));
+  BOOST_CHECK(pl.canSwap(1, 2));
+  BOOST_CHECK(pl.canSwap(3, 4));
+  BOOST_CHECK(pl.canSwap(0, 2));
+  BOOST_CHECK(pl.canSwap(0, 3));
+  BOOST_CHECK(pl.canSwap(0, 4));
+  pl.swap(0, 1);
+  pl.check();
+  pl.swap(3, 4);
+  pl.check();
+  pl.swap(2, 4);
+  pl.check();
+}
+
+BOOST_AUTO_TEST_CASE(TestInsert) {
+  std::vector<int> widths = {4, 4, 4, 4, 4};
+  std::vector<int> cellX = {0, 8, 16, 4, 8};
+  std::vector<int> cellY = {10, 10, 10, 20, 20};
+  std::vector<Rectangle> rows = {{0, 32, 10, 20}, {0, 32, 20, 30}};
+  DetailedPlacement pl(rows, widths, cellX, cellY);
+  pl.check();
+  BOOST_CHECK(pl.canInsert(0, 0, 1));
+  BOOST_CHECK(pl.canInsert(0, 0, 2));
+  BOOST_CHECK(pl.canInsert(0, 1, -1));
+  BOOST_CHECK(!pl.canInsert(0, 1, 3));
+  pl.insert(0, 0, 2);
+  pl.check();
+  pl.insert(0, 1, -1);
+  pl.check();
+  pl.insert(0, 0, 1);
+  pl.check();
+  pl.insert(0, 0, -1);
+  pl.check();
+}
+
+BOOST_AUTO_TEST_CASE(TestNoSwap) {
+  std::vector<int> widths = {4, 5, 6, 7, 8};
+  std::vector<int> cellX = {0, 4, 9, 0, 7};
+  std::vector<int> cellY = {10, 10, 10, 20, 20};
+  std::vector<Rectangle> rows = {{0, 15, 10, 20}, {0, 15, 20, 30}};
+  DetailedPlacement pl(rows, widths, cellX, cellY);
+  pl.check();
+  BOOST_CHECK(pl.canSwap(0, 1));
+  BOOST_CHECK(!pl.canSwap(0, 2));
+  BOOST_CHECK(!pl.canSwap(0, 3));
+  BOOST_CHECK(!pl.canSwap(0, 4));
+  BOOST_CHECK(pl.canSwap(1, 2));
+  BOOST_CHECK(!pl.canSwap(1, 3));
+  BOOST_CHECK(!pl.canSwap(1, 4));
+  BOOST_CHECK(!pl.canSwap(2, 3));
+  BOOST_CHECK(pl.canSwap(3, 4));
+}

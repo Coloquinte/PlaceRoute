@@ -113,6 +113,58 @@ class DetailedPlacement {
   }
 
   /**
+   * @brief Return the x boundary before the cell (beginning of row or end of
+   * previous cell)
+   */
+  int boundaryBefore(int c) const;
+
+  /**
+   * @brief Return the x boundary after the cell (end of row or beginning of
+   * next cell)
+   */
+  int boundaryAfter(int c) const;
+
+  /**
+   * @brief Return the beginning position of the placement site after this cell
+   * on this row
+   */
+  int siteBegin(int row, int pred) const;
+
+  /**
+   * @brief Return the ending position of the placement site after this cell on
+   * this row
+   */
+  int siteEnd(int row, int pred) const;
+
+  /**
+   * @brief Return true if it is possible to place the cell here
+   */
+  bool canPlace(int c, int row, int pred, int x) const;
+
+  /**
+   * @brief Return true if it is possible to insert the cell with this
+   * predecessor
+   */
+  bool canInsert(int c, int row, int pred) const;
+
+  /**
+   * @brief Return true if it is possible to insert the cell with a specific
+   * position
+   */
+  bool canInsertAt(int c, int row, int pred, int x) const;
+
+  /**
+   * @brief Return true if it is possible to swap the two cells
+   */
+  bool canSwap(int c1, int c2) const;
+
+  /**
+   * @brief Return true if it is possible to swap the two cells with a given x
+   * position
+   */
+  bool canSwapAt(int c1, int c2, int x1, int x2) const;
+
+  /**
    * @brief Do placement of a single cell
    */
   void place(int c, int row, int pred, int x);
@@ -121,6 +173,26 @@ class DetailedPlacement {
    * @brief Undo placement of a single cell
    */
   void unplace(int c);
+
+  /**
+   * @brief Insert the cell with this predecessor
+   */
+  void insert(int c, int row, int pred);
+
+  /**
+   * @brief Insert the cell at this position
+   */
+  void insertAt(int c, int row, int pred, int x);
+
+  /**
+   * @brief Swap the two cells
+   */
+  void swap(int c1, int c2);
+
+  /**
+   * @brief Swap the two cells with the given x position
+   */
+  void swapAt(int c1, int c2, int x1, int x2);
 
   /**
    * @brief Run the algorithm
@@ -132,7 +204,6 @@ class DetailedPlacement {
    */
   void check() const;
 
- private:
  private:
   std::vector<Rectangle> rows_;
   std::vector<int> rowFirstCell_;

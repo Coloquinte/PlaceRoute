@@ -5,7 +5,7 @@
 
 namespace coloquinte {
 
-DetailedPlacement fromIspdCircuit(const Circuit &circuit) {
+DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit) {
   // Represent fixed cells with -1 width so they are not considered
   std::vector<int> widths = circuit.cellWidths;
   for (int i = 0; i < circuit.nbCells(); ++i) {
@@ -92,6 +92,164 @@ DetailedPlacement::DetailedPlacement(const std::vector<Rectangle> &rows,
   }
 }
 
+int DetailedPlacement::boundaryBefore(int c) const {
+  assert(isPlaced(c));
+  int pred = cellPred(c);
+  if (pred == -1) {
+    return rows_[cellRow(c)].minX;
+  } else {
+    return cellX(pred) + cellWidth(pred);
+  }
+}
+
+int DetailedPlacement::boundaryAfter(int c) const {
+  assert(isPlaced(c));
+  int next = cellNext(c);
+  if (next == -1) {
+    return rows_[cellRow(c)].maxX;
+  } else {
+    return cellX(next);
+  }
+}
+
+int DetailedPlacement::siteBegin(int row, int pred) const {
+  return pred == -1 ? rows_[row].minX : cellX(pred) + cellWidth(pred);
+}
+
+int DetailedPlacement::siteEnd(int row, int pred) const {
+  int next = pred == -1 ? rowFirstCell(row) : cellNext(pred);
+  return next == -1 ? rows_[row].maxX : cellX(next);
+}
+
+bool DetailedPlacement::canPlace(int c, int row, int pred, int x) const {
+  if (isPlaced(c)) {
+    throw std::runtime_error("Cannot attempt to place already placed cell");
+  }
+  return x >= siteBegin(row, pred) && x + cellWidth(c) <= siteEnd(row, pred);
+}
+
+bool DetailedPlacement::canInsert(int c, int row, int pred) const {
+  if (!isPlaced(c)) {
+    throw std::runtime_error(
+        "Cannot attempt to insert a cell that is not placed yet");
+  }
+  return siteEnd(row, pred) - siteBegin(row, pred) >= cellWidth(c);
+}
+
+bool DetailedPlacement::canSwap(int c1, int c2) const {
+  if (!isPlaced(c1) || !isPlaced(c2)) {
+    throw std::runtime_error("Cannot swap cells that are not placed yet");
+  }
+  if (c1 == c2) {
+    // Do not swap a cell with itself
+    return false;
+  }
+  if (cellPred(c1) == c2 || cellPred(c2) == c1) {
+    // We can always swap neighbours
+    return true;
+  } else {
+    // Otherwise check if there is enough space for both cells
+    int b1 = boundaryBefore(c1);
+    int b2 = boundaryBefore(c2);
+    int e1 = boundaryAfter(c1);
+    int e2 = boundaryAfter(c2);
+    return e2 - b2 >= cellWidth(c1) && e1 - b1 >= cellWidth(c2);
+  }
+}
+
+void DetailedPlacement::place(int c, int row, int pred, int x) {
+  if (!canPlace(c, row, pred, x)) {
+    throw std::runtime_error("Cannot place the cell");
+  }
+  cellRow_[c] = row;
+  int next = pred == -1 ? rowFirstCell(row) : cellNext(pred);
+  if (pred == -1) {
+    rowFirstCell_[row] = c;
+  } else {
+    cellNext_[pred] = c;
+  }
+  cellPred_[c] = pred;
+  if (next == -1) {
+    rowLastCell_[row] = c;
+  } else {
+    cellPred_[next] = c;
+  }
+  cellNext_[c] = next;
+  cellX_[c] = x;
+  cellY_[c] = rows_[row].minY;
+}
+
+void DetailedPlacement::unplace(int c) {
+  int row = cellRow(c);
+  int pred = cellPred(c);
+  int next = cellNext(c);
+  cellRow_[c] = -1;
+  if (pred == -1) {
+    rowFirstCell_[row] = next;
+  } else {
+    cellNext_[pred] = next;
+  }
+  cellPred_[c] = -1;
+  if (next == -1) {
+    rowLastCell_[row] = pred;
+  } else {
+    cellPred_[next] = pred;
+  }
+  cellNext_[c] = -1;
+}
+
+void DetailedPlacement::insert(int c, int row, int pred) {
+  if (!canInsert(c, row, pred)) {
+    throw std::runtime_error("Cannot insert this cell here");
+  }
+  int x = (siteEnd(row, pred) - cellWidth(c) + siteBegin(row, pred)) / 2;
+  insertAt(c, row, pred, x);
+}
+
+void DetailedPlacement::insertAt(int c, int row, int pred, int x) {
+  // TODO: check that this is indeed OK
+  unplace(c);
+  place(c, row, pred, x);
+}
+
+void DetailedPlacement::swap(int c1, int c2) {
+  if (!canSwap(c1, c2)) {
+    throw std::runtime_error("Cannot swap these cells");
+  }
+  int x1, x2;
+  if (cellPred(c1) == c2) {
+    x1 = cellX(c2);
+    x2 = x1 + cellWidth(c1);
+  } else if (cellPred(c2) == c1) {
+    x2 = cellX(c1);
+    x1 = x2 + cellWidth(c2);
+  } else {
+    x1 = (boundaryBefore(c2) + boundaryAfter(c2) - cellWidth(c1)) / 2;
+    x2 = (boundaryBefore(c1) + boundaryAfter(c1) - cellWidth(c2)) / 2;
+  }
+  swapAt(c1, c2, x1, x2);
+}
+
+void DetailedPlacement::swapAt(int c1, int c2, int x1, int x2) {
+  // TODO: check that this is indeed OK
+  int r1 = cellRow(c1);
+  int r2 = cellRow(c2);
+  int p1 = cellPred(c1);
+  int p2 = cellPred(c2);
+  unplace(c1);
+  unplace(c2);
+  if (p1 == c2) {
+    place(c1, r2, p2, x1);
+    place(c2, r1, c1, x2);
+  } else if (p2 == c1) {
+    place(c2, r1, p1, x2);
+    place(c1, r2, c2, x1);
+  } else {
+    place(c1, r2, p2, x1);
+    place(c2, r1, p1, x2);
+  }
+}
+
 void DetailedPlacement::check() const {
   if (rows_.size() != nbRows()) throw std::runtime_error("Row size mismatch");
   if (rowFirstCell_.size() != nbRows())
@@ -175,46 +333,5 @@ void DetailedPlacement::check() const {
       }
     }
   }
-}
-
-void DetailedPlacement::place(int c, int row, int pred, int x) {
-  if (isPlaced(c)) {
-    throw std::runtime_error("Must first undo placement before placing a cell");
-  }
-  cellRow_[c] = row;
-  int next = pred == -1 ? rowFirstCell(row) : cellNext(pred);
-  if (pred == -1) {
-    rowFirstCell_[row] = c;
-  } else {
-    cellNext_[pred] = c;
-  }
-  cellPred_[c] = pred;
-  if (next == -1) {
-    rowLastCell_[row] = c;
-  } else {
-    cellPred_[next] = c;
-  }
-  cellNext_[c] = next;
-  cellX_[c] = x;
-  cellY_[c] = rows_[row].minY;
-}
-
-void DetailedPlacement::unplace(int c) {
-  int row = cellRow(c);
-  int pred = cellPred(c);
-  int next = cellNext(c);
-  cellRow_[c] = -1;
-  if (pred == -1) {
-    rowFirstCell_[row] = next;
-  } else {
-    cellNext_[pred] = next;
-  }
-  cellPred_[c] = -1;
-  if (next == -1) {
-    rowLastCell_[row] = pred;
-  } else {
-    cellPred_[next] = pred;
-  }
-  cellNext_[c] = -1;
 }
 }  // namespace coloquinte

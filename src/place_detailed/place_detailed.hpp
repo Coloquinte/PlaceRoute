@@ -22,7 +22,7 @@ class DetailedPlacer {
   /**
    * @brief Initialize the datastructure
    */
-  DetailedPlacer(Circuit &circuit);
+  explicit DetailedPlacer(const Circuit &circuit);
 
   /**
    * @brief Run a simple optimization using only cell swapping
@@ -33,19 +33,36 @@ class DetailedPlacer {
    * @brief Attempt to swap the two cells; keep the modification if it improves
    * the result
    */
-  void trySwap(int c1, int c2);
+  bool trySwap(int c1, int c2);
+
+  /**
+   * @brief Attempt to insert the cell here; keep the modification if it
+   * improves the result
+   */
+  bool tryInsert(int c, int row, int pred);
 
   /**
    * @brief Attempt to swap the two cells and shift them; keep the modification
    * if it improves the result
    */
-  void trySwapShift(int c1, int c2);
+  bool trySwapShift(int c1, int c2);
 
   /**
    * @brief Change the cell coordinates to optimize the wirelength without
    * reordering them
    */
   void optimizeShift(const std::vector<int> &cells);
+
+  /**
+   * @brief Update the cell position in the objective after a change in the
+   * placement
+   */
+  void updateCellPos(int c);
+
+  /**
+   * @brief Return the current objective value
+   */
+  long long value() const { return xtopo_.value() + ytopo_.value(); }
 
  private:
   DetailedPlacement placement_;
