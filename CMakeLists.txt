@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.10)
 PROJECT(COLOQUINTE)
 
-#add_subdirectory(thirdparty/kahypar)
+add_subdirectory(thirdparty/lemon)
 
 FIND_PACKAGE(Boost REQUIRED COMPONENTS system filesystem iostreams program_options unit_test_framework)
 FIND_PACKAGE(Eigen3 3.3 REQUIRED NO_MODULE)
@@ -29,6 +29,7 @@ add_library(coloquinte SHARED ${SOURCES})
 target_compile_features(coloquinte PRIVATE cxx_std_17)
 target_link_libraries(coloquinte
   ${Boost_LIBRARIES}
+  lemon
 )
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)

@@ -19,6 +19,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        submodules: recursive
 
     - name: Install dependencies
       run: sudo apt-get install libboost-all-dev libeigen3-dev

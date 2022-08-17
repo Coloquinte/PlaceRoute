@@ -1,3 +1,6 @@
 [submodule "thirdparty/kahypar/kahypar"]
 	path = thirdparty/kahypar/kahypar
 	url = https://github.com/kahypar/kahypar
+[submodule "thirdparty/lemon/lemon"]
+	path = thirdparty/lemon/lemon
+	url = https://github.com/Coloquinte/lemon
