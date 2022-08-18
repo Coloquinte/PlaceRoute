@@ -4,8 +4,11 @@
 
 namespace coloquinte {
 /**
- * @brief Representation of a detailed placement of standard cells
+ * @brief Representation of the detailed placement state of a standard cells
+ * design
  *
+ * Each row is represented as a linked lists, so that accessing nearby cells is
+ * cheap.
  */
 class DetailedPlacement {
  public:

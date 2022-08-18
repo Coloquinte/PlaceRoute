@@ -17,6 +17,14 @@ DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit) {
                            circuit.cellY);
 }
 
+void DetailedPlacement::exportPlacement(Circuit &circuit) {
+  for (int i = 0; i < circuit.nbCells(); ++i) {
+    if (circuit.fixed(i)) continue;
+    circuit.cellX[i] = cellX(i);
+    circuit.cellY[i] = cellY(i);
+  }
+}
+
 DetailedPlacement::DetailedPlacement(const std::vector<Rectangle> &rows,
                                      const std::vector<int> &width,
                                      const std::vector<int> &posX,
@@ -132,6 +140,14 @@ bool DetailedPlacement::canInsert(int c, int row, int pred) const {
   if (!isPlaced(c)) {
     throw std::runtime_error(
         "Cannot attempt to insert a cell that is not placed yet");
+  }
+  if (c == pred) {
+    // Do not insert after itself
+    return false;
+  }
+  if (pred != -1 && cellPred(c) == pred) {
+    // Do not insert before itself
+    return false;
   }
   return siteEnd(row, pred) - siteBegin(row, pred) >= cellWidth(c);
 }
