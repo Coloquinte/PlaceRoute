@@ -158,6 +158,7 @@ long long IncrNetModel::computeValue() const {
 
 void IncrNetModel::updateCellPos(int cell, int pos) {
   // TODO: optimize performance: do not recompute every connected net
+  cellPos_[cell] = pos;
   for (int i = 0; i < nbCellPins(cell); ++i) {
     int net = pinNet(cell, i);
     recomputeNet(net);
@@ -169,6 +170,8 @@ void IncrNetModel::recomputeNet(int net) {
   int maxPos = computeNetMaxPos(net);
   int oldValue = netMaxPos_[net] - netMinPos_[net];
   int newValue = maxPos - minPos;
+  netMinPos_[net] = minPos;
+  netMaxPos_[net] = maxPos;
   value_ += newValue - oldValue;
 }
 

@@ -61,3 +61,27 @@ BOOST_AUTO_TEST_CASE(TestMove1) {
   model.updateCellPos(2, 1);
   model.check();
 }
+
+BOOST_AUTO_TEST_CASE(TestMove2) {
+  IncrNetModelBuilder bd(3);
+  bd.addNet({0, 1, 2}, {0, 0, 0});
+  IncrNetModel model = bd.build({0, 1, 2});
+  model.check();
+  BOOST_CHECK_EQUAL(model.nbNets(), 1);
+  BOOST_CHECK_EQUAL(model.value(), 2LL);
+  model.updateCellPos(0, 2);
+  model.check();
+  BOOST_CHECK_EQUAL(model.value(), 1LL);
+  model.updateCellPos(0, 2);
+  model.check();
+  BOOST_CHECK_EQUAL(model.value(), 1LL);
+  model.updateCellPos(1, -2);
+  model.check();
+  BOOST_CHECK_EQUAL(model.value(), 4LL);
+  model.updateCellPos(1, 8);
+  model.check();
+  BOOST_CHECK_EQUAL(model.value(), 6LL);
+  model.updateCellPos(2, 1);
+  model.check();
+  BOOST_CHECK_EQUAL(model.value(), 7LL);
+}
