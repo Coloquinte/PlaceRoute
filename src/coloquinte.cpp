@@ -168,11 +168,7 @@ void place(Circuit &circuit, int effort) {
             << circuit.nbNets() << " nets and " << circuit.nbPins() << " pins."
             << std::endl;
   GlobalPlacer::place(circuit, effort);
-  std::cout << "Wirelength after global placement: " << circuit.hpwl()
-            << std::endl;
   DetailedPlacer::place(circuit, effort);
-  std::cout << "Wirelength after detailed placement: " << circuit.hpwl()
-            << std::endl;
 }
 
 extern "C" {

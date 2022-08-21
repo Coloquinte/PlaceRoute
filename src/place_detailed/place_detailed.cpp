@@ -6,12 +6,17 @@
 
 namespace coloquinte {
 void DetailedPlacer::place(Circuit &circuit, int effort) {
+  std::cout << "Wirelength before legalization: " << circuit.hpwl()
+            << std::endl;
   Legalizer leg = Legalizer::fromIspdCircuit(circuit);
   leg.run();
   leg.exportPlacement(circuit);
+  std::cout << "Wirelength after legalization: " << circuit.hpwl() << std::endl;
   DetailedPlacer pl(circuit);
   pl.runSwaps(3);
   pl.placement_.exportPlacement(circuit);
+  std::cout << "Wirelength after detailed placement: " << circuit.hpwl()
+            << std::endl;
 }
 
 DetailedPlacer::DetailedPlacer(const Circuit &circuit)
@@ -63,8 +68,8 @@ void DetailedPlacer::runSwaps(int nbNeighbours) {
   for (int i = 0; i + 1 < placement_.nbRows(); ++i) {
     runSwapsTwoRows(i, i + 1, nbNeighbours);
   }
-  for (int i = 0; i + 1 < placement_.nbRows(); ++i) {
-    runSwapsTwoRows(i + 1, i, nbNeighbours);
+  for (int i = placement_.nbRows() - 1; i >= 1; --i) {
+    runSwapsTwoRows(i, i - 1, nbNeighbours);
   }
 }
 
@@ -89,9 +94,29 @@ void DetailedPlacer::runSwapsOneRow(int row, int nbNeighbours) {
 }
 
 void DetailedPlacer::runSwapsTwoRows(int r1, int r2, int nbNeighbours) {
-  int c1 = placement_.rowFirstCell(r1);
-  int c2 = placement_.rowFirstCell(r2);
-  // TODO
+  int closest = placement_.rowFirstCell(r2);
+  for (int c = placement_.rowFirstCell(r1); c != -1;
+       c = placement_.cellNext(c)) {
+    // Update the closest cell
+    while (true) {
+      int nextC = placement_.cellNext(closest);
+      if (nextC == -1) break;
+      if (placement_.cellX(nextC) > placement_.cellX(c)) break;
+      closest = nextC;
+    }
+    for (int p = closest, i = 0; (p != -1) && (i <= nbNeighbours);
+         p = placement_.cellPred(p), ++i) {
+      if (trySwap(p, c)) {
+        std::swap(c, p);
+      }
+    }
+    for (int p = closest, i = 0; (p != -1) && (i <= nbNeighbours);
+         p = placement_.cellNext(p), ++i) {
+      if (trySwap(p, c)) {
+        std::swap(c, p);
+      }
+    }
+  }
 }
 
 void DetailedPlacer::updateCellPos(int c) {
