@@ -13,7 +13,11 @@ void DetailedPlacer::place(Circuit &circuit, int effort) {
   leg.exportPlacement(circuit);
   std::cout << "Wirelength after legalization: " << circuit.hpwl() << std::endl;
   DetailedPlacer pl(circuit);
-  pl.runSwaps(3);
+  pl.check();
+  for (int i = 0; i < effort / 3 + 1; ++i) {
+    pl.runSwaps(effort / 2 + 1, effort / 2 + 1);
+  }
+  pl.check();
   pl.placement_.exportPlacement(circuit);
   std::cout << "Wirelength after detailed placement: " << circuit.hpwl()
             << std::endl;
@@ -61,15 +65,23 @@ bool DetailedPlacer::tryInsert(int c, int row, int pred) {
   return false;
 }
 
-void DetailedPlacer::runSwaps(int nbNeighbours) {
+void DetailedPlacer::runSwaps(int nbRows, int nbNeighbours) {
+  // Optimize each row internally
   for (int i = 0; i < placement_.nbRows(); ++i) {
     runSwapsOneRow(i, nbNeighbours);
   }
-  for (int i = 0; i + 1 < placement_.nbRows(); ++i) {
-    runSwapsTwoRows(i, i + 1, nbNeighbours);
+  // Optimize each row with neighbours after it
+  for (int d = 1; d <= nbRows; ++d) {
+    for (int i = 0; i + d < placement_.nbRows(); ++i) {
+      runSwapsTwoRows(i, i + d, nbNeighbours);
+    }
   }
-  for (int i = placement_.nbRows() - 1; i >= 1; --i) {
-    runSwapsTwoRows(i, i - 1, nbNeighbours);
+  // Optimize each row with neighbours before it;
+  // We do both for symmetry and to allow large cell movements
+  for (int d = 1; d <= nbRows; ++d) {
+    for (int i = placement_.nbRows() - 1; i - d >= 0; --i) {
+      runSwapsTwoRows(i, i - d, nbNeighbours);
+    }
   }
 }
 
