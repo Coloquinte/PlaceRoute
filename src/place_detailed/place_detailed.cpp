@@ -119,12 +119,16 @@ void DetailedPlacer::runSwapsTwoRows(int r1, int r2, int nbNeighbours) {
     for (int p = closest, i = 0; (p != -1) && (i <= nbNeighbours);
          p = placement_.cellPred(p), ++i) {
       if (trySwap(p, c)) {
+        // Continue iterating on the same row, from p
+        if (closest == p) closest = c;
         std::swap(c, p);
       }
     }
     for (int p = closest, i = 0; (p != -1) && (i <= nbNeighbours);
          p = placement_.cellNext(p), ++i) {
       if (trySwap(p, c)) {
+        // Continue iterating on the same row, from p
+        if (closest == p) closest = c;
         std::swap(c, p);
       }
     }
