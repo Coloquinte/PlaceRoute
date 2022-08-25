@@ -73,12 +73,6 @@ class DetailedPlacer {
   bool tryInsert(int c, int row, int pred);
 
   /**
-   * @brief Attempt to swap the two cells and shift them; keep the modification
-   * if it improves the result
-   */
-  bool trySwapShift(int c1, int c2);
-
-  /**
    * @brief Change the cell coordinates to optimize the wirelength without
    * reordering them
    */

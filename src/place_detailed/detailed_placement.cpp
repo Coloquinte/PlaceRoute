@@ -153,7 +153,7 @@ bool DetailedPlacement::canInsert(int c, int row, int pred) const {
     // Do not insert after itself
     return false;
   }
-  if (pred != -1 && cellPred(c) == pred) {
+  if (cellRow(c) == row && cellPred(c) == pred) {
     // Do not insert before itself
     return false;
   }

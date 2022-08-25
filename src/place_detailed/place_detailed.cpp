@@ -284,5 +284,15 @@ void DetailedPlacer::check() const {
   placement_.check();
   xtopo_.check();
   ytopo_.check();
+  for (int c = 0; c < placement_.nbCells(); ++c) {
+    if (placement_.isPlaced(c)) {
+      if (xtopo_.cellPos(c) != placement_.cellX(c)) {
+        throw std::runtime_error("X placement is not consistant");
+      }
+      if (ytopo_.cellPos(c) != placement_.cellY(c)) {
+        throw std::runtime_error("Y placement is not consistant");
+      }
+    }
+  }
 }
 }  // namespace coloquinte

@@ -88,6 +88,12 @@ class IncrNetModel {
    */
   int nbPins() const { return netLimits_.back(); }
 
+  int cellPos(int cell) const {
+    assert(cell >= 0);
+    assert(cell < nbCells());
+    return cellPos_[cell];
+  }
+
   /**
    * @brief Return the number of pins for a given net
    */
@@ -177,7 +183,7 @@ class IncrNetModel {
   void check() const;
 
  private:
- /**
+  /**
    * @brief Compute the minimum position of a net from scratch
    */
   int computeNetMinPos(int net) const;
