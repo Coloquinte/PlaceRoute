@@ -1,6 +1,10 @@
 #include "place_detailed.hpp"
 
+#include <lemon/network_simplex.h>
+#include <lemon/smart_graph.h>
+
 #include <iostream>
+#include <unordered_set>
 
 #include "legalizer.hpp"
 
@@ -14,6 +18,7 @@ void DetailedPlacer::place(Circuit &circuit, int effort) {
   std::cout << "Wirelength after legalization: " << circuit.hpwl() << std::endl;
   DetailedPlacer pl(circuit);
   pl.check();
+  pl.runShifts(effort + 2);
   for (int i = 0; i < effort / 3 + 1; ++i) {
     pl.runSwaps(effort / 2 + 1, effort / 2 + 1);
   }
@@ -132,6 +137,141 @@ void DetailedPlacer::runSwapsTwoRows(int r1, int r2, int nbNeighbours) {
         std::swap(c, p);
       }
     }
+  }
+}
+
+void DetailedPlacer::runShifts(int nbRows) {
+  if (nbRows < 2) return;
+  for (int r = 0; r < placement_.nbRows(); r += nbRows / 2) {
+    std::vector<int> cells;
+    for (int i = r; i < std::min(r + nbRows, placement_.nbRows()); ++i) {
+      for (int c : placement_.rowCells(i)) {
+        cells.push_back(c);
+      }
+    }
+    optimizeShift(cells);
+  }
+  placement_.check();
+}
+
+void DetailedPlacer::optimizeShift(const std::vector<int> &cells) {
+  std::unordered_set<int> cell_set(cells.begin(), cells.end());
+  if (cell_set.size() != cells.size()) {
+    throw std::runtime_error("The given cells are not unique");
+  }
+  std::unordered_set<int> net_set;
+  for (int c : cells) {
+    for (int i = 0; i < xtopo_.nbCellPins(c); ++i) {
+      int net = xtopo_.pinNet(c, i);
+      net_set.insert(net);
+    }
+  }
+  std::vector<int> nets(net_set.begin(), net_set.end());
+  std::sort(nets.begin(), nets.end());
+  // Create a graph with the cells as using namespace lemon;
+  using namespace lemon;
+  DIGRAPH_TYPEDEFS(SmartDigraph);
+
+  // Create a graph with the cells and bounds of the nets as node
+  SmartDigraph g;
+
+  std::unordered_map<int, Node> cell_nodes(cells.size());
+  for (int c : cells) {
+    cell_nodes[c] = g.addNode();
+  }
+  std::unordered_map<int, Node> Lnet_nodes, Unet_nodes;
+  for (int net : nets) {
+    Lnet_nodes[net] = g.addNode();
+    Unet_nodes[net] = g.addNode();
+  }
+
+  // Two nodes for position constraints
+  Node fixed = g.addNode();
+  typedef std::pair<SmartDigraph::Arc, int> arc_pair;
+  typedef std::pair<SmartDigraph::Node, int> node_pair;
+
+  // The arcs corresponding to constraints of the original problem
+  std::vector<arc_pair> constraint_arcs;
+
+  // Now we add every positional constraint, which becomes an arc in the
+  // min-cost flow problem
+  for (int c : cells) {
+    int pred = placement_.cellPred(c);
+    int next = placement_.cellNext(c);
+    if (cell_set.count(next)) {
+      // Two movable cells
+      auto A = g.addArc(cell_nodes[next], cell_nodes[c]);
+      constraint_arcs.push_back(arc_pair(A, -placement_.cellWidth(c)));
+    }
+    if (cell_set.count(pred) == 0) {
+      // Predecessor fixed
+      int boundary = placement_.boundaryBefore(c);
+      auto A = g.addArc(cell_nodes[c], fixed);
+      constraint_arcs.push_back(arc_pair(A, -boundary));
+    }
+    if (cell_set.count(next) == 0) {
+      // Successor fixed
+      int boundary = placement_.boundaryAfter(c);
+      auto A = g.addArc(fixed, cell_nodes[c]);
+      constraint_arcs.push_back(
+          arc_pair(A, boundary - placement_.cellWidth(c)));
+    }
+  }
+
+  // One arc for every pin of every net: arcs too
+  for (int net : nets) {
+    for (int i = 0; i < xtopo_.nbNetPins(net); ++i) {
+      int c = xtopo_.pinCell(net, i);
+      int pin_offs = xtopo_.netPinOffset(net, i);
+      if (cell_set.count(c)) {
+        Arc Al = g.addArc(cell_nodes[c], Lnet_nodes[net]);
+        constraint_arcs.push_back(arc_pair(Al, pin_offs));
+        Arc Ar = g.addArc(Unet_nodes[net], cell_nodes[c]);
+        constraint_arcs.push_back(arc_pair(Ar, -pin_offs));
+      } else {  // Fixed offset
+        auto Al = g.addArc(fixed, Lnet_nodes[net]);
+        constraint_arcs.push_back(arc_pair(Al, placement_.cellX(c) + pin_offs));
+        auto Ar = g.addArc(Unet_nodes[net], fixed);
+        constraint_arcs.push_back(
+            arc_pair(Ar, -placement_.cellX(c) - pin_offs));
+      }
+    }
+  }
+
+  // Then the only capacitated arcs: the ones for the nets
+  std::vector<node_pair> net_supplies;
+  for (int net : nets) {
+    net_supplies.push_back(node_pair(Unet_nodes[net], 1));
+    net_supplies.push_back(node_pair(Lnet_nodes[net], -1));
+  }
+
+  // Create the maps to have cost and capacity for the arcs
+  IntArcMap cost(g, 0);
+  IntArcMap capacity(g, nets.size());
+  IntNodeMap supply(g, 0);
+
+  for (arc_pair A : constraint_arcs) {
+    cost[A.first] = A.second;
+  }
+
+  for (node_pair N : net_supplies) {
+    supply[N.first] = N.second;
+  }
+
+  // Then we (hope the solver can) solve it
+  NetworkSimplex<SmartDigraph> ns(g);
+  ns.supplyMap(supply).costMap(cost);
+  auto res = ns.run();
+  if (res != ns.OPTIMAL) {
+    throw std::runtime_error("Could not solve the network flow optimallt");
+  }
+
+  // And we get the new positions as the dual values of the current solution
+  // (compared to the fixed pin)
+  for (int c : cells) {
+    int pos = ns.potential(cell_nodes[c]) - ns.potential(fixed);
+    placement_.cellX_[c] = pos;
+    xtopo_.updateCellPos(c, pos);
   }
 }
 

@@ -37,6 +37,13 @@ class DetailedPlacer {
   void runSwaps(int nbRows, int nbNeighbours);
 
   /**
+   * @brief Run a simple optimization using only cell shifting (no reordering)
+   *
+   * @param nbRows Number of neighbouring rows considered
+   */
+  void runShifts(int nbRows);
+
+  /**
    * @brief Run the cell swapping optimization within a row
    *
    * @param row Row to look for swaps

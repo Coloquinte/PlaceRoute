@@ -100,6 +100,11 @@ class DetailedPlacement {
   }
 
   /**
+   * @brief Return all cells in the row
+   */
+  std::vector<int> rowCells(int row) const;
+
+  /**
    * @brief Return the x position of the cell
    */
   int cellX(int c) const {
@@ -113,6 +118,14 @@ class DetailedPlacement {
   int cellY(int c) const {
     assert(c >= 0 && c < nbCells());
     return cellY_[c];
+  }
+
+  /**
+   * @brief Return the y position of the row
+   */
+  int rowY(int r) const {
+    assert(r >= 0 && r < nbRows());
+    return rows_[r].minY;
   }
 
   /**
@@ -217,5 +230,7 @@ class DetailedPlacement {
   std::vector<int> cellRow_;
   std::vector<int> cellX_;
   std::vector<int> cellY_;
+
+  friend class DetailedPlacer;
 };
 }  // namespace coloquinte

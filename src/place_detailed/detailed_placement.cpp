@@ -100,6 +100,14 @@ DetailedPlacement::DetailedPlacement(const std::vector<Rectangle> &rows,
   }
 }
 
+std::vector<int> DetailedPlacement::rowCells(int row) const {
+  std::vector<int> ret;
+  for (int c = rowFirstCell(row); c != -1; c = cellNext(c)) {
+    ret.push_back(c);
+  }
+  return ret;
+}
+
 int DetailedPlacement::boundaryBefore(int c) const {
   assert(isPlaced(c));
   int pred = cellPred(c);
