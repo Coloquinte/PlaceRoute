@@ -22,6 +22,7 @@ void DetailedPlacer::place(Circuit &circuit, int effort) {
   for (int i = 0; i < effort / 3 + 1; ++i) {
     pl.runSwaps(effort / 2 + 1, effort / 2 + 1);
   }
+  pl.runShifts(effort + 2);
   pl.check();
   pl.placement_.exportPlacement(circuit);
   std::cout << "Wirelength after detailed placement: " << circuit.hpwl()
@@ -74,11 +75,13 @@ void DetailedPlacer::runSwaps(int nbRows, int nbNeighbours) {
   // Optimize each row internally
   for (int i = 0; i < placement_.nbRows(); ++i) {
     runSwapsOneRow(i, nbNeighbours);
+    runInsertsOneRow(i, nbNeighbours);
   }
   // Optimize each row with neighbours after it
   for (int d = 1; d <= nbRows; ++d) {
     for (int i = 0; i + d < placement_.nbRows(); ++i) {
       runSwapsTwoRows(i, i + d, nbNeighbours);
+      runInsertsTwoRows(i, i + d, nbNeighbours);
     }
   }
   // Optimize each row with neighbours before it;
@@ -86,58 +89,89 @@ void DetailedPlacer::runSwaps(int nbRows, int nbNeighbours) {
   for (int d = 1; d <= nbRows; ++d) {
     for (int i = placement_.nbRows() - 1; i - d >= 0; --i) {
       runSwapsTwoRows(i, i - d, nbNeighbours);
+      runInsertsTwoRows(i, i - d, nbNeighbours);
     }
   }
 }
 
 void DetailedPlacer::runSwapsOneRow(int row, int nbNeighbours) {
-  for (int c = placement_.rowFirstCell(row); c != -1;
-       c = placement_.cellNext(c)) {
-    for (int p = c, i = 0; (p != -1) && (i <= nbNeighbours);
-         p = placement_.cellPred(p), ++i) {
-      if (trySwap(p, c)) {
-        // Continue before the cell
-        p = c;
-      }
-    }
-    for (int p = c, i = 0; (p != -1) && (i <= nbNeighbours);
-         p = placement_.cellNext(p), ++i) {
-      if (trySwap(p, c)) {
-        // Continue after the cell
-        p = c;
+  std::vector<int> cells = placement_.rowCells(row);
+  for (int i = 0; i < cells.size(); ++i) {
+    int b = std::max(0, i - nbNeighbours);
+    int e = std::min((int)cells.size() - 1, i + nbNeighbours);
+    for (int j = b; j <= e; ++j) {
+      if (trySwap(cells[i], cells[j])) {
+        std::swap(cells[i], cells[j]);
       }
     }
   }
 }
 
-void DetailedPlacer::runSwapsTwoRows(int r1, int r2, int nbNeighbours) {
-  int closest = placement_.rowFirstCell(r2);
-  for (int c = placement_.rowFirstCell(r1); c != -1;
-       c = placement_.cellNext(c)) {
-    // Update the closest cell
-    while (true) {
-      int nextC = placement_.cellNext(closest);
-      if (nextC == -1) break;
-      if (placement_.cellX(nextC) > placement_.cellX(c)) break;
-      closest = nextC;
-    }
-    for (int p = closest, i = 0; (p != -1) && (i <= nbNeighbours);
-         p = placement_.cellPred(p), ++i) {
-      if (trySwap(p, c)) {
-        // Continue iterating on the same row, from p
-        if (closest == p) closest = c;
-        std::swap(c, p);
-      }
-    }
-    for (int p = closest, i = 0; (p != -1) && (i <= nbNeighbours);
-         p = placement_.cellNext(p), ++i) {
-      if (trySwap(p, c)) {
-        // Continue iterating on the same row, from p
-        if (closest == p) closest = c;
-        std::swap(c, p);
-      }
+void DetailedPlacer::runInsertsOneRow(int row, int nbNeighbours) {
+  std::vector<int> cells = placement_.rowCells(row);
+  // Consider insertion before the first cell
+  cells.insert(cells.begin(), -1);
+  for (int i = 1; i < cells.size(); ++i) {
+    int b = std::max(0, i - nbNeighbours);
+    int e = std::min((int)cells.size() - 1, i + nbNeighbours);
+    for (int j = b; j <= e; ++j) {
+      tryInsert(cells[i], row, cells[j]);
     }
   }
+}
+
+void DetailedPlacer::runSwapsTwoRows(int r1, int r2, int nbNeighbours) {
+  std::vector<int> cells1 = placement_.rowCells(r1);
+  std::vector<int> cells2 = placement_.rowCells(r2);
+  std::vector<int> closestIndex = computeClosestIndexInRow(cells1, cells2);
+  for (int i = 0; i < cells1.size(); ++i) {
+    int closest = closestIndex[i];
+    int b = std::max(0, closest - nbNeighbours);
+    int e = std::min((int)cells2.size() - 1, closest + nbNeighbours);
+    for (int j = b; j <= e; ++j) {
+      trySwap(cells1[i], cells2[j]);
+    }
+  }
+}
+
+void DetailedPlacer::runInsertsTwoRows(int r1, int r2, int nbNeighbours) {
+  std::vector<int> cells1 = placement_.rowCells(r1);
+  std::vector<int> cells2 = placement_.rowCells(r2);
+  cells2.insert(cells2.begin(), -1);
+  std::vector<int> closestIndex = computeClosestIndexInRow(cells1, cells2);
+  for (int i = 0; i < cells1.size(); ++i) {
+    int closest = closestIndex[i];
+    int b = std::max(0, closest - nbNeighbours);
+    int e = std::min((int)cells2.size() - 1, closest + nbNeighbours);
+    for (int j = b; j <= e; ++j) {
+      tryInsert(cells1[i], r2, cells2[j]);
+    }
+  }
+}
+
+std::vector<int> DetailedPlacer::computeClosestIndexInRow(
+    const std::vector<int> &row1Cells,
+    const std::vector<int> &row2Cells) const {
+  if (row2Cells.empty()) {
+    return std::vector<int>(row1Cells.size(), 0);
+  }
+  std::vector<int> ret;
+  int closest = 0;
+  for (int i = 0; i < row1Cells.size(); ++i) {
+    int x = placement_.cellX(row1Cells[i]);
+    while (true) {
+      int c = row2Cells[closest];
+      if (closest == row2Cells.size() - 1) {
+        break;
+      }
+      if (c != -1 && placement_.cellX(c) < x) {
+        break;
+      }
+      ++closest;
+    }
+    ret.push_back(closest);
+  }
+  return ret;
 }
 
 void DetailedPlacer::runShifts(int nbRows) {

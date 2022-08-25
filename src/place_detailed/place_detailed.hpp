@@ -52,6 +52,14 @@ class DetailedPlacer {
   void runSwapsOneRow(int row, int nbNeighbours);
 
   /**
+   * @brief Run the cell insertion optimization within a row
+   *
+   * @param row Row to look for insertions
+   * @param nbNeighbours Number of closest neighbours to consider for each cell
+   */
+  void runInsertsOneRow(int row, int nbNeighbours);
+
+  /**
    * @brief Run the cell swapping optimization on the two rows
    *
    * @param r1 First row to look for swaps
@@ -59,6 +67,20 @@ class DetailedPlacer {
    * @param nbNeighbours Number of closest neighbours to consider for each cell
    */
   void runSwapsTwoRows(int r1, int r2, int nbNeighbours);
+
+  /**
+   * @brief Run the cell insertion optimization on the two rows
+   *
+   * @param r1 Row to look for cells
+   * @param r2 Row to insert into
+   * @param nbNeighbours Number of closest neighbours to consider for each cell
+   */
+  void runInsertsTwoRows(int r1, int r2, int nbNeighbours);
+
+  /**
+   * @brief Given two ordered rows, obtain the index of the closest cell in the second row for each cell in the firt row
+   */
+  std::vector<int> computeClosestIndexInRow(const std::vector<int> &row1Cells, const std::vector<int> &row2Cells) const;
 
   /**
    * @brief Attempt to swap the two cells; keep the modification if it improves
