@@ -7,10 +7,13 @@
 Coloquinte is a Place&Route tool for electronic circuits.
 Its goal is to provide a single package of well-tested and well-tuned Place&Route algorithms, to be used in open source electronic design toolchains.
 
+This replaces and extends the [placement library](https://github.com/Coloquinte/Coloquinte_placement) used in the [Coriolis](https://gitlab.lip6.fr/vlsi-eda/coriolis/) toolchain.
+
 ## Using Coloquinte
 
-Build Coloquinte using CMake :
+Install dependencies and build Coloquinte using CMake :
 ``` bash
+sudo apt-get install libboost-all-dev libeigen3-dev
 cmake -B build; cmake --build build
 ```
 
