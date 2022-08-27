@@ -78,21 +78,47 @@ class DetailedPlacer {
   void runInsertsTwoRows(int r1, int r2, int nbNeighbours);
 
   /**
-   * @brief Given two ordered rows, obtain the index of the closest cell in the second row for each cell in the firt row
+   * @brief Given two ordered rows, obtain the index of the closest cell in the
+   * second row for each cell in the firt row
    */
-  std::vector<int> computeClosestIndexInRow(const std::vector<int> &row1Cells, const std::vector<int> &row2Cells) const;
+  std::vector<int> computeClosestIndexInRow(
+      const std::vector<int> &row1Cells,
+      const std::vector<int> &row2Cells) const;
 
   /**
-   * @brief Attempt to swap the two cells; keep the modification if it improves
-   * the result strictly
+   * @brief Swap the two cells
    */
-  bool trySwap(int c1, int c2);
+  void doSwap(int c1, int c2);
 
   /**
-   * @brief Attempt to insert the cell here; keep the modification if it
-   * improves the result strictly
+   * @brief Insert the cell here
    */
-  bool tryInsert(int c, int row, int pred);
+  void doInsert(int c, int row, int pred);
+
+  /**
+   * @brief Perform the best swap out of many candidates
+   *
+   * @return True on a change
+   */
+  bool bestSwap(int c, const std::vector<int> &candidates);
+
+  /**
+   * @brief Perform the best insert out of many candidates
+   *
+   * @return True on a change
+   */
+  bool bestInsert(int c, int row, const std::vector<int> &candidates);
+
+  /**
+   * @brief Return the feasibility of the swap, and the new value if feasible
+   */
+  std::pair<bool, long long> valueOnSwap(int c1, int c2);
+
+  /**
+   * @brief Return the feasibility of the insertion, and the new value if
+   * feasible
+   */
+  std::pair<bool, long long> valueOnInsert(int c, int row, int pred);
 
   /**
    * @brief Change the cell coordinates to optimize the wirelength without
@@ -111,6 +137,11 @@ class DetailedPlacer {
    * placement
    */
   void updateCellPos(int c);
+
+  /**
+   * @brief Update the cell position in the objective (not the placement)
+   */
+  void updateCellPos(int c, Point pos);
 
  private:
   DetailedPlacement placement_;

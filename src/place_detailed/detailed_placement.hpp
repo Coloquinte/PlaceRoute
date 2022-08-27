@@ -121,6 +121,14 @@ class DetailedPlacement {
   }
 
   /**
+   * @brief Return the position of the cell
+   */
+  Point cellPos(int c) const {
+    assert(c >= 0 && c < nbCells());
+    return Point(cellX_[c], cellY_[c]);
+  }
+
+  /**
    * @brief Return the y position of the row
    */
   int rowY(int r) const {
@@ -164,10 +172,9 @@ class DetailedPlacement {
   bool canInsert(int c, int row, int pred) const;
 
   /**
-   * @brief Return true if it is possible to insert the cell with a specific
-   * position
+   * @brief Return the position after inserting the cell here
    */
-  bool canInsertAt(int c, int row, int pred, int x) const;
+  Point positionOnInsert(int c, int row, int pred) const;
 
   /**
    * @brief Return true if it is possible to swap the two cells
@@ -175,10 +182,9 @@ class DetailedPlacement {
   bool canSwap(int c1, int c2) const;
 
   /**
-   * @brief Return true if it is possible to swap the two cells with a given x
-   * position
+   * @brief Return the positions after swapping the two cells
    */
-  bool canSwapAt(int c1, int c2, int x1, int x2) const;
+  std::pair<Point, Point> positionsOnSwap(int c1, int c2) const;
 
   /**
    * @brief Do placement of a single cell

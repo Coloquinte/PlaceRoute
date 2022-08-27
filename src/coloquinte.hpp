@@ -5,7 +5,18 @@
 
 namespace coloquinte {
 /**
- * 2D rectangle
+ * @brief 2D point
+ */
+struct Point {
+  Point() : x(0), y(0) {}
+  Point(int x, int y) : x(x), y(y) {}
+
+  int x;
+  int y;
+};
+
+/**
+ * @brief 2D rectangle
  */
 struct Rectangle {
   Rectangle() : minX(0), maxX(0), minY(0), maxY(0) {}

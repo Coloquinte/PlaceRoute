@@ -226,40 +226,22 @@ void DetailedPlacement::insert(int c, int row, int pred) {
   if (!canInsert(c, row, pred)) {
     throw std::runtime_error("Cannot insert this cell here");
   }
-  int x = (siteEnd(row, pred) - cellWidth(c) + siteBegin(row, pred)) / 2;
-  insertAt(c, row, pred, x);
-}
-
-void DetailedPlacement::insertAt(int c, int row, int pred, int x) {
-  // TODO: check that this is indeed OK
+  Point pos = positionOnInsert(c, row, pred);
   unplace(c);
-  place(c, row, pred, x);
+  place(c, row, pred, pos.x);
 }
 
 void DetailedPlacement::swap(int c1, int c2) {
   if (!canSwap(c1, c2)) {
     throw std::runtime_error("Cannot swap these cells");
   }
-  int x1, x2;
-  if (cellPred(c1) == c2) {
-    x1 = cellX(c2);
-    x2 = x1 + cellWidth(c1);
-  } else if (cellPred(c2) == c1) {
-    x2 = cellX(c1);
-    x1 = x2 + cellWidth(c2);
-  } else {
-    x1 = (boundaryBefore(c2) + boundaryAfter(c2) - cellWidth(c1)) / 2;
-    x2 = (boundaryBefore(c1) + boundaryAfter(c1) - cellWidth(c2)) / 2;
-  }
-  swapAt(c1, c2, x1, x2);
-}
-
-void DetailedPlacement::swapAt(int c1, int c2, int x1, int x2) {
-  // TODO: check that this is indeed OK
+  auto [pos1, pos2] = positionsOnSwap(c1, c2);
   int r1 = cellRow(c1);
   int r2 = cellRow(c2);
   int p1 = cellPred(c1);
   int p2 = cellPred(c2);
+  int x1 = pos1.x;
+  int x2 = pos2.x;
   unplace(c1);
   unplace(c2);
   if (p1 == c2) {
@@ -272,6 +254,30 @@ void DetailedPlacement::swapAt(int c1, int c2, int x1, int x2) {
     place(c1, r2, p2, x1);
     place(c2, r1, p1, x2);
   }
+}
+
+std::pair<Point, Point> DetailedPlacement::positionsOnSwap(int c1,
+                                                           int c2) const {
+  Point p1 = cellPos(c1);
+  Point p2 = cellPos(c2);
+  int x1, x2;
+  if (cellPred(c1) == c2) {
+    x1 = p2.x;
+    x2 = p2.x + cellWidth(c1);
+  } else if (cellPred(c2) == c1) {
+    x2 = p1.x;
+    x1 = p1.x + cellWidth(c2);
+  } else {
+    x1 = (boundaryBefore(c2) + boundaryAfter(c2) - cellWidth(c1)) / 2;
+    x2 = (boundaryBefore(c1) + boundaryAfter(c1) - cellWidth(c2)) / 2;
+  }
+  return std::make_pair(Point(x1, p2.y), Point(x2, p1.y));
+}
+
+Point DetailedPlacement::positionOnInsert(int c, int row, int pred) const {
+  int x = (siteEnd(row, pred) - cellWidth(c) + siteBegin(row, pred)) / 2;
+  int y = rowY(row);
+  return Point(x, y);
 }
 
 void DetailedPlacement::check() const {
