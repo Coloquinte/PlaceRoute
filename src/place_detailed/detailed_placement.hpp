@@ -45,6 +45,11 @@ class DetailedPlacement {
   int nbCells() const { return cellWidth_.size(); }
 
   /**
+   * @brief Return all row geometries
+   */
+  const std::vector<Rectangle> &rows() const { return rows_; }
+
+  /**
    * @brief Returns true if the cell is to be ignored by the detailed placement
    */
   bool isIgnored(int cell) const { return cellWidth_[cell] == -1; }

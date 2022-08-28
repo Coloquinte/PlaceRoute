@@ -37,6 +37,14 @@ class DetailedPlacer {
   void runSwaps(int nbRows, int nbNeighbours);
 
   /**
+   * @brief Run a simple optimization using only cell insertion
+   *
+   * @param nbRows Number of neighbouring rows to look at for each row
+   * @param nbNeighbours Number of closest neighbours to consider for each cell
+   */
+  void runInserts(int nbRows, int nbNeighbours);
+
+  /**
    * @brief Run a simple optimization using only cell shifting (no reordering)
    *
    * @param nbRows Number of neighbouring rows considered
@@ -78,6 +86,29 @@ class DetailedPlacer {
   void runInsertsTwoRows(int r1, int r2, int nbNeighbours);
 
   /**
+   * @brief Run the cell swapping optimization on the two rows
+   *
+   * After a swap is found, retry to find other improvements
+   *
+   * @param r1 First row to look for swaps
+   * @param r2 Second row to look for swaps
+   * @param nbNeighbours Number of closest neighbours to consider for each cell
+   */
+  void runSwapsTwoRowsAmplify(int r1, int r2, int nbNeighbours);
+
+  /**
+   * @brief Change the cell coordinates to optimize the wirelength without
+   * reordering them
+   */
+  void optimizeShift(const std::vector<int> &cells);
+
+  /**
+   * @brief Return the current objective value
+   */
+  long long value() const { return xtopo_.value() + ytopo_.value(); }
+
+ private:
+  /**
    * @brief Given two ordered rows, obtain the index of the closest cell in the
    * second row for each cell in the firt row
    */
@@ -96,6 +127,22 @@ class DetailedPlacer {
   void doInsert(int c, int row, int pred);
 
   /**
+   * @brief Try to swap two cells
+   *
+   * @return True on a change
+   */
+  bool trySwap(int c1, int c2) { return bestSwap(c1, {c2}); }
+
+  /**
+   * @brief Insert the cell at a given position
+   *
+   * @return True on a change
+   */
+  bool tryInsert(int c, int row, int pred) {
+    return bestInsert(c, row, {pred});
+  }
+
+  /**
    * @brief Perform the best swap out of many candidates
    *
    * @return True on a change
@@ -110,6 +157,14 @@ class DetailedPlacer {
   bool bestInsert(int c, int row, const std::vector<int> &candidates);
 
   /**
+   * @brief Perfom the best improvement swap between a cell and another row;
+   * update the inputs if necessary on a swap
+   *
+   * @return True on a change
+   */
+  bool bestSwapUpdate(int &c, int &from, int nbNeighbours);
+
+  /**
    * @brief Return the feasibility of the swap, and the new value if feasible
    */
   std::pair<bool, long long> valueOnSwap(int c1, int c2);
@@ -121,15 +176,16 @@ class DetailedPlacer {
   std::pair<bool, long long> valueOnInsert(int c, int row, int pred);
 
   /**
-   * @brief Change the cell coordinates to optimize the wirelength without
-   * reordering them
+   * @brief Return the first cell in a row that has x larger or equal to the
+   * target cell
    */
-  void optimizeShift(const std::vector<int> &cells);
+  int findCellAfter(int target, int fromCell) const;
 
   /**
-   * @brief Return the current objective value
+   * @brief Return the first cell in a row that has x smaller or equal to the
+   * target cell
    */
-  long long value() const { return xtopo_.value() + ytopo_.value(); }
+  int findCellBefore(int target, int fromCell) const;
 
  private:
   /**

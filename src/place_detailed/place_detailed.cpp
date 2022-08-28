@@ -55,14 +55,34 @@ void DetailedPlacer::runSwaps(int nbRows, int nbNeighbours) {
   // Optimize each row with neighbours after it
   for (int d = 1; d <= nbRows; ++d) {
     for (int i = 0; i + d < placement_.nbRows(); ++i) {
-      runSwapsTwoRows(i, i + d, nbNeighbours);
+      runSwapsTwoRowsAmplify(i, i + d, nbNeighbours);
     }
   }
   // Optimize each row with neighbours before it;
   // We do both for symmetry and to allow large cell movements
   for (int d = 1; d <= nbRows; ++d) {
     for (int i = placement_.nbRows() - 1; i - d >= 0; --i) {
-      runSwapsTwoRows(i, i - d, nbNeighbours);
+      runSwapsTwoRowsAmplify(i, i - d, nbNeighbours);
+    }
+  }
+}
+
+void DetailedPlacer::runInserts(int nbRows, int nbNeighbours) {
+  // Optimize each row internally
+  for (int i = 0; i < placement_.nbRows(); ++i) {
+    runInsertsOneRow(i, nbNeighbours);
+  }
+  // Optimize each row with neighbours after it
+  for (int d = 1; d <= nbRows; ++d) {
+    for (int i = 0; i + d < placement_.nbRows(); ++i) {
+      runInsertsTwoRows(i, i + d, nbNeighbours);
+    }
+  }
+  // Optimize each row with neighbours before it;
+  // We do both for symmetry and to allow large cell movements
+  for (int d = 1; d <= nbRows; ++d) {
+    for (int i = placement_.nbRows() - 1; i - d >= 0; --i) {
+      runInsertsTwoRows(i, i - d, nbNeighbours);
     }
   }
 }
@@ -102,6 +122,16 @@ void DetailedPlacer::runSwapsTwoRows(int r1, int r2, int nbNeighbours) {
   }
 }
 
+void DetailedPlacer::runSwapsTwoRowsAmplify(int r1, int r2, int nbNeighbours) {
+  int from = placement_.rowFirstCell(r2);
+  for (int c = placement_.rowFirstCell(r1); c != -1;
+       c = placement_.cellNext(c)) {
+    while (bestSwapUpdate(c, from, nbNeighbours))
+      ;
+    from = findCellAfter(c, from);
+  }
+}
+
 void DetailedPlacer::runInsertsTwoRows(int r1, int r2, int nbNeighbours) {
   std::vector<int> cells1 = placement_.rowCells(r1);
   std::vector<int> cells2 = placement_.rowCells(r2);
@@ -118,35 +148,65 @@ void DetailedPlacer::runInsertsTwoRows(int r1, int r2, int nbNeighbours) {
 
 bool DetailedPlacer::bestSwap(int c, const std::vector<int> &candidates) {
   long long bestValue = value();
+  bool found = false;
   int bestCandidate = -1;
   for (int candidate : candidates) {
     auto [feasible, val] = valueOnSwap(c, candidate);
     if (feasible && val < bestValue) {
+      found = true;
       bestCandidate = candidate;
     }
   }
-  if (bestCandidate != -1) {
+  if (found) {
     doSwap(c, bestCandidate);
-    return true;
   }
-  return false;
+  return found;
 }
 
 bool DetailedPlacer::bestInsert(int c, int row,
                                 const std::vector<int> &candidates) {
   long long bestValue = value();
+  bool found = false;
   int bestCandidate = -1;
   for (int candidate : candidates) {
     auto [feasible, val] = valueOnInsert(c, row, candidate);
     if (feasible && val < bestValue) {
+      found = true;
       bestCandidate = candidate;
     }
   }
-  if (bestCandidate != -1) {
+  if (found) {
     doInsert(c, row, bestCandidate);
-    return true;
   }
-  return false;
+  return found;
+}
+
+bool DetailedPlacer::bestSwapUpdate(int &c, int &from, int nbNeighbours) {
+  long long bestValue = value();
+  bool found = false;
+  int bestCandidate = -1;
+  for (int candidate = from; candidate != -1;
+       candidate = placement_.cellNext(candidate)) {
+    auto [feasible, val] = valueOnSwap(c, candidate);
+    if (feasible && val < bestValue) {
+      found = true;
+      bestCandidate = candidate;
+    }
+  }
+  for (int candidate = from; candidate != -1;
+       candidate = placement_.cellPred(candidate)) {
+    auto [feasible, val] = valueOnSwap(c, candidate);
+    if (feasible && val < bestValue) {
+      found = true;
+      bestCandidate = candidate;
+    }
+  }
+  if (found) {
+    doSwap(c, bestCandidate);
+    if (bestCandidate == from) from = c;
+    c = bestCandidate;
+  }
+  return found;
 }
 
 std::pair<bool, long long> DetailedPlacer::valueOnSwap(int c1, int c2) {
@@ -175,6 +235,32 @@ std::pair<bool, long long> DetailedPlacer::valueOnInsert(int c, int row,
   long long newValue = value();
   updateCellPos(c, oldP);
   return std::make_pair(true, newValue);
+}
+
+int DetailedPlacer::findCellAfter(int target, int fromCell) const {
+  int c = fromCell;
+  if (c == -1) return c;
+  while (true) {
+    int nextC = placement_.cellNext(c);
+    if (nextC == -1) break;
+    if (placement_.cellX(nextC) > placement_.cellX(target)) break;
+    c = nextC;
+  }
+  return c;
+}
+
+int DetailedPlacer::findCellBefore(int target, int fromCell) const {
+  int c = fromCell;
+  if (c == -1) return c;
+  while (true) {
+    int nextC = placement_.cellPred(c);
+    if (nextC == -1) break;
+    if (placement_.cellX(nextC) + placement_.cellWidth(nextC) <
+        placement_.cellX(target) + placement_.cellWidth(target))
+      break;
+    c = nextC;
+  }
+  return c;
 }
 
 std::vector<int> DetailedPlacer::computeClosestIndexInRow(
