@@ -24,6 +24,7 @@ SET(SOURCES
   src/place_detailed/place_detailed.cpp
   src/place_detailed/detailed_placement.cpp
   src/place_detailed/incr_net_model.cpp
+  src/place_detailed/row_neighbourhood.cpp
 )
 
 add_library(coloquinte SHARED ${SOURCES})

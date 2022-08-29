@@ -8,6 +8,7 @@ SET(TESTS
     test_row_legalizer
     test_incr_net_model
     test_detailed_placement
+    test_row_neighbourhood
 )
 
 FOREACH(TEST IN LISTS TESTS)
