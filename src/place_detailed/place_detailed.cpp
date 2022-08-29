@@ -7,6 +7,7 @@
 #include <unordered_set>
 
 #include "legalizer.hpp"
+#include "row_neighbourhood.hpp"
 
 namespace coloquinte {
 void DetailedPlacer::place(Circuit &circuit, int effort) {
@@ -52,18 +53,21 @@ void DetailedPlacer::runSwaps(int nbRows, int nbNeighbours) {
   for (int i = 0; i < placement_.nbRows(); ++i) {
     runSwapsOneRow(i, nbNeighbours);
   }
-  // Optimize each row with neighbours after it
-  for (int d = 1; d <= nbRows; ++d) {
-    for (int i = 0; i + d < placement_.nbRows(); ++i) {
-      runSwapsTwoRowsAmplify(i, i + d, nbNeighbours);
-    }
+  RowNeighbourhood rowsNeighbours(placement_.rows(), nbNeighbours);
+  //  Optimize each row with neighbours after it
+  for (int i = 0; i < placement_.nbRows(); ++i) {
+    for (int j : rowsNeighbours.rowsAbove(i))
+      runSwapsTwoRowsAmplify(i, j, nbNeighbours);
+    for (int j : rowsNeighbours.rowsRight(i))
+      runSwapsTwoRowsAmplify(i, j, nbNeighbours);
   }
   // Optimize each row with neighbours before it;
   // We do both for symmetry and to allow large cell movements
-  for (int d = 1; d <= nbRows; ++d) {
-    for (int i = placement_.nbRows() - 1; i - d >= 0; --i) {
-      runSwapsTwoRowsAmplify(i, i - d, nbNeighbours);
-    }
+  for (int i = placement_.nbRows() - 1; i >= 1; --i) {
+    for (int j : rowsNeighbours.rowsBelow(i))
+      runSwapsTwoRowsAmplify(i, j, nbNeighbours);
+    for (int j : rowsNeighbours.rowsLeft(i))
+      runSwapsTwoRowsAmplify(i, j, nbNeighbours);
   }
 }
 
