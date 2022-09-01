@@ -8,30 +8,77 @@
 #include "net_model.hpp"
 
 namespace coloquinte {
-void GlobalPlacer::place(Circuit &circuit, int effort) {
-  GlobalPlacer pl(circuit);
-  pl.initParameters();
-  pl.runInitialLB();
-  for (pl.step_ = 1; pl.step_ <= pl.maxNbSteps_; ++pl.step_) {
-    pl.runUB();
-    pl.runLB();
-    std::cout << "#" << pl.step_ << ":\tLB " << pl.valueLB() << "\tUB "
-              << pl.valueUB() << std::endl;
-    pl.updateParameters();
+
+GlobalPlacer::Parameters::Parameters(int effort) {
+  maxNbSteps = 30;
+  gapTolerance = 0.05;
+  penaltyCutoffDistance = 10.0;
+  initialPenalty = 0.02;
+  penaltyUpdateFactor = 1.2;
+  approximationDistance = 0.5;
+  maxNbConjugateGradientSteps = 100;
+  conjugateGradientErrorTolerance = 1.0e-3;
+  check();
+}
+
+void GlobalPlacer::Parameters::check() const {
+  if (maxNbSteps < 0) {
+    throw std::runtime_error("Invalid number of steps");
   }
-  pl.runUB();
+  if (gapTolerance < 0.0f || gapTolerance > 2.0f) {
+    throw std::runtime_error("Invalid gap tolerance");
+  }
+  if (penaltyCutoffDistance < 1.0e-6) {
+    throw std::runtime_error("Too small cutoff distance may lead to issues");
+  }
+  if (initialPenalty <= 0.0f) {
+    throw std::runtime_error("Initial penalty should be positive");
+  }
+  if (penaltyUpdateFactor <= 1.0f || penaltyUpdateFactor >= 2.0f) {
+    throw std::runtime_error("Penalty update factor should be between one and two");
+  }
+  if (approximationDistance < 1.0e-6) {
+    throw std::runtime_error("Too small approximation distance may lead to issues");
+  }
+  if (approximationDistance > 1.0e3) {
+    throw std::runtime_error("Too large approximation distance is highly imprecise");
+  }
+  if (maxNbConjugateGradientSteps <= 0) {
+    throw std::runtime_error("Must have positive number of steps during conjugate gradients");
+  }
+  if (conjugateGradientErrorTolerance < 1.0e-6) {
+    throw std::runtime_error("Too small error tolerance may lead to issues");
+  }
+  if (conjugateGradientErrorTolerance > 1.0) {
+    throw std::runtime_error("Too large error tolerance is highly imprecise");
+  }
+}
+
+void GlobalPlacer::place(Circuit &circuit,
+                         const GlobalPlacer::Parameters &params) {
+  GlobalPlacer pl(circuit, params);
+  pl.run();
   pl.leg_.exportPlacement(circuit);
 }
 
-GlobalPlacer::GlobalPlacer(Circuit &circuit)
+GlobalPlacer::GlobalPlacer(Circuit &circuit,
+                           const GlobalPlacer::Parameters &params)
     : circuit_(circuit),
       leg_(DensityLegalizer::fromIspdCircuit(circuit)),
       xtopo_(NetModel::xTopology(circuit)),
-      ytopo_(NetModel::yTopology(circuit)) {
-  initParameters();
+      ytopo_(NetModel::yTopology(circuit)),
+      params_(params) {
+  averageCellLength_ = computeAverageCellSize();
+  perCellPenalty_ = computePerCellPenalty();
 }
 
-std::vector<float> GlobalPlacer::computeBaseForces() const {
+float GlobalPlacer::computeAverageCellSize() const {
+  float totalDemand = leg_.totalDemand();
+  float avgDemand = totalDemand == 0.0 ? 0.0 : totalDemand / leg_.nbCells();
+  return std::sqrt(avgDemand);
+}
+
+std::vector<float> GlobalPlacer::computePerCellPenalty() const {
   int nbCells = leg_.nbNonEmptyCells();
   float meanArea = leg_.totalDemand() / std::max(1, nbCells);
   std::vector<float> ret;
@@ -41,20 +88,22 @@ std::vector<float> GlobalPlacer::computeBaseForces() const {
   return ret;
 }
 
-void GlobalPlacer::initParameters() {
-  baseForces_ = computeBaseForces();
-  float totalDemand = leg_.totalDemand();
-  float avgDemand = totalDemand == 0.0 ? 0.0 : totalDemand / leg_.nbCells();
-  float avgDist = std::sqrt(avgDemand);
-  epsilon_ = avgDist / 2.0;
-  cutoffDistance_ = avgDist * 10.0;
-  updateFactor_ = 1.2;
-  maxNbSteps_ = 30;
-  forceFactor_ = 0.02;
-  step_ = 0;
+void GlobalPlacer::run() {
+  runInitialLB();
+  penalty_ = params_.initialPenalty;
+  for (step_ = 1; step_ <= params_.maxNbSteps; ++step_) {
+    runUB();
+    float ub = valueUB();
+    runLB();
+    float lb = valueLB();
+    std::cout << "#" << step_ << ":\tLB " << lb << "\tUB " << ub
+              << std::endl;
+    float gap = (ub - lb) / ub;
+    if (gap < params_.gapTolerance) break;
+    penalty_ *= params_.penaltyUpdateFactor;
+  }
+  runUB();
 }
-
-void GlobalPlacer::updateParameters() { forceFactor_ *= updateFactor_; }
 
 float GlobalPlacer::valueLB() const {
   return xtopo_.value(xPlacementLB_) + ytopo_.value(yPlacementLB_);
@@ -70,12 +119,15 @@ void GlobalPlacer::runInitialLB() {
 }
 
 void GlobalPlacer::runLB() {
-  std::vector<float> strength = baseForces_;
-  for (float &s : strength) s *= forceFactor_;
-  xPlacementLB_ = xtopo_.solveB2B(xPlacementLB_, epsilon_, xPlacementUB_,
-                                  strength, cutoffDistance_);
-  yPlacementLB_ = ytopo_.solveB2B(yPlacementLB_, epsilon_, yPlacementUB_,
-                                  strength, cutoffDistance_);
+  std::vector<float> penalty = perCellPenalty_;
+  for (float &s : penalty) s *= penalty_;
+  // TODO: pass other parameters to the solver
+  xPlacementLB_ =
+      xtopo_.solveB2B(xPlacementLB_, approximationDistance(), xPlacementUB_,
+                      penalty, penaltyCutoffDistance());
+  yPlacementLB_ =
+      ytopo_.solveB2B(yPlacementLB_, approximationDistance(), yPlacementUB_,
+                      penalty, penaltyCutoffDistance());
 }
 
 void GlobalPlacer::runUB() {
@@ -85,4 +137,4 @@ void GlobalPlacer::runUB() {
   xPlacementUB_ = leg_.simpleCoordX();
   yPlacementUB_ = leg_.simpleCoordY();
 }
-}
+}  // namespace coloquinte
