@@ -10,7 +10,19 @@
 #include "row_neighbourhood.hpp"
 
 namespace coloquinte {
-void DetailedPlacer::place(Circuit &circuit, int effort) {
+
+DetailedPlacer::Parameters::Parameters(int effort) {
+  nbPasses = effort / 3 + 1;
+  localSearchNbNeighbours = effort / 2 + 1;
+  localSearchNbRows = effort / 2 + 1;
+  shiftNbRows = effort + 2;
+  check();
+}
+
+void DetailedPlacer::Parameters::check() const {
+}
+
+void DetailedPlacer::place(Circuit &circuit, const DetailedPlacer::Parameters &params) {
   std::cout << "Wirelength before legalization: " << circuit.hpwl()
             << std::endl;
   Legalizer leg = Legalizer::fromIspdCircuit(circuit);
@@ -19,11 +31,10 @@ void DetailedPlacer::place(Circuit &circuit, int effort) {
   std::cout << "Wirelength after legalization: " << circuit.hpwl() << std::endl;
   DetailedPlacer pl(circuit);
   pl.check();
-  pl.runShifts(effort + 2);
-  for (int i = 0; i < effort / 3 + 1; ++i) {
-    pl.runSwaps(effort / 2 + 1, effort / 2 + 1);
+  for (int i = 0; i < params.nbPasses; ++i) {
+    pl.runSwaps(params.localSearchNbNeighbours, params.localSearchNbRows);
+    pl.runShifts(params.shiftNbRows);
   }
-  pl.runShifts(effort + 2);
   pl.check();
   pl.placement_.exportPlacement(circuit);
   std::cout << "Wirelength after detailed placement: " << circuit.hpwl()
