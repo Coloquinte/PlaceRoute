@@ -11,6 +11,15 @@ namespace coloquinte {
  */
 class NetModel {
  public:
+  struct Parameters {
+      float approximationDistance;
+      float penaltyCutoffDistance;
+      float tolerance;
+      int maxNbIterations;
+
+      Parameters(float approximationDistance=10.0);
+  };
+
   /**
    * @brief Create the horizontal view of the HPWL model
    */
@@ -122,70 +131,63 @@ class NetModel {
    *
    * @return Positions for the cells that minimize the wirelength
    */
-  std::vector<float> solveStar() const;
+  std::vector<float> solveStar(const Parameters &params=Parameters()) const;
 
   /**
    * @brief Solve using the star model as a local approximation of the actual
    * wirelength
    *
    * @param placement Initial positions to build the approximation
-   * @param epsilon Small approximation parameter
+   * @param params Model parameters
    *
    * @return New positions for the cells
    */
   std::vector<float> solveStar(const std::vector<float> &placement,
-                               float epsilon) const;
+                              const Parameters &params=Parameters()) const;
 
   /**
    * @brief Solve using the star model as a local approximation of the actual
    * wirelength
    *
    * @param netPlacement Initial positions to build the approximation
-   * @param epsilon Small approximation parameter
    * @param placementTarget Target positions to pull the cells
    * @param penaltyStrength Magnitude of the penalty towards the target
    * positions
-   * @param cutoffDistance Cutoff distance where the strength stops growing
    *
    * @return New positions for the cells
    */
   std::vector<float> solveStar(const std::vector<float> &netPlacement,
-                               float epsilon,
                                const std::vector<float> &placementTarget,
                                const std::vector<float> &penaltyStrength,
-                               float cutoffDistance) const;
+                               const Parameters &params=Parameters()) const;
 
   /**
    * @brief Solve using the bound-to-bound model as a local approximation of the
    * actual wirelength
    *
    * @param placement Initial positions to build the approximation
-   * @param epsilon Small approximation parameter
    *
    * @return New positions for the cells
    */
   std::vector<float> solveB2B(const std::vector<float> &placement,
-                              float epsilon) const;
+                              const Parameters &params=Parameters()) const;
 
   /**
    * @brief Solve the bound-to-bound model as a local approximation of the
    * actual wirelength
    *
    * @param netPlacement Initial positions to build the approximation
-   * @param epsilon Small approximation parameter
    * @param placementTarget Target positions to pull the cells
    * @param penaltyStrength Magnitude of the penalty towards the target
    * positions
-   * @param cutoffDistance Cutoff distance where the strength stops growing
    *
    * @return New positions for the cells
    */
 
   std::vector<float> solveB2B(const std::vector<float> &netPlacement,
-                              float epsilon,
                               const std::vector<float> &placementTarget,
                               const std::vector<float> &penaltyStrength,
-                              float cutoffDistance) const;
+                              const Parameters &params=Parameters()) const;
 
   /**
    * @brief Check the consistency of the datastructure

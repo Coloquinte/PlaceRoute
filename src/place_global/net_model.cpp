@@ -6,6 +6,13 @@
 #include <limits>
 
 namespace coloquinte {
+NetModel::Parameters::Parameters(float approximationDistance) {
+  approximationDistance = 10.0;
+  penaltyCutoffDistance = 100.0;
+  tolerance = 1.0e-4;
+  maxNbIterations = 100;
+}
+
 NetModel NetModel::xTopology(const Circuit &circuit) {
   NetModel ret(circuit.nbCells());
   for (int i = 0; i < circuit.nbNets(); ++i) {
@@ -235,7 +242,7 @@ class MatrixCreator {
 
   int addCell(float initialPos);
 
-  std::vector<float> solve();
+  std::vector<float> solve(float tolerance, int maxIterations);
 
   static MatrixCreator createStar(const NetModel &topo);
   static MatrixCreator createStar(const NetModel &topo,
@@ -454,7 +461,7 @@ void MatrixCreator::addB2B(int net, const std::vector<float> &pl,
   }
 }
 
-std::vector<float> MatrixCreator::solve() {
+std::vector<float> MatrixCreator::solve(float tolerance, int maxIterations) {
   check();
   Eigen::SparseMatrix<float> mat(matSize(), matSize());
   mat.setFromTriplets(mat_.begin(), mat_.end());
@@ -463,8 +470,8 @@ std::vector<float> MatrixCreator::solve() {
                                                    initial_.size());
   Eigen::ConjugateGradient<Eigen::SparseMatrix<float> > solver;
   solver.compute(mat);
-  solver.setTolerance(1.0e-6f);
-  solver.setMaxIterations(1000);
+  solver.setTolerance(tolerance);
+  solver.setMaxIterations(maxIterations);
   Eigen::Matrix<float, -1, 1> res = solver.solveWithGuess(rhs, initial);
   // Copy to a std::vector and remove the fake cells
   std::vector<float> ret;
@@ -479,43 +486,44 @@ void MatrixCreator::check() const {
   assert(matSize() == rhs_.size());
 }
 
-std::vector<float> NetModel::solveStar() const {
+std::vector<float> NetModel::solveStar(const Parameters &params) const {
   MatrixCreator builder = MatrixCreator::createStar(*this);
-  return builder.solve();
+  return builder.solve(params.tolerance, params.maxNbIterations);
 }
 
 std::vector<float> NetModel::solveStar(const std::vector<float> &placement,
-                                       float epsilon) const {
-  MatrixCreator builder = MatrixCreator::createStar(*this, placement, epsilon);
-  return builder.solve();
+                                       const Parameters &params) const {
+  MatrixCreator builder =
+      MatrixCreator::createStar(*this, placement, params.approximationDistance);
+  return builder.solve(params.tolerance, params.maxNbIterations);
 }
 
 std::vector<float> NetModel::solveStar(
-    const std::vector<float> &netPlacement, float epsilon,
+    const std::vector<float> &netPlacement,
     const std::vector<float> &placementTarget,
-    const std::vector<float> &penaltyStrength, float cutoffDistance) const {
-  MatrixCreator builder =
-      MatrixCreator::createStar(*this, netPlacement, epsilon);
+    const std::vector<float> &penaltyStrength, const Parameters &params) const {
+  MatrixCreator builder = MatrixCreator::createStar(
+      *this, netPlacement, params.approximationDistance);
   builder.addPenalty(netPlacement, placementTarget, penaltyStrength,
-                     cutoffDistance);
-  return builder.solve();
+                     params.penaltyCutoffDistance);
+  return builder.solve(params.tolerance, params.maxNbIterations);
 }
 
 std::vector<float> NetModel::solveB2B(const std::vector<float> &placement,
-                                      float epsilon) const {
-  MatrixCreator builder = MatrixCreator::createB2B(*this, placement, epsilon);
-  return builder.solve();
+                                      const Parameters &params) const {
+  MatrixCreator builder =
+      MatrixCreator::createB2B(*this, placement, params.approximationDistance);
+  return builder.solve(params.tolerance, params.maxNbIterations);
 }
 
 std::vector<float> NetModel::solveB2B(const std::vector<float> &netPlacement,
-                                      float epsilon,
                                       const std::vector<float> &placementTarget,
                                       const std::vector<float> &penaltyStrength,
-                                      float cutoffDistance) const {
-  MatrixCreator builder =
-      MatrixCreator::createB2B(*this, netPlacement, epsilon);
+                                      const Parameters &params) const {
+  MatrixCreator builder = MatrixCreator::createB2B(
+      *this, netPlacement, params.approximationDistance);
   builder.addPenalty(netPlacement, placementTarget, penaltyStrength,
-                     cutoffDistance);
-  return builder.solve();
+                     params.penaltyCutoffDistance);
+  return builder.solve(params.tolerance, params.maxNbIterations);
 }
-}
+}  // namespace coloquinte

@@ -16,8 +16,8 @@ GlobalPlacer::Parameters::Parameters(int effort) {
   initialPenalty = 0.02;
   penaltyUpdateFactor = 1.2;
   approximationDistance = 0.5;
-  maxNbConjugateGradientSteps = 100;
-  conjugateGradientErrorTolerance = 1.0e-3;
+  maxNbConjugateGradientSteps = 1000;
+  conjugateGradientErrorTolerance = 1.0e-6;
   check();
 }
 
@@ -35,18 +35,22 @@ void GlobalPlacer::Parameters::check() const {
     throw std::runtime_error("Initial penalty should be positive");
   }
   if (penaltyUpdateFactor <= 1.0f || penaltyUpdateFactor >= 2.0f) {
-    throw std::runtime_error("Penalty update factor should be between one and two");
+    throw std::runtime_error(
+        "Penalty update factor should be between one and two");
   }
   if (approximationDistance < 1.0e-6) {
-    throw std::runtime_error("Too small approximation distance may lead to issues");
+    throw std::runtime_error(
+        "Too small approximation distance may lead to issues");
   }
   if (approximationDistance > 1.0e3) {
-    throw std::runtime_error("Too large approximation distance is highly imprecise");
+    throw std::runtime_error(
+        "Too large approximation distance is highly imprecise");
   }
   if (maxNbConjugateGradientSteps <= 0) {
-    throw std::runtime_error("Must have positive number of steps during conjugate gradients");
+    throw std::runtime_error(
+        "Must have positive number of steps during conjugate gradients");
   }
-  if (conjugateGradientErrorTolerance < 1.0e-6) {
+  if (conjugateGradientErrorTolerance < 1.0e-8) {
     throw std::runtime_error("Too small error tolerance may lead to issues");
   }
   if (conjugateGradientErrorTolerance > 1.0) {
@@ -96,8 +100,7 @@ void GlobalPlacer::run() {
     float ub = valueUB();
     runLB();
     float lb = valueLB();
-    std::cout << "#" << step_ << ":\tLB " << lb << "\tUB " << ub
-              << std::endl;
+    std::cout << "#" << step_ << ":\tLB " << lb << "\tUB " << ub << std::endl;
     float gap = (ub - lb) / ub;
     if (gap < params_.gapTolerance) break;
     penalty_ *= params_.penaltyUpdateFactor;
@@ -114,20 +117,25 @@ float GlobalPlacer::valueUB() const {
 }
 
 void GlobalPlacer::runInitialLB() {
-  xPlacementLB_ = xtopo_.solveStar();
-  yPlacementLB_ = ytopo_.solveStar();
+  NetModel::Parameters params;
+  params.tolerance = params_.conjugateGradientErrorTolerance;
+  params.maxNbIterations = params_.maxNbConjugateGradientSteps;
+  xPlacementLB_ = xtopo_.solveStar(params);
+  yPlacementLB_ = ytopo_.solveStar(params);
 }
 
 void GlobalPlacer::runLB() {
   std::vector<float> penalty = perCellPenalty_;
   for (float &s : penalty) s *= penalty_;
-  // TODO: pass other parameters to the solver
+  NetModel::Parameters params;
+  params.approximationDistance = approximationDistance();
+  params.penaltyCutoffDistance = penaltyCutoffDistance();
+  params.tolerance = params_.conjugateGradientErrorTolerance;
+  params.maxNbIterations = params_.maxNbConjugateGradientSteps;
   xPlacementLB_ =
-      xtopo_.solveB2B(xPlacementLB_, approximationDistance(), xPlacementUB_,
-                      penalty, penaltyCutoffDistance());
+      xtopo_.solveB2B(xPlacementLB_, xPlacementUB_, penalty, params);
   yPlacementLB_ =
-      ytopo_.solveB2B(yPlacementLB_, approximationDistance(), yPlacementUB_,
-                      penalty, penaltyCutoffDistance());
+      ytopo_.solveB2B(yPlacementLB_, yPlacementUB_, penalty, params);
 }
 
 void GlobalPlacer::runUB() {
