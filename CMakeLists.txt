@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 PROJECT(COLOQUINTE)
 
 add_subdirectory(thirdparty/lemon)
+add_subdirectory(thirdparty/pybind11)
 
 FIND_PACKAGE(Boost REQUIRED COMPONENTS system filesystem iostreams program_options unit_test_framework)
 FIND_PACKAGE(Eigen3 3.3 REQUIRED NO_MODULE)
@@ -10,6 +11,7 @@ FIND_PACKAGE(Eigen3 3.3 REQUIRED NO_MODULE)
 INCLUDE_DIRECTORIES(
     ${COLOQUINTE_SOURCE_DIR}/src
     ${COLOQUINTE_SOURCE_DIR}/thirdparty/lemon/lemon
+    ${COLOQUINTE_SOURCE_DIR}/thirdparty/pybind11
 )
 
 SET(SOURCES
@@ -27,12 +29,14 @@ SET(SOURCES
   src/place_detailed/row_neighbourhood.cpp
 )
 
-add_library(coloquinte SHARED ${SOURCES})
+add_library(coloquinte STATIC ${SOURCES})
+set_target_properties(coloquinte PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 target_compile_features(coloquinte PRIVATE cxx_std_17)
 target_link_libraries(coloquinte
   ${Boost_LIBRARIES}
   lemon
 )
+add_subdirectory(pycoloquinte)
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     enable_testing()
