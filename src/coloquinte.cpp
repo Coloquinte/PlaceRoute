@@ -3,6 +3,7 @@
 
 #include <boost/polygon/polygon.hpp>
 #include <iostream>
+#include <sstream>
 
 #include "coloquinte.hpp"
 #include "place_detailed/place_detailed.hpp"
@@ -217,6 +218,13 @@ std::vector<Rectangle> Circuit::computeRows() const {
   return ret;
 }
 
+std::string Circuit::toString() const {
+  std::stringstream ss;
+  ss << "Circuit with " << nbCells() << " cells, " << nbNets() << " nets and "
+     << nbPins() << " pins";
+  return ss.str();
+}
+
 void Circuit::check() const {
   assert(cellWidth_.size() == nbCells());
   assert(cellHeight_.size() == nbCells());
@@ -229,14 +237,6 @@ void Circuit::check() const {
   assert(pinCells_.size() == nbPins());
   assert(pinXOffsets_.size() == nbPins());
   assert(pinYOffsets_.size() == nbPins());
-}
-
-void place(Circuit &circuit, int effort) {
-  std::cout << "Placing circuit with " << circuit.nbCells() << " cells, "
-            << circuit.nbNets() << " nets and " << circuit.nbPins() << " pins."
-            << std::endl;
-  GlobalPlacer::place(circuit, effort);
-  DetailedPlacer::place(circuit, effort);
 }
 
 extern "C" {
@@ -280,7 +280,11 @@ int place_ispd(int nb_cells, int nb_nets, int *cell_widths, int *cell_heights,
   }
 
   try {
-    place(circuit, effort);
+    std::cout << "Placing circuit with " << circuit.nbCells() << " cells, "
+              << circuit.nbNets() << " nets and " << circuit.nbPins()
+              << " pins." << std::endl;
+    GlobalPlacer::place(circuit, effort);
+    DetailedPlacer::place(circuit, effort);
   } catch (const std::exception &e) {
     std::cout << "placement terminated with exception: " << e.what()
               << std::endl;

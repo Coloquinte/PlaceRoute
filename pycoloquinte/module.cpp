@@ -38,6 +38,43 @@ PYBIND11_MODULE(pycoloquinte, m) {
       .value("FE", CellOrientation::FE, "Flipped + East")
       .export_values();
 
+  py::class_<GlobalPlacer::Parameters>(m, "GlobalPlacerParameters")
+      .def(py::init<int>(), R"pbdoc(
+Construct the parameters
+
+:param int effort: Effort level
+)pbdoc",
+           py::arg("effort"))
+      .def_readwrite("max_nb_steps", &GlobalPlacer::Parameters::maxNbSteps)
+      .def_readwrite("gap_tolerance", &GlobalPlacer::Parameters::gapTolerance)
+      .def_readwrite("penalty_cutoff_distance",
+                     &GlobalPlacer::Parameters::penaltyCutoffDistance)
+      .def_readwrite("initial_penalty",
+                     &GlobalPlacer::Parameters::initialPenalty)
+      .def_readwrite("penalty_update_factor",
+                     &GlobalPlacer::Parameters::penaltyUpdateFactor)
+      .def_readwrite("approximation_distance",
+                     &GlobalPlacer::Parameters::approximationDistance)
+      .def_readwrite("max_nb_conjugate_gradient_steps",
+                     &GlobalPlacer::Parameters::maxNbConjugateGradientSteps)
+      .def_readwrite(
+          "conjugate_gradient_error_tolerance",
+          &GlobalPlacer::Parameters::conjugateGradientErrorTolerance);
+
+  py::class_<DetailedPlacer::Parameters>(m, "DetailedPlacerParameters")
+      .def(py::init<int>(), R"pbdoc(
+Construct the parameters
+
+:param int effort: Effort level
+)pbdoc",
+           py::arg("effort"))
+      .def_readwrite("nb_passes", &DetailedPlacer::Parameters::nbPasses)
+      .def_readwrite("local_search_nb_neighbours",
+                     &DetailedPlacer::Parameters::localSearchNbNeighbours)
+      .def_readwrite("local_search_nb_rows",
+                     &DetailedPlacer::Parameters::localSearchNbRows)
+      .def_readwrite("shift_nb_rows", &DetailedPlacer::Parameters::shiftNbRows);
+
   py::class_<Circuit>(m, "Circuit")
       .def(py::init<int>(), R"pbdoc(
 Construct a circuit.
@@ -63,9 +100,11 @@ Construct a circuit.
                     "Fixed status flag of the cells")
       .def_property("cell_orientation", &Circuit::cellOrientation,
                     &Circuit::setCellOrientation, "Orientation of the cells")
-      .def_property("rows", &Circuit::rows,
-                    &Circuit::setRows, "Standard cell rows")
+      .def_property("rows", &Circuit::rows, &Circuit::setRows,
+                    "Standard cell rows")
       .def("add_net", &Circuit::addNet, "Add a net to the circuit")
       .def("hpwl", &Circuit::hpwl, "Compute the half-perimeter wirelength")
-      .def("check", &Circuit::check, "Check the datastructure");
+      .def("check", &Circuit::check, "Check the datastructure")
+      .def("__str__", &Circuit::toString)
+      .def("__repr__", &Circuit::toString);
 }

@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <vector>
+#include <string>
 
 namespace coloquinte {
 /**
@@ -294,6 +295,11 @@ class Circuit {
   long long hpwl() const;
 
   /**
+   * @brief Return a brief description of the circuit
+   */
+  std::string toString() const;
+
+  /**
    * @brief Check the consistency of the datastructure
    */
   void check() const;
@@ -311,11 +317,6 @@ class Circuit {
   std::vector<CellOrientation> cellOrientation_;
   std::vector<Rectangle> rows_;
 };
-
-/**
- * @brief Run the whole placement algorithm
- */
-void place(Circuit &circuit, int effort);
 
 extern "C" {
 /**
