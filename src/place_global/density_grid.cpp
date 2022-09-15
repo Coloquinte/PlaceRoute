@@ -39,7 +39,7 @@ DensityGrid DensityGrid::fromIspdCircuit(const Circuit &circuit,
     obstacles.emplace_back(x, x + circuit.cellWidth_[i], y,
                            y + circuit.cellHeight_[i]);
   }
-  return DensityGrid(sizeFactor * minCellHeight, circuit.rows, obstacles);
+  return DensityGrid(sizeFactor * minCellHeight, circuit.rows_, obstacles);
 }
 
 DensityGrid::DensityGrid(std::vector<int> xLimits, std::vector<int> yLimits,

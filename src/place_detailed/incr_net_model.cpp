@@ -25,7 +25,7 @@ IncrNetModel IncrNetModel::xTopology(const Circuit &circuit) {
   for (int i = 0; i < circuit.nbNets(); ++i) {
     std::vector<int> cells;
     std::vector<int> offsets;
-    for (int j = 0; j < circuit.nbPins(i); ++j) {
+    for (int j = 0; j < circuit.nbPinsNet(i); ++j) {
       int cell = circuit.pinCell(i, j);
       int offset = circuit.pinXOffset(i, j);
       cells.push_back(cell);
@@ -41,7 +41,7 @@ IncrNetModel IncrNetModel::yTopology(const Circuit &circuit) {
   for (int i = 0; i < circuit.nbNets(); ++i) {
     std::vector<int> cells;
     std::vector<int> offsets;
-    for (int j = 0; j < circuit.nbPins(i); ++j) {
+    for (int j = 0; j < circuit.nbPinsNet(i); ++j) {
       int cell = circuit.pinCell(i, j);
       int offset = circuit.pinYOffset(i, j);
       cells.push_back(cell);
@@ -56,7 +56,7 @@ void IncrNetModel::exportPlacementX(Circuit &circuit) const {
   assert(circuit.nbCells() == nbCells());
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (!circuit.fixed(i)) {
-      circuit.setCellX(i, cellPos_[i]);
+      circuit.cellX_[i] = cellPos_[i];
     }
   }
 }
@@ -65,7 +65,7 @@ void IncrNetModel::exportPlacementY(Circuit &circuit) const {
   assert(circuit.nbCells() == nbCells());
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (!circuit.fixed(i)) {
-      circuit.setCellY(i, cellPos_[i]);
+      circuit.cellY_[i] = cellPos_[i];
     }
   }
 }

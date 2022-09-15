@@ -20,8 +20,21 @@ Circuit::Circuit(int nbCells) {
   cellX_.resize(nbCells);
   cellY_.resize(nbCells);
   cellOrientation_.resize(nbCells);
-  netLimits.push_back(0);
+  netLimits_.push_back(0);
   check();
+}
+
+void Circuit::addNet(const std::vector<int> &cells,
+                     const std::vector<int> &xOffsets,
+                     const std::vector<int> &yOffsets) {
+  if (cells.size() != xOffsets.size() || cells.size() != yOffsets.size()) {
+    throw std::runtime_error("Inconsistent number of pins for the net");
+  }
+  if (cells.empty()) return;
+  netLimits_.push_back(netLimits_.back() + cells.size());
+  pinCells_.insert(pinCells_.end(), cells.begin(), cells.end());
+  pinXOffsets_.insert(pinXOffsets_.end(), xOffsets.begin(), xOffsets.end());
+  pinYOffsets_.insert(pinYOffsets_.end(), yOffsets.begin(), yOffsets.end());
 }
 
 void Circuit::setNets(const std::vector<int> &limits,
@@ -33,20 +46,74 @@ void Circuit::setNets(const std::vector<int> &limits,
   assert(limits.back() == cells.size());
   assert(limits.back() == xOffsets.size());
   assert(limits.back() == yOffsets.size());
-  netLimits = limits;
-  pinCells = cells;
-  pinXOffsets = xOffsets;
-  pinYOffsets = yOffsets;
+  netLimits_ = limits;
+  pinCells_ = cells;
+  pinXOffsets_ = xOffsets;
+  pinYOffsets_ = yOffsets;
 }
 
-int Circuit::width(int cell) const {
+void Circuit::setCellX(const std::vector<int> &x) {
+  if (x.size() != nbCells()) {
+    throw std::runtime_error(
+        "Number of elements is not the same as the number of cells of the "
+        "circuit");
+  }
+  cellX_ = x;
+}
+
+void Circuit::setCellY(const std::vector<int> &y) {
+  if (y.size() != nbCells()) {
+    throw std::runtime_error(
+        "Number of elements is not the same as the number of cells of the "
+        "circuit");
+  }
+  cellY_ = y;
+}
+
+void Circuit::setCellFixed(const std::vector<bool> &f) {
+  if (f.size() != nbCells()) {
+    throw std::runtime_error(
+        "Number of elements is not the same as the number of cells of the "
+        "circuit");
+  }
+  cellFixed_ = f;
+}
+
+void Circuit::setCellOrientation(const std::vector<CellOrientation> &orient) {
+  if (orient.size() != nbCells()) {
+    throw std::runtime_error(
+        "Number of elements is not the same as the number of cells of the "
+        "circuit");
+  }
+  cellOrientation_ = orient;
+}
+
+void Circuit::setCellWidth(const std::vector<int> &widths) {
+  if (widths.size() != nbCells()) {
+    throw std::runtime_error(
+        "Number of elements is not the same as the number of cells of the "
+        "circuit");
+  }
+  cellWidth_ = widths;
+}
+
+void Circuit::setCellHeight(const std::vector<int> &heights) {
+  if (heights.size() != nbCells()) {
+    throw std::runtime_error(
+        "Number of elements is not the same as the number of cells of the "
+        "circuit");
+  }
+  cellHeight_ = heights;
+}
+
+int Circuit::placedWidth(int cell) const {
   CellOrientation orient = orientation(cell);
   bool turned = orient == CellOrientation::E || orient == CellOrientation::W ||
                 orient == CellOrientation::FW || orient == CellOrientation::FE;
   return turned ? cellHeight_[cell] : cellWidth_[cell];
 }
 
-int Circuit::height(int cell) const {
+int Circuit::placedHeight(int cell) const {
   CellOrientation orient = orientation(cell);
   bool turned = orient == CellOrientation::E || orient == CellOrientation::W ||
                 orient == CellOrientation::FW || orient == CellOrientation::FE;
@@ -58,11 +125,11 @@ int Circuit::pinXOffset(int net, int i) const {
   CellOrientation orient = orientation(cell);
   bool turned = orient == CellOrientation::E || orient == CellOrientation::W ||
                 orient == CellOrientation::FW || orient == CellOrientation::FE;
-  int offs = turned ? pinYOffsets[netLimits[net] + i]
-                    : pinXOffsets[netLimits[net] + i];
+  int offs = turned ? pinYOffsets_[netLimits_[net] + i]
+                    : pinXOffsets_[netLimits_[net] + i];
   bool flipped = orient == CellOrientation::S || orient == CellOrientation::W ||
                  orient == CellOrientation::FN || orient == CellOrientation::FE;
-  return flipped ? width(cell) - offs : offs;
+  return flipped ? placedWidth(cell) - offs : offs;
 }
 
 int Circuit::pinYOffset(int net, int i) const {
@@ -70,24 +137,24 @@ int Circuit::pinYOffset(int net, int i) const {
   CellOrientation orient = orientation(cell);
   bool turned = orient == CellOrientation::E || orient == CellOrientation::W ||
                 orient == CellOrientation::FW || orient == CellOrientation::FE;
-  int offs = turned ? pinXOffsets[netLimits[net] + i]
-                    : pinYOffsets[netLimits[net] + i];
+  int offs = turned ? pinXOffsets_[netLimits_[net] + i]
+                    : pinYOffsets_[netLimits_[net] + i];
   bool flipped = orient == CellOrientation::S || orient == CellOrientation::E ||
                  orient == CellOrientation::FS || orient == CellOrientation::FE;
-  return flipped ? height(cell) - offs : offs;
+  return flipped ? placedHeight(cell) - offs : offs;
 }
 
 long long Circuit::hpwl() const {
   long long ret = 0;
   for (int net = 0; net < nbNets(); ++net) {
-    if (nbPins(net) == 0) {
+    if (nbPinsNet(net) == 0) {
       continue;
     }
     int minX = std::numeric_limits<int>::max();
     int maxX = std::numeric_limits<int>::min();
     int minY = std::numeric_limits<int>::max();
     int maxY = std::numeric_limits<int>::min();
-    for (int pin = 0; pin < nbPins(net); ++pin) {
+    for (int pin = 0; pin < nbPinsNet(net); ++pin) {
       int cell = pinCell(net, pin);
       int px = x(cell) + pinXOffset(net, pin);
       int py = y(cell) + pinYOffset(net, pin);
@@ -107,10 +174,10 @@ Rectangle Circuit::computePlacementArea() const {
   int maxX = std::numeric_limits<int>::min();
   int minY = std::numeric_limits<int>::max();
   int maxY = std::numeric_limits<int>::min();
-  if (rows.empty()) {
+  if (rows_.empty()) {
     return Rectangle(0, 0, 0, 0);
   }
-  for (Rectangle row : rows) {
+  for (Rectangle row : rows_) {
     minX = std::min(row.minX, minX);
     maxX = std::max(row.maxX, maxX);
     minY = std::min(row.minY, minY);
@@ -123,10 +190,11 @@ std::vector<Rectangle> Circuit::computeRows() const {
   std::vector<Rectangle> obstacles;
   for (int i = 0; i < nbCells(); ++i) {
     if (!fixed(i)) continue;
-    obstacles.emplace_back(x(i), x(i) + width(i), y(i), y(i) + height(i));
+    obstacles.emplace_back(x(i), x(i) + placedWidth(i), y(i),
+                           y(i) + placedHeight(i));
   }
   std::vector<Rectangle> ret;
-  for (Rectangle row : rows) {
+  for (Rectangle row : rows_) {
     bpl::polygon_90_set_data<int> row_set;
     row_set.insert(
         bpl::rectangle_data<int>(row.minX, row.minY, row.maxX, row.maxY));
@@ -156,11 +224,11 @@ void Circuit::check() const {
   assert(cellX_.size() == nbCells());
   assert(cellY_.size() == nbCells());
   assert(cellOrientation_.size() == nbCells());
-  assert(!netLimits.empty());
-  assert(netLimits.front() == 0);
-  assert(pinCells.size() == nbPins());
-  assert(pinXOffsets.size() == nbPins());
-  assert(pinYOffsets.size() == nbPins());
+  assert(!netLimits_.empty());
+  assert(netLimits_.front() == 0);
+  assert(pinCells_.size() == nbPins());
+  assert(pinXOffsets_.size() == nbPins());
+  assert(pinYOffsets_.size() == nbPins());
 }
 
 void place(Circuit &circuit, int effort) {
@@ -180,25 +248,26 @@ int place_ispd(int nb_cells, int nb_nets, int *cell_widths, int *cell_heights,
   Circuit circuit(nb_cells);
 
   try {
-    circuit.cellWidth(std::vector<int>(cell_widths, cell_widths + nb_cells));
-    circuit.cellHeight(std::vector<int>(cell_heights, cell_heights + nb_cells));
+    circuit.setCellWidth(std::vector<int>(cell_widths, cell_widths + nb_cells));
+    circuit.setCellHeight(
+        std::vector<int>(cell_heights, cell_heights + nb_cells));
     std::vector<bool> cell_fixed_vec;
     for (char *f = cell_fixed; f != cell_fixed + nb_cells; ++f) {
       cell_fixed_vec.push_back(*f);
     }
-    circuit.cellFixed(cell_fixed_vec);
+    circuit.setCellFixed(cell_fixed_vec);
     int nb_pins = net_limits[nb_nets];
     circuit.setNets(std::vector<int>(net_limits, net_limits + nb_nets + 1),
                     std::vector<int>(pin_cells, pin_cells + nb_pins),
                     std::vector<int>(pin_x_offsets, pin_x_offsets + nb_pins),
                     std::vector<int>(pin_y_offsets, pin_y_offsets + nb_pins));
-    circuit.cellX(std::vector<int>(cell_x, cell_x + nb_cells));
-    circuit.cellY(std::vector<int>(cell_y, cell_y + nb_cells));
+    circuit.setCellX(std::vector<int>(cell_x, cell_x + nb_cells));
+    circuit.setCellY(std::vector<int>(cell_y, cell_y + nb_cells));
     std::vector<CellOrientation> orient;
     for (int i = 0; i < nb_cells; ++i) {
       orient.push_back(static_cast<CellOrientation>(cell_orientation[i]));
     }
-    circuit.cellOrientation(orient);
+    circuit.setCellOrientation(orient);
     std::vector<Rectangle> rows;
     for (int i = 0; i < nb_rows; ++i) {
       rows.emplace_back(row_min_x[i], row_max_x[i], row_min_y[i], row_max_y[i]);

@@ -20,7 +20,7 @@ NetModel NetModel::xTopology(const Circuit &circuit) {
     float maxPos = -std::numeric_limits<float>::infinity();
     std::vector<int> cells;
     std::vector<float> offsets;
-    for (int j = 0; j < circuit.nbPins(i); ++j) {
+    for (int j = 0; j < circuit.nbPinsNet(i); ++j) {
       int cell = circuit.pinCell(i, j);
       int offset = circuit.pinXOffset(i, j);
       if (circuit.fixed(cell)) {
@@ -30,7 +30,7 @@ NetModel NetModel::xTopology(const Circuit &circuit) {
       } else {
         cells.push_back(cell);
         // Offset to center of cell instead of lower-left
-        offsets.push_back(offset - 0.5f * circuit.width(cell));
+        offsets.push_back(offset - 0.5f * circuit.placedWidth(cell));
       }
     }
     ret.addNet(cells, offsets, minPos, maxPos);
@@ -46,7 +46,7 @@ NetModel NetModel::yTopology(const Circuit &circuit) {
     float maxPos = -std::numeric_limits<float>::infinity();
     std::vector<int> cells;
     std::vector<float> offsets;
-    for (int j = 0; j < circuit.nbPins(i); ++j) {
+    for (int j = 0; j < circuit.nbPinsNet(i); ++j) {
       int cell = circuit.pinCell(i, j);
       int offset = circuit.pinYOffset(i, j);
       if (circuit.fixed(cell)) {
@@ -56,7 +56,7 @@ NetModel NetModel::yTopology(const Circuit &circuit) {
       } else {
         cells.push_back(cell);
         // Offset to center of cell instead of lower-left
-        offsets.push_back(offset - 0.5f * circuit.height(cell));
+        offsets.push_back(offset - 0.5f * circuit.placedHeight(cell));
       }
     }
     ret.addNet(cells, offsets, minPos, maxPos);
@@ -71,7 +71,7 @@ void NetModel::exportPlacementX(Circuit &circuit,
   assert(circuit.nbCells() == nbCells());
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (!circuit.fixed(i)) {
-      circuit.setCellX(i, std::round(xplace[i] - 0.5f * circuit.width(i)));
+      circuit.cellX_[i] = std::round(xplace[i] - 0.5f * circuit.placedWidth(i));
     }
   }
 }
@@ -82,7 +82,7 @@ void NetModel::exportPlacementY(Circuit &circuit,
   assert(circuit.nbCells() == nbCells());
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (!circuit.fixed(i)) {
-      circuit.setCellY(i, std::round(yplace[i] - 0.5f * circuit.height(i)));
+      circuit.cellY_[i] = std::round(yplace[i] - 0.5f * circuit.placedHeight(i));
     }
   }
 }
