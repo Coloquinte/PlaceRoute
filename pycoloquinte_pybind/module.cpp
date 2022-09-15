@@ -10,7 +10,7 @@ using namespace coloquinte;
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(pycoloquinte, m) {
+PYBIND11_MODULE(coloquinte_pybind, m) {
   m.doc() = R"pbdoc(
         Coloquinte VLSI placer
         -----------------------
@@ -37,6 +37,17 @@ PYBIND11_MODULE(pycoloquinte, m) {
       .value("FW", CellOrientation::FW, "Flipped + West")
       .value("FE", CellOrientation::FE, "Flipped + East")
       .export_values();
+
+  py::class_<Rectangle>(m, "Rectangle")
+      .def(py::init<int, int, int, int>(), R"pbdoc(
+        Construct a rectangle
+)pbdoc",
+           py::arg("min_x"), py::arg("max_x"), py::arg("min_y"),
+           py::arg("max_y"))
+      .def_readwrite("min_x", &Rectangle::minX)
+      .def_readwrite("max_x", &Rectangle::maxX)
+      .def_readwrite("min_y", &Rectangle::minY)
+      .def_readwrite("max_y", &Rectangle::maxY);
 
   py::class_<GlobalPlacer::Parameters>(m, "GlobalPlacerParameters")
       .def(py::init<int>(), R"pbdoc(
@@ -88,9 +99,9 @@ Construct a circuit.
                              "Number of standard cell rows")
       .def_property_readonly("nb_pins", &Circuit::nbPins,
                              "Total number of pins")
-      .def_property("cell_x", &Circuit::setCellX, &Circuit::setCellX,
+      .def_property("cell_x", &Circuit::cellX, &Circuit::setCellX,
                     "X position of the cells")
-      .def_property("cell_y", &Circuit::setCellY, &Circuit::setCellY,
+      .def_property("cell_y", &Circuit::cellY, &Circuit::setCellY,
                     "Y position of the cells")
       .def_property("cell_width", &Circuit::cellWidth, &Circuit::setCellWidth,
                     "Width of the cells")

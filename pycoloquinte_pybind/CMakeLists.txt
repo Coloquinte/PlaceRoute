@@ -1,3 +1,3 @@
 
-pybind11_add_module(pycoloquinte_pybind module.cpp)
-target_link_libraries(pycoloquinte_pybind PRIVATE coloquinte ${Boost_LIBRARIES})
+pybind11_add_module(coloquinte_pybind module.cpp)
+target_link_libraries(coloquinte_pybind PRIVATE coloquinte ${Boost_LIBRARIES})

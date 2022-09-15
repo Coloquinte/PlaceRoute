@@ -1,3 +1,7 @@
 build/
 pycoloquinte/__pycache__
+pycoloquinte/coloquinte_pybind.egg-info/
+pycoloquinte/dist/
+pycoloquinte_pybind/coloquinte_pybind.egg-info/
+pycoloquinte_pybind/dist/
 .vscode
