@@ -10,13 +10,13 @@
 namespace coloquinte {
 Legalizer Legalizer::fromIspdCircuit(const Circuit &circuit) {
   // Represent fixed cells with -1 width so they are not considered
-  std::vector<int> widths = circuit.cellWidths;
+  std::vector<int> widths = circuit.cellWidth_;
   for (int i = 0; i < circuit.nbCells(); ++i) {
-    if (circuit.cellFixed[i]) {
+    if (circuit.cellFixed_[i]) {
       widths[i] = -1;
     }
   }
-  return Legalizer(circuit.computeRows(), widths, circuit.cellX, circuit.cellY);
+  return Legalizer(circuit.computeRows(), widths, circuit.cellX_, circuit.cellY_);
 }
 
 Legalizer::Legalizer(const std::vector<Rectangle> &rows,
@@ -239,8 +239,8 @@ void Legalizer::exportPlacement(Circuit &circuit) {
   std::vector<int> cellY = cellLegalY();
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (isIgnored(i)) continue;
-    circuit.cellX[i] = cellX[i];
-    circuit.cellY[i] = cellY[i];
+    circuit.cellX_[i] = cellX[i];
+    circuit.cellY_[i] = cellY[i];
   }
 }
 

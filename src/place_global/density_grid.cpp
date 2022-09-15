@@ -26,7 +26,7 @@ DensityGrid DensityGrid::fromIspdCircuit(const Circuit &circuit,
                                          float sizeFactor) {
   int minCellHeight = std::numeric_limits<int>::max();
   for (int i = 0; i < circuit.nbCells(); ++i) {
-    int height = circuit.cellHeights[i];
+    int height = circuit.cellHeight_[i];
     if (height > 0) {
       minCellHeight = std::min(height, minCellHeight);
     }
@@ -34,10 +34,10 @@ DensityGrid DensityGrid::fromIspdCircuit(const Circuit &circuit,
   std::vector<Rectangle> obstacles;
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (!circuit.fixed(i)) continue;
-    int x = circuit.cellX[i];
-    int y = circuit.cellY[i];
-    obstacles.emplace_back(x, x + circuit.cellWidths[i], y,
-                           y + circuit.cellHeights[i]);
+    int x = circuit.cellX_[i];
+    int y = circuit.cellY_[i];
+    obstacles.emplace_back(x, x + circuit.cellWidth_[i], y,
+                           y + circuit.cellHeight_[i]);
   }
   return DensityGrid(sizeFactor * minCellHeight, circuit.rows, obstacles);
 }

@@ -33,7 +33,7 @@ IncrNetModel IncrNetModel::xTopology(const Circuit &circuit) {
     }
     ret.addNet(cells, offsets);
   }
-  return ret.build(circuit.cellX);
+  return ret.build(circuit.cellX_);
 }
 
 IncrNetModel IncrNetModel::yTopology(const Circuit &circuit) {
@@ -49,7 +49,7 @@ IncrNetModel IncrNetModel::yTopology(const Circuit &circuit) {
     }
     ret.addNet(cells, offsets);
   }
-  return ret.build(circuit.cellY);
+  return ret.build(circuit.cellY_);
 }
 
 void IncrNetModel::exportPlacementX(Circuit &circuit) const {

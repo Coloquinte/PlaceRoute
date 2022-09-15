@@ -7,21 +7,21 @@ namespace coloquinte {
 
 DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit) {
   // Represent fixed cells with -1 width so they are not considered
-  std::vector<int> widths = circuit.cellWidths;
+  std::vector<int> widths = circuit.cellWidth_;
   for (int i = 0; i < circuit.nbCells(); ++i) {
-    if (circuit.cellFixed[i]) {
+    if (circuit.cellFixed_[i]) {
       widths[i] = -1;
     }
   }
-  return DetailedPlacement(circuit.computeRows(), widths, circuit.cellX,
-                           circuit.cellY);
+  return DetailedPlacement(circuit.computeRows(), widths, circuit.cellX_,
+                           circuit.cellY_);
 }
 
 void DetailedPlacement::exportPlacement(Circuit &circuit) {
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (circuit.fixed(i)) continue;
-    circuit.cellX[i] = cellX(i);
-    circuit.cellY[i] = cellY(i);
+    circuit.cellX_[i] = cellX(i);
+    circuit.cellY_[i] = cellY(i);
   }
 }
 

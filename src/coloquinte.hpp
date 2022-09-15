@@ -98,7 +98,7 @@ class Circuit {
   /**
    * @brief Return the number of cells
    */
-  int nbCells() const { return cellWidths.size(); }
+  int nbCells() const { return cellWidth_.size(); }
 
   /**
    * @brief Return the number of nets
@@ -116,13 +116,114 @@ class Circuit {
   int nbPins() const { return netLimits.back(); }
 
   /**
-   * @brief Return the number of pins for a given net
-   *
+   * @brief Set the x position for all cells
    */
-  int nbPins(int net) const {
-    assert(net < nbNets());
-    return netLimits[net + 1] - netLimits[net];
+  const std::vector<int> &cellX() const { return cellX_; }
+
+  /**
+   * @brief Set the x position for all cells
+   */
+  void cellX(const std::vector<int> &x) {
+    assert(x.size() == nbCells());
+    cellX_ = x;
   }
+
+  /**
+   * @brief Get the y position for all cells
+   */
+  const std::vector<int> &cellY() const { return cellY_; }
+
+  /**
+   * @brief Set the y position for all cells
+   */
+  void cellY(const std::vector<int> &y) {
+    assert(y.size() == nbCells());
+    cellY_ = y;
+  }
+
+  /**
+   * @brief Get the fixed status for all cells
+   */
+  const std::vector<bool> &cellFixed() const { return cellFixed_; }
+
+  /**
+   * @brief Set the fixed status for all cells
+   */
+  void cellFixed(const std::vector<bool> &f) {
+    assert(f.size() == nbCells());
+    cellFixed_ = f;
+  }
+
+  /**
+   * @brief Get the orientation for all cells
+   */
+  const std::vector<CellOrientation> &cellOrientation() const {
+    return cellOrientation_;
+  }
+
+  /**
+   * @brief Set the orientation for all cells
+   */
+  void cellOrientation(const std::vector<CellOrientation> &orient) {
+    assert(orient.size() == nbCells());
+    cellOrientation_ = orient;
+  }
+
+  /**
+   * @brief Get the width for all cells
+   */
+  const std::vector<int> &cellWidth() const { return cellWidth_; }
+
+  /**
+   * @brief Set the width for all cells
+   */
+  void cellWidth(const std::vector<int> &widths) {
+    assert(widths.size() == nbCells());
+    cellWidth_ = widths;
+  }
+
+  /**
+   * @brief Get the height for all cells
+   */
+  const std::vector<int> &cellHeight() const { return cellHeight_; }
+
+  /**
+   * @brief Set the height for all cells
+   */
+  void cellHeight(const std::vector<int> &heights) {
+    assert(heights.size() == nbCells());
+    cellHeight_ = heights;
+  }
+
+  /**
+   * @brief Add a single net
+   */
+  void addNet(const std::vector<int> &cells, const std::vector<int> &xOffsets,
+              const std::vector<int> &yOffsets);
+
+  /**
+   * @brief Set all nets
+   */
+  void setNets(const std::vector<int> &limits, const std::vector<int> &cells,
+               const std::vector<int> &xOffsets,
+               const std::vector<int> &yOffsets);
+
+  /**
+   * @brief Set all rows
+   */
+  void setRows(const std::vector<Rectangle> &r) { rows = r; }
+
+  /**
+   * @brief Return a bounding box of the placement area
+   */
+  Rectangle computePlacementArea() const;
+
+  /**
+   * @brief Return the rows after removing the obstacles
+   */
+  std::vector<Rectangle> computeRows() const;
+
+
 
   /**
    * @brief Return the current width of the cell (depends on its orientation)
@@ -139,7 +240,7 @@ class Circuit {
    */
   int x(int cell) const {
     assert(cell < nbCells());
-    return cellX[cell];
+    return cellX_[cell];
   }
 
   /**
@@ -147,7 +248,7 @@ class Circuit {
    */
   int y(int cell) const {
     assert(cell < nbCells());
-    return cellY[cell];
+    return cellY_[cell];
   }
 
   /**
@@ -155,7 +256,7 @@ class Circuit {
    */
   CellOrientation orientation(int cell) const {
     assert(cell < nbCells());
-    return cellOrientation[cell];
+    return cellOrientation_[cell];
   }
 
   /**
@@ -163,7 +264,7 @@ class Circuit {
    */
   bool fixed(int cell) const {
     assert(cell < nbCells());
-    return cellFixed[cell];
+    return cellFixed_[cell];
   }
 
   /**
@@ -171,8 +272,17 @@ class Circuit {
    */
   long long area(int cell) const {
     assert(cell < nbCells());
-    return static_cast<long long>(cellWidths[cell]) *
-           static_cast<long long>(cellHeights[cell]);
+    return static_cast<long long>(cellWidth_[cell]) *
+           static_cast<long long>(cellHeight_[cell]);
+  }
+
+  /**
+   * @brief Return the number of pins for a given net
+   *
+   */
+  int nbPins(int net) const {
+    assert(net < nbNets());
+    return netLimits[net + 1] - netLimits[net];
   }
 
   /**
@@ -201,88 +311,18 @@ class Circuit {
   /**
    * @brief Set the x position for a cell
    */
-  void setCellX(int cell, float pos) {
+  void setCellX(int cell, int pos) {
     assert(cell < nbCells());
-    cellX[cell] = pos;
+    cellX_[cell] = pos;
   }
 
   /**
    * @brief Set the y position for a cell
    */
-  void setCellY(int cell, float pos) {
+  void setCellY(int cell, int pos) {
     assert(cell < nbCells());
-    cellY[cell] = pos;
+    cellY_[cell] = pos;
   }
-
-  /**
-   * @brief Set the x position for all cells
-   */
-  void setCellX(const std::vector<int> &x) {
-    assert(x.size() == nbCells());
-    cellX = x;
-  }
-
-  /**
-   * @brief Set the y position for all cells
-   */
-  void setCellY(const std::vector<int> &y) {
-    assert(y.size() == nbCells());
-    cellY = y;
-  }
-
-  /**
-   * @brief Set the fixed status for all cells
-   */
-  void setCellFixed(const std::vector<char> &f) {
-    assert(f.size() == nbCells());
-    cellFixed = f;
-  }
-
-  /**
-   * @brief Set the orientation for all cells
-   */
-  void setOrientation(const std::vector<CellOrientation> &orient) {
-    assert(orient.size() == nbCells());
-    cellOrientation = orient;
-  }
-
-  /**
-   * @brief Set the width for all cells
-   */
-  void setCellWidths(const std::vector<int> &widths) {
-    assert(widths.size() == nbCells());
-    cellWidths = widths;
-  }
-
-  /**
-   * @brief Set the height for all cells
-   */
-  void setCellHeights(const std::vector<int> &heights) {
-    assert(heights.size() == nbCells());
-    cellHeights = heights;
-  }
-
-  /**
-   * @brief Set all nets
-   */
-  void setNets(const std::vector<int> &limits, const std::vector<int> &cells,
-               const std::vector<int> &xOffsets,
-               const std::vector<int> &yOffsets);
-
-  /**
-   * @brief Set all rows
-   */
-  void setRows(const std::vector<Rectangle> &r) { rows = r; }
-
-  /**
-   * @brief Return a bounding box of the placement area
-   */
-  Rectangle computePlacementArea() const;
-
-  /**
-   * @brief Return the rows after removing the obstacles
-   */
-  std::vector<Rectangle> computeRows() const;
 
   /**
    * @brief Check the consistency of the datastructure
@@ -290,16 +330,16 @@ class Circuit {
   void check() const;
 
  public:
-  std::vector<int> cellWidths;
-  std::vector<int> cellHeights;
-  std::vector<char> cellFixed;
   std::vector<int> netLimits;
   std::vector<int> pinCells;
   std::vector<int> pinXOffsets;
   std::vector<int> pinYOffsets;
-  std::vector<int> cellX;
-  std::vector<int> cellY;
-  std::vector<CellOrientation> cellOrientation;
+  std::vector<int> cellWidth_;
+  std::vector<int> cellHeight_;
+  std::vector<bool> cellFixed_;
+  std::vector<int> cellX_;
+  std::vector<int> cellY_;
+  std::vector<CellOrientation> cellOrientation_;
   std::vector<Rectangle> rows;
 };
 

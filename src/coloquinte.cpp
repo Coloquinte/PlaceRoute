@@ -14,12 +14,12 @@ namespace bpl = boost::polygon;
 namespace coloquinte {
 
 Circuit::Circuit(int nbCells) {
-  cellWidths.resize(nbCells);
-  cellHeights.resize(nbCells);
-  cellFixed.resize(nbCells);
-  cellX.resize(nbCells);
-  cellY.resize(nbCells);
-  cellOrientation.resize(nbCells);
+  cellWidth_.resize(nbCells);
+  cellHeight_.resize(nbCells);
+  cellFixed_.resize(nbCells);
+  cellX_.resize(nbCells);
+  cellY_.resize(nbCells);
+  cellOrientation_.resize(nbCells);
   netLimits.push_back(0);
   check();
 }
@@ -43,14 +43,14 @@ int Circuit::width(int cell) const {
   CellOrientation orient = orientation(cell);
   bool turned = orient == CellOrientation::E || orient == CellOrientation::W ||
                 orient == CellOrientation::FW || orient == CellOrientation::FE;
-  return turned ? cellHeights[cell] : cellWidths[cell];
+  return turned ? cellHeight_[cell] : cellWidth_[cell];
 }
 
 int Circuit::height(int cell) const {
   CellOrientation orient = orientation(cell);
   bool turned = orient == CellOrientation::E || orient == CellOrientation::W ||
                 orient == CellOrientation::FW || orient == CellOrientation::FE;
-  return turned ? cellWidths[cell] : cellHeights[cell];
+  return turned ? cellWidth_[cell] : cellHeight_[cell];
 }
 
 int Circuit::pinXOffset(int net, int i) const {
@@ -150,12 +150,12 @@ std::vector<Rectangle> Circuit::computeRows() const {
 }
 
 void Circuit::check() const {
-  assert(cellWidths.size() == nbCells());
-  assert(cellHeights.size() == nbCells());
-  assert(cellFixed.size() == nbCells());
-  assert(cellX.size() == nbCells());
-  assert(cellY.size() == nbCells());
-  assert(cellOrientation.size() == nbCells());
+  assert(cellWidth_.size() == nbCells());
+  assert(cellHeight_.size() == nbCells());
+  assert(cellFixed_.size() == nbCells());
+  assert(cellX_.size() == nbCells());
+  assert(cellY_.size() == nbCells());
+  assert(cellOrientation_.size() == nbCells());
   assert(!netLimits.empty());
   assert(netLimits.front() == 0);
   assert(pinCells.size() == nbPins());
@@ -180,23 +180,25 @@ int place_ispd(int nb_cells, int nb_nets, int *cell_widths, int *cell_heights,
   Circuit circuit(nb_cells);
 
   try {
-    circuit.setCellWidths(
-        std::vector<int>(cell_widths, cell_widths + nb_cells));
-    circuit.setCellHeights(
-        std::vector<int>(cell_heights, cell_heights + nb_cells));
-    circuit.setCellFixed(std::vector<char>(cell_fixed, cell_fixed + nb_cells));
+    circuit.cellWidth(std::vector<int>(cell_widths, cell_widths + nb_cells));
+    circuit.cellHeight(std::vector<int>(cell_heights, cell_heights + nb_cells));
+    std::vector<bool> cell_fixed_vec;
+    for (char *f = cell_fixed; f != cell_fixed + nb_cells; ++f) {
+      cell_fixed_vec.push_back(*f);
+    }
+    circuit.cellFixed(cell_fixed_vec);
     int nb_pins = net_limits[nb_nets];
     circuit.setNets(std::vector<int>(net_limits, net_limits + nb_nets + 1),
                     std::vector<int>(pin_cells, pin_cells + nb_pins),
                     std::vector<int>(pin_x_offsets, pin_x_offsets + nb_pins),
                     std::vector<int>(pin_y_offsets, pin_y_offsets + nb_pins));
-    circuit.setCellX(std::vector<int>(cell_x, cell_x + nb_cells));
-    circuit.setCellY(std::vector<int>(cell_y, cell_y + nb_cells));
+    circuit.cellX(std::vector<int>(cell_x, cell_x + nb_cells));
+    circuit.cellY(std::vector<int>(cell_y, cell_y + nb_cells));
     std::vector<CellOrientation> orient;
     for (int i = 0; i < nb_cells; ++i) {
       orient.push_back(static_cast<CellOrientation>(cell_orientation[i]));
     }
-    circuit.setOrientation(orient);
+    circuit.cellOrientation(orient);
     std::vector<Rectangle> rows;
     for (int i = 0; i < nb_rows; ++i) {
       rows.emplace_back(row_min_x[i], row_max_x[i], row_min_y[i], row_max_y[i]);
@@ -217,8 +219,8 @@ int place_ispd(int nb_cells, int nb_nets, int *cell_widths, int *cell_heights,
   }
 
   for (int i = 0; i < nb_cells; ++i) {
-    cell_x[i] = circuit.cellX[i];
-    cell_y[i] = circuit.cellY[i];
+    cell_x[i] = circuit.cellX_[i];
+    cell_y[i] = circuit.cellY_[i];
   }
 
   // Return with success.
