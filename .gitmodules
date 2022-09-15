@@ -4,3 +4,6 @@
 [submodule "thirdparty/lemon/lemon"]
 	path = thirdparty/lemon/lemon
 	url = https://github.com/Coloquinte/lemon
+[submodule "thirdparty/pybind11/pybind11"]
+	path = thirdparty/pybind11/pybind11
+	url = https://github.com/pybind/pybind11.git
