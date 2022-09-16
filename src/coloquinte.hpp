@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cassert>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace coloquinte {
 /**
@@ -74,6 +74,100 @@ enum class CellOrientation {
   FW,
   /// Flip + East
   FE
+};
+
+/**
+ * @brief Parameters for the global placer
+ */
+struct GlobalPlacerParameters {
+  /**
+   * @brief Maximum number of global placement steps
+   */
+  int maxNbSteps;
+
+  /**
+   * @brief Gap between lower and upper bound placement at which to stop
+   * placement early
+   */
+  float gapTolerance;
+
+  /**
+   * @brief Distance at which the full displacement penalty is obtained, as a
+   * fraction of the average standard cell length
+   */
+  float penaltyCutoffDistance;
+
+  /**
+   * @brief Initial average strength for the displacement penalty
+   */
+  float initialPenalty;
+
+  /**
+   * @brief Multiplicative factor for the displacement penalty at each
+   * iteration
+   */
+  float penaltyUpdateFactor;
+
+  /**
+   * @brief Approximation distance of the continuous model, as a fraction of
+   * the average standard cell length
+   */
+  float approximationDistance;
+
+  /**
+   * @brief Maximum number of conjugate gradient steps at each placement
+   * iteration
+   */
+  int maxNbConjugateGradientSteps;
+
+  /**
+   * @brief Error tolerance to stop the conjugate gradient solver at each
+   * placement iteration
+   */
+  float conjugateGradientErrorTolerance;
+
+  /**
+   * @brief Initialize the parameters with sensible defaults
+   *
+   * @param effort Placement effort between 1 and 9
+   */
+  explicit GlobalPlacerParameters(int effort = 3);
+
+  /**
+   * @brief Check that the parameters make sense
+   */
+  void check() const;
+};
+
+/**
+ * @brief Parameters for the detailed placer
+ */
+struct DetailedPlacerParameters {
+  /**
+   * @brief Number of optimization passes
+   */
+  int nbPasses;
+
+  /**
+   * @brief Number of closest neighbours on each side considered during local
+   * search
+   */
+  int localSearchNbNeighbours;
+
+  /**
+   * @brief Number of closest rows on each side considered during local
+   * search
+   */
+  int localSearchNbRows;
+
+  /**
+   * @brief Number of rows considered together when optimizing shifts
+   */
+  int shiftNbRows;
+
+  explicit DetailedPlacerParameters(int effort = 3);
+
+  void check() const;
 };
 
 /**
@@ -293,6 +387,34 @@ class Circuit {
    * @brief Return the current half-perimeter wirelength of the circuit
    */
   long long hpwl() const;
+
+  /**
+   * @brief Run the whole placement algorithm (global + detailed)
+   */
+  void place(int effort) {
+    placeGlobal(effort);
+    placeDetailed(effort);
+  }
+
+  /**
+   * @brief Run the global placement algorithm
+   */
+  void placeGlobal(int effort) { placeGlobal(GlobalPlacerParameters(effort)); }
+
+  /**
+   * @brief Run the global placement algorithm
+   */
+  void placeGlobal(const GlobalPlacerParameters &params);
+
+  /**
+   * @brief Run the detailed placement algorithm
+   */
+  void placeDetailed(int effort) { placeDetailed(DetailedPlacerParameters(effort)); }
+
+  /**
+   * @brief Run the detailed placement algorithm
+   */
+  void placeDetailed(const DetailedPlacerParameters &params);
 
   /**
    * @brief Return a brief description of the circuit

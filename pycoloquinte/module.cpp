@@ -3,8 +3,6 @@
 #include <pybind11/stl.h>
 
 #include "coloquinte.hpp"
-#include "place_detailed/place_detailed.hpp"
-#include "place_global/place_global.hpp"
 
 using namespace coloquinte;
 
@@ -49,42 +47,40 @@ PYBIND11_MODULE(coloquinte_pybind, m) {
       .def_readwrite("min_y", &Rectangle::minY)
       .def_readwrite("max_y", &Rectangle::maxY);
 
-  py::class_<GlobalPlacer::Parameters>(m, "GlobalPlacerParameters")
+  py::class_<GlobalPlacerParameters>(m, "GlobalPlacerParameters")
       .def(py::init<int>(), R"pbdoc(
 Construct the parameters
 
 :param int effort: Effort level
 )pbdoc",
            py::arg("effort"))
-      .def_readwrite("max_nb_steps", &GlobalPlacer::Parameters::maxNbSteps)
-      .def_readwrite("gap_tolerance", &GlobalPlacer::Parameters::gapTolerance)
+      .def_readwrite("max_nb_steps", &GlobalPlacerParameters::maxNbSteps)
+      .def_readwrite("gap_tolerance", &GlobalPlacerParameters::gapTolerance)
       .def_readwrite("penalty_cutoff_distance",
-                     &GlobalPlacer::Parameters::penaltyCutoffDistance)
-      .def_readwrite("initial_penalty",
-                     &GlobalPlacer::Parameters::initialPenalty)
+                     &GlobalPlacerParameters::penaltyCutoffDistance)
+      .def_readwrite("initial_penalty", &GlobalPlacerParameters::initialPenalty)
       .def_readwrite("penalty_update_factor",
-                     &GlobalPlacer::Parameters::penaltyUpdateFactor)
+                     &GlobalPlacerParameters::penaltyUpdateFactor)
       .def_readwrite("approximation_distance",
-                     &GlobalPlacer::Parameters::approximationDistance)
+                     &GlobalPlacerParameters::approximationDistance)
       .def_readwrite("max_nb_conjugate_gradient_steps",
-                     &GlobalPlacer::Parameters::maxNbConjugateGradientSteps)
-      .def_readwrite(
-          "conjugate_gradient_error_tolerance",
-          &GlobalPlacer::Parameters::conjugateGradientErrorTolerance);
+                     &GlobalPlacerParameters::maxNbConjugateGradientSteps)
+      .def_readwrite("conjugate_gradient_error_tolerance",
+                     &GlobalPlacerParameters::conjugateGradientErrorTolerance);
 
-  py::class_<DetailedPlacer::Parameters>(m, "DetailedPlacerParameters")
+  py::class_<DetailedPlacerParameters>(m, "DetailedPlacerParameters")
       .def(py::init<int>(), R"pbdoc(
 Construct the parameters
 
 :param int effort: Effort level
 )pbdoc",
            py::arg("effort"))
-      .def_readwrite("nb_passes", &DetailedPlacer::Parameters::nbPasses)
+      .def_readwrite("nb_passes", &DetailedPlacerParameters::nbPasses)
       .def_readwrite("local_search_nb_neighbours",
-                     &DetailedPlacer::Parameters::localSearchNbNeighbours)
+                     &DetailedPlacerParameters::localSearchNbNeighbours)
       .def_readwrite("local_search_nb_rows",
-                     &DetailedPlacer::Parameters::localSearchNbRows)
-      .def_readwrite("shift_nb_rows", &DetailedPlacer::Parameters::shiftNbRows);
+                     &DetailedPlacerParameters::localSearchNbRows)
+      .def_readwrite("shift_nb_rows", &DetailedPlacerParameters::shiftNbRows);
 
   py::class_<Circuit>(m, "Circuit")
       .def(py::init<int>(), R"pbdoc(
@@ -115,6 +111,11 @@ Construct a circuit.
                     "Standard cell rows")
       .def("add_net", &Circuit::addNet, "Add a net to the circuit")
       .def("hpwl", &Circuit::hpwl, "Compute the half-perimeter wirelength")
+      .def("place", &Circuit::place, "Run the whole placement algorithm (global and detailed)")
+      .def("place_global", py::overload_cast<int>(&Circuit::placeGlobal), "Run the global placement algorithm")
+      .def("place_global", py::overload_cast<const GlobalPlacerParameters&>(&Circuit::placeGlobal), "Run the global placement algorithm")
+      .def("place_detailed", py::overload_cast<int>(&Circuit::placeDetailed), "Run the detailed placement algorithm")
+      .def("place_detailed", py::overload_cast<const DetailedPlacerParameters&>(&Circuit::placeDetailed), "Run the detailed placement algorithm")
       .def("check", &Circuit::check, "Check the datastructure")
       .def("__str__", &Circuit::toString)
       .def("__repr__", &Circuit::toString);

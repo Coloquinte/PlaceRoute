@@ -10,34 +10,6 @@ namespace coloquinte {
  */
 class DetailedPlacer {
  public:
-  struct Parameters {
-    /**
-     * @brief Number of optimization passes
-     */
-    int nbPasses;
-
-    /**
-     * @brief Number of closest neighbours on each side considered during local
-     * search
-     */
-    int localSearchNbNeighbours;
-
-    /**
-     * @brief Number of closest rows on each side considered during local
-     * search
-     */
-    int localSearchNbRows;
-
-    /**
-     * @brief Number of rows considered together when optimizing shifts
-     */
-    int shiftNbRows;
-
-    explicit Parameters(int effort = 3);
-
-    void check() const;
-  };
-
   /**
    * @brief Run detailed placement on the circuit representation
    *
@@ -45,7 +17,7 @@ class DetailedPlacer {
    * @param effort Effort level, between 0 and 9
    */
   static void place(Circuit &circuit, int effort) {
-    place(circuit, Parameters(effort));
+    place(circuit, DetailedPlacerParameters(effort));
   }
 
   /**
@@ -54,7 +26,7 @@ class DetailedPlacer {
    * @param circuit The circuit to be modified
    * @param params Placement parameters
    */
-  static void place(Circuit &circuit, const DetailedPlacer::Parameters &params);
+  static void place(Circuit &circuit, const DetailedPlacerParameters &params);
 
   /**
    * @brief Initialize the datastructure

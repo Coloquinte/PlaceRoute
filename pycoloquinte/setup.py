@@ -168,8 +168,8 @@ with open('../README.md') as f:
 # The information here can also be placed in setup.cfg - better separation of
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
-    name="coloquinte_pybind",
-    version="0.0.1",
+    name="coloquinte",
+    version="0.1.0",
     author="Gabriel Gouvine",
     author_email="gabriel.gouvine_git@m4x.org",
     url="https://github.com/Coloquinte/PlaceRoute",

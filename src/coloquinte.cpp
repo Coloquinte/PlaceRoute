@@ -239,6 +239,14 @@ void Circuit::check() const {
   assert(pinYOffsets_.size() == nbPins());
 }
 
+void Circuit::placeGlobal(const GlobalPlacerParameters &params) {
+  GlobalPlacer::place(*this, params);
+}
+
+void Circuit::placeDetailed(const DetailedPlacerParameters &params) {
+  DetailedPlacer::place(*this, params);
+}
+
 extern "C" {
 int place_ispd(int nb_cells, int nb_nets, int *cell_widths, int *cell_heights,
                char *cell_fixed, int *net_limits, int *pin_cells,
@@ -283,8 +291,7 @@ int place_ispd(int nb_cells, int nb_nets, int *cell_widths, int *cell_heights,
     std::cout << "Placing circuit with " << circuit.nbCells() << " cells, "
               << circuit.nbNets() << " nets and " << circuit.nbPins()
               << " pins." << std::endl;
-    GlobalPlacer::place(circuit, effort);
-    DetailedPlacer::place(circuit, effort);
+    circuit.place(effort);
   } catch (const std::exception &e) {
     std::cout << "placement terminated with exception: " << e.what()
               << std::endl;

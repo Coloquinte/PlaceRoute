@@ -11,7 +11,7 @@
 
 namespace coloquinte {
 
-DetailedPlacer::Parameters::Parameters(int effort) {
+DetailedPlacerParameters::DetailedPlacerParameters(int effort) {
   nbPasses = effort / 3 + 1;
   localSearchNbNeighbours = effort / 2 + 1;
   localSearchNbRows = effort / 2 + 1;
@@ -19,10 +19,10 @@ DetailedPlacer::Parameters::Parameters(int effort) {
   check();
 }
 
-void DetailedPlacer::Parameters::check() const {
-}
+void DetailedPlacerParameters::check() const {}
 
-void DetailedPlacer::place(Circuit &circuit, const DetailedPlacer::Parameters &params) {
+void DetailedPlacer::place(Circuit &circuit,
+                           const DetailedPlacerParameters &params) {
   std::cout << "Wirelength before legalization: " << circuit.hpwl()
             << std::endl;
   Legalizer leg = Legalizer::fromIspdCircuit(circuit);

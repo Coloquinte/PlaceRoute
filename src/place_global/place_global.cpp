@@ -9,7 +9,7 @@
 
 namespace coloquinte {
 
-GlobalPlacer::Parameters::Parameters(int effort) {
+GlobalPlacerParameters::GlobalPlacerParameters(int effort) {
   maxNbSteps = 30;
   gapTolerance = 0.05;
   penaltyCutoffDistance = 10.0;
@@ -21,7 +21,7 @@ GlobalPlacer::Parameters::Parameters(int effort) {
   check();
 }
 
-void GlobalPlacer::Parameters::check() const {
+void GlobalPlacerParameters::check() const {
   if (maxNbSteps < 0) {
     throw std::runtime_error("Invalid number of steps");
   }
@@ -59,14 +59,14 @@ void GlobalPlacer::Parameters::check() const {
 }
 
 void GlobalPlacer::place(Circuit &circuit,
-                         const GlobalPlacer::Parameters &params) {
+                         const GlobalPlacerParameters &params) {
   GlobalPlacer pl(circuit, params);
   pl.run();
   pl.leg_.exportPlacement(circuit);
 }
 
 GlobalPlacer::GlobalPlacer(Circuit &circuit,
-                           const GlobalPlacer::Parameters &params)
+                           const GlobalPlacerParameters &params)
     : circuit_(circuit),
       leg_(DensityLegalizer::fromIspdCircuit(circuit)),
       xtopo_(NetModel::xTopology(circuit)),
