@@ -9,7 +9,7 @@ from coloquinte_pybind import (CellOrientation, DetailedPlacerParameters,
                                Rectangle)
 
 
-def open_file(name, write=False):
+def _open_file(name, write=False):
     """
     Open the file with the appropriate decompression method. In read mode, search for compressed versions if the exact name does not exist.
     """
@@ -32,7 +32,7 @@ def open_file(name, write=False):
         raise RuntimeError(f"Could not find file {name}")
 
 
-def read_aux(filename):
+def _read_aux(filename):
     if os.path.isdir(filename):
         dir_list = os.listdir(filename)
         all_files = [f for f in dir_list if f.endswith(".aux")]
@@ -67,18 +67,18 @@ def read_aux(filename):
             )
 
 
-def parse_num_line(line):
+def _parse_num_line(line):
     tokens = line.split(':')
     if len(tokens) != 2:
         raise RuntimeError(f"Couldn't interpret <{line}> as <Key : Value>")
     return int(tokens[1].strip())
 
 
-def read_nodes(filename):
+def _read_nodes(filename):
     nb_nodes = None
     nb_terminals = None
     nodes = []
-    with open_file(filename) as f:
+    with _open_file(filename) as f:
         first_line_found = False
         for line in f:
             line = line.strip()
@@ -91,11 +91,11 @@ def read_nodes(filename):
                 continue
             if line.startswith("NumNodes"):
                 assert nb_nodes is None
-                nb_nodes = parse_num_line(line)
+                nb_nodes = _parse_num_line(line)
                 continue
             if line.startswith("NumTerminals"):
                 assert nb_terminals is None
-                nb_terminals = parse_num_line(line)
+                nb_terminals = _parse_num_line(line)
                 continue
             vals = line.split()
             assert 3 <= len(vals) <= 4
@@ -118,13 +118,13 @@ def read_nodes(filename):
     return names, widths, heights, fixed
 
 
-def read_nets(filename, cell_names, cell_widths, cell_heights, sort_entries=False):
+def _read_nets(filename, cell_names, cell_widths, cell_heights, sort_entries=False):
     name_dir = dict((name, i) for i, name in enumerate(cell_names))
     nb_nets = None
     nb_pins = None
     net_degree = None
     nets = []
-    with open_file(filename) as f:
+    with _open_file(filename) as f:
         first_line_found = False
         for line in f:
             line = line.strip()
@@ -137,11 +137,11 @@ def read_nets(filename, cell_names, cell_widths, cell_heights, sort_entries=Fals
                 continue
             if line.startswith("NumNets"):
                 assert nb_nets is None
-                nb_nets = parse_num_line(line)
+                nb_nets = _parse_num_line(line)
                 continue
             if line.startswith("NumPins"):
                 assert nb_pins is None
-                nb_pins = parse_num_line(line)
+                nb_pins = _parse_num_line(line)
                 continue
             line = line.replace(":", " ")
             if line.startswith("NetDegree"):
@@ -194,13 +194,13 @@ def read_nets(filename, cell_names, cell_widths, cell_heights, sort_entries=Fals
     return ret
 
 
-def read_place(filename, cell_names):
+def _read_place(filename, cell_names):
     name_dir = dict((name, i) for i, name in enumerate(cell_names))
     cell_x = [0 for i in cell_names]
     cell_y = [0 for i in cell_names]
     cell_orient = [None for i in cell_names]
 
-    with open_file(filename) as f:
+    with _open_file(filename) as f:
         first_line_found = False
         for line in f:
             line = line.strip()
@@ -226,15 +226,15 @@ def read_place(filename, cell_names):
     return cell_x, cell_y, cell_orient
 
 
-def read_rows(filename):
+def _read_rows(filename):
     nb_rows = None
     rows = []
-    with open_file(filename) as f:
+    with _open_file(filename) as f:
         lines = [l.strip() for l in f]
         for line in lines:
             if line.startswith("NumRows"):
                 assert nb_rows is None
-                nb_rows = parse_num_line(line)
+                nb_rows = _parse_num_line(line)
         row_descs = []
         in_row = False
         for line in lines:
@@ -268,7 +268,7 @@ def read_rows(filename):
         return rows
 
 
-def rows_to_area(rows):
+def _rows_to_area(rows):
     min_x = [row[0] for row in rows]
     min_y = [row[1] for row in rows]
     max_x = [row[2] for row in rows]
@@ -300,7 +300,7 @@ def rows_to_area(rows):
     return (min(min_x), min(max_x), min(min_y), max(max_y))
 
 
-def rows_to_height(rows):
+def _rows_to_height(rows):
     heights = [row[3] - row[1] for row in rows]
     # All rows have same height
     heights = list(sorted(set(heights)))
@@ -322,14 +322,14 @@ class Circuit(coloquinte_pybind.Circuit):
         """
         Read an ISPD benchmark from its .aux file
         """
-        node_filename, net_filename, pl_filename, scl_filename = read_aux(
+        node_filename, net_filename, pl_filename, scl_filename = _read_aux(
             filename)
-        cell_names, cell_widths, cell_heights, cell_fixed = read_nodes(
+        cell_names, cell_widths, cell_heights, cell_fixed = _read_nodes(
             node_filename)
-        nets = read_nets(
+        nets = _read_nets(
             net_filename, cell_names, cell_widths, cell_heights)
-        cell_x, cell_y, cell_orient = read_place(pl_filename, cell_names)
-        rows = read_rows(scl_filename)
+        cell_x, cell_y, cell_orient = _read_place(pl_filename, cell_names)
+        rows = _read_rows(scl_filename)
 
         ret = Circuit(len(cell_names))
         ret._filename = filename
@@ -356,12 +356,12 @@ class Circuit(coloquinte_pybind.Circuit):
         ret.check()
         return ret
 
-    def write_pl(self, filename):
+    def write_placement(self, filename):
         if filename is None:
             if self._filename is None:
                 raise RuntimeError("No filename to export placement to")
             filename = os.path.splitext(self._filename)[0] + ".sol.pl"
-        with open_file(filename, True) as f:
+        with _open_file(filename, True) as f:
             print("UCLA pl 1.0", file=f)
             print("# Created by Coloquinte", file=f)
             print("# https://github.com/Coloquinte/PlaceRoute", file=f)
@@ -391,4 +391,4 @@ def main():
 
     circuit = Circuit.read_ispd(args.instance)
     circuit.place(args.effort)
-    circuit.write_pl(args.solution)
+    circuit.write_placement(args.solution)
