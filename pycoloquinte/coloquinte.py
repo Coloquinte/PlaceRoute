@@ -264,7 +264,7 @@ def read_rows(filename):
             assert min_y is not None
             assert width is not None
             assert height is not None
-            rows.append((min_x, min_y, min_x + width, min_y + height))
+            rows.append((min_x, min_x + width, min_y, min_y + height))
         return rows
 
 

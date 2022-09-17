@@ -14,6 +14,14 @@
 namespace bpl = boost::polygon;
 namespace coloquinte {
 
+
+std::string Rectangle::toString() const {
+  std::stringstream ss;
+  ss << "Rectangle " << minX << ".." << maxX
+     << " x " << minY << ".." << maxY;
+  return ss.str();
+}
+
 Circuit::Circuit(int nbCells) {
   cellWidth_.resize(nbCells);
   cellHeight_.resize(nbCells);

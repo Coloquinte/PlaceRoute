@@ -45,7 +45,9 @@ PYBIND11_MODULE(coloquinte_pybind, m) {
       .def_readwrite("min_x", &Rectangle::minX)
       .def_readwrite("max_x", &Rectangle::maxX)
       .def_readwrite("min_y", &Rectangle::minY)
-      .def_readwrite("max_y", &Rectangle::maxY);
+      .def_readwrite("max_y", &Rectangle::maxY)
+      .def("__str__", &Rectangle::toString)
+      .def("__repr__", &Rectangle::toString);
 
   py::class_<GlobalPlacerParameters>(m, "GlobalPlacerParameters")
       .def(py::init<int>(), R"pbdoc(

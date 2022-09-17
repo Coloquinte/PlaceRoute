@@ -31,13 +31,26 @@ struct Rectangle {
   int width() const { return maxX - minX; }
   int height() const { return maxY - minY; }
   long long area() const { return (long long)width() * (long long)height(); }
+
+  /**
+   * @brief Returns whether the two rectangles intersect
+   */
   bool intersects(Rectangle o) const {
     return minX < o.maxX && o.minX < maxX && minY < o.maxY && o.minY < maxY;
   }
+
+  /**
+   * @brief Return the overlapping area of the rectangles if they intersect
+   */
   static Rectangle intersection(Rectangle a, Rectangle b) {
     return Rectangle(std::max(a.minX, b.minX), std::min(a.maxX, b.maxX),
                      std::max(a.minY, b.minY), std::min(a.maxY, b.maxY));
   }
+
+  /**
+   * @brief Return a brief description of the rectangle
+   */
+  std::string toString() const;
 };
 
 /**
