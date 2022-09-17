@@ -378,3 +378,17 @@ class Circuit(coloquinte_pybind.Circuit):
                 if cell_fixed[i]:
                     orient += " /FIXED"
                 print(f"{name}\t{x}\t{y}\t: {orient}", file=f)
+
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("instance", help="Benchmark instance")
+    parser.add_argument("--solution", help="Placement result")
+    parser.add_argument("--effort", help="Placement effort",
+                        type=int, default=3)
+    args = parser.parse_args()
+
+    circuit = Circuit.read_ispd(args.instance)
+    circuit.place(args.effort)
+    circuit.write_pl(args.solution)

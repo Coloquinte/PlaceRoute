@@ -188,5 +188,6 @@ setup(
     py_modules=["coloquinte"],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
-    python_requires=">=3.6",
+    python_requires=">=3.8",
+    entry_points={'console_scripts': ['coloquinte = coloquinte:main']},
 )
