@@ -55,7 +55,7 @@ Construct the parameters
 
 :param int effort: Effort level
 )pbdoc",
-           py::arg("effort"))
+           py::arg("effort") = 3)
       .def_readwrite("max_nb_steps", &GlobalPlacerParameters::maxNbSteps)
       .def_readwrite("gap_tolerance", &GlobalPlacerParameters::gapTolerance)
       .def_readwrite("penalty_cutoff_distance",
@@ -76,7 +76,7 @@ Construct the parameters
 
 :param int effort: Effort level
 )pbdoc",
-           py::arg("effort"))
+           py::arg("effort") = 3)
       .def_readwrite("nb_passes", &DetailedPlacerParameters::nbPasses)
       .def_readwrite("local_search_nb_neighbours",
                      &DetailedPlacerParameters::localSearchNbNeighbours)
