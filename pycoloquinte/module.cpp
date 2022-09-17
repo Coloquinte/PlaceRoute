@@ -113,11 +113,36 @@ Construct a circuit.
                     "Standard cell rows")
       .def("add_net", &Circuit::addNet, "Add a net to the circuit")
       .def("hpwl", &Circuit::hpwl, "Compute the half-perimeter wirelength")
-      .def("place", &Circuit::place, "Run the whole placement algorithm (global and detailed)")
-      .def("place_global", py::overload_cast<int>(&Circuit::placeGlobal), "Run the global placement algorithm")
-      .def("place_global", py::overload_cast<const GlobalPlacerParameters&>(&Circuit::placeGlobal), "Run the global placement algorithm")
-      .def("place_detailed", py::overload_cast<int>(&Circuit::placeDetailed), "Run the detailed placement algorithm")
-      .def("place_detailed", py::overload_cast<const DetailedPlacerParameters&>(&Circuit::placeDetailed), "Run the detailed placement algorithm")
+      .def("place", &Circuit::place,
+           "Run the whole placement algorithm (global and detailed)")
+      .def(
+          "place_global",
+          [](Circuit &circuit, int effort) {
+            py::gil_scoped_release release;
+            circuit.placeGlobal(effort);
+          },
+          "Run the global placement algorithm")
+      .def(
+          "place_global",
+          [](Circuit &circuit, const GlobalPlacerParameters &params) {
+            py::gil_scoped_release release;
+            circuit.placeGlobal(params);
+          },
+          "Run the global placement algorithm")
+      .def(
+          "place_detailed",
+          [](Circuit &circuit, int effort) {
+            py::gil_scoped_release release;
+            circuit.placeDetailed(effort);
+          },
+          "Run the detailed placement algorithm")
+      .def(
+          "place_detailed",
+          [](Circuit &circuit, const DetailedPlacerParameters &params) {
+            py::gil_scoped_release release;
+            circuit.placeDetailed(params);
+          },
+          "Run the detailed placement algorithm")
       .def("check", &Circuit::check, "Check the datastructure")
       .def("__str__", &Circuit::toString)
       .def("__repr__", &Circuit::toString);
