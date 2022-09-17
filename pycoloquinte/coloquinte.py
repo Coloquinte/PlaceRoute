@@ -1,3 +1,7 @@
+"""
+Coloquinte VLSI placer
+"""
+
 
 import gzip
 import lzma
@@ -357,6 +361,9 @@ class Circuit(coloquinte_pybind.Circuit):
         return ret
 
     def write_placement(self, filename):
+        """
+        Write the placement result in ISPD file format
+        """
         if filename is None:
             if self._filename is None:
                 raise RuntimeError("No filename to export placement to")
@@ -381,6 +388,9 @@ class Circuit(coloquinte_pybind.Circuit):
 
 
 def main():
+    """
+    Run the whole placement algorithm from the command line
+    """
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("instance", help="Benchmark instance")
