@@ -14,11 +14,33 @@
 namespace bpl = boost::polygon;
 namespace coloquinte {
 
-
 std::string Rectangle::toString() const {
   std::stringstream ss;
-  ss << "Rectangle " << minX << ".." << maxX
-     << " x " << minY << ".." << maxY;
+  ss << "Rectangle " << minX << ".." << maxX << " x " << minY << ".." << maxY;
+  return ss.str();
+}
+
+std::string GlobalPlacerParameters::toString() const {
+  std::stringstream ss;
+  ss << "Global placer params:"
+     << "\n\tMax nb steps: " << maxNbSteps
+     << "\n\tGap tolerance: " << gapTolerance << "\n\tPenalty cutoff distance"
+     << penaltyCutoffDistance << "\n\tInitial penalty: " << initialPenalty
+     << "\n\tPenalty update factor: " << penaltyUpdateFactor
+     << "\n\tApproximation distance: " << approximationDistance
+     << "\n\tMax nb CG steps: " << maxNbConjugateGradientSteps
+     << "\n\tCG error tolerance: " << conjugateGradientErrorTolerance
+     << std::endl;
+  return ss.str();
+}
+
+std::string DetailedPlacerParameters::toString() const {
+  std::stringstream ss;
+  ss << "Detailed placer params:"
+     << "\n\tNb passes: " << nbPasses
+     << "\n\tLocal search nb neighbours: " << localSearchNbNeighbours
+     << "\n\tLocal search nb rows" << localSearchNbRows
+     << "\n\tShift nb rows: " << shiftNbRows << std::endl;
   return ss.str();
 }
 

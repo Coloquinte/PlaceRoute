@@ -68,7 +68,9 @@ Construct the parameters
       .def_readwrite("max_nb_conjugate_gradient_steps",
                      &GlobalPlacerParameters::maxNbConjugateGradientSteps)
       .def_readwrite("conjugate_gradient_error_tolerance",
-                     &GlobalPlacerParameters::conjugateGradientErrorTolerance);
+                     &GlobalPlacerParameters::conjugateGradientErrorTolerance)
+      .def("__str__", &GlobalPlacerParameters::toString)
+      .def("__repr__", &GlobalPlacerParameters::toString);
 
   py::class_<DetailedPlacerParameters>(m, "DetailedPlacerParameters")
       .def(py::init<int>(), R"pbdoc(
@@ -82,7 +84,9 @@ Construct the parameters
                      &DetailedPlacerParameters::localSearchNbNeighbours)
       .def_readwrite("local_search_nb_rows",
                      &DetailedPlacerParameters::localSearchNbRows)
-      .def_readwrite("shift_nb_rows", &DetailedPlacerParameters::shiftNbRows);
+      .def_readwrite("shift_nb_rows", &DetailedPlacerParameters::shiftNbRows)
+      .def("__str__", &DetailedPlacerParameters::toString)
+      .def("__repr__", &DetailedPlacerParameters::toString);
 
   py::class_<Circuit>(m, "Circuit")
       .def(py::init<int>(), R"pbdoc(

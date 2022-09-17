@@ -147,6 +147,11 @@ struct GlobalPlacerParameters {
   explicit GlobalPlacerParameters(int effort = 3);
 
   /**
+   * @brief Obtain a string representation
+   */
+  std::string toString() const;
+
+  /**
    * @brief Check that the parameters make sense
    */
   void check() const;
@@ -178,8 +183,21 @@ struct DetailedPlacerParameters {
    */
   int shiftNbRows;
 
+  /**
+   * @brief Initialize the parameters with sensible defaults
+   *
+   * @param effort Placement effort between 1 and 9
+   */
   explicit DetailedPlacerParameters(int effort = 3);
 
+  /**
+   * @brief Obtain a string representation
+   */
+  std::string toString() const;
+
+  /**
+   * @brief Check that the parameters make sense
+   */
   void check() const;
 };
 
@@ -422,7 +440,9 @@ class Circuit {
   /**
    * @brief Run the detailed placement algorithm
    */
-  void placeDetailed(int effort) { placeDetailed(DetailedPlacerParameters(effort)); }
+  void placeDetailed(int effort) {
+    placeDetailed(DetailedPlacerParameters(effort));
+  }
 
   /**
    * @brief Run the detailed placement algorithm
