@@ -40,10 +40,14 @@ def _read_aux(filename):
     if os.path.isdir(filename):
         dir_list = os.listdir(filename)
         all_files = [f for f in dir_list if f.endswith(".aux")]
-        if len(all_files) != 1:
+        default_name = os.path.basename(filename) + ".aux"
+        if len(all_files) == 1:
+            filename = os.path.join(filename, all_files[0])
+        elif len(all_files) > 1 and default_name in all_files:
+            filename = os.path.join(filename, default_name)
+        else:
             raise RuntimeError(
-                f"There should be one file ending with .aux, got {len(all_files)}")
-        filename = os.path.join(filename, all_files[0])
+                f"There should be one file ending with .aux, got {', '.join(all_files)}")
     elif not os.path.exists(filename):
         filename = filename + ".aux"
     dirname = os.path.dirname(filename)
