@@ -5,6 +5,7 @@ PROJECT(COLOQUINTE)
 add_subdirectory(thirdparty/lemon)
 add_subdirectory(thirdparty/pybind11)
 
+SET(Boost_USE_STATIC_LIBS ON)
 FIND_PACKAGE(Boost REQUIRED COMPONENTS system filesystem iostreams program_options unit_test_framework)
 FIND_PACKAGE(Eigen3 3.3 REQUIRED NO_MODULE)
 

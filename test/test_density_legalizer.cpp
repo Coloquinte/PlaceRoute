@@ -1,5 +1,4 @@
-#define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE CPP_API
+#define BOOST_TEST_MODULE DENSITY_LEGALIZER
 
 #include <boost/test/unit_test.hpp>
 #include <cmath>

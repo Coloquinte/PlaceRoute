@@ -1,5 +1,4 @@
-#define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE CPP_API
+#define BOOST_TEST_MODULE ROW_NEIGHBOURHOOD
 
 #include <boost/test/unit_test.hpp>
 
