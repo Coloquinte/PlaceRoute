@@ -14,6 +14,32 @@
 namespace bpl = boost::polygon;
 namespace coloquinte {
 
+std::string toString(LegalizationModel model) {
+  switch (model) {
+    case LegalizationModel::L1:
+      return "L1";
+    case LegalizationModel::L2:
+      return "L2";
+    case LegalizationModel::LInf:
+      return "LInf";
+    case LegalizationModel::L2Squared:
+      return "L2Squared";
+    default:
+      return "UnknownLegalizationModel";
+  }
+}
+
+std::string toString(NetModelOption model) {
+  switch (model) {
+    case NetModelOption::BoundToBound:
+      return "BoundToBound";
+    case NetModelOption::Star:
+      return "Star";
+    default:
+      return "UnknownNetModel";
+  }
+}
+
 std::string Rectangle::toString() const {
   std::stringstream ss;
   ss << "Rectangle " << minX << ".." << maxX << " x " << minY << ".." << maxY;
@@ -27,9 +53,13 @@ std::string GlobalPlacerParameters::toString() const {
      << "\n\tGap tolerance: " << gapTolerance << "\n\tPenalty cutoff distance"
      << penaltyCutoffDistance << "\n\tInitial penalty: " << initialPenalty
      << "\n\tPenalty update factor: " << penaltyUpdateFactor
+     << "\n\tNet model: " << coloquinte::toString(netModel)
      << "\n\tApproximation distance: " << approximationDistance
      << "\n\tMax nb CG steps: " << maxNbConjugateGradientSteps
      << "\n\tCG error tolerance: " << conjugateGradientErrorTolerance
+     << "\n\tRough legalization cost model: "
+     << coloquinte::toString(roughLegalizationCostModel)
+     << "\n\tNb rough legalization steps: " << nbRoughLegalizationSteps
      << std::endl;
   return ss.str();
 }
@@ -40,7 +70,8 @@ std::string DetailedPlacerParameters::toString() const {
      << "\n\tNb passes: " << nbPasses
      << "\n\tLocal search nb neighbours: " << localSearchNbNeighbours
      << "\n\tLocal search nb rows" << localSearchNbRows
-     << "\n\tShift nb rows: " << shiftNbRows << std::endl;
+     << "\n\tShift nb rows: " << shiftNbRows << "\n\tLegalization cost model: "
+     << coloquinte::toString(legalizationCostModel) << std::endl;
   return ss.str();
 }
 

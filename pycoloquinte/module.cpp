@@ -18,13 +18,6 @@ PYBIND11_MODULE(coloquinte_pybind, m) {
            Circuit
     )pbdoc";
 
-  py::enum_<LegalizationModel>(m, "LegalizationModel")
-      .value("L1", LegalizationModel::L1)
-      .value("L2", LegalizationModel::L2)
-      .value("LInf", LegalizationModel::LInf)
-      .value("L2Squared", LegalizationModel::L2Squared)
-      .export_values();
-
   py::enum_<CellOrientation>(m, "CellOrientation")
       .value("N", CellOrientation::N, "North")
       .value("S", CellOrientation::S, "South")
@@ -49,6 +42,18 @@ PYBIND11_MODULE(coloquinte_pybind, m) {
       .def("__str__", &Rectangle::toString)
       .def("__repr__", &Rectangle::toString);
 
+  py::enum_<LegalizationModel>(m, "LegalizationModel")
+      .value("L1", LegalizationModel::L1)
+      .value("L2", LegalizationModel::L2)
+      .value("LInf", LegalizationModel::LInf)
+      .value("L2Squared", LegalizationModel::L2Squared)
+      .export_values();
+
+  py::enum_<NetModelOption>(m, "NetModel")
+      .value("BoundToBound", NetModelOption::BoundToBound)
+      .value("Star", NetModelOption::Star)
+      .export_values();
+
   py::class_<GlobalPlacerParameters>(m, "GlobalPlacerParameters")
       .def(py::init<int>(), R"pbdoc(
 Construct the parameters
@@ -63,12 +68,18 @@ Construct the parameters
       .def_readwrite("initial_penalty", &GlobalPlacerParameters::initialPenalty)
       .def_readwrite("penalty_update_factor",
                      &GlobalPlacerParameters::penaltyUpdateFactor)
+      .def_readwrite("net_model",
+                     &GlobalPlacerParameters::netModel)
       .def_readwrite("approximation_distance",
                      &GlobalPlacerParameters::approximationDistance)
       .def_readwrite("max_nb_conjugate_gradient_steps",
                      &GlobalPlacerParameters::maxNbConjugateGradientSteps)
       .def_readwrite("conjugate_gradient_error_tolerance",
                      &GlobalPlacerParameters::conjugateGradientErrorTolerance)
+      .def_readwrite("rough_legalization_cost_model",
+                     &GlobalPlacerParameters::roughLegalizationCostModel)
+      .def_readwrite("nb_rough_legalization_steps",
+                     &GlobalPlacerParameters::nbRoughLegalizationSteps)
       .def("__str__", &GlobalPlacerParameters::toString)
       .def("__repr__", &GlobalPlacerParameters::toString);
 
@@ -85,6 +96,8 @@ Construct the parameters
       .def_readwrite("local_search_nb_rows",
                      &DetailedPlacerParameters::localSearchNbRows)
       .def_readwrite("shift_nb_rows", &DetailedPlacerParameters::shiftNbRows)
+      .def_readwrite("legalization_cost_model",
+                     &DetailedPlacerParameters::legalizationCostModel)
       .def("__str__", &DetailedPlacerParameters::toString)
       .def("__repr__", &DetailedPlacerParameters::toString);
 

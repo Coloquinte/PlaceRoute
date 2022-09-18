@@ -15,11 +15,32 @@ DetailedPlacerParameters::DetailedPlacerParameters(int effort) {
   nbPasses = effort / 3 + 1;
   localSearchNbNeighbours = effort / 2 + 1;
   localSearchNbRows = effort / 2 + 1;
+  legalizationCostModel = LegalizationModel::L1;
   shiftNbRows = effort + 2;
   check();
 }
 
-void DetailedPlacerParameters::check() const {}
+void DetailedPlacerParameters::check() const {
+  if (nbPasses < 0) {
+    throw std::runtime_error(
+        "Number of detailed placement passes must be non-negative");
+  }
+  if (localSearchNbNeighbours < 0) {
+    throw std::runtime_error(
+        "Number of detailed placement neighbour cells must be non-negative");
+  }
+  if (localSearchNbRows < 0) {
+    throw std::runtime_error(
+        "Number of detailed placement rows must be non-negative");
+  }
+  if (shiftNbRows < 0) {
+    throw std::runtime_error(
+        "Number of detailed placement shift rows must be non-negative");
+  }
+  if (legalizationCostModel != LegalizationModel::L1) {
+    throw std::runtime_error("Only L1 legalization model is supported");
+  }
+}
 
 void DetailedPlacer::place(Circuit &circuit,
                            const DetailedPlacerParameters &params) {

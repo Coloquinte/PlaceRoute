@@ -68,6 +68,11 @@ enum class LegalizationModel {
 };
 
 /**
+ * @brief Net model to use for continuous optimization
+ */
+enum class NetModelOption { BoundToBound, Star };
+
+/**
  * @brief Orientation of a cell
  */
 enum class CellOrientation {
@@ -88,6 +93,9 @@ enum class CellOrientation {
   /// Flip + East
   FE
 };
+
+std::string toString(LegalizationModel model);
+std::string toString(NetModelOption model);
 
 /**
  * @brief Parameters for the global placer
@@ -122,6 +130,11 @@ struct GlobalPlacerParameters {
   float penaltyUpdateFactor;
 
   /**
+   * @brief Cost model for the continuous optimization
+   */
+  NetModelOption netModel;
+
+  /**
    * @brief Approximation distance of the continuous model, as a fraction of
    * the average standard cell length
    */
@@ -138,6 +151,16 @@ struct GlobalPlacerParameters {
    * placement iteration
    */
   float conjugateGradientErrorTolerance;
+
+  /**
+   * @brief Cost model used for rough legalization
+   */
+  LegalizationModel roughLegalizationCostModel;
+
+  /**
+   * @brief Number of rough legalization steps at each placement iteration
+   */
+  int nbRoughLegalizationSteps;
 
   /**
    * @brief Initialize the parameters with sensible defaults
@@ -182,6 +205,11 @@ struct DetailedPlacerParameters {
    * @brief Number of rows considered together when optimizing shifts
    */
   int shiftNbRows;
+
+  /**
+   * @brief Cost model used for legalization
+   */
+  LegalizationModel legalizationCostModel;
 
   /**
    * @brief Initialize the parameters with sensible defaults

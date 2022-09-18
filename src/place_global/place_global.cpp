@@ -15,9 +15,12 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort) {
   penaltyCutoffDistance = 10.0;
   initialPenalty = 0.02;
   penaltyUpdateFactor = 1.2;
+  netModel = NetModelOption::BoundToBound;
   approximationDistance = 0.5;
   maxNbConjugateGradientSteps = 1000;
   conjugateGradientErrorTolerance = 1.0e-6;
+  roughLegalizationCostModel = LegalizationModel::L1;
+  nbRoughLegalizationSteps = 1;
   check();
 }
 
@@ -56,6 +59,10 @@ void GlobalPlacerParameters::check() const {
   if (conjugateGradientErrorTolerance > 1.0) {
     throw std::runtime_error("Too large error tolerance is highly imprecise");
   }
+  if (nbRoughLegalizationSteps < 0) {
+    throw std::runtime_error(
+        "Must have non-negative number of steps for rough legalization");
+  }
 }
 
 void GlobalPlacer::place(Circuit &circuit,
@@ -74,6 +81,8 @@ GlobalPlacer::GlobalPlacer(Circuit &circuit,
       params_(params) {
   averageCellLength_ = computeAverageCellSize();
   perCellPenalty_ = computePerCellPenalty();
+  leg_.setCostModel(params.roughLegalizationCostModel);
+  leg_.setNbSteps(params.nbRoughLegalizationSteps);
 }
 
 float GlobalPlacer::computeAverageCellSize() const {
@@ -132,10 +141,8 @@ void GlobalPlacer::runLB() {
   params.penaltyCutoffDistance = penaltyCutoffDistance();
   params.tolerance = params_.conjugateGradientErrorTolerance;
   params.maxNbIterations = params_.maxNbConjugateGradientSteps;
-  xPlacementLB_ =
-      xtopo_.solveB2B(xPlacementLB_, xPlacementUB_, penalty, params);
-  yPlacementLB_ =
-      ytopo_.solveB2B(yPlacementLB_, yPlacementUB_, penalty, params);
+  xPlacementLB_ = xtopo_.solve(xPlacementLB_, xPlacementUB_, penalty, params);
+  yPlacementLB_ = ytopo_.solve(yPlacementLB_, yPlacementUB_, penalty, params);
 }
 
 void GlobalPlacer::runUB() {

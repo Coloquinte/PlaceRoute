@@ -10,7 +10,7 @@ import os
 import coloquinte_pybind
 from coloquinte_pybind import (CellOrientation, DetailedPlacerParameters,
                                GlobalPlacerParameters, LegalizationModel,
-                               Rectangle)
+                               NetModel, Rectangle)
 
 
 def _open_file(name, write=False):
@@ -414,6 +414,7 @@ __all__ = [
     "DetailedPlacerParameters",
     "Rectangle",
     "LegalizationModel",
+    "NetModel",
     "CellOrientation",
     "main",
 ]

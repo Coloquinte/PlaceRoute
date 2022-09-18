@@ -53,6 +53,16 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
   void setCostModel(LegalizationModel model) { costModel_ = model; }
 
   /**
+   * @brief Get the number of iterations used
+   */
+  int nbSteps() const { return nbSteps_; }
+
+  /**
+   * @brief Set the number of iterations to use
+   */
+  void setNbSteps(int nbSteps) { nbSteps_ = nbSteps; }
+
+  /**
    * @brief Update the demands of the cells
    */
   void updateCellDemand(std::vector<int> cellDemand) {
@@ -154,7 +164,8 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
 
  private:
   LegalizationModel costModel_;
+  int nbSteps_;
   std::vector<float> cellTargetX_;
   std::vector<float> cellTargetY_;
 };
-}
+}  // namespace coloquinte

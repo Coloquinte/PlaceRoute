@@ -208,10 +208,12 @@ void DensityLegalizer::refine() {
 }
 
 void DensityLegalizer::improve() {
-  improveX(false);
-  improveY(false);
-  improveX(true);
-  improveY(true);
+  for (int i = 0; i < nbSteps_; ++i) {
+    improveX(false);
+    improveY(false);
+    improveX(true);
+    improveY(true);
+  }
 }
 
 void DensityLegalizer::improveX(bool sameParent) {
@@ -243,4 +245,4 @@ void DensityLegalizer::run() {
     improve();
   }
 }
-}
+}  // namespace coloquinte

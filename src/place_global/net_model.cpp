@@ -7,6 +7,7 @@
 
 namespace coloquinte {
 NetModel::Parameters::Parameters(float approximationDistance) {
+  netModel = NetModelOption::BoundToBound;
   approximationDistance = 10.0;
   penaltyCutoffDistance = 100.0;
   tolerance = 1.0e-4;
@@ -82,7 +83,8 @@ void NetModel::exportPlacementY(Circuit &circuit,
   assert(circuit.nbCells() == nbCells());
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (!circuit.fixed(i)) {
-      circuit.cellY_[i] = std::round(yplace[i] - 0.5f * circuit.placedHeight(i));
+      circuit.cellY_[i] =
+          std::round(yplace[i] - 0.5f * circuit.placedHeight(i));
     }
   }
 }
@@ -245,6 +247,9 @@ class MatrixCreator {
   std::vector<float> solve(float tolerance, int maxIterations);
 
   static MatrixCreator createStar(const NetModel &topo);
+  static MatrixCreator create(const NetModel &topo,
+                              const std::vector<float> &pl, float epsilon,
+                              NetModelOption netModel);
   static MatrixCreator createStar(const NetModel &topo,
                                   const std::vector<float> &pl, float epsilon);
   static MatrixCreator createB2B(const NetModel &topo,
@@ -333,6 +338,16 @@ int MatrixCreator::addCell(float initialPos) {
   int ret = nbCells_ + nbSupps_;
   nbSupps_++;
   return ret;
+}
+
+MatrixCreator MatrixCreator::create(const NetModel &topo,
+                                    const std::vector<float> &pl, float epsilon,
+                                    NetModelOption netModel) {
+  if (netModel == NetModelOption::BoundToBound) {
+    return MatrixCreator::createB2B(topo, pl, epsilon);
+  } else {
+    return MatrixCreator::createStar(topo, pl, epsilon);
+  }
 }
 
 MatrixCreator MatrixCreator::createStar(const NetModel &topo) {
@@ -495,6 +510,17 @@ std::vector<float> NetModel::solveStar(const std::vector<float> &placement,
                                        const Parameters &params) const {
   MatrixCreator builder =
       MatrixCreator::createStar(*this, placement, params.approximationDistance);
+  return builder.solve(params.tolerance, params.maxNbIterations);
+}
+
+std::vector<float> NetModel::solve(const std::vector<float> &netPlacement,
+                                   const std::vector<float> &placementTarget,
+                                   const std::vector<float> &penaltyStrength,
+                                   const Parameters &params) const {
+  MatrixCreator builder = MatrixCreator::create(
+      *this, netPlacement, params.approximationDistance, params.netModel);
+  builder.addPenalty(netPlacement, placementTarget, penaltyStrength,
+                     params.penaltyCutoffDistance);
   return builder.solve(params.tolerance, params.maxNbIterations);
 }
 

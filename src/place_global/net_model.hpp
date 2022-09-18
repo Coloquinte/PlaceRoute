@@ -12,6 +12,7 @@ namespace coloquinte {
 class NetModel {
  public:
   struct Parameters {
+      NetModelOption netModel;
       float approximationDistance;
       float penaltyCutoffDistance;
       float tolerance;
@@ -127,6 +128,22 @@ class NetModel {
   float value(const std::vector<float> &pl) const;
 
   /**
+   * @brief Solve using a local approximation of the actual wirelength, specified in the parameters
+   *
+   * @param netPlacement Initial positions to build the approximation
+   * @param placementTarget Target positions to pull the cells
+   * @param penaltyStrength Magnitude of the penalty towards the target
+   * positions
+   * @param params Net model parameters
+   *
+   * @return New positions for the cells
+   */
+  std::vector<float> solve(const std::vector<float> &netPlacement,
+                               const std::vector<float> &placementTarget,
+                               const std::vector<float> &penaltyStrength,
+                               const Parameters &params=Parameters()) const;
+
+  /**
    * @brief Solve with a quadratic star model
    *
    * @return Positions for the cells that minimize the wirelength
@@ -144,6 +161,7 @@ class NetModel {
    */
   std::vector<float> solveStar(const std::vector<float> &placement,
                               const Parameters &params=Parameters()) const;
+
 
   /**
    * @brief Solve using the star model as a local approximation of the actual
