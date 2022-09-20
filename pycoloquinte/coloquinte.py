@@ -68,7 +68,8 @@ def _read_aux(filename):
         raise RuntimeError("There should be a .pl file in .aux")
     if len(scl_files) != 1:
         raise RuntimeError("There should be a .scl file in .aux")
-    return (os.path.join(dirname, node_files[0]),
+    return (filename,
+            os.path.join(dirname, node_files[0]),
             os.path.join(dirname, net_files[0]),
             os.path.join(dirname, pl_files[0]),
             os.path.join(dirname, scl_files[0]),
@@ -330,7 +331,7 @@ class Circuit(coloquinte_pybind.Circuit):
         """
         Read an ISPD benchmark from its .aux file
         """
-        node_filename, net_filename, pl_filename, scl_filename = _read_aux(
+        aux_filename, node_filename, net_filename, pl_filename, scl_filename = _read_aux(
             filename)
         cell_names, cell_widths, cell_heights, cell_fixed = _read_nodes(
             node_filename)
@@ -340,7 +341,7 @@ class Circuit(coloquinte_pybind.Circuit):
         rows = _read_rows(scl_filename)
 
         ret = Circuit(len(cell_names))
-        ret._filename = filename
+        ret._filename = os.path.splitext(aux_filename)[0]
 
         # Setup cell properties
         ret._cell_name = cell_names
