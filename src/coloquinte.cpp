@@ -50,7 +50,7 @@ std::string GlobalPlacerParameters::toString() const {
   std::stringstream ss;
   ss << "Global placer params:"
      << "\n\tMax nb steps: " << maxNbSteps
-     << "\n\tGap tolerance: " << gapTolerance << "\n\tPenalty cutoff distance"
+     << "\n\tGap tolerance: " << gapTolerance << "\n\tPenalty cutoff distance: "
      << penaltyCutoffDistance << "\n\tInitial penalty: " << initialPenalty
      << "\n\tPenalty update factor: " << penaltyUpdateFactor
      << "\n\tNet model: " << coloquinte::toString(netModel)
