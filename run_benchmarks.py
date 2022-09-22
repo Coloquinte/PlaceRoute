@@ -1,9 +1,13 @@
+import argparse
 import math
 import os
 import sqlite3
 import time
 
 import coloquinte
+
+import numpy as np
+
 
 class BenchmarkRun:
     def __init__(self, benchmark, global_params=None, detailed_params=None, prefix="benchmarks/ISPD06/"):
@@ -29,7 +33,8 @@ class BenchmarkRun:
         return self._benchmark
 
     def run(self):
-        circuit = coloquinte.Circuit.read_ispd(os.path.join(self._prefix, self.benchmark))
+        circuit = coloquinte.Circuit.read_ispd(
+            os.path.join(self._prefix, self.benchmark))
         # Global placement
         global_start_time = time.time()
         circuit.place_global(self.gp)
@@ -59,7 +64,7 @@ class BenchmarkRun:
         if not isinstance(old, (int, float, str)):
             v = type(old).__members__[v]
         setattr(params, k, v)
-    
+
     @staticmethod
     def from_dict(d):
         gp = coloquinte.GlobalPlacerParameters()
@@ -89,8 +94,12 @@ class BenchmarkRun:
 
 
 class BenchmarkRunner:
-    def __init__(self):
-        self.con = sqlite3.connect("benchmarks.db")
+    def __init__(self, benchmarks=None, time_for_quality=None, prefix="benchmarks/ISPD06/"):
+        if benchmarks is None:
+            benchmarks = os.listdir(prefix)
+        self.benchmarks = benchmarks
+        self.prefix = prefix
+        self.time_for_quality = time_for_quality
 
     @staticmethod
     def default_params():
@@ -114,7 +123,8 @@ class BenchmarkRunner:
     def unique_columns(data=None):
         if data is None:
             data = BenchmarkRun("").to_dict()
-        unique_columns = list(k for k in data.keys() if k.startswith("global") or k.startswith("detailed"))
+        unique_columns = list(k for k in data.keys() if k.startswith(
+            "global") or k.startswith("detailed"))
         return ["benchmark", "prefix"] + unique_columns
 
     @staticmethod
@@ -130,23 +140,23 @@ class BenchmarkRunner:
         c.close()
 
     def get_data(self, data):
-        cols = BenchmarkRunner.unique_columns(data)
-        column_names = []
-        columns = []
-        values = []
-        for k, v in data.items():
-            column_names.append(k)
-            columns.append(k + "=?")
-            values.append(v)
-        columns = " and ".join(columns)
-        sql = f"SELECT * FROM ColoquinteBenchmarks WHERE {columns}"
-        c = self.con.cursor()
+        key_columns = BenchmarkRunner.unique_columns(data)
+        if sorted(data.keys()) != sorted(key_columns):
+            raise RuntimeError("Queried data does not match unique columns")
+        values = [data[k] for k in key_columns]
+        key_columns_sql = " and ".join([c + "=?" for c in key_columns])
+        metric_columns = BenchmarkRunner.metric_columns()
+        metric_columns_sql = ", ".join(metric_columns)
+        sql = f"SELECT {metric_columns_sql} FROM ColoquinteBenchmarks WHERE {key_columns_sql}"
+        con = sqlite3.connect("benchmarks.db")
+        c = con.cursor()
         c.execute(sql, values)
         ret = c.fetchall()
         if len(ret) == 0:
             return None
         elif len(ret) == 1:
-            return {k: v for k, v in zip(column_names, ret[0])}
+            assert len(ret[0]) == len(metric_columns)
+            return {k: v for k, v in zip(metric_columns, ret[0])}
         else:
             raise RuntimeError("Multiple lines found")
 
@@ -165,9 +175,10 @@ class BenchmarkRunner:
         columns = ', '.join(columns)
         placeholders = ', '.join(placeholders)
         sql = f"INSERT INTO ColoquinteBenchmarks ({columns}) VALUES ({placeholders})"
-        c = self.con.cursor()
+        con = sqlite3.connect("benchmarks.db")
+        c = con.cursor()
         c.execute(sql, values)
-        self.con.commit()
+        con.commit()
         c.close()
 
     def run(self, params_dict):
@@ -179,42 +190,108 @@ class BenchmarkRunner:
         data = dict(params_dict)
         data.update(metrics)
         self.save_data(data)
-        return data
+        return self.get_data(params_dict)
 
-    def run_metrics(self, params_dict, time_for_quality):
+    def run_metrics(self, params_dict):
         """
         Return a metrics of the run, with a tradeoff between time and quality
         """
-        assert time_for_quality > 0
-        m = self.run(params)
+        assert self.time_for_quality > 0
+        m = self.run(params_dict)
         t = m["time_total"]
         q = m["hpwl"]
-        return math.log(q) - time_for_quality * math.log(t)
+        print(
+            f"Evaluated benchmark {params_dict['benchmark']} at {q} after {t:.0f}s")
+        return self.time_for_quality * math.log(q) + math.log(t)
 
-    def run_metrics_all(self, params_dict, time_for_quality, benchmarks=None, prefix="benchmarks/ISPD06/"):
+    def run_metrics_all(self, params_dict):
         """
         Return the geometric mean of the metrics across the benchmarks, with the given time/quality tradeoff
         """
-        if benchmarks is None:
-            benchmarks = os.listdir(prefix)
         metrics = []
-        for benchmark in sorted(benchmarks):
+        for benchmark in sorted(self.benchmarks):
             params = dict(params_dict)
             params["benchmark"] = benchmark
-            params["prefix"] = prefix
+            params["prefix"] = self.prefix
             metrics.append(self.run_metrics(params))
+        # Geometric mean
         return np.exp(np.mean(np.log(metrics)))
 
-    def optimize(self, benchmarks=None):
+    def evaluate_localsolver(self, params_map):
+        params_dict = BenchmarkRunner.default_params()
+        param_names = self.get_localsolver_param_names()
+        for i in range(len(params_map)):
+            params_dict[param_names[i]] = params_map[i]
+        print("Evaluation of a new incumbent: ")
+        for name in param_names:
+            print(f"\t{name}: {params_dict[name]}")
+        ret = self.run_metrics_all(params_dict)
+        print(f"Objective function: {ret}")
+        return ret
+
+    def get_localsolver_param_names(self):
+        return [
+            "global_max_nb_steps",
+            "global_gap_tolerance",
+            "global_penalty_cutoff_distance",
+            "global_approximation_distance",
+            "detailed_nb_passes",
+            "detailed_local_search_nb_neighbours",
+        ]
+
+    def make_localsolver_parameters(self, model):
+        return [
+            model.int(20, 60),
+            model.float(0.01, 0.2),
+            model.float(2.0, 50.0),
+            model.float(0.1, 10.0),
+            model.int(1, 3),
+            model.int(1, 6),
+        ]
+
+    def optimize(self):
         import localsolver
 
         with localsolver.LocalSolver() as ls:
+            # Create a simple model with an external function
             model = ls.model
-            max_nb_steps = ls.int(20, 60)
-            gap_tolerance = ls.float(0.01, 0.2)
+            model_params = self.make_localsolver_parameters(model)
+            f = model.create_double_external_function(
+                self.evaluate_localsolver)
+            func_call = model.call(f, *model_params)
+            model.minimize(func_call)
+            surrogate_params = f.external_context.enable_surrogate_modeling()
+            model.close()
 
+            # Setup the initial values as the default parameters
+            params_dict = BenchmarkRunner.default_params()
+            for name, p in zip(self.get_localsolver_param_names(), model_params):
+                p.value = params_dict[name]
+
+            # Add limits
+            surrogate_params.evaluation_limit = 1000
+            ls.param.time_limit = 600
+
+            # Solve
+            ls.solve()
+
+            # Get the result
+            result = {}
+            for name, p in zip(self.get_localsolver_param_names(), model_params):
+                result[name] = p.value
+            print(f"Optimization result: {result}")
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "benchmarks", help="Benchmark instances to optimize", nargs="+", type=str)
+parser.add_argument("--time-quality-tradeoff",
+                    help="Tradeoff between time and quality; higher is higher quality", type=float, default=1.0)
+
+args = parser.parse_args()
 
 BenchmarkRunner.create_db()
 
-runner = BenchmarkRunner()
-runner.optimize(["adaptec1"])
+runner = BenchmarkRunner(
+    args.benchmarks, time_for_quality=args.time_quality_tradeoff)
+runner.optimize()
