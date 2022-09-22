@@ -50,8 +50,9 @@ std::string GlobalPlacerParameters::toString() const {
   std::stringstream ss;
   ss << "Global placer params:"
      << "\n\tMax nb steps: " << maxNbSteps
-     << "\n\tGap tolerance: " << gapTolerance << "\n\tPenalty cutoff distance: "
-     << penaltyCutoffDistance << "\n\tInitial penalty: " << initialPenalty
+     << "\n\tGap tolerance: " << gapTolerance
+     << "\n\tPenalty cutoff distance: " << penaltyCutoffDistance
+     << "\n\tInitial penalty: " << initialPenalty
      << "\n\tPenalty update factor: " << penaltyUpdateFactor
      << "\n\tNet model: " << coloquinte::toString(netModel)
      << "\n\tApproximation distance: " << approximationDistance
@@ -69,7 +70,7 @@ std::string DetailedPlacerParameters::toString() const {
   ss << "Detailed placer params:"
      << "\n\tNb passes: " << nbPasses
      << "\n\tLocal search nb neighbours: " << localSearchNbNeighbours
-     << "\n\tLocal search nb rows" << localSearchNbRows
+     << "\n\tLocal search nb rows: " << localSearchNbRows
      << "\n\tShift nb rows: " << shiftNbRows << "\n\tLegalization cost model: "
      << coloquinte::toString(legalizationCostModel) << std::endl;
   return ss.str();

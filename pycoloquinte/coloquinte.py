@@ -40,7 +40,7 @@ def _read_aux(filename):
     if os.path.isdir(filename):
         dir_list = os.listdir(filename)
         all_files = [f for f in dir_list if f.endswith(".aux")]
-        default_name = os.path.basename(filename) + ".aux"
+        default_name = os.path.basename(os.path.normpath(filename)) + ".aux"
         if len(all_files) == 1:
             filename = os.path.join(filename, all_files[0])
         elif len(all_files) > 1 and default_name in all_files:
@@ -405,6 +405,7 @@ def main():
     args = parser.parse_args()
 
     circuit = Circuit.read_ispd(args.instance)
+    print(circuit)
     circuit.place(args.effort)
     circuit.write_placement(args.solution)
 
