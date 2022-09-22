@@ -109,23 +109,25 @@ class BenchmarkRunner:
         return data
 
     @staticmethod
-    def columns(data=None):
-        if data is None:
-            data = BenchmarkRun("").to_dict()
+    def columns():
+        data = BenchmarkRun("").to_dict()
         columns = list(data.keys())
-        return BenchmarkRunner.metric_columns(data) + columns
+        return BenchmarkRunner.metric_columns() + columns
 
     @staticmethod
-    def metric_columns(data=None):
+    def metric_columns():
         return ["time_total", "time_global", "time_detailed", "hpwl"]
 
     @staticmethod
-    def unique_columns(data=None):
-        if data is None:
-            data = BenchmarkRun("").to_dict()
-        unique_columns = list(k for k in data.keys() if k.startswith(
+    def param_columns():
+        data = BenchmarkRun("").to_dict()
+        param_columns = list(k for k in data.keys() if k.startswith(
             "global") or k.startswith("detailed"))
-        return ["benchmark", "prefix"] + unique_columns
+        return param_columns
+
+    @staticmethod
+    def unique_columns():
+        return ["benchmark", "prefix"] + BenchmarkRunner.param_columns()
 
     @staticmethod
     def create_db():
@@ -139,8 +141,24 @@ class BenchmarkRunner:
         con.commit()
         c.close()
 
+    def get_all_params(self):
+        """
+        Return all placement parameters that have been used
+        """
+        param_columns = BenchmarkRunner.param_columns()
+        param_columns_sql = ", ".join(param_columns)
+        sql = f"SELECT DISTINCT {param_columns_sql} FROM ColoquinteBenchmarks"
+        con = sqlite3.connect("benchmarks.db")
+        c = con.cursor()
+        c.execute(sql)
+        ret = c.fetchall()
+        return [{k: v for k, v in zip(param_columns, r)} for r in ret]
+
     def get_data(self, data):
-        key_columns = BenchmarkRunner.unique_columns(data)
+        """
+        Get the optimization metrics from the parameters
+        """
+        key_columns = BenchmarkRunner.unique_columns()
         if sorted(data.keys()) != sorted(key_columns):
             raise RuntimeError("Queried data does not match unique columns")
         values = [data[k] for k in key_columns]
@@ -161,6 +179,9 @@ class BenchmarkRunner:
             raise RuntimeError("Multiple lines found")
 
     def save_data(self, data):
+        """
+        Save the optimization metrics for these parameters
+        """
         expected_columns = sorted(BenchmarkRunner.columns())
         all_columns = sorted(data.keys())
         if all_columns != expected_columns:
@@ -233,23 +254,72 @@ class BenchmarkRunner:
         return [
             "global_max_nb_steps",
             "global_gap_tolerance",
+            "global_initial_penalty",
+            "global_penalty_update_factor",
             "global_penalty_cutoff_distance",
             "global_approximation_distance",
+            "global_max_nb_conjugate_gradient_steps",
+            "global_nb_rough_legalization_steps",
             "detailed_nb_passes",
             "detailed_local_search_nb_neighbours",
+            "detailed_local_search_nb_rows",
+            "detailed_shift_nb_rows",
         ]
 
     def make_localsolver_parameters(self, model):
         return [
             model.int(20, 60),
             model.float(0.01, 0.2),
+            model.float(0.01, 0.05),
+            model.float(1.01, 1.3),
             model.float(2.0, 50.0),
             model.float(0.1, 10.0),
+            model.int(100, 1000),
+            model.int(1, 3),
             model.int(1, 3),
             model.int(1, 6),
+            model.int(1, 3),
+            model.int(2, 10),
         ]
 
-    def optimize(self):
+    def save_localsolver_solutions(self, surrogate_params):
+        """
+        Register all pre-existing solutions for LocalSolver
+        """
+        existing = self.get_all_params()
+        print(f"{len(existing)} different configurations found")
+        nb_added = 0
+        for params_dict in existing:
+            if self.save_localsolver_solution(surrogate_params, params_dict):
+                nb_added += 1
+        print(f"{nb_added} configurations added")
+
+    def save_localsolver_solution(self, surrogate_params, params_dict):
+        """
+        Register an existing solution for LocalSolver
+        """
+        value = self.run_metrics_all(params_dict)
+        params_names = self.get_localsolver_param_names()
+        # Do not register if any parameter is not optimized but has a non-default value
+        default_dict = BenchmarkRunner.default_params()
+        for k, v in params_dict.items():
+            if k not in params_names and params_dict[k] != default_dict[k]:
+                return False
+        # Do not register if any of the benchmarks has not been run
+        for benchmark in self.benchmarks:
+            benchmark_dict = dict(params_dict)
+            benchmark_dict["benchmark"] = benchmark
+            benchmark_dict["prefix"] = self.prefix
+            if self.get_data(benchmark_dict) is None:
+                return False
+        # Register the solution
+        evaluation_point = surrogate_params.create_evaluation_point()
+        for name in params_names:
+            evaluation_point.add_argument(params_dict[name])
+        evaluation_point.set_return_value(self.run_metrics_all(params_dict))
+        return True
+
+    def optimize(self, time_limit=None, reuse=False):
         import localsolver
 
         with localsolver.LocalSolver() as ls:
@@ -268,9 +338,11 @@ class BenchmarkRunner:
             for name, p in zip(self.get_localsolver_param_names(), model_params):
                 p.value = params_dict[name]
 
-            # Add limits
-            surrogate_params.evaluation_limit = 1000
-            ls.param.time_limit = 600
+            if reuse:
+                self.save_localsolver_solutions(surrogate_params)
+
+            if time_limit is not None:
+                ls.param.time_limit = time_limit
 
             # Solve
             ls.solve()
@@ -287,6 +359,10 @@ parser.add_argument(
     "benchmarks", help="Benchmark instances to optimize", nargs="+", type=str)
 parser.add_argument("--time-quality-tradeoff",
                     help="Tradeoff between time and quality; higher is higher quality", type=float, default=1.0)
+parser.add_argument("--time-limit",
+                    help="Time limit for optimization", type=int)
+parser.add_argument("--reuse",
+                    help="Reuse previously evaluated incumbents from the start", action="store_true")
 
 args = parser.parse_args()
 
@@ -294,4 +370,4 @@ BenchmarkRunner.create_db()
 
 runner = BenchmarkRunner(
     args.benchmarks, time_for_quality=args.time_quality_tradeoff)
-runner.optimize()
+runner.optimize(time_limit=args.time_limit, reuse=args.reuse)
