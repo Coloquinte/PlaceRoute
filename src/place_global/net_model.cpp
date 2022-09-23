@@ -483,7 +483,7 @@ std::vector<float> MatrixCreator::solve(float tolerance, int maxIterations) {
   Eigen::Map<Eigen::Matrix<float, -1, 1> > rhs(rhs_.data(), rhs_.size());
   Eigen::Map<Eigen::Matrix<float, -1, 1> > initial(initial_.data(),
                                                    initial_.size());
-  Eigen::ConjugateGradient<Eigen::SparseMatrix<float> > solver;
+  Eigen::ConjugateGradient<Eigen::SparseMatrix<float>, Eigen::Lower|Eigen::Upper> solver;
   solver.compute(mat);
   solver.setTolerance(tolerance);
   solver.setMaxIterations(maxIterations);
