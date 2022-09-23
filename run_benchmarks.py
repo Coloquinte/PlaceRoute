@@ -223,7 +223,10 @@ class BenchmarkRunner:
         q = m["hpwl"]
         print(
             f"Evaluated benchmark {params_dict['benchmark']} at {q} after {t:.0f}s")
-        return self.time_for_quality * math.log(q) + math.log(t)
+        # Just normalization so numbers are not too horrible
+        norm_q = 1.0e6
+        norm_t = 100
+        return math.exp(math.log(q / norm_q) + math.log(t / norm_t) / self.time_for_quality)
 
     def run_metrics_all(self, params_dict):
         """
