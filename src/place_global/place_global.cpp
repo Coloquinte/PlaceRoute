@@ -1,6 +1,7 @@
 #include "place_global.hpp"
 
 #include <cmath>
+#include <future>
 #include <iostream>
 #include <numeric>
 
@@ -141,8 +142,10 @@ void GlobalPlacer::runLB() {
   params.penaltyCutoffDistance = penaltyCutoffDistance();
   params.tolerance = params_.conjugateGradientErrorTolerance;
   params.maxNbIterations = params_.maxNbConjugateGradientSteps;
-  xPlacementLB_ = xtopo_.solve(xPlacementLB_, xPlacementUB_, penalty, params);
-  yPlacementLB_ = ytopo_.solve(yPlacementLB_, yPlacementUB_, penalty, params);
+  std::future<std::vector<float> > x = std::async(std::launch::async, &NetModel::solve, &xtopo_, xPlacementLB_, xPlacementUB_, penalty, params);
+  std::future<std::vector<float> > y = std::async(std::launch::async, &NetModel::solve, &ytopo_, yPlacementLB_, yPlacementUB_, penalty, params);
+  xPlacementLB_ = x.get();
+  yPlacementLB_ = y.get();
 }
 
 void GlobalPlacer::runUB() {

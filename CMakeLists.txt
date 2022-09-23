@@ -8,6 +8,7 @@ add_subdirectory(thirdparty/pybind11)
 SET(Boost_USE_STATIC_LIBS ON)
 FIND_PACKAGE(Boost REQUIRED COMPONENTS system filesystem iostreams program_options unit_test_framework)
 FIND_PACKAGE(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(Threads REQUIRED)
 
 INCLUDE_DIRECTORIES(
     ${COLOQUINTE_SOURCE_DIR}/src
@@ -34,8 +35,10 @@ add_library(coloquinte STATIC ${SOURCES})
 set_target_properties(coloquinte PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 target_compile_features(coloquinte PRIVATE cxx_std_17)
 target_link_libraries(coloquinte
+  PRIVATE
   ${Boost_LIBRARIES}
   lemon
+  Threads::Threads
 )
 add_subdirectory(pycoloquinte)
 
