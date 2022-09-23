@@ -184,24 +184,14 @@ class IncrNetModel {
 
  private:
   /**
-   * @brief Compute the minimum position of a net from scratch
+   * @brief Compute the minimum and maximum position of a net from scratch
    */
-  int computeNetMinPos(int net) const;
+  std::pair<int, int> computeNetMinMaxPos(int net) const;
 
   /**
-   * @brief Compute the maximum position of a net from scratch
+   * @brief Compute the minimum and maximum position of each net from scratch
    */
-  int computeNetMaxPos(int net) const;
-
-  /**
-   * @brief Compute the minimum position of each net from scratch
-   */
-  std::vector<int> computeNetMinPos() const;
-
-  /**
-   * @brief Compute the maximum position of each net from scratch
-   */
-  std::vector<int> computeNetMaxPos() const;
+  std::vector<std::pair<int, int> > computeNetMinMaxPos() const;
 
   /**
    * @brief Compute the total value from scratch
@@ -239,8 +229,7 @@ class IncrNetModel {
   std::vector<int> cellPinOffsets_;
 
   // Current minimum and maximum for each net
-  std::vector<int> netMinPos_;
-  std::vector<int> netMaxPos_;
+  std::vector<std::pair<int, int> > netMinMaxPos_;
 
   // Current value
   long long value_;

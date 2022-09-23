@@ -109,41 +109,26 @@ void IncrNetModel::finalize() {
   }
 
   // Setup the cost
-  netMinPos_ = computeNetMinPos();
-  netMaxPos_ = computeNetMaxPos();
+  netMinMaxPos_ = computeNetMinMaxPos();
   value_ = computeValue();
 }
 
-int IncrNetModel::computeNetMinPos(int net) const {
-  int pos = std::numeric_limits<int>::max();
+std::pair<int, int> IncrNetModel::computeNetMinMaxPos(int net) const {
+  int minPos = std::numeric_limits<int>::max();
+  int maxPos = std::numeric_limits<int>::min();
   for (int j = 0; j < nbNetPins(net); ++j) {
     int c = pinCell(net, j);
-    pos = std::min(cellPos_[c] + netPinOffset(net, j), pos);
+    int pinPos = cellPos_[c] + netPinOffset(net, j);
+    minPos = std::min(pinPos, minPos);
+    maxPos = std::max(pinPos, maxPos);
   }
-  return pos;
+  return std::make_pair(minPos, maxPos);
 }
 
-int IncrNetModel::computeNetMaxPos(int net) const {
-  int pos = std::numeric_limits<int>::min();
-  for (int j = 0; j < nbNetPins(net); ++j) {
-    int c = pinCell(net, j);
-    pos = std::max(cellPos_[c] + netPinOffset(net, j), pos);
-  }
-  return pos;
-}
-
-std::vector<int> IncrNetModel::computeNetMinPos() const {
-  std::vector<int> ret(nbNets());
+std::vector<std::pair<int, int>> IncrNetModel::computeNetMinMaxPos() const {
+  std::vector<std::pair<int, int>> ret(nbNets());
   for (int net = 0; net < nbNets(); ++net) {
-    ret[net] = computeNetMinPos(net);
-  }
-  return ret;
-}
-
-std::vector<int> IncrNetModel::computeNetMaxPos() const {
-  std::vector<int> ret(nbNets());
-  for (int net = 0; net < nbNets(); ++net) {
-    ret[net] = computeNetMaxPos(net);
+    ret[net] = computeNetMinMaxPos(net);
   }
   return ret;
 }
@@ -151,7 +136,8 @@ std::vector<int> IncrNetModel::computeNetMaxPos() const {
 long long IncrNetModel::computeValue() const {
   long long ret = 0;
   for (int net = 0; net < nbNets(); ++net) {
-    ret += netMaxPos_[net] - netMinPos_[net];
+    auto minMaxPos = netMinMaxPos_[net];
+    ret += minMaxPos.second - minMaxPos.first;
   }
   return ret;
 }
@@ -166,12 +152,11 @@ void IncrNetModel::updateCellPos(int cell, int pos) {
 }
 
 void IncrNetModel::recomputeNet(int net) {
-  int minPos = computeNetMinPos(net);
-  int maxPos = computeNetMaxPos(net);
-  int oldValue = netMaxPos_[net] - netMinPos_[net];
-  int newValue = maxPos - minPos;
-  netMinPos_[net] = minPos;
-  netMaxPos_[net] = maxPos;
+  auto newMinMaxPos = computeNetMinMaxPos(net);
+  auto oldMinMaxPos = netMinMaxPos_[net];
+  int oldValue = oldMinMaxPos.second - oldMinMaxPos.first;
+  int newValue = newMinMaxPos.second - newMinMaxPos.first;
+  netMinMaxPos_[net] = newMinMaxPos;
   value_ += newValue - oldValue;
 }
 
@@ -219,14 +204,10 @@ void IncrNetModel::check() const {
       throw std::runtime_error("Invalid net number");
     }
   }
-  auto minPos = computeNetMinPos();
-  auto maxPos = computeNetMaxPos();
+  auto minMaxPos = computeNetMinMaxPos();
   for (int i = 0; i < nbNets(); ++i) {
-    if (minPos[i] != netMinPos_[i]) {
-      throw std::runtime_error("Mismatched min net bound");
-    }
-    if (maxPos[i] != netMaxPos_[i]) {
-      throw std::runtime_error("Mismatched max net bound");
+    if (minMaxPos[i] != netMinMaxPos_[i]) {
+      throw std::runtime_error("Mismatched net bound");
     }
   }
   if (computeValue() != value()) {
