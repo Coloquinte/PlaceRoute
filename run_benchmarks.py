@@ -10,7 +10,7 @@ import numpy as np
 
 
 class BenchmarkRun:
-    def __init__(self, benchmark, global_params=None, detailed_params=None, prefix="benchmarks/ISPD06/"):
+    def __init__(self, benchmark, global_params=None, detailed_params=None, ignore_macros=False, prefix="benchmarks/ISPD06/"):
         if global_params is None:
             global_params = coloquinte.GlobalPlacerParameters()
         if detailed_params is None:
@@ -18,6 +18,7 @@ class BenchmarkRun:
         self._global_params = global_params
         self._detailed_params = detailed_params
         self._benchmark = benchmark
+        self._ignore_macros = ignore_macros
         self._prefix = prefix
 
     @property
@@ -76,7 +77,7 @@ class BenchmarkRun:
             if k.startswith("detailed_"):
                 k = k[9:]
                 BenchmarkRun._setattr(dp, k, v)
-        return BenchmarkRun(d["benchmark"], gp, dp, d["prefix"])
+        return BenchmarkRun(d["benchmark"], gp, dp, d["ignore_macros"], d["prefix"])
 
     def to_dict(self):
         ret = {}
@@ -90,14 +91,16 @@ class BenchmarkRun:
                 ret[name + "_" + p] = val
         ret["benchmark"] = self.benchmark
         ret["prefix"] = self._prefix
+        ret["ignore_macros"] = self._ignore_macros
         return ret
 
 
 class BenchmarkRunner:
-    def __init__(self, benchmarks=None, time_for_quality=None, prefix="benchmarks/ISPD06/"):
+    def __init__(self, benchmarks=None, time_for_quality=None, ignore_macros=False, prefix="benchmarks/ISPD06/"):
         if benchmarks is None:
             benchmarks = os.listdir(prefix)
         self.benchmarks = benchmarks
+        self.ignore_macros = ignore_macros
         self.prefix = prefix
         self.time_for_quality = time_for_quality
 
@@ -105,6 +108,7 @@ class BenchmarkRunner:
     def default_params():
         data = BenchmarkRun("").to_dict()
         del data["benchmark"]
+        del data["ignore_macros"]
         del data["prefix"]
         return data
 
@@ -127,7 +131,7 @@ class BenchmarkRunner:
 
     @staticmethod
     def unique_columns():
-        return ["benchmark", "prefix"] + BenchmarkRunner.param_columns()
+        return ["benchmark", "ignore_macros", "prefix"] + BenchmarkRunner.param_columns()
 
     @staticmethod
     def create_db():
@@ -236,6 +240,7 @@ class BenchmarkRunner:
         for benchmark in sorted(self.benchmarks):
             params = dict(params_dict)
             params["benchmark"] = benchmark
+            params["ignore_macros"] = self.ignore_macros
             params["prefix"] = self.prefix
             metrics.append(self.run_metrics(params))
         # Geometric mean
@@ -366,11 +371,13 @@ parser.add_argument("--time-limit",
                     help="Time limit for optimization", type=int)
 parser.add_argument("--reuse",
                     help="Reuse previously evaluated incumbents from the start", action="store_true")
+parser.add_argument("--ignore-macros",
+                    help="Ignore the macros during placement for more stable benchmarks", action="store_true")
 
 args = parser.parse_args()
 
 BenchmarkRunner.create_db()
 
 runner = BenchmarkRunner(
-    args.benchmarks, time_for_quality=args.time_quality_tradeoff)
+    args.benchmarks, time_for_quality=args.time_quality_tradeoff, ignore_macros=args.ignore_macros)
 runner.optimize(time_limit=args.time_limit, reuse=args.reuse)
