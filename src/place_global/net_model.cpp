@@ -233,7 +233,8 @@ class MatrixCreator {
         nbCells_(topo.nbCells()),
         nbSupps_(0),
         rhs_(topo.nbCells()),
-        initial_(topo.nbCells()) {}
+        initial_(topo.nbCells()),
+        hasNonZero_(topo.nbCells()) {}
 
   int nbCells() const { return nbCells_; }
   int matSize() const { return nbCells_ + nbSupps_; }
@@ -276,13 +277,24 @@ class MatrixCreator {
   void addMovingPin(int c1, int c2, float offs1, float offs2, float weight);
   void addFixedPin(int c1, float offs1, float pos, float weight);
 
+  void finalize();
+
  private:
   const NetModel &topo_;
   int nbCells_;
   int nbSupps_;
+
+  // Matrix to be solved
   std::vector<Eigen::Triplet<float> > mat_;
+
+  // Right-hand side of the equation
   std::vector<float> rhs_;
+
+  // Initial guess for the solver
   std::vector<float> initial_;
+
+  // Whether the cell has a non-zero on the diagonal
+  std::vector<char> hasNonZero_;
 };
 
 void MatrixCreator::addMovingPin(int c1, int c2, float offs1, float offs2,
@@ -296,12 +308,15 @@ void MatrixCreator::addMovingPin(int c1, int c2, float offs1, float offs2,
   mat_.emplace_back(c2, c2, weight);
   rhs_[c1] += weight * (offs2 - offs1);
   rhs_[c2] += weight * (offs1 - offs2);
+  hasNonZero_[c1] = true;
+  hasNonZero_[c2] = true;
 }
 
 void MatrixCreator::addFixedPin(int c1, float offs1, float pos, float weight) {
   assert(c1 >= 0);
   mat_.emplace_back(c1, c1, weight);
   rhs_[c1] += weight * (pos - offs1);
+  hasNonZero_[c1] = true;
 }
 
 void MatrixCreator::addPin(int c1, int c2, float offs1, float offs2,
@@ -335,6 +350,7 @@ void MatrixCreator::addPenalty(const std::vector<float> &netPlacement,
 int MatrixCreator::addCell(float initialPos) {
   initial_.push_back(initialPos);
   rhs_.push_back(0.0f);
+  hasNonZero_.push_back(false);
   int ret = nbCells_ + nbSupps_;
   nbSupps_++;
   return ret;
@@ -476,8 +492,21 @@ void MatrixCreator::addB2B(int net, const std::vector<float> &pl,
   }
 }
 
+void MatrixCreator::finalize() {
+  // Ensure there are no non-zeros on the matrix diagonal
+  // This avoids crashes in IncompleteCholesky code, and may avert
+  // numerical issues (division by zero) elsewhere
+  for (int i = 0; i < matSize(); ++i) {
+    if (!hasNonZero_[i]) {
+      mat_.emplace_back(i, i, 1.0e-8f);
+    }
+    hasNonZero_[i] = true;
+  }
+}
+
 std::vector<float> MatrixCreator::solve(float tolerance, int maxIterations) {
   check();
+  finalize();
   Eigen::SparseMatrix<float> mat(matSize(), matSize());
   mat.setFromTriplets(mat_.begin(), mat_.end());
   Eigen::Map<Eigen::Matrix<float, -1, 1> > rhs(rhs_.data(), rhs_.size());
