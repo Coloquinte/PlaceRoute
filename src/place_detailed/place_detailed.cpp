@@ -326,9 +326,15 @@ std::vector<int> DetailedPlacer::computeClosestIndexInRow(
 
 void DetailedPlacer::runShifts(int nbRows) {
   if (nbRows < 2) return;
+  RowNeighbourhood rowsNeighbours(placement_.rows(), nbRows / 2);
+
   for (int r = 0; r < placement_.nbRows(); r += nbRows / 2) {
     std::vector<int> rows;
-    for (int i = r; i < std::min(r + nbRows, placement_.nbRows()); ++i) {
+    rows.push_back(r);
+    for (int i : rowsNeighbours.rowsBelow(r)) {
+      rows.push_back(i);
+    }
+    for (int i : rowsNeighbours.rowsAbove(r)) {
       rows.push_back(i);
     }
     runShiftsOnRows(rows);
@@ -455,7 +461,7 @@ void DetailedPlacer::runShiftsOnCells(const std::vector<int> &cells) {
   ns.supplyMap(supply).costMap(cost);
   auto res = ns.run();
   if (res != ns.OPTIMAL) {
-    throw std::runtime_error("Could not solve the network flow optimallt");
+    throw std::runtime_error("Could not solve the network flow optimally");
   }
 
   // And we get the new positions as the dual values of the current solution
