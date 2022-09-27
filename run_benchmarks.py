@@ -107,6 +107,9 @@ class BlackboxFloatVariable:
     def value(self, model_value):
         return model_value
 
+    def initialize(self, model_variable, value):
+        model_variable.value = value
+
 
 class BlackboxLogFloatVariable:
     def __init__(self, name, min, max):
@@ -119,6 +122,9 @@ class BlackboxLogFloatVariable:
 
     def value(self, model_value):
         return math.exp(model_value)
+
+    def initialize(self, model_variable, value):
+        model_variable.value = math.log(value)
 
 
 class BlackboxIntVariable:
@@ -133,6 +139,9 @@ class BlackboxIntVariable:
     def value(self, model_value):
         return model_value
 
+    def initialize(self, model_variable, value):
+        model_variable.value = value
+
 
 class BlackboxEnumVariable:
     def __init__(self, name, enum):
@@ -143,16 +152,20 @@ class BlackboxEnumVariable:
         return model.int(0, len(self.enum.__members__))
 
     def value(self, model_value):
+        # TODO
         return self.enum(model_value)
 
+    def initialize(self, model_variable, value):
+        # TODO
+        model_variable.value = value
 
 optimization_variables = [
     BlackboxIntVariable("global_max_nb_steps", 20, 60),
-    BlackboxFloatVariable("global_gap_tolerance", 0.01, 0.2),
+    BlackboxLogFloatVariable("global_gap_tolerance", 0.01, 0.2),
     BlackboxFloatVariable("global_initial_penalty", 0.01, 0.05),
-    BlackboxFloatVariable("global_penalty_update_factor", 1.01, 1.3),
-    BlackboxFloatVariable("global_penalty_cutoff_distance", 2.0, 50.0),
-    BlackboxFloatVariable("global_approximation_distance", 0.1, 10.0),
+    BlackboxLogFloatVariable("global_penalty_update_factor", 1.01, 1.3),
+    BlackboxLogFloatVariable("global_penalty_cutoff_distance", 2.0, 50.0),
+    BlackboxLogFloatVariable("global_approximation_distance", 0.1, 10.0),
     BlackboxIntVariable("global_max_nb_conjugate_gradient_steps", 100, 1000),
     BlackboxIntVariable("global_nb_rough_legalization_steps", 1, 3),
     BlackboxIntVariable("detailed_nb_passes", 1, 3),
@@ -232,7 +245,13 @@ class BenchmarkRunner:
         """
         key_columns = BenchmarkRunner.unique_columns()
         if sorted(data.keys()) != sorted(key_columns):
-            raise RuntimeError("Queried data does not match unique columns")
+            non_existent = sorted(set(data.keys()).difference(key_columns))
+            missing = sorted(set(key_columns).difference(data.keys()))
+            raise RuntimeError(
+                f"Queried data does not match unique columns:\n"
+                f"\tNon existent: {', '.join(non_existent)}\n"
+                f"\tMissing: {', '.join(missing)}\n"
+        )
         values = [data[k] for k in key_columns]
         key_columns_sql = " and ".join([c + "=?" for c in key_columns])
         metric_columns = BenchmarkRunner.metric_columns()
@@ -316,12 +335,12 @@ class BenchmarkRunner:
 
     def evaluate_localsolver(self, params_map):
         params_dict = BenchmarkRunner.default_params()
-        param_names = self.variable_names
-        for i in range(len(params_map)):
-            params_dict[param_names[i]] = params_map[i]
+        variables = optimization_variables
+        for i in range(len(variables)):
+            params_dict[variables[i].name] = variables[i].value(params_map[i])
         print("Evaluation of a new incumbent: ")
-        for name in param_names:
-            print(f"\t{name}: {params_dict[name]}")
+        for v in optimization_variables:
+            print(f"\t{v.name}: {params_dict[v.name]}")
         ret = self.run_metrics_all(params_dict)
         print(f"Objective function: {ret}")
         return ret
@@ -387,7 +406,7 @@ class BenchmarkRunner:
             # Setup the initial values as the default parameters
             params_dict = BenchmarkRunner.default_params()
             for v, p in zip(optimization_variables, model_params):
-                p.value = params_dict[v.name]
+                v.initialize(p, params_dict[v.name])
 
             if reuse:
                 self.save_localsolver_solutions(surrogate_params)
