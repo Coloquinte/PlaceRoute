@@ -59,7 +59,7 @@ class DetailedPlacer {
    *
    * @param nbRows Number of neighbouring rows considered
    */
-  void runShifts(int nbRows);
+  void runShifts(int nbRows, int maxNbCells);
 
   /**
    * @brief Run the cell swapping optimization within a row
@@ -110,7 +110,7 @@ class DetailedPlacer {
    * @brief Run a simple optimization using only cell shifting (no reordering)
    * on the given rows
    */
-  void runShiftsOnRows(const std::vector<int> &rows);
+  void runShiftsOnRows(const std::vector<int> &rows, int maxNbCells);
 
   /**
    * @brief Change the cell coordinates to optimize the wirelength without

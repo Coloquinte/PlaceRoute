@@ -207,6 +207,11 @@ struct DetailedPlacerParameters {
   int shiftNbRows;
 
   /**
+   * @brief Maximum number of cells considered together when optimizing shifts
+   */
+  int shiftMaxNbCells;
+
+  /**
    * @brief Cost model used for legalization
    */
   LegalizationModel legalizationCostModel;

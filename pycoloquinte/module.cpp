@@ -96,6 +96,7 @@ Construct the parameters
       .def_readwrite("local_search_nb_rows",
                      &DetailedPlacerParameters::localSearchNbRows)
       .def_readwrite("shift_nb_rows", &DetailedPlacerParameters::shiftNbRows)
+      .def_readwrite("shift_max_nb_cells", &DetailedPlacerParameters::shiftMaxNbCells)
       .def_readwrite("legalization_cost_model",
                      &DetailedPlacerParameters::legalizationCostModel)
       .def("__str__", &DetailedPlacerParameters::toString)

@@ -71,7 +71,9 @@ std::string DetailedPlacerParameters::toString() const {
      << "\n\tNb passes: " << nbPasses
      << "\n\tLocal search nb neighbours: " << localSearchNbNeighbours
      << "\n\tLocal search nb rows: " << localSearchNbRows
-     << "\n\tShift nb rows: " << shiftNbRows << "\n\tLegalization cost model: "
+     << "\n\tShift nb rows: " << shiftNbRows
+     << "\n\tShift max nb cells: " << shiftMaxNbCells
+     << "\n\tLegalization cost model: "
      << coloquinte::toString(legalizationCostModel) << std::endl;
   return ss.str();
 }

@@ -16,7 +16,8 @@ DetailedPlacerParameters::DetailedPlacerParameters(int effort) {
   localSearchNbNeighbours = effort / 2 + 1;
   localSearchNbRows = effort / 2 + 1;
   legalizationCostModel = LegalizationModel::L1;
-  shiftNbRows = effort + 2;
+  shiftNbRows = 3;
+  shiftMaxNbCells = 100;
   check();
 }
 
@@ -37,6 +38,10 @@ void DetailedPlacerParameters::check() const {
     throw std::runtime_error(
         "Number of detailed placement shift rows must be non-negative");
   }
+  if (shiftMaxNbCells < 0) {
+    throw std::runtime_error(
+        "Number of detailed placement shift cells must be non-negative");
+  }
   if (legalizationCostModel != LegalizationModel::L1) {
     throw std::runtime_error("Only L1 legalization model is supported");
   }
@@ -54,7 +59,7 @@ void DetailedPlacer::place(Circuit &circuit,
   pl.check();
   for (int i = 0; i < params.nbPasses; ++i) {
     pl.runSwaps(params.localSearchNbNeighbours, params.localSearchNbRows);
-    pl.runShifts(params.shiftNbRows);
+    pl.runShifts(params.shiftNbRows, params.shiftMaxNbCells);
   }
   pl.check();
   pl.placement_.exportPlacement(circuit);
@@ -324,7 +329,7 @@ std::vector<int> DetailedPlacer::computeClosestIndexInRow(
   return ret;
 }
 
-void DetailedPlacer::runShifts(int nbRows) {
+void DetailedPlacer::runShifts(int nbRows, int maxNbCells) {
   if (nbRows < 2) return;
   RowNeighbourhood rowsNeighbours(placement_.rows(), nbRows / 2);
 
@@ -337,19 +342,34 @@ void DetailedPlacer::runShifts(int nbRows) {
     for (int i : rowsNeighbours.rowsAbove(r)) {
       rows.push_back(i);
     }
-    runShiftsOnRows(rows);
+    runShiftsOnRows(rows, maxNbCells);
   }
   placement_.check();
 }
 
-void DetailedPlacer::runShiftsOnRows(const std::vector<int> &rows) {
-  std::vector<int> cells;
+void DetailedPlacer::runShiftsOnRows(const std::vector<int> &rows,
+                                     int maxNbCells) {
+  // Gather all cells and sort them by x coordinate
+  std::vector<std::pair<int, int> > sortedCells;
   for (int row : rows) {
     for (int c : placement_.rowCells(row)) {
-      cells.push_back(c);
+      sortedCells.emplace_back(placement_.cellX(c), c);
     }
   }
-  runShiftsOnCells(cells);
+  std::stable_sort(sortedCells.begin(), sortedCells.end());
+  std::vector<int> cells;
+  for (auto p : sortedCells) {
+    cells.push_back(p.second);
+  }
+
+  // Only select part of the cells so we never solve an optimization problem
+  // bigger than maxNbCells
+  int overlap = std::min(maxNbCells / 2, 10);
+  for (int start = 0; start < cells.size(); start += maxNbCells - overlap) {
+    int end = std::min(start + maxNbCells, (int)cells.size());
+    std::vector<int> subproblem(cells.begin() + start, cells.begin() + end);
+    runShiftsOnCells(subproblem);
+  }
 }
 
 void DetailedPlacer::runShiftsOnCells(const std::vector<int> &cells) {
@@ -445,7 +465,6 @@ void DetailedPlacer::runShiftsOnCells(const std::vector<int> &cells) {
 
   // Create the maps to have cost and capacity for the arcs
   IntArcMap cost(g, 0);
-  IntArcMap capacity(g, nets.size());
   IntNodeMap supply(g, 0);
 
   for (arc_pair A : constraint_arcs) {
@@ -458,7 +477,12 @@ void DetailedPlacer::runShiftsOnCells(const std::vector<int> &cells) {
 
   // Then we (hope the solver can) solve it
   NetworkSimplex<SmartDigraph> ns(g);
-  ns.supplyMap(supply).costMap(cost);
+  ns.supplyMap(supply);
+  ns.costMap(cost);
+
+  // May be necessary to specify a capacity for algorithms other than
+  // NetworkSimplex IntArcMap capacity(g, nets.size()); ns.upperMap(capacity);
+
   auto res = ns.run();
   if (res != ns.OPTIMAL) {
     throw std::runtime_error("Could not solve the network flow optimally");
