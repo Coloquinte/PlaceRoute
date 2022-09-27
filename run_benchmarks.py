@@ -95,6 +95,74 @@ class BenchmarkRun:
         return ret
 
 
+class BlackboxFloatVariable:
+    def __init__(self, name, min, max):
+        self.name = name
+        self.min = min
+        self.max = max
+
+    def define(self, model):
+        return model.float(self.min, self.max)
+
+    def value(self, model_value):
+        return model_value
+
+
+class BlackboxLogFloatVariable:
+    def __init__(self, name, min, max):
+        self.name = name
+        self.min = min
+        self.max = max
+
+    def define(self, model):
+        return model.float(math.log(self.min), math.log(self.max))
+
+    def value(self, model_value):
+        return math.exp(model_value)
+
+
+class BlackboxIntVariable:
+    def __init__(self, name, min, max):
+        self.name = name
+        self.min = min
+        self.max = max
+
+    def define(self, model):
+        return model.int(self.min, self.max)
+
+    def value(self, model_value):
+        return model_value
+
+
+class BlackboxEnumVariable:
+    def __init__(self, name, enum):
+        self.name = name
+        self.enum = enum
+
+    def define(self, model):
+        return model.int(0, len(self.enum.__members__))
+
+    def value(self, model_value):
+        return self.enum(model_value)
+
+
+optimization_variables = [
+    BlackboxIntVariable("global_max_nb_steps", 20, 60),
+    BlackboxFloatVariable("global_gap_tolerance", 0.01, 0.2),
+    BlackboxFloatVariable("global_initial_penalty", 0.01, 0.05),
+    BlackboxFloatVariable("global_penalty_update_factor", 1.01, 1.3),
+    BlackboxFloatVariable("global_penalty_cutoff_distance", 2.0, 50.0),
+    BlackboxFloatVariable("global_approximation_distance", 0.1, 10.0),
+    BlackboxIntVariable("global_max_nb_conjugate_gradient_steps", 100, 1000),
+    BlackboxIntVariable("global_nb_rough_legalization_steps", 1, 3),
+    BlackboxIntVariable("detailed_nb_passes", 1, 3),
+    BlackboxIntVariable("detailed_local_search_nb_neighbours", 1, 6),
+    BlackboxIntVariable("detailed_local_search_nb_rows", 1, 3),
+    BlackboxIntVariable("detailed_shift_nb_rows", 2, 10),
+    BlackboxIntVariable("detailed_shift_max_nb_cells", 20, 200),
+]
+
+
 class BenchmarkRunner:
     def __init__(self, benchmarks=None, time_for_quality=None, ignore_macros=False, prefix="benchmarks/ISPD06/"):
         if benchmarks is None:
@@ -248,7 +316,7 @@ class BenchmarkRunner:
 
     def evaluate_localsolver(self, params_map):
         params_dict = BenchmarkRunner.default_params()
-        param_names = self.get_localsolver_param_names()
+        param_names = self.variable_names
         for i in range(len(params_map)):
             params_dict[param_names[i]] = params_map[i]
         print("Evaluation of a new incumbent: ")
@@ -258,37 +326,12 @@ class BenchmarkRunner:
         print(f"Objective function: {ret}")
         return ret
 
-    def get_localsolver_param_names(self):
-        return [
-            "global_max_nb_steps",
-            "global_gap_tolerance",
-            "global_initial_penalty",
-            "global_penalty_update_factor",
-            "global_penalty_cutoff_distance",
-            "global_approximation_distance",
-            "global_max_nb_conjugate_gradient_steps",
-            "global_nb_rough_legalization_steps",
-            "detailed_nb_passes",
-            "detailed_local_search_nb_neighbours",
-            "detailed_local_search_nb_rows",
-            "detailed_shift_nb_rows",
-        ]
+    @property
+    def variable_names(self):
+        return [v.name for v in optimization_variables]
 
-    def make_localsolver_parameters(self, model):
-        return [
-            model.int(20, 60),
-            model.float(0.01, 0.2),
-            model.float(0.01, 0.05),
-            model.float(1.01, 1.3),
-            model.float(2.0, 50.0),
-            model.float(0.1, 10.0),
-            model.int(100, 1000),
-            model.int(1, 3),
-            model.int(1, 3),
-            model.int(1, 6),
-            model.int(1, 3),
-            model.int(2, 10),
-        ]
+    def define_variables(self, model):
+        return [v.define(model) for v in optimization_variables]
 
     def save_localsolver_solutions(self, surrogate_params):
         """
@@ -307,7 +350,7 @@ class BenchmarkRunner:
         Register an existing solution for LocalSolver
         """
         value = self.run_metrics_all(params_dict)
-        params_names = self.get_localsolver_param_names()
+        params_names = self.variable_names
         # Do not register if any parameter is not optimized but has a non-default value
         default_dict = BenchmarkRunner.default_params()
         for k, v in params_dict.items():
@@ -333,7 +376,7 @@ class BenchmarkRunner:
         with localsolver.LocalSolver() as ls:
             # Create a simple model with an external function
             model = ls.model
-            model_params = self.make_localsolver_parameters(model)
+            model_params = self.define_variables(model)
             f = model.create_double_external_function(
                 self.evaluate_localsolver)
             func_call = model.call(f, *model_params)
@@ -343,8 +386,8 @@ class BenchmarkRunner:
 
             # Setup the initial values as the default parameters
             params_dict = BenchmarkRunner.default_params()
-            for name, p in zip(self.get_localsolver_param_names(), model_params):
-                p.value = params_dict[name]
+            for v, p in zip(optimization_variables, model_params):
+                p.value = params_dict[v.name]
 
             if reuse:
                 self.save_localsolver_solutions(surrogate_params)
@@ -357,7 +400,7 @@ class BenchmarkRunner:
 
             # Get the result
             result = {}
-            for name, p in zip(self.get_localsolver_param_names(), model_params):
+            for name, p in zip(self.variable_names, model_params):
                 result[name] = p.value
             print(f"Optimization result: {result}")
 
