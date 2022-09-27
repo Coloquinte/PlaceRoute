@@ -107,10 +107,16 @@ class DetailedPlacer {
   void runSwapsTwoRowsAmplify(int r1, int r2, int nbNeighbours);
 
   /**
+   * @brief Run a simple optimization using only cell shifting (no reordering)
+   * on the given rows
+   */
+  void runShiftsOnRows(const std::vector<int> &rows);
+
+  /**
    * @brief Change the cell coordinates to optimize the wirelength without
    * reordering them
    */
-  void optimizeShift(const std::vector<int> &cells);
+  void runShiftsOnCells(const std::vector<int> &cells);
 
   /**
    * @brief Return the current objective value

@@ -327,18 +327,26 @@ std::vector<int> DetailedPlacer::computeClosestIndexInRow(
 void DetailedPlacer::runShifts(int nbRows) {
   if (nbRows < 2) return;
   for (int r = 0; r < placement_.nbRows(); r += nbRows / 2) {
-    std::vector<int> cells;
+    std::vector<int> rows;
     for (int i = r; i < std::min(r + nbRows, placement_.nbRows()); ++i) {
-      for (int c : placement_.rowCells(i)) {
-        cells.push_back(c);
-      }
+      rows.push_back(i);
     }
-    optimizeShift(cells);
+    runShiftsOnRows(rows);
   }
   placement_.check();
 }
 
-void DetailedPlacer::optimizeShift(const std::vector<int> &cells) {
+void DetailedPlacer::runShiftsOnRows(const std::vector<int> &rows) {
+  std::vector<int> cells;
+  for (int row : rows) {
+    for (int c : placement_.rowCells(row)) {
+      cells.push_back(c);
+    }
+  }
+  runShiftsOnCells(cells);
+}
+
+void DetailedPlacer::runShiftsOnCells(const std::vector<int> &cells) {
   std::unordered_set<int> cell_set(cells.begin(), cells.end());
   if (cell_set.size() != cells.size()) {
     throw std::runtime_error("The given cells are not unique");
