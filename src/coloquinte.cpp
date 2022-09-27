@@ -81,7 +81,8 @@ std::string DetailedPlacerParameters::toString() const {
 Circuit::Circuit(int nbCells) {
   cellWidth_.resize(nbCells);
   cellHeight_.resize(nbCells);
-  cellFixed_.resize(nbCells);
+  cellIsFixed_.resize(nbCells, false);
+  cellIsObstruction_.resize(nbCells, true);
   cellX_.resize(nbCells);
   cellY_.resize(nbCells);
   cellOrientation_.resize(nbCells);
@@ -135,13 +136,22 @@ void Circuit::setCellY(const std::vector<int> &y) {
   cellY_ = y;
 }
 
-void Circuit::setCellFixed(const std::vector<bool> &f) {
+void Circuit::setCellIsFixed(const std::vector<bool> &f) {
   if (f.size() != nbCells()) {
     throw std::runtime_error(
         "Number of elements is not the same as the number of cells of the "
         "circuit");
   }
-  cellFixed_ = f;
+  cellIsFixed_ = f;
+}
+
+void Circuit::setCellIsObstruction(const std::vector<bool> &f) {
+  if (f.size() != nbCells()) {
+    throw std::runtime_error(
+        "Number of elements is not the same as the number of cells of the "
+        "circuit");
+  }
+  cellIsObstruction_ = f;
 }
 
 void Circuit::setCellOrientation(const std::vector<CellOrientation> &orient) {
@@ -254,7 +264,8 @@ Rectangle Circuit::computePlacementArea() const {
 std::vector<Rectangle> Circuit::computeRows() const {
   std::vector<Rectangle> obstacles;
   for (int i = 0; i < nbCells(); ++i) {
-    if (!fixed(i)) continue;
+    if (!isFixed(i)) continue;
+    if (!isObstruction(i)) continue;
     obstacles.emplace_back(x(i), x(i) + placedWidth(i), y(i),
                            y(i) + placedHeight(i));
   }
@@ -292,7 +303,8 @@ std::string Circuit::toString() const {
 void Circuit::check() const {
   assert(cellWidth_.size() == nbCells());
   assert(cellHeight_.size() == nbCells());
-  assert(cellFixed_.size() == nbCells());
+  assert(cellIsFixed_.size() == nbCells());
+  assert(cellIsObstruction_.size() == nbCells());
   assert(cellX_.size() == nbCells());
   assert(cellY_.size() == nbCells());
   assert(cellOrientation_.size() == nbCells());
@@ -327,7 +339,7 @@ int place_ispd(int nb_cells, int nb_nets, int *cell_widths, int *cell_heights,
     for (char *f = cell_fixed; f != cell_fixed + nb_cells; ++f) {
       cell_fixed_vec.push_back(*f);
     }
-    circuit.setCellFixed(cell_fixed_vec);
+    circuit.setCellIsFixed(cell_fixed_vec);
     int nb_pins = net_limits[nb_nets];
     circuit.setNets(std::vector<int>(net_limits, net_limits + nb_nets + 1),
                     std::vector<int>(pin_cells, pin_cells + nb_pins),

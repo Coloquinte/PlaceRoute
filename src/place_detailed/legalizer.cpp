@@ -12,7 +12,7 @@ Legalizer Legalizer::fromIspdCircuit(const Circuit &circuit) {
   // Represent fixed cells with -1 width so they are not considered
   std::vector<int> widths = circuit.cellWidth_;
   for (int i = 0; i < circuit.nbCells(); ++i) {
-    if (circuit.cellFixed_[i]) {
+    if (circuit.cellIsFixed_[i]) {
       widths[i] = -1;
     }
   }

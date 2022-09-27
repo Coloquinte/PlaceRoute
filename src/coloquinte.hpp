@@ -297,12 +297,22 @@ class Circuit {
   /**
    * @brief Get the fixed status for all cells
    */
-  const std::vector<bool> &cellFixed() const { return cellFixed_; }
+  const std::vector<bool> &cellIsFixed() const { return cellIsFixed_; }
 
   /**
    * @brief Set the fixed status for all cells
    */
-  void setCellFixed(const std::vector<bool> &f);
+  void setCellIsFixed(const std::vector<bool> &f);
+
+  /**
+   * @brief Get the obstruction status for all cells
+   */
+  const std::vector<bool> &cellIsObstruction() const { return cellIsObstruction_; }
+
+  /**
+   * @brief Set the fixed status for all cells
+   */
+  void setCellIsObstruction(const std::vector<bool> &f);
 
   /**
    * @brief Get the orientation for all cells
@@ -406,9 +416,17 @@ class Circuit {
   /**
    * @brief Return true if a cell is fixed
    */
-  bool fixed(int cell) const {
+  bool isFixed(int cell) const {
     assert(cell < nbCells());
-    return cellFixed_[cell];
+    return cellIsFixed_[cell];
+  }
+
+  /**
+   * @brief Return true if a cell cannot overlap with others
+   */
+  bool isObstruction(int cell) const {
+    assert(cell < nbCells());
+    return cellIsObstruction_[cell];
   }
 
   /**
@@ -499,7 +517,8 @@ class Circuit {
   std::vector<int> pinYOffsets_;
   std::vector<int> cellWidth_;
   std::vector<int> cellHeight_;
-  std::vector<bool> cellFixed_;
+  std::vector<bool> cellIsFixed_;
+  std::vector<bool> cellIsObstruction_;
   std::vector<int> cellX_;
   std::vector<int> cellY_;
   std::vector<CellOrientation> cellOrientation_;

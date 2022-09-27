@@ -327,13 +327,13 @@ class Circuit(coloquinte_pybind.Circuit):
         self._net_name = None
 
     @staticmethod
-    def read_ispd(filename):
+    def read_ispd(filename, ignore_obstructions=False):
         """
         Read an ISPD benchmark from its .aux file
         """
         aux_filename, node_filename, net_filename, pl_filename, scl_filename = _read_aux(
             filename)
-        cell_names, cell_widths, cell_heights, cell_fixed = _read_nodes(
+        cell_names, cell_widths, cell_heights, cell_is_fixed = _read_nodes(
             node_filename)
         nets = _read_nets(
             net_filename, cell_names, cell_widths, cell_heights)
@@ -347,7 +347,10 @@ class Circuit(coloquinte_pybind.Circuit):
         ret._cell_name = cell_names
         ret.cell_width = cell_widths
         ret.cell_height = cell_heights
-        ret.cell_fixed = cell_fixed
+        ret.cell_is_fixed = cell_is_fixed
+        if ignore_obstructions:
+            # All fixed cells marked as not obstructions
+            ret.cell_is_obstruction = [not f for f in cell_is_fixed]
 
         # Setup nets and pins
         ret._net_name = []
@@ -390,13 +393,13 @@ class Circuit(coloquinte_pybind.Circuit):
             cell_x = self.cell_x
             cell_y = self.cell_y
             cell_orientation = self.cell_orientation
-            cell_fixed = self.cell_fixed
+            cell_is_fixed = self.cell_is_fixed
             for i in range(self.nb_cells):
                 name = self._cell_name[i]
                 x = cell_x[i]
                 y = cell_y[i]
                 orient = cell_orientation[i].name
-                if cell_fixed[i]:
+                if cell_is_fixed[i]:
                     orient += " /FIXED"
                 print(f"{name}\t{x}\t{y}\t: {orient}", file=f)
 
@@ -410,14 +413,20 @@ def main():
     parser.add_argument("instance", help="Benchmark instance")
     parser.add_argument("--effort", help="Placement effort",
                         type=int, default=3)
+    parser.add_argument("--ignore-obstructions",
+                        help="Ignore macros when placing standard cells", action="store_true")
     parser.add_argument("--load-solution", help="Load initial placement")
     parser.add_argument("--save-solution", help="Save final placement")
-    parser.add_argument("--no-global", help="Do not run global placement", action="store_false", dest="run_global")
-    parser.add_argument("--no-detailed", help="Do not run detailed placement", action="store_false", dest="run_detailed")
+    parser.add_argument("--no-global", help="Do not run global placement",
+                        action="store_false", dest="run_global")
+    parser.add_argument("--no-detailed", help="Do not run detailed placement",
+                        action="store_false", dest="run_detailed")
     args = parser.parse_args()
 
-    circuit = Circuit.read_ispd(args.instance)
+    circuit = Circuit.read_ispd(args.instance, args.ignore_obstructions)
     print(circuit)
+    if args.ignore_obstructions:
+        print("Ignoring macros for standard cell placement")
     if args.load_solution is not None:
         print(f"Loading initial solution")
         circuit.load_placement(args.load_solution)

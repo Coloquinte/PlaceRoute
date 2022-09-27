@@ -123,8 +123,10 @@ Construct a circuit.
                     "Width of the cells")
       .def_property("cell_height", &Circuit::cellHeight,
                     &Circuit::setCellHeight, "Height of the cells")
-      .def_property("cell_fixed", &Circuit::cellFixed, &Circuit::setCellFixed,
+      .def_property("cell_is_fixed", &Circuit::cellIsFixed, &Circuit::setCellIsFixed,
                     "Fixed status flag of the cells")
+      .def_property("cell_is_obstruction", &Circuit::cellIsObstruction, &Circuit::setCellIsObstruction,
+                    "Obstruction status flag of the cells")
       .def_property("cell_orientation", &Circuit::cellOrientation,
                     &Circuit::setCellOrientation, "Orientation of the cells")
       .def_property("rows", &Circuit::rows, &Circuit::setRows,

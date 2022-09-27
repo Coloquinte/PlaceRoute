@@ -33,7 +33,8 @@ DensityGrid DensityGrid::fromIspdCircuit(const Circuit &circuit,
   }
   std::vector<Rectangle> obstacles;
   for (int i = 0; i < circuit.nbCells(); ++i) {
-    if (!circuit.fixed(i)) continue;
+    if (!circuit.isFixed(i)) continue;
+    if (!circuit.isObstruction(i)) continue;
     int x = circuit.cellX_[i];
     int y = circuit.cellY_[i];
     obstacles.emplace_back(x, x + circuit.cellWidth_[i], y,
@@ -235,7 +236,7 @@ HierarchicalDensityPlacement HierarchicalDensityPlacement::fromIspdCircuit(
   DensityGrid grid = DensityGrid::fromIspdCircuit(circuit, sizeFactor);
   std::vector<int> demands;
   for (int i = 0; i < circuit.nbCells(); ++i) {
-    if (circuit.fixed(i)) {
+    if (circuit.isFixed(i)) {
       demands.push_back(0LL);
     } else {
       demands.push_back(circuit.area(i));

@@ -33,7 +33,7 @@ void DensityLegalizer::exportPlacement(Circuit &circuit) {
   std::vector<float> cellY = spreadCoordY(cellTargetY_);
   assert(nbCells() == circuit.nbCells());
   for (int i = 0; i < circuit.nbCells(); ++i) {
-    if (circuit.fixed(i)) continue;
+    if (circuit.isFixed(i)) continue;
     circuit.cellX_[i] = std::round(cellX[i]);
     circuit.cellY_[i] = std::round(cellY[i]);
   }

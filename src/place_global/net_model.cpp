@@ -24,7 +24,7 @@ NetModel NetModel::xTopology(const Circuit &circuit) {
     for (int j = 0; j < circuit.nbPinsNet(i); ++j) {
       int cell = circuit.pinCell(i, j);
       int offset = circuit.pinXOffset(i, j);
-      if (circuit.fixed(cell)) {
+      if (circuit.isFixed(cell)) {
         int pos = circuit.x(cell) + offset;
         minPos = std::min(minPos, (float)pos);
         maxPos = std::max(maxPos, (float)pos);
@@ -50,7 +50,7 @@ NetModel NetModel::yTopology(const Circuit &circuit) {
     for (int j = 0; j < circuit.nbPinsNet(i); ++j) {
       int cell = circuit.pinCell(i, j);
       int offset = circuit.pinYOffset(i, j);
-      if (circuit.fixed(cell)) {
+      if (circuit.isFixed(cell)) {
         int pos = circuit.y(cell) + offset;
         minPos = std::min(minPos, (float)pos);
         maxPos = std::max(maxPos, (float)pos);
@@ -71,7 +71,7 @@ void NetModel::exportPlacementX(Circuit &circuit,
   assert(circuit.nbCells() == xplace.size());
   assert(circuit.nbCells() == nbCells());
   for (int i = 0; i < circuit.nbCells(); ++i) {
-    if (!circuit.fixed(i)) {
+    if (!circuit.isFixed(i)) {
       circuit.cellX_[i] = std::round(xplace[i] - 0.5f * circuit.placedWidth(i));
     }
   }
@@ -82,7 +82,7 @@ void NetModel::exportPlacementY(Circuit &circuit,
   assert(circuit.nbCells() == yplace.size());
   assert(circuit.nbCells() == nbCells());
   for (int i = 0; i < circuit.nbCells(); ++i) {
-    if (!circuit.fixed(i)) {
+    if (!circuit.isFixed(i)) {
       circuit.cellY_[i] =
           std::round(yplace[i] - 0.5f * circuit.placedHeight(i));
     }

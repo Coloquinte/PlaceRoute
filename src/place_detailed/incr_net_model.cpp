@@ -55,7 +55,7 @@ IncrNetModel IncrNetModel::yTopology(const Circuit &circuit) {
 void IncrNetModel::exportPlacementX(Circuit &circuit) const {
   assert(circuit.nbCells() == nbCells());
   for (int i = 0; i < circuit.nbCells(); ++i) {
-    if (!circuit.fixed(i)) {
+    if (!circuit.isFixed(i)) {
       circuit.cellX_[i] = cellPos_[i];
     }
   }
@@ -64,7 +64,7 @@ void IncrNetModel::exportPlacementX(Circuit &circuit) const {
 void IncrNetModel::exportPlacementY(Circuit &circuit) const {
   assert(circuit.nbCells() == nbCells());
   for (int i = 0; i < circuit.nbCells(); ++i) {
-    if (!circuit.fixed(i)) {
+    if (!circuit.isFixed(i)) {
       circuit.cellY_[i] = cellPos_[i];
     }
   }
