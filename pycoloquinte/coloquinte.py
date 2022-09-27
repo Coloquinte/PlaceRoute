@@ -358,12 +358,21 @@ class Circuit(coloquinte_pybind.Circuit):
         # Setup initial cell placement
         ret.cell_x = cell_x
         ret.cell_y = cell_y
-        ret._cell_orientation = cell_orient
+        ret.cell_orientation = cell_orient
 
         # Setup rows
         ret.rows = [coloquinte_pybind.Rectangle(*row) for row in rows]
         ret.check()
         return ret
+
+    def load_placement(self, filename):
+        if filename is None:
+            return
+
+        cell_x, cell_y, cell_orient = _read_place(filename, self._cell_name)
+        self.cell_x = cell_x
+        self.cell_y = cell_y
+        self.cell_orientation = cell_orient
 
     def write_placement(self, filename):
         """
@@ -399,15 +408,32 @@ def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("instance", help="Benchmark instance")
-    parser.add_argument("--solution", help="Placement result")
     parser.add_argument("--effort", help="Placement effort",
                         type=int, default=3)
+    parser.add_argument("--load-solution", help="Load initial placement")
+    parser.add_argument("--save-solution", help="Save final placement")
+    parser.add_argument("--no-global", help="Do not run global placement", action="store_false", dest="run_global")
+    parser.add_argument("--no-detailed", help="Do not run detailed placement", action="store_false", dest="run_detailed")
     args = parser.parse_args()
 
     circuit = Circuit.read_ispd(args.instance)
     print(circuit)
-    circuit.place(args.effort)
-    circuit.write_placement(args.solution)
+    if args.load_solution is not None:
+        print(f"Loading initial solution")
+        circuit.load_placement(args.load_solution)
+
+    if args.run_global:
+        print("Running global placement")
+        circuit.place_global(args.effort)
+    else:
+        print("Global placement skipped at user's request")
+
+    if args.run_detailed:
+        print("Running detailed placement")
+        circuit.place_detailed(args.effort)
+    else:
+        print("Detailed placement skipped at user's request")
+    circuit.write_placement(args.save_solution)
 
 
 __all__ = [
