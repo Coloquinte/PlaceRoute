@@ -85,7 +85,7 @@ void DetailedPlacer::runSwaps(int nbRows, int nbNeighbours) {
   for (int i = 0; i < placement_.nbRows(); ++i) {
     runSwapsOneRow(i, nbNeighbours);
   }
-  RowNeighbourhood rowsNeighbours(placement_.rows(), nbNeighbours);
+  RowNeighbourhood rowsNeighbours(placement_.rows(), nbRows);
   //  Optimize each row with neighbours after it
   for (int i = 0; i < placement_.nbRows(); ++i) {
     for (int j : rowsNeighbours.rowsAbove(i))
