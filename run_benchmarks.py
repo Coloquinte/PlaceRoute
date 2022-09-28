@@ -107,8 +107,8 @@ class BlackboxFloatVariable:
     def value(self, model_value):
         return model_value
 
-    def initialize(self, model_variable, value):
-        model_variable.value = value
+    def model_value(self, value):
+        return value
 
 
 class BlackboxLogFloatVariable:
@@ -123,8 +123,8 @@ class BlackboxLogFloatVariable:
     def value(self, model_value):
         return math.exp(model_value)
 
-    def initialize(self, model_variable, value):
-        model_variable.value = math.log(value)
+    def model_value(self, value):
+        return math.log(value)
 
 
 class BlackboxIntVariable:
@@ -139,8 +139,8 @@ class BlackboxIntVariable:
     def value(self, model_value):
         return model_value
 
-    def initialize(self, model_variable, value):
-        model_variable.value = value
+    def model_value(self, value):
+        return value
 
 
 class BlackboxEnumVariable:
@@ -155,9 +155,9 @@ class BlackboxEnumVariable:
         # TODO
         return self.enum(model_value)
 
-    def initialize(self, model_variable, value):
+    def model_value(self, value):
         # TODO
-        model_variable.value = value
+        return value
 
 optimization_variables = [
     BlackboxIntVariable("global_max_nb_steps", 20, 60),
@@ -369,6 +369,7 @@ class BenchmarkRunner:
         Register an existing solution for LocalSolver
         """
         value = self.run_metrics_all(params_dict)
+        variables = optimization_variables
         params_names = self.variable_names
         # Do not register if any parameter is not optimized but has a non-default value
         default_dict = BenchmarkRunner.default_params()
@@ -379,13 +380,14 @@ class BenchmarkRunner:
         for benchmark in self.benchmarks:
             benchmark_dict = dict(params_dict)
             benchmark_dict["benchmark"] = benchmark
+            benchmark_dict["ignore_macros"] = self.ignore_macros
             benchmark_dict["prefix"] = self.prefix
             if self.get_data(benchmark_dict) is None:
                 return False
         # Register the solution
         evaluation_point = surrogate_params.create_evaluation_point()
-        for name in params_names:
-            evaluation_point.add_argument(params_dict[name])
+        for v in variables:
+            evaluation_point.add_argument(v.model_value(params_dict[v.name]))
         evaluation_point.set_return_value(self.run_metrics_all(params_dict))
         return True
 
@@ -406,7 +408,7 @@ class BenchmarkRunner:
             # Setup the initial values as the default parameters
             params_dict = BenchmarkRunner.default_params()
             for v, p in zip(optimization_variables, model_params):
-                v.initialize(p, params_dict[v.name])
+                p.value = v.model_value(params_dict[v.name])
 
             if reuse:
                 self.save_localsolver_solutions(surrogate_params)
@@ -419,8 +421,8 @@ class BenchmarkRunner:
 
             # Get the result
             result = {}
-            for name, p in zip(self.variable_names, model_params):
-                result[name] = p.value
+            for v, p in zip(optimization_variables, model_params):
+                result[v.name] = v.value(p.value)
             print(f"Optimization result: {result}")
 
 
