@@ -143,6 +143,22 @@ class BlackboxIntVariable:
         return value
 
 
+class BlackboxLogIntVariable:
+    def __init__(self, name, min, max):
+        self.name = name
+        self.min = min
+        self.max = max
+
+    def define(self, model):
+        return model.float(math.log(self.min), math.log(self.max))
+
+    def value(self, model_value):
+        return int(round(math.exp(model_value)))
+
+    def model_value(self, value):
+        return math.log(value)
+
+
 class BlackboxEnumVariable:
     def __init__(self, name, enum):
         self.name = name
@@ -166,13 +182,13 @@ optimization_variables = [
     BlackboxLogFloatVariable("global_penalty_update_factor", 1.01, 1.3),
     BlackboxLogFloatVariable("global_penalty_cutoff_distance", 2.0, 50.0),
     BlackboxLogFloatVariable("global_approximation_distance", 0.1, 10.0),
-    BlackboxIntVariable("global_max_nb_conjugate_gradient_steps", 100, 1000),
+    BlackboxLogIntVariable("global_max_nb_conjugate_gradient_steps", 100, 1000),
     BlackboxIntVariable("global_nb_rough_legalization_steps", 1, 3),
     BlackboxIntVariable("detailed_nb_passes", 1, 3),
     BlackboxIntVariable("detailed_local_search_nb_neighbours", 1, 6),
     BlackboxIntVariable("detailed_local_search_nb_rows", 1, 3),
     BlackboxIntVariable("detailed_shift_nb_rows", 2, 10),
-    BlackboxIntVariable("detailed_shift_max_nb_cells", 20, 200),
+    BlackboxLogIntVariable("detailed_shift_max_nb_cells", 20, 200),
 ]
 
 
