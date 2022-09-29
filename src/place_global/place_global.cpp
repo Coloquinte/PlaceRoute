@@ -22,7 +22,7 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort) {
   conjugateGradientErrorTolerance = 1.0e-6;
   roughLegalizationCostModel = LegalizationModel::L1;
   nbRoughLegalizationSteps = 1;
-  roughLegalizationBinSize = 10.0;
+  roughLegalizationBinSize = 5.0;
   check();
 }
 
