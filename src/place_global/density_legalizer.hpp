@@ -111,6 +111,16 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
   void run();
 
   /**
+   * @brief Run the coarsening part of the legalization process
+   */
+  void runCoarsening();
+
+  /**
+   * @brief Run the refinement part of the legalization process
+   */
+  void runRefinement();
+
+  /**
    * @brief Do one refinement step
    */
   void refine();

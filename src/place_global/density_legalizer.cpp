@@ -198,10 +198,15 @@ void DensityLegalizer::rebisect(int x1, int y1, int x2, int y2) {
 }
 
 void DensityLegalizer::refine() {
-  if (levelX() >= levelY()) {
+  // Refine both if they are at the same level, otherwise refine only the
+  // coarsest level
+  bool doX = levelX() >= levelY();
+  bool doY = levelY() >= levelX();
+  if (doX) {
     refineX();
     improveX(true);
-  } else {
+  }
+  if (doY) {
     refineY();
     improveY(true);
   }
@@ -249,7 +254,13 @@ void DensityLegalizer::improveDiag() {
 }
 
 void DensityLegalizer::run() {
-  coarsenFully();
+  runCoarsening();
+  runRefinement();
+}
+
+void DensityLegalizer::runCoarsening() { coarsenFully(); }
+
+void DensityLegalizer::runRefinement() {
   while (levelX() > 0 || levelY() > 0) {
     refine();
     improve();
