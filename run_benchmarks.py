@@ -320,34 +320,36 @@ class BenchmarkRunner:
         self.save_data(data)
         return self.get_data(params_dict)
 
-    def run_metrics(self, params_dict):
-        """
-        Return a metrics of the run, with a tradeoff between time and quality
-        """
-        assert self.time_for_quality > 0
-        m = self.run(params_dict)
-        t = m["time_total"]
-        q = m["hpwl"]
-        print(
-            f"Evaluated benchmark {params_dict['benchmark']} at {q} after {t:.0f}s")
-        # Just normalization so numbers are not too horrible
-        norm_q = 1.0e6
-        norm_t = 100
-        return math.exp(math.log(q / norm_q) + math.log(t / norm_t) / self.time_for_quality)
-
-    def run_metrics_all(self, params_dict):
+    def run_all(self, params_dict):
         """
         Return the geometric mean of the metrics across the benchmarks, with the given time/quality tradeoff
         """
-        metrics = []
+        metrics = {}
         for benchmark in sorted(self.benchmarks):
             params = dict(params_dict)
             params["benchmark"] = benchmark
             params["ignore_macros"] = self.ignore_macros
             params["prefix"] = self.prefix
-            metrics.append(self.run_metrics(params))
+            cur = self.run(params)
+            for k, v in cur.items():
+                if k in metrics:
+                    metrics[k].append(v)
+                else:
+                    metrics[k] = [v]
         # Geometric mean
-        return np.exp(np.mean(np.log(metrics)))
+        ret = {}
+        for k, v in metrics.items():
+            ret[k] = np.exp(np.mean(np.log(v)))
+        return ret
+
+    def get_objective_value(self, params_dict):
+        m = self.run_all(params_dict)
+        t = m["time_total"]
+        q = m["hpwl"]
+        # Just normalization so numbers are not too horrible
+        norm_q = 1.0e6
+        norm_t = 100
+        return math.exp(math.log(q / norm_q) + math.log(t / norm_t) / self.time_for_quality)
 
     def evaluate_localsolver(self, params_map):
         params_dict = BenchmarkRunner.default_params()
@@ -357,7 +359,7 @@ class BenchmarkRunner:
         print("Evaluation of a new incumbent: ")
         for v in optimization_variables:
             print(f"\t{v.name}: {params_dict[v.name]}")
-        ret = self.run_metrics_all(params_dict)
+        ret = self.get_objective_value(params_dict)
         print(f"Objective function: {ret}")
         return ret
 
@@ -384,7 +386,7 @@ class BenchmarkRunner:
         """
         Register an existing solution for LocalSolver
         """
-        value = self.run_metrics_all(params_dict)
+        value = self.get_objective_value(params_dict)
         variables = optimization_variables
         params_names = self.variable_names
         # Do not register if any parameter is not optimized but has a non-default value
@@ -404,7 +406,7 @@ class BenchmarkRunner:
         evaluation_point = surrogate_params.create_evaluation_point()
         for v in variables:
             evaluation_point.add_argument(v.model_value(params_dict[v.name]))
-        evaluation_point.set_return_value(self.run_metrics_all(params_dict))
+        evaluation_point.set_return_value(self.get_objective_value(params_dict))
         return True
 
     def optimize(self, time_limit=None, reuse=False):
@@ -440,6 +442,51 @@ class BenchmarkRunner:
             for v, p in zip(optimization_variables, model_params):
                 result[v.name] = v.value(p.value)
             print(f"Optimization result: {result}")
+
+    def show_results(self):
+        import matplotlib.pyplot as plt
+        existing = self.get_all_params()
+        time_total = []
+        hpwl = []
+        for p in existing:
+            m = self.run_all(p)
+            time_total.append(m["time_total"])
+            hpwl.append(m["hpwl"])
+        ax = plt.gca()
+        ax.scatter(hpwl, time_total)
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        plt.show()
+
+    def get_pareto(self):
+        existing = self.get_all_params()
+        results = []
+        for p in existing:
+            m = self.run_all(p)
+            results.append( (m["time_total"], m["hpwl"], p) )
+        ret = []
+        for i, (t1, w1, p1) in enumerate(results):
+            dominated = False
+            for j, (t2, w2, p2) in enumerate(results):
+                if i != j and t2 < t1 and w2 < w1:
+                    dominated = True
+            if not dominated:
+                ret.append((t1, w1, p1))
+        return sorted(ret)
+
+    def show_pareto(self):
+        import matplotlib.pyplot as plt
+        front = self.get_pareto()
+        time_total = []
+        hpwl = []
+        for t, w, p in front:
+            time_total.append(t)
+            hpwl.append(w)
+        ax = plt.gca()
+        ax.scatter(hpwl, time_total)
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        plt.show()
 
 
 parser = argparse.ArgumentParser()
