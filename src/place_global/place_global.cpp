@@ -22,6 +22,7 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort) {
   conjugateGradientErrorTolerance = 1.0e-6;
   roughLegalizationCostModel = LegalizationModel::L1;
   nbRoughLegalizationSteps = 1;
+  roughLegalizationBinSize = 10.0;
   check();
 }
 
@@ -64,10 +65,19 @@ void GlobalPlacerParameters::check() const {
     throw std::runtime_error(
         "Must have non-negative number of steps for rough legalization");
   }
+  if (roughLegalizationBinSize < 1.0f) {
+    throw std::runtime_error(
+        "Bin size should generally be larger than 1 (one standard cell)");
+  }
+  if (roughLegalizationBinSize > 25.0f) {
+    throw std::runtime_error(
+        "Bin size should not be too large (10 should be enough)");
+  }
 }
 
 void GlobalPlacer::place(Circuit &circuit,
                          const GlobalPlacerParameters &params) {
+  params.check();
   GlobalPlacer pl(circuit, params);
   pl.run();
   pl.leg_.exportPlacement(circuit);
@@ -76,7 +86,8 @@ void GlobalPlacer::place(Circuit &circuit,
 GlobalPlacer::GlobalPlacer(Circuit &circuit,
                            const GlobalPlacerParameters &params)
     : circuit_(circuit),
-      leg_(DensityLegalizer::fromIspdCircuit(circuit)),
+      leg_(DensityLegalizer::fromIspdCircuit(circuit,
+                                             params.roughLegalizationBinSize)),
       xtopo_(NetModel::xTopology(circuit)),
       ytopo_(NetModel::yTopology(circuit)),
       params_(params) {
@@ -142,8 +153,12 @@ void GlobalPlacer::runLB() {
   params.penaltyCutoffDistance = penaltyCutoffDistance();
   params.tolerance = params_.conjugateGradientErrorTolerance;
   params.maxNbIterations = params_.maxNbConjugateGradientSteps;
-  std::future<std::vector<float> > x = std::async(std::launch::async, &NetModel::solve, &xtopo_, xPlacementLB_, xPlacementUB_, penalty, params);
-  std::future<std::vector<float> > y = std::async(std::launch::async, &NetModel::solve, &ytopo_, yPlacementLB_, yPlacementUB_, penalty, params);
+  std::future<std::vector<float> > x =
+      std::async(std::launch::async, &NetModel::solve, &xtopo_, xPlacementLB_,
+                 xPlacementUB_, penalty, params);
+  std::future<std::vector<float> > y =
+      std::async(std::launch::async, &NetModel::solve, &ytopo_, yPlacementLB_,
+                 yPlacementUB_, penalty, params);
   xPlacementLB_ = x.get();
   yPlacementLB_ = y.get();
 }

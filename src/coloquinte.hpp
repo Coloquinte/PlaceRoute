@@ -113,8 +113,8 @@ struct GlobalPlacerParameters {
   float gapTolerance;
 
   /**
-   * @brief Distance at which the full displacement penalty is obtained, as a
-   * fraction of the average standard cell length
+   * @brief Distance at which the full displacement penalty is obtained,
+   * relative to the average standard cell length
    */
   float penaltyCutoffDistance;
 
@@ -135,7 +135,7 @@ struct GlobalPlacerParameters {
   NetModelOption netModel;
 
   /**
-   * @brief Approximation distance of the continuous model, as a fraction of
+   * @brief Approximation distance of the continuous model, relative to
    * the average standard cell length
    */
   float approximationDistance;
@@ -161,6 +161,11 @@ struct GlobalPlacerParameters {
    * @brief Number of rough legalization steps at each placement iteration
    */
   int nbRoughLegalizationSteps;
+
+  /**
+   * @brief Size of the rough legalization bin relative to the average standard cell length
+   */
+  float roughLegalizationBinSize;
 
   /**
    * @brief Initialize the parameters with sensible defaults

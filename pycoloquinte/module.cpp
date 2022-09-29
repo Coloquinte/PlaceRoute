@@ -68,8 +68,7 @@ Construct the parameters
       .def_readwrite("initial_penalty", &GlobalPlacerParameters::initialPenalty)
       .def_readwrite("penalty_update_factor",
                      &GlobalPlacerParameters::penaltyUpdateFactor)
-      .def_readwrite("net_model",
-                     &GlobalPlacerParameters::netModel)
+      .def_readwrite("net_model", &GlobalPlacerParameters::netModel)
       .def_readwrite("approximation_distance",
                      &GlobalPlacerParameters::approximationDistance)
       .def_readwrite("max_nb_conjugate_gradient_steps",
@@ -80,6 +79,9 @@ Construct the parameters
                      &GlobalPlacerParameters::roughLegalizationCostModel)
       .def_readwrite("nb_rough_legalization_steps",
                      &GlobalPlacerParameters::nbRoughLegalizationSteps)
+      .def_readwrite("rough_legalization_bin_size",
+                     &GlobalPlacerParameters::roughLegalizationBinSize)
+      .def("check", &GlobalPlacerParameters::check)
       .def("__str__", &GlobalPlacerParameters::toString)
       .def("__repr__", &GlobalPlacerParameters::toString);
 
@@ -96,9 +98,11 @@ Construct the parameters
       .def_readwrite("local_search_nb_rows",
                      &DetailedPlacerParameters::localSearchNbRows)
       .def_readwrite("shift_nb_rows", &DetailedPlacerParameters::shiftNbRows)
-      .def_readwrite("shift_max_nb_cells", &DetailedPlacerParameters::shiftMaxNbCells)
+      .def_readwrite("shift_max_nb_cells",
+                     &DetailedPlacerParameters::shiftMaxNbCells)
       .def_readwrite("legalization_cost_model",
                      &DetailedPlacerParameters::legalizationCostModel)
+      .def("check", &DetailedPlacerParameters::check)
       .def("__str__", &DetailedPlacerParameters::toString)
       .def("__repr__", &DetailedPlacerParameters::toString);
 
@@ -123,9 +127,10 @@ Construct a circuit.
                     "Width of the cells")
       .def_property("cell_height", &Circuit::cellHeight,
                     &Circuit::setCellHeight, "Height of the cells")
-      .def_property("cell_is_fixed", &Circuit::cellIsFixed, &Circuit::setCellIsFixed,
-                    "Fixed status flag of the cells")
-      .def_property("cell_is_obstruction", &Circuit::cellIsObstruction, &Circuit::setCellIsObstruction,
+      .def_property("cell_is_fixed", &Circuit::cellIsFixed,
+                    &Circuit::setCellIsFixed, "Fixed status flag of the cells")
+      .def_property("cell_is_obstruction", &Circuit::cellIsObstruction,
+                    &Circuit::setCellIsObstruction,
                     "Obstruction status flag of the cells")
       .def_property("cell_orientation", &Circuit::cellOrientation,
                     &Circuit::setCellOrientation, "Orientation of the cells")

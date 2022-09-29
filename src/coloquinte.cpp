@@ -61,6 +61,7 @@ std::string GlobalPlacerParameters::toString() const {
      << "\n\tRough legalization cost model: "
      << coloquinte::toString(roughLegalizationCostModel)
      << "\n\tNb rough legalization steps: " << nbRoughLegalizationSteps
+     << "\n\tRough legalization bin size: " << roughLegalizationBinSize
      << std::endl;
   return ss.str();
 }

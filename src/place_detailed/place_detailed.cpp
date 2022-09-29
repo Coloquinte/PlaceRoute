@@ -49,6 +49,7 @@ void DetailedPlacerParameters::check() const {
 
 void DetailedPlacer::place(Circuit &circuit,
                            const DetailedPlacerParameters &params) {
+  params.check();
   std::cout << "Wirelength before legalization: " << circuit.hpwl()
             << std::endl;
   Legalizer leg = Legalizer::fromIspdCircuit(circuit);
