@@ -213,6 +213,7 @@ void DensityLegalizer::improve() {
     improveY(false);
     improveX(true);
     improveY(true);
+    improveDiag();
   }
 }
 
@@ -234,6 +235,15 @@ void DensityLegalizer::improveY(bool sameParent) {
     }
     for (int i = 0; i < nbBinsX(); ++i) {
       rebisect(i, j, i, j + 1);
+    }
+  }
+}
+
+void DensityLegalizer::improveDiag() {
+  for (int i = 0; i + 1 < nbBinsX(); ++i) {
+    for (int j = 0; j + 1 < nbBinsY(); ++j) {
+      rebisect(i, j, i + 1, j + 1);
+      rebisect(i, j + 1, i + 1, j);
     }
   }
 }

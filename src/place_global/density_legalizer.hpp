@@ -142,6 +142,11 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
   void improveY(bool sameParent);
 
   /**
+   * @brief Improve all diagonally adjacent bins
+   */
+  void improveDiag();
+
+  /**
    * @brief Redo the bisection for two bins
    */
   void rebisect(int x1, int y1, int x2, int y2);
