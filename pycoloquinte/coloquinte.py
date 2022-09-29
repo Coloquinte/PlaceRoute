@@ -404,24 +404,78 @@ class Circuit(coloquinte_pybind.Circuit):
                 print(f"{name}\t{x}\t{y}\t: {orient}", file=f)
 
 
+def _add_arguments(parser, obj, prefix):
+    for name in obj.__dir__():
+        if name.startswith('_'):
+            continue
+        if name == "check":
+            continue
+        arg_type = type(getattr(obj, name))
+        if arg_type in (int, float):
+            parser.add_argument("--" + prefix + "." + name,
+                                type=arg_type, metavar=name.upper())
+        else:
+            parser.add_argument("--" + prefix + "." + name,
+                                choices=list(arg_type.__members__.keys()),
+                                metavar=name.upper())
+
+
+def _parse_arguments(args, obj, prefix):
+    for name in obj.__dir__():
+        if name.startswith('_'):
+            continue
+        if name == "check":
+            continue
+        val = getattr(args, prefix + "." + name)
+        if val is not None:
+            new_val = val
+            old_val = getattr(obj, name)
+            arg_type = type(old_val)
+            if arg_type not in (int, float):
+                val = arg_type.__members__[val]
+                old_val = old_val.name
+            print(
+                f"Overloading {prefix} placement parameter {name} "
+                f"({old_val} -> {new_val})"
+            )
+            setattr(obj, name, val)
+
+
 def main():
     """
     Run the whole placement algorithm from the command line
     """
     import argparse
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Place a benchmark circuit from the command line")
     parser.add_argument("instance", help="Benchmark instance")
     parser.add_argument("--effort", help="Placement effort",
                         type=int, default=3)
-    parser.add_argument("--ignore-obstructions",
-                        help="Ignore macros when placing standard cells", action="store_true")
-    parser.add_argument("--load-solution", help="Load initial placement")
-    parser.add_argument("--save-solution", help="Save final placement")
+    parser.add_argument("--ignore-macros",
+                        help="Ignore macros when placing standard cells", action="store_true",
+                        dest="ignore_obstructions")
+    parser.add_argument("--load-solution",
+                        help="Load initial placement", metavar='FILE')
+    parser.add_argument("--save-solution",
+                        help="Save final placement", metavar='FILE')
     parser.add_argument("--no-global", help="Do not run global placement",
                         action="store_false", dest="run_global")
     parser.add_argument("--no-detailed", help="Do not run detailed placement",
                         action="store_false", dest="run_detailed")
+
+    global_group = parser.add_argument_group("Global placement parameters")
+    detailed_group = parser.add_argument_group("Detailed placement parameters")
+    _add_arguments(global_group, GlobalPlacerParameters(), "global")
+    _add_arguments(detailed_group, DetailedPlacerParameters(), "detailed")
     args = parser.parse_args()
+
+    global_params = GlobalPlacerParameters(args.effort)
+    _parse_arguments(args, global_params, "global")
+    global_params.check()
+
+    detailed_params = DetailedPlacerParameters(args.effort)
+    _parse_arguments(args, detailed_params, "detailed")
+    detailed_params.check()
 
     circuit = Circuit.read_ispd(args.instance, args.ignore_obstructions)
     print(circuit)
@@ -433,13 +487,13 @@ def main():
 
     if args.run_global:
         print("Running global placement")
-        circuit.place_global(args.effort)
+        circuit.place_global(global_params)
     else:
         print("Global placement skipped at user's request")
 
     if args.run_detailed:
         print("Running detailed placement")
-        circuit.place_detailed(args.effort)
+        circuit.place_detailed(detailed_params)
     else:
         print("Detailed placement skipped at user's request")
     circuit.write_placement(args.save_solution)
