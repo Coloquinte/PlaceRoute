@@ -63,8 +63,12 @@ enum class LegalizationModel {
   L2,
   /// LInf norm (maximum of absolute values)
   LInf,
-  /// Square of euclidean norm
-  L2Squared
+  /// Square of L1 norm
+  L1Squared,
+  /// Square of L2 norm
+  L2Squared,
+  /// Square of LInf norm
+  LInfSquared
 };
 
 /**

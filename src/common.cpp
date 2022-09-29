@@ -1,34 +1,39 @@
 
 #include <cmath>
+#include <stdexcept>
 
 #include "coloquinte.hpp"
 
 namespace coloquinte {
-float norm(float x, float y, LegalizationModel leg) {
+
+template <typename T>
+T computeNorm(T x, T y, LegalizationModel leg) {
+  T z;
   switch (leg) {
     case LegalizationModel::L1:
       return std::abs(x) + std::abs(y);
     case LegalizationModel::L2:
       return std::sqrt(x * x + y * y);
+    case LegalizationModel::LInf:
+      return std::max(std::abs(x), std::abs(y));
+    case LegalizationModel::L1Squared:
+      z = std::abs(x) + std::abs(y);
+      return z * z;
     case LegalizationModel::L2Squared:
       return x * x + y * y;
+    case LegalizationModel::LInfSquared:
+      z = std::max(std::abs(x), std::abs(y));
+      return z * z;
     default:
-      return std::max(std::abs(x), std::abs(y));
+      throw std::runtime_error("Unknown legalization model");
   }
 }
 
+float norm(float x, float y, LegalizationModel leg) {
+  return computeNorm<float>(x, y, leg);
+}
+
 long long norm(int x, int y, LegalizationModel leg) {
-  long long lx = x;
-  long long ly = y;
-  switch (leg) {
-    case LegalizationModel::L1:
-      return std::abs(lx) + std::abs(ly);
-    case LegalizationModel::L2:
-      return std::sqrt(lx * lx + ly * ly);
-    case LegalizationModel::L2Squared:
-      return lx * lx + ly * ly;
-    default:
-      return std::max(std::abs(lx), std::abs(ly));
-  }
+  return computeNorm<long long>(x, y, leg);
 }
-}
+}  // namespace coloquinte

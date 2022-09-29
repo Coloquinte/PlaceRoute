@@ -46,7 +46,9 @@ PYBIND11_MODULE(coloquinte_pybind, m) {
       .value("L1", LegalizationModel::L1)
       .value("L2", LegalizationModel::L2)
       .value("LInf", LegalizationModel::LInf)
+      .value("L1Squared", LegalizationModel::L1Squared)
       .value("L2Squared", LegalizationModel::L2Squared)
+      .value("LInfSquared", LegalizationModel::LInfSquared)
       .export_values();
 
   py::enum_<NetModelOption>(m, "NetModel")

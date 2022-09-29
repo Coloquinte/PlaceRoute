@@ -22,8 +22,12 @@ std::string toString(LegalizationModel model) {
       return "L2";
     case LegalizationModel::LInf:
       return "LInf";
+    case LegalizationModel::L1Squared:
+      return "L1Squared";
     case LegalizationModel::L2Squared:
       return "L2Squared";
+    case LegalizationModel::LInfSquared:
+      return "LInfSquared";
     default:
       return "UnknownLegalizationModel";
   }
