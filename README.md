@@ -11,15 +11,34 @@ This replaces and extends the [placement library](https://github.com/Coloquinte/
 
 ## Using Coloquinte
 
+ISPD placement and routing benchmarks are available directly in this repository using Git LFS. [Placement benchmarks](https://github.com/Coloquinte/PlaceRouteBenchmarks) can be run with the Python package:
+``` bash
+coloquinte ISPD06/adaptec1
+```
+
+For other applications, you can use Coloquinte as a C++ library or a Python package: see `src/coloquinte.hpp` or `help(coloquinte.Circuit)`.
+
+## Installing Coloquinte
+
+### Python package
+
+On Linux, you may install Coloquinte from pip:
+``` bash
+pip install coloquinte
+```
+
+For the latest version of other OSes, install the dependencies and build the module. For example:
+``` bash
+sudo apt-get install cmake libboost-all-dev libeigen3-dev
+cd pycoloquinte
+python setup.py install
+```
+
+### C++ library
+
 Install dependencies and build Coloquinte using CMake :
 ``` bash
 sudo apt-get install libboost-all-dev libeigen3-dev
 cmake -B build; cmake --build build
 ```
 
-ISPD placement and routing benchmarks are available directly in this repository using Git LFS. Currently, only placement benchmarks can be run.
-``` bash
-python -m pycoloquinte benchmarks/ISPD06/adaptec1/adaptec1.aux
-```
-
-To use Coloquinte as a library, setup a `coloquinte::Circuit` object, and call `coloquinte::place`.
