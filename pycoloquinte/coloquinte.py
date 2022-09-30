@@ -6,6 +6,7 @@ Coloquinte VLSI placer
 import gzip
 import lzma
 import os
+import sys
 
 import coloquinte_pybind
 from coloquinte_pybind import (CellOrientation, DetailedPlacerParameters,
@@ -441,6 +442,19 @@ def _parse_arguments(args, obj, prefix):
             setattr(obj, name, val)
 
 
+def _show_params(obj, prefix):
+    for name in obj.__dir__():
+        if name.startswith('_'):
+            continue
+        if name == "check":
+            continue
+        default_val = getattr(obj, name)
+        arg_type = type(default_val)
+        if arg_type not in (int, float):
+            default_val = default_val.name
+        print(f"\t--{prefix}.{name}: {default_val}")
+
+
 def main():
     """
     Run the whole placement algorithm from the command line
@@ -462,6 +476,8 @@ def main():
                         action="store_false", dest="run_global")
     parser.add_argument("--no-detailed", help="Do not run detailed placement",
                         action="store_false", dest="run_detailed")
+    parser.add_argument("--show-parameters", help="Show parameter values",
+                        action="store_true")
 
     global_group = parser.add_argument_group("Global placement parameters")
     detailed_group = parser.add_argument_group("Detailed placement parameters")
@@ -472,10 +488,14 @@ def main():
     global_params = GlobalPlacerParameters(args.effort)
     _parse_arguments(args, global_params, "global")
     global_params.check()
-
     detailed_params = DetailedPlacerParameters(args.effort)
     _parse_arguments(args, detailed_params, "detailed")
     detailed_params.check()
+
+    if args.show_parameters:
+        print("Parameter values:")
+        _show_params(global_params, "global")
+        _show_params(detailed_params, "detailed")
 
     circuit = Circuit.read_ispd(args.instance, args.ignore_obstructions)
     print(circuit)
