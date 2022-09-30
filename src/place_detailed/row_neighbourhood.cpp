@@ -45,16 +45,39 @@ void RowNeighbourhood::simpleSetup(const std::vector<Rectangle> &rows,
   }
 }
 
+bool RowNeighbourhood::isBelow(Rectangle r1, Rectangle r2) {
+  // Only rows strictly below
+  if (r2.minY <= r1.minY) return false;
+  // Only rows that share part of their x range
+  if (r2.minX >= r1.maxX) return false;
+  if (r2.maxX <= r1.minX) return false;
+  return true;
+}
+
+bool RowNeighbourhood::isAbove(Rectangle r1, Rectangle r2) {
+  // Only rows strictly above
+  if (r2.minY >= r1.minY) return false;
+  // Only rows that share part of their x range
+  if (r2.minX >= r1.maxX) return false;
+  if (r2.maxX <= r1.minX) return false;
+  return true;
+}
+
+bool RowNeighbourhood::isLeft(Rectangle r1, Rectangle r2) {
+  // Only rows strictly on the left
+  return r2.minX >= r1.maxX;
+}
+
+bool RowNeighbourhood::isRight(Rectangle r1, Rectangle r2) {
+  // Only rows strictly on the right
+  return r2.maxX <= r1.minX;
+}
+
 std::vector<int> RowNeighbourhood::rowsBelow(
     Rectangle row, const std::vector<Rectangle> &rows) {
   std::vector<std::pair<int, Rectangle> > sortedRows;
   for (int other = 0; other < rows.size(); ++other) {
-    // Only rows strictly below
-    if (row.minY <= rows[other].minY) continue;
-    // Only rows that share part of their x range
-    if (row.minX >= rows[other].maxX) continue;
-    if (row.maxX <= rows[other].minX) continue;
-    sortedRows.emplace_back(other, rows[other]);
+    if (isBelow(rows[other], row)) sortedRows.emplace_back(other, rows[other]);
   }
   std::sort(sortedRows.begin(), sortedRows.end(),
             [](std::pair<int, Rectangle> a, std::pair<int, Rectangle> b) {
@@ -73,12 +96,7 @@ std::vector<int> RowNeighbourhood::rowsAbove(
     Rectangle row, const std::vector<Rectangle> &rows) {
   std::vector<std::pair<int, Rectangle> > sortedRows;
   for (int other = 0; other < rows.size(); ++other) {
-    // Only rows strictly above
-    if (row.minY >= rows[other].minY) continue;
-    // Only rows that share part of their x range
-    if (row.minX >= rows[other].maxX) continue;
-    if (row.maxX <= rows[other].minX) continue;
-    sortedRows.emplace_back(other, rows[other]);
+    if (isAbove(rows[other], row)) sortedRows.emplace_back(other, rows[other]);
   }
   std::sort(sortedRows.begin(), sortedRows.end(),
             [](std::pair<int, Rectangle> a, std::pair<int, Rectangle> b) {
@@ -97,9 +115,7 @@ std::vector<int> RowNeighbourhood::rowsLeft(
     Rectangle row, const std::vector<Rectangle> &rows) {
   std::vector<std::pair<int, Rectangle> > sortedRows;
   for (int other = 0; other < rows.size(); ++other) {
-    // Only rows strictly on the left
-    if (row.minX < rows[other].maxX) continue;
-    sortedRows.emplace_back(other, rows[other]);
+    if (isLeft(rows[other], row)) sortedRows.emplace_back(other, rows[other]);
   }
   // Sort by distance to the row's left side
   std::sort(sortedRows.begin(), sortedRows.end(),
@@ -125,9 +141,7 @@ std::vector<int> RowNeighbourhood::rowsRight(
     Rectangle row, const std::vector<Rectangle> &rows) {
   std::vector<std::pair<int, Rectangle> > sortedRows;
   for (int other = 0; other < rows.size(); ++other) {
-    // Only rows strictly on the right
-    if (row.maxX > rows[other].minX) continue;
-    sortedRows.emplace_back(other, rows[other]);
+    if (isRight(rows[other], row)) sortedRows.emplace_back(other, rows[other]);
   }
   // Sort by distance to the row's right side
   std::sort(sortedRows.begin(), sortedRows.end(),
