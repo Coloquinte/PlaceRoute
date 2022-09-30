@@ -26,8 +26,8 @@ BOOST_AUTO_TEST_CASE(TestBasic1) {
 BOOST_AUTO_TEST_CASE(TestBasic2) {
   std::vector<Rectangle> rows = {{0, 100, 0, 12},
                                  {10, 90, 12, 24},
-                                 {-200, -10, 12, 24},
-                                 {-100, 5, 24, 36}};
+                                 {-200, -10, 0, 12},
+                                 {-100, 5, 12, 24}};
   RowNeighbourhood neigh(rows, 3);
 
   BOOST_CHECK_EQUAL(neigh.rowsAbove(0).size(), 2);
@@ -52,9 +52,9 @@ BOOST_AUTO_TEST_CASE(TestBasic2) {
 }
 
 /**
- * @brief Only valid if the rows don't overlap
+ * @brief Not valid anymore as we don't build all left/right neighbours
  */
-void checkNeighbourhood(const RowNeighbourhood &neigh, int nbRows) {
+void checkNeighbourhoodComplete(const RowNeighbourhood &neigh, int nbRows) {
   BOOST_CHECK_EQUAL(neigh.nbRows(), nbRows);
   for (int i = 0; i < nbRows; ++i) {
     int nb = 0;
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(TestAbove) {
                                  {99, 105, 10, 22}};
   int nbRows = rows.size();
   RowNeighbourhood neigh(rows, nbRows);
-  checkNeighbourhood(neigh, nbRows);
+  //checkNeighbourhoodComplete(neigh, nbRows);
   BOOST_CHECK_EQUAL(neigh.rowsAbove(0).size(), nbRows - 1);
 }
 
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(TestBelow) {
                                  {99, 105, -24, 12}};
   int nbRows = rows.size();
   RowNeighbourhood neigh(rows, nbRows);
-  checkNeighbourhood(neigh, nbRows);
+  //checkNeighbourhoodComplete(neigh, nbRows);
   BOOST_CHECK_EQUAL(neigh.rowsBelow(0).size(), nbRows - 1);
 }
 
@@ -98,18 +98,18 @@ BOOST_AUTO_TEST_CASE(TestLeft) {
                                  {-20, -5, 24, 36}};
   int nbRows = rows.size();
   RowNeighbourhood neigh(rows, nbRows);
-  checkNeighbourhood(neigh, nbRows);
+  //checkNeighbourhoodComplete(neigh, nbRows);
   BOOST_CHECK_EQUAL(neigh.rowsLeft(0).size(), nbRows - 1);
 }
 
 BOOST_AUTO_TEST_CASE(TestRight) {
   std::vector<Rectangle> rows = {{0, 100, 0, 12},
-                                 {110, 130, -12, 0},
+                                 {100, 140, 0, 12},
                                  {130, 300, -12, 0},
                                  {100, 201, -36, -24},
-                                 {104, 105, 0, 12}};
+                                 {104, 105, 12, 24}};
   int nbRows = rows.size();
   RowNeighbourhood neigh(rows, nbRows);
-  checkNeighbourhood(neigh, nbRows);
+  //checkNeighbourhoodComplete(neigh, nbRows);
   BOOST_CHECK_EQUAL(neigh.rowsRight(0).size(), nbRows - 1);
 }

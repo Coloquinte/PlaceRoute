@@ -41,19 +41,21 @@ bool orderAbove(std::pair<int, Rectangle> a, std::pair<int, Rectangle> b) {
   int by = b.second.minY;
   return ay < by || (ay == by && a.first < b.first);
 }
+
+bool orderSide(std::pair<int, Rectangle> a, std::pair<int, Rectangle> b) {
+  int ax = a.second.minX;
+  int bx = b.second.minX;
+  int ay = a.second.minY;
+  int by = b.second.minY;
+  return ay < by || (ay == by && ax < bx);
+}
 }  // namespace
 
 void RowNeighbourhood::simpleSetup(const std::vector<Rectangle> &rows,
                                    int nbNeighbourRows) {
   rowsBelow_ = rowsBelow(rows, nbNeighbourRows);
   rowsAbove_ = rowsAbove(rows, nbNeighbourRows);
-  rowsLeft_.resize(rows.size());
-  rowsRight_.resize(rows.size());
-
-  for (int row = 0; row < rows.size(); ++row) {
-    rowsLeft_[row] = keepFirstK(rowsLeft(rows[row], rows), nbNeighbourRows);
-    rowsRight_[row] = keepFirstK(rowsRight(rows[row], rows), nbNeighbourRows);
-  }
+  buildRowsSides(rows, nbNeighbourRows);
 }
 
 bool RowNeighbourhood::isBelow(Rectangle r1, Rectangle r2) {
@@ -134,13 +136,16 @@ std::vector<std::vector<int> > RowNeighbourhood::rowsAbove(
   return ret;
 }
 
-std::vector<int> RowNeighbourhood::rowsLeft(
-    Rectangle row, const std::vector<Rectangle> &rows) {
+std::vector<int> RowNeighbourhood::buildLeftFrom(
+    Rectangle row, const std::vector<Rectangle> &rows, int ind) {
+  std::vector<int> candidates;
+  candidates.push_back(ind);
+  for (int c : rowsAbove(ind)) candidates.push_back(c);
+  for (int c : rowsBelow(ind)) candidates.push_back(c);
   std::vector<std::pair<int, Rectangle> > sortedRows;
-  for (int other = 0; other < rows.size(); ++other) {
-    if (isLeft(rows[other], row)) sortedRows.emplace_back(other, rows[other]);
+  for (int c : candidates) {
+    if (isLeft(rows[c], row)) sortedRows.emplace_back(c, rows[c]);
   }
-  // Sort by distance to the row's left side
   std::sort(sortedRows.begin(), sortedRows.end(),
             [row](std::pair<int, Rectangle> a, std::pair<int, Rectangle> b) {
               int ax = a.second.maxX;
@@ -160,17 +165,20 @@ std::vector<int> RowNeighbourhood::rowsLeft(
   return ret;
 }
 
-std::vector<int> RowNeighbourhood::rowsRight(
-    Rectangle row, const std::vector<Rectangle> &rows) {
+std::vector<int> RowNeighbourhood::buildRightFrom(
+    Rectangle row, const std::vector<Rectangle> &rows, int ind) {
+  std::vector<int> candidates;
+  candidates.push_back(ind);
+  for (int c : rowsAbove(ind)) candidates.push_back(c);
+  for (int c : rowsBelow(ind)) candidates.push_back(c);
   std::vector<std::pair<int, Rectangle> > sortedRows;
-  for (int other = 0; other < rows.size(); ++other) {
-    if (isRight(rows[other], row)) sortedRows.emplace_back(other, rows[other]);
+  for (int c : candidates) {
+    if (isRight(rows[c], row)) sortedRows.emplace_back(c, rows[c]);
   }
-  // Sort by distance to the row's right side
   std::sort(sortedRows.begin(), sortedRows.end(),
             [row](std::pair<int, Rectangle> a, std::pair<int, Rectangle> b) {
-              int ax = a.second.minX;
-              int bx = b.second.minX;
+              int ax = a.second.maxX;
+              int bx = b.second.maxX;
               int ay = a.second.minY;
               int by = b.second.minY;
               int rx = row.maxX;
@@ -185,4 +193,30 @@ std::vector<int> RowNeighbourhood::rowsRight(
   }
   return ret;
 }
+
+void RowNeighbourhood::buildRowsSides(const std::vector<Rectangle> &rows,
+                                      int nbNeighbourRows) {
+  rowsLeft_.clear();
+  rowsLeft_.resize(rows.size());
+  rowsRight_.clear();
+  rowsRight_.resize(rows.size());
+  std::vector<std::pair<int, Rectangle> > sortedRows;
+  for (int i = 0; i < rows.size(); ++i) {
+    sortedRows.emplace_back(i, rows[i]);
+  }
+  std::sort(sortedRows.begin(), sortedRows.end(), orderSide);
+  for (int i = 0; i + 1 < sortedRows.size(); ++i) {
+    auto [ind1, row1] = sortedRows[i];
+    auto [ind2, row2] = sortedRows[i + 1];
+    if (isLeft(row1, row2)) {
+      rowsLeft_[ind2] =
+          keepFirstK(buildLeftFrom(row2, rows, ind1), nbNeighbourRows);
+    }
+    if (isRight(row2, row1)) {
+      rowsRight_[ind1] =
+          keepFirstK(buildRightFrom(row1, rows, ind2), nbNeighbourRows);
+    }
+  }
+}
+
 }  // Namespace coloquinte
