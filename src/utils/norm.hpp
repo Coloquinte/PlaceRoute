@@ -7,7 +7,7 @@
 namespace coloquinte {
 
 template <typename T>
-T computeNorm(T x, T y, LegalizationModel leg) {
+inline T computeNorm(T x, T y, LegalizationModel leg) {
   T z;
   switch (leg) {
     case LegalizationModel::L1:
@@ -29,11 +29,17 @@ T computeNorm(T x, T y, LegalizationModel leg) {
   }
 }
 
-float norm(float x, float y, LegalizationModel leg) {
+/**
+ * @brief Compute the norm of the 2D vector with the given cost model
+ */
+inline float norm(float x, float y, LegalizationModel leg) {
   return computeNorm<float>(x, y, leg);
 }
 
-long long norm(int x, int y, LegalizationModel leg) {
+/**
+ * @brief Compute the norm of the 2D vector with the given cost model
+ */
+inline long long norm(int x, int y, LegalizationModel leg) {
   return computeNorm<long long>(x, y, leg);
 }
 }  // namespace coloquinte

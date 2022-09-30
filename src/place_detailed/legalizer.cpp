@@ -7,6 +7,8 @@
 #include <iostream>
 #include <limits>
 
+#include "utils/norm.hpp"
+
 namespace coloquinte {
 Legalizer Legalizer::fromIspdCircuit(const Circuit &circuit) {
   // Represent fixed cells with -1 width so they are not considered
@@ -16,7 +18,8 @@ Legalizer Legalizer::fromIspdCircuit(const Circuit &circuit) {
       widths[i] = -1;
     }
   }
-  return Legalizer(circuit.computeRows(), widths, circuit.cellX_, circuit.cellY_);
+  return Legalizer(circuit.computeRows(), widths, circuit.cellX_,
+                   circuit.cellY_);
 }
 
 Legalizer::Legalizer(const std::vector<Rectangle> &rows,

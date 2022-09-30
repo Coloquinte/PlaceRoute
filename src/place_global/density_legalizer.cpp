@@ -6,6 +6,8 @@
 #include <cmath>
 #include <iostream>
 
+#include "utils/norm.hpp"
+
 namespace coloquinte {
 DensityLegalizer::DensityLegalizer(DensityGrid grid,
                                    std::vector<int> cellDemand)
@@ -102,7 +104,8 @@ void DensityLegalizer::report(bool verbose) const {
 
 std::vector<std::pair<float, int> > DensityLegalizer::computeCellCosts(
     float cx1, float cy1, float cx2, float cy2, std::vector<int> cells) const {
-  // TODO: always add a secondary objective using squared distance
+  // TODO: always add a secondary objective using squared distance to improve
+  // stability
   std::vector<std::pair<float, int> > cellCosts;
   for (int c : cells) {
     float x = cellTargetX_[c];

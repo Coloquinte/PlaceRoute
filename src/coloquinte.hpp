@@ -244,16 +244,6 @@ struct DetailedPlacerParameters {
 };
 
 /**
- * @brief Compute the norm of the 2D vector with the given cost model
- */
-float norm(float x, float y, LegalizationModel leg);
-
-/**
- * @brief Compute the norm of the 2D vector with the given cost model
- */
-long long norm(int x, int y, LegalizationModel leg);
-
-/**
  * @brief Flat representation of a circuit
  */
 class Circuit {
