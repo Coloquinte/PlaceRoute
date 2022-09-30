@@ -72,10 +72,18 @@ class RowNeighbourhood {
    */
   void simpleSetup(const std::vector<Rectangle> &rows, int nbNeighbourRows);
 
-  static std::vector<int> rowsBelow(Rectangle row,
-                                    const std::vector<Rectangle> &rows);
-  static std::vector<int> rowsAbove(Rectangle row,
-                                    const std::vector<Rectangle> &rows);
+  /**
+   * @brief Build the structure indicating the rows below
+   */
+  static std::vector<std::vector<int> > rowsBelow(
+      const std::vector<Rectangle> &rows, int nbNeighbourRows);
+
+  /**
+   * @brief Build the structure indicating the rows above
+   */
+  static std::vector<std::vector<int> > rowsAbove(
+      const std::vector<Rectangle> &rows, int nbNeighbourRows);
+
   static std::vector<int> rowsLeft(Rectangle row,
                                    const std::vector<Rectangle> &rows);
   static std::vector<int> rowsRight(Rectangle row,
