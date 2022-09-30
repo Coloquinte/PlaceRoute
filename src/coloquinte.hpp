@@ -114,24 +114,24 @@ struct GlobalPlacerParameters {
    * @brief Gap between lower and upper bound placement at which to stop
    * placement early
    */
-  float gapTolerance;
+  double gapTolerance;
 
   /**
    * @brief Distance at which the full displacement penalty is obtained,
    * relative to the average standard cell length
    */
-  float penaltyCutoffDistance;
+  double penaltyCutoffDistance;
 
   /**
    * @brief Initial average strength for the displacement penalty
    */
-  float initialPenalty;
+  double initialPenalty;
 
   /**
    * @brief Multiplicative factor for the displacement penalty at each
    * iteration
    */
-  float penaltyUpdateFactor;
+  double penaltyUpdateFactor;
 
   /**
    * @brief Cost model for the continuous optimization
@@ -142,7 +142,7 @@ struct GlobalPlacerParameters {
    * @brief Approximation distance of the continuous model, relative to
    * the average standard cell length
    */
-  float approximationDistance;
+  double approximationDistance;
 
   /**
    * @brief Maximum number of conjugate gradient steps at each placement
@@ -154,7 +154,7 @@ struct GlobalPlacerParameters {
    * @brief Error tolerance to stop the conjugate gradient solver at each
    * placement iteration
    */
-  float conjugateGradientErrorTolerance;
+  double conjugateGradientErrorTolerance;
 
   /**
    * @brief Cost model used for rough legalization
@@ -169,7 +169,7 @@ struct GlobalPlacerParameters {
   /**
    * @brief Size of the rough legalization bin relative to the average standard cell length
    */
-  float roughLegalizationBinSize;
+  double roughLegalizationBinSize;
 
   /**
    * @brief Initialize the parameters with sensible defaults
