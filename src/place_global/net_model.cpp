@@ -251,10 +251,16 @@ class MatrixCreator {
   static MatrixCreator create(const NetModel &topo,
                               const std::vector<float> &pl, float epsilon,
                               NetModelOption netModel);
-  static MatrixCreator createStar(const NetModel &topo,
-                                  const std::vector<float> &pl, float epsilon);
   static MatrixCreator createB2B(const NetModel &topo,
                                  const std::vector<float> &pl, float epsilon);
+  static MatrixCreator createStar(const NetModel &topo,
+                                  const std::vector<float> &pl, float epsilon);
+  static MatrixCreator createClique(const NetModel &topo,
+                                    const std::vector<float> &pl,
+                                    float epsilon);
+  static MatrixCreator createLightStar(const NetModel &topo,
+                                       const std::vector<float> &pl,
+                                       float epsilon);
 
   void addPenalty(const std::vector<float> &netPlacement,
                   const std::vector<float> &placementTarget,
@@ -268,6 +274,7 @@ class MatrixCreator {
   void addBipoint(int net, const std::vector<float> &pl, float epsilon);
   void addClique(int net, const std::vector<float> &pl, float epsilon);
   void addStar(int net, const std::vector<float> &pl, float epsilon);
+  void addLightStar(int net, const std::vector<float> &pl, float epsilon);
   void addB2B(int net, const std::vector<float> &pl, float epsilon);
 
   void check() const;
@@ -361,8 +368,12 @@ MatrixCreator MatrixCreator::create(const NetModel &topo,
                                     NetModelOption netModel) {
   if (netModel == NetModelOption::BoundToBound) {
     return MatrixCreator::createB2B(topo, pl, epsilon);
-  } else {
+  } else if (netModel == NetModelOption::Star) {
     return MatrixCreator::createStar(topo, pl, epsilon);
+  } else if (netModel == NetModelOption::Clique) {
+    return MatrixCreator::createClique(topo, pl, epsilon);
+  } else {
+    return MatrixCreator::createLightStar(topo, pl, epsilon);
   }
 }
 
@@ -390,6 +401,26 @@ MatrixCreator MatrixCreator::createB2B(const NetModel &topo,
   MatrixCreator ret(topo);
   for (int i = 0; i < topo.nbNets(); ++i) {
     ret.addB2B(i, pl, epsilon);
+  }
+  return ret;
+}
+
+MatrixCreator MatrixCreator::createClique(const NetModel &topo,
+                                          const std::vector<float> &pl,
+                                          float epsilon) {
+  MatrixCreator ret(topo);
+  for (int i = 0; i < topo.nbNets(); ++i) {
+    ret.addClique(i, pl, epsilon);
+  }
+  return ret;
+}
+
+MatrixCreator MatrixCreator::createLightStar(const NetModel &topo,
+                                             const std::vector<float> &pl,
+                                             float epsilon) {
+  MatrixCreator ret(topo);
+  for (int i = 0; i < topo.nbNets(); ++i) {
+    ret.addLightStar(i, pl, epsilon);
   }
   return ret;
 }
@@ -470,6 +501,34 @@ void MatrixCreator::addStar(int net, const std::vector<float> &pl,
         float dist = std::min(maxPos - pos, pos - minPos);
         float w = topo_.netWeight(net) / std::max(epsilon, dist);
         addPin(c, starC, topo_.pinOffset(net, i), pos - starPos, w);
+      }
+    }
+  }
+}
+
+void MatrixCreator::addLightStar(int net, const std::vector<float> &pl,
+                                 float epsilon) {
+  if (topo_.nbPins(net) <= 2) {
+    addBipoint(net, pl, epsilon);
+  } else {
+    auto [minI, minCell, minOffset, minPos] = topo_.minPin(net, pl);
+    auto [maxI, maxCell, maxOffset, maxPos] = topo_.maxPin(net, pl);
+    float starPos = 0.5f * (minPos + maxPos);
+    int starC = addCell(starPos);
+    for (int i = 0; i < topo_.nbPins(net); ++i) {
+      int c = topo_.pinCell(net, i);
+      float pos = topo_.pinPosition(net, i, pl);
+      if (i == minI || i == maxI) {
+        // Strength of 1 when at the current position
+        float w =
+            topo_.netWeight(net) / std::max(epsilon, std::abs(pos - starPos));
+        addPin(c, starC, topo_.pinOffset(net, i), 0.0f, w);
+      } else {
+        // Emulate the weight of a bound-to-bound net
+        float w = topo_.netWeight(net) / (topo_.nbPins(net) - 1);
+        float w1 = w / std::max(epsilon, maxPos - pos);
+        float w2 = w / std::max(epsilon, pos - minPos);
+        addPin(c, starC, topo_.pinOffset(net, i), pos - starPos, w1 + w2);
       }
     }
   }

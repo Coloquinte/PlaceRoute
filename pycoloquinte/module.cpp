@@ -54,6 +54,8 @@ PYBIND11_MODULE(coloquinte_pybind, m) {
   py::enum_<NetModelOption>(m, "NetModel")
       .value("BoundToBound", NetModelOption::BoundToBound)
       .value("Star", NetModelOption::Star)
+      .value("Clique", NetModelOption::Clique)
+      .value("LightStar", NetModelOption::LightStar)
       .export_values();
 
   py::class_<GlobalPlacerParameters>(m, "GlobalPlacerParameters")

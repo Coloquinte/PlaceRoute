@@ -74,7 +74,24 @@ enum class LegalizationModel {
 /**
  * @brief Net model to use for continuous optimization
  */
-enum class NetModelOption { BoundToBound, Star };
+enum class NetModelOption {
+  /**
+   * @brief Classical bound-to-bound model (connect to the extreme points of the net)
+   */
+  BoundToBound,
+  /**
+   * @brief Star model, with a virtual pin at the middle
+   */
+  Star,
+  /**
+   * @brief Fully-connected model
+   */
+  Clique,
+  /**
+   * @brief Relaxed star model, with weighting more similar to bound-to-bound
+   */
+  LightStar
+  };
 
 /**
  * @brief Orientation of a cell
@@ -167,7 +184,8 @@ struct GlobalPlacerParameters {
   int roughLegalizationNbSteps;
 
   /**
-   * @brief Size of the rough legalization bin relative to the average standard cell length
+   * @brief Size of the rough legalization bin relative to the average standard
+   * cell length
    */
   double roughLegalizationBinSize;
 
@@ -306,7 +324,9 @@ class Circuit {
   /**
    * @brief Get the obstruction status for all cells
    */
-  const std::vector<bool> &cellIsObstruction() const { return cellIsObstruction_; }
+  const std::vector<bool> &cellIsObstruction() const {
+    return cellIsObstruction_;
+  }
 
   /**
    * @brief Set the fixed status for all cells
