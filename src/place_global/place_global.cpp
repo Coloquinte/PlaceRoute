@@ -149,6 +149,7 @@ void GlobalPlacer::runLB() {
   std::vector<float> penalty = perCellPenalty_;
   for (float &s : penalty) s *= penalty_;
   NetModel::Parameters params;
+  params.netModel = params_.netModel;
   params.approximationDistance = approximationDistance();
   params.penaltyCutoffDistance = penaltyCutoffDistance();
   params.tolerance = params_.conjugateGradientErrorTolerance;
