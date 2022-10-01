@@ -164,7 +164,7 @@ struct GlobalPlacerParameters {
   /**
    * @brief Number of rough legalization steps at each placement iteration
    */
-  int nbRoughLegalizationSteps;
+  int roughLegalizationNbSteps;
 
   /**
    * @brief Size of the rough legalization bin relative to the average standard cell length

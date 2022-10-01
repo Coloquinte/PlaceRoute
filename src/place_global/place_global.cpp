@@ -21,7 +21,7 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort) {
   maxNbConjugateGradientSteps = 1000;
   conjugateGradientErrorTolerance = 1.0e-6;
   roughLegalizationCostModel = LegalizationModel::L1;
-  nbRoughLegalizationSteps = 2;
+  roughLegalizationNbSteps = 2;
   roughLegalizationBinSize = 5.0;
   check();
 }
@@ -61,7 +61,7 @@ void GlobalPlacerParameters::check() const {
   if (conjugateGradientErrorTolerance > 1.0) {
     throw std::runtime_error("Too large error tolerance is highly imprecise");
   }
-  if (nbRoughLegalizationSteps < 0) {
+  if (roughLegalizationNbSteps < 0) {
     throw std::runtime_error(
         "Must have non-negative number of steps for rough legalization");
   }
@@ -94,7 +94,7 @@ GlobalPlacer::GlobalPlacer(Circuit &circuit,
   averageCellLength_ = computeAverageCellSize();
   perCellPenalty_ = computePerCellPenalty();
   leg_.setCostModel(params.roughLegalizationCostModel);
-  leg_.setNbSteps(params.nbRoughLegalizationSteps);
+  leg_.setNbSteps(params.roughLegalizationNbSteps);
 }
 
 float GlobalPlacer::computeAverageCellSize() const {

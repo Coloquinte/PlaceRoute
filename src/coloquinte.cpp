@@ -64,7 +64,7 @@ std::string GlobalPlacerParameters::toString() const {
      << "\n\tCG error tolerance: " << conjugateGradientErrorTolerance
      << "\n\tRough legalization cost model: "
      << coloquinte::toString(roughLegalizationCostModel)
-     << "\n\tNb rough legalization steps: " << nbRoughLegalizationSteps
+     << "\n\tNb rough legalization steps: " << roughLegalizationNbSteps
      << "\n\tRough legalization bin size: " << roughLegalizationBinSize
      << std::endl;
   return ss.str();

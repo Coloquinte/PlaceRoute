@@ -79,8 +79,8 @@ Construct the parameters
                      &GlobalPlacerParameters::conjugateGradientErrorTolerance)
       .def_readwrite("rough_legalization_cost_model",
                      &GlobalPlacerParameters::roughLegalizationCostModel)
-      .def_readwrite("nb_rough_legalization_steps",
-                     &GlobalPlacerParameters::nbRoughLegalizationSteps)
+      .def_readwrite("rough_legalization_nb_steps",
+                     &GlobalPlacerParameters::roughLegalizationNbSteps)
       .def_readwrite("rough_legalization_bin_size",
                      &GlobalPlacerParameters::roughLegalizationBinSize)
       .def("check", &GlobalPlacerParameters::check)
