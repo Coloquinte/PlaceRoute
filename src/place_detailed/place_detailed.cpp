@@ -11,16 +11,6 @@
 
 namespace coloquinte {
 
-DetailedPlacerParameters::DetailedPlacerParameters(int effort) {
-  nbPasses = effort / 3 + 1;
-  localSearchNbNeighbours = effort / 2 + 1;
-  localSearchNbRows = effort / 2 + 1;
-  legalizationCostModel = LegalizationModel::L1;
-  shiftNbRows = 3;
-  shiftMaxNbCells = 100;
-  check();
-}
-
 void DetailedPlacerParameters::check() const {
   if (nbPasses < 0) {
     throw std::runtime_error(

@@ -10,22 +10,6 @@
 
 namespace coloquinte {
 
-GlobalPlacerParameters::GlobalPlacerParameters(int effort) {
-  maxNbSteps = 30;
-  gapTolerance = 0.05;
-  penaltyCutoffDistance = 10.0;
-  initialPenalty = 0.02;
-  penaltyUpdateFactor = 1.2;
-  netModel = NetModelOption::BoundToBound;
-  approximationDistance = 0.5;
-  maxNbConjugateGradientSteps = 1000;
-  conjugateGradientErrorTolerance = 1.0e-6;
-  roughLegalizationCostModel = LegalizationModel::L1;
-  roughLegalizationNbSteps = 2;
-  roughLegalizationBinSize = 5.0;
-  check();
-}
-
 void GlobalPlacerParameters::check() const {
   if (maxNbSteps < 0) {
     throw std::runtime_error("Invalid number of steps");

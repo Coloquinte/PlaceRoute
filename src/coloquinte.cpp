@@ -50,6 +50,23 @@ std::string Rectangle::toString() const {
   return ss.str();
 }
 
+GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
+    : seed(seed) {
+  maxNbSteps = 30;
+  gapTolerance = 0.05;
+  penaltyCutoffDistance = 10.0;
+  initialPenalty = 0.02;
+  penaltyUpdateFactor = 1.2;
+  netModel = NetModelOption::BoundToBound;
+  approximationDistance = 0.5;
+  maxNbConjugateGradientSteps = 1000;
+  conjugateGradientErrorTolerance = 1.0e-6;
+  roughLegalizationCostModel = LegalizationModel::L1;
+  roughLegalizationNbSteps = 2;
+  roughLegalizationBinSize = 5.0;
+  check();
+}
+
 std::string GlobalPlacerParameters::toString() const {
   std::stringstream ss;
   ss << "Global placer params:"
@@ -65,9 +82,23 @@ std::string GlobalPlacerParameters::toString() const {
      << "\n\tRough legalization cost model: "
      << coloquinte::toString(roughLegalizationCostModel)
      << "\n\tNb rough legalization steps: " << roughLegalizationNbSteps
-     << "\n\tRough legalization bin size: " << roughLegalizationBinSize
-     << std::endl;
+     << "\n\tRough legalization bin size: " << roughLegalizationBinSize;
+  if (seed != -1) {
+    ss << "\n\tSeed: " << seed;
+  }
+  ss << std::endl;
   return ss.str();
+}
+
+DetailedPlacerParameters::DetailedPlacerParameters(int effort, int seed)
+    : seed(seed) {
+  nbPasses = effort / 3 + 1;
+  localSearchNbNeighbours = effort / 2 + 1;
+  localSearchNbRows = effort / 2 + 1;
+  legalizationCostModel = LegalizationModel::L1;
+  shiftNbRows = 3;
+  shiftMaxNbCells = 100;
+  check();
 }
 
 std::string DetailedPlacerParameters::toString() const {
@@ -79,7 +110,11 @@ std::string DetailedPlacerParameters::toString() const {
      << "\n\tShift nb rows: " << shiftNbRows
      << "\n\tShift max nb cells: " << shiftMaxNbCells
      << "\n\tLegalization cost model: "
-     << coloquinte::toString(legalizationCostModel) << std::endl;
+     << coloquinte::toString(legalizationCostModel);
+  if (seed != -1) {
+    ss << "\n\tSeed: " << seed;
+  }
+  ss << std::endl;
   return ss.str();
 }
 

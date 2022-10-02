@@ -59,12 +59,13 @@ PYBIND11_MODULE(coloquinte_pybind, m) {
       .export_values();
 
   py::class_<GlobalPlacerParameters>(m, "GlobalPlacerParameters")
-      .def(py::init<int>(), R"pbdoc(
+      .def(py::init<int, int>(), R"pbdoc(
 Construct the parameters
 
 :param int effort: Effort level
+:param int seed: Random seed
 )pbdoc",
-           py::arg("effort") = 3)
+           py::arg("effort") = 3, py::arg("seed") = -1)
       .def_readwrite("max_nb_steps", &GlobalPlacerParameters::maxNbSteps)
       .def_readwrite("gap_tolerance", &GlobalPlacerParameters::gapTolerance)
       .def_readwrite("penalty_cutoff_distance",
@@ -90,12 +91,13 @@ Construct the parameters
       .def("__repr__", &GlobalPlacerParameters::toString);
 
   py::class_<DetailedPlacerParameters>(m, "DetailedPlacerParameters")
-      .def(py::init<int>(), R"pbdoc(
+      .def(py::init<int, int>(), R"pbdoc(
 Construct the parameters
 
 :param int effort: Effort level
+:param int seed: Random seed
 )pbdoc",
-           py::arg("effort") = 3)
+           py::arg("effort") = 3, py::arg("seed") = -1)
       .def_readwrite("nb_passes", &DetailedPlacerParameters::nbPasses)
       .def_readwrite("local_search_nb_neighbours",
                      &DetailedPlacerParameters::localSearchNbNeighbours)

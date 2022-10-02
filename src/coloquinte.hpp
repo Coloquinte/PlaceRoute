@@ -190,11 +190,17 @@ struct GlobalPlacerParameters {
   double roughLegalizationBinSize;
 
   /**
+   * @brief Random seed
+   */
+  int seed;
+
+  /**
    * @brief Initialize the parameters with sensible defaults
    *
    * @param effort Placement effort between 1 and 9
+   * @param seed Random seed
    */
-  explicit GlobalPlacerParameters(int effort = 3);
+  explicit GlobalPlacerParameters(int effort = 3, int seed = -1);
 
   /**
    * @brief Obtain a string representation
@@ -244,11 +250,17 @@ struct DetailedPlacerParameters {
   LegalizationModel legalizationCostModel;
 
   /**
+   * @brief Random seed
+   */
+  int seed;
+
+  /**
    * @brief Initialize the parameters with sensible defaults
    *
    * @param effort Placement effort between 1 and 9
+   * @param seed Random seed
    */
-  explicit DetailedPlacerParameters(int effort = 3);
+  explicit DetailedPlacerParameters(int effort = 3, int seed = -1);
 
   /**
    * @brief Obtain a string representation

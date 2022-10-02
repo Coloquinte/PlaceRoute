@@ -465,6 +465,8 @@ def main():
     parser.add_argument("instance", help="Benchmark instance")
     parser.add_argument("--effort", help="Placement effort",
                         type=int, default=3)
+    parser.add_argument("--seed", help="Random seed",
+                        type=int, default=-1)
     parser.add_argument("--ignore-macros",
                         help="Ignore macros when placing standard cells", action="store_true",
                         dest="ignore_obstructions")
@@ -485,10 +487,10 @@ def main():
     _add_arguments(detailed_group, DetailedPlacerParameters(), "detailed")
     args = parser.parse_args()
 
-    global_params = GlobalPlacerParameters(args.effort)
+    global_params = GlobalPlacerParameters(args.effort, args.seed)
     _parse_arguments(args, global_params, "global")
     global_params.check()
-    detailed_params = DetailedPlacerParameters(args.effort)
+    detailed_params = DetailedPlacerParameters(args.effort, args.seed)
     _parse_arguments(args, detailed_params, "detailed")
     detailed_params.check()
 
