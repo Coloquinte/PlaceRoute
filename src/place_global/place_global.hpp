@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <random>
 
 #include "coloquinte.hpp"
 #include "place_global/density_legalizer.hpp"
@@ -107,5 +108,6 @@ class GlobalPlacer {
   std::vector<float> perCellPenalty_;
   int step_;
   float penalty_;
+  std::mt19937 rgen_;
 };
 }  // namespace coloquinte

@@ -75,6 +75,7 @@ GlobalPlacer::GlobalPlacer(Circuit &circuit,
       xtopo_(NetModel::xTopology(circuit)),
       ytopo_(NetModel::yTopology(circuit)),
       params_(params) {
+  rgen_.seed(params_.seed);
   averageCellLength_ = computeAverageCellSize();
   perCellPenalty_ = computePerCellPenalty();
   leg_.setCostModel(params.roughLegalizationCostModel);
@@ -130,14 +131,21 @@ void GlobalPlacer::runInitialLB() {
 }
 
 void GlobalPlacer::runLB() {
-  std::vector<float> penalty = perCellPenalty_;
-  for (float &s : penalty) s *= penalty_;
+  // Compute the parameters for the continuous model solver
   NetModel::Parameters params;
   params.netModel = params_.netModel;
   params.approximationDistance = approximationDistance();
   params.penaltyCutoffDistance = penaltyCutoffDistance();
   params.tolerance = params_.conjugateGradientErrorTolerance;
   params.maxNbIterations = params_.maxNbConjugateGradientSteps;
+
+  // Compute the per-cell penalty with randomization
+  std::vector<float> penalty = perCellPenalty_;
+  for (float &s : penalty) s *= penalty_;
+  float rand = std::uniform_real_distribution<float>(-1.0e-4f, 1.0e-4f)(rgen_);
+  for (float &s : penalty) s *= (1.0f + rand);
+
+  // Solve the continuous model (x and y independently)
   std::future<std::vector<float> > x =
       std::async(std::launch::async, &NetModel::solve, &xtopo_, xPlacementLB_,
                  xPlacementUB_, penalty, params);
