@@ -29,7 +29,7 @@ pip install coloquinte
 
 For the latest version of other OSes, install the dependencies and build the module. For example:
 ``` bash
-sudo apt-get install cmake libboost-all-dev libeigen3-dev
+sudo apt-get install g++ cmake libboost-all-dev libeigen3-dev
 cd pycoloquinte
 python setup.py install
 ```
@@ -38,7 +38,7 @@ python setup.py install
 
 Install dependencies and build Coloquinte using CMake :
 ``` bash
-sudo apt-get install libboost-all-dev libeigen3-dev
+sudo apt-get install g++ cmake libboost-all-dev libeigen3-dev
 cmake -B build; cmake --build build
 ```
 

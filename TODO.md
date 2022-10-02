@@ -5,9 +5,13 @@
 
 ## Ease-of-development
 
-* Randomize parameters: add noise to the parameters based on a seed to test robustness
+* More randomization:
+    * Add noise to the global placement parameters based on the seed
+    * Make the detailed placer less deterministic
 
 ## Performance
 
 * Optimization for various quality/time tradeoffs
 * Parallel implementation for detailed placement
+* Legalization cost models other than L1
+* Reoptimization of legalization
