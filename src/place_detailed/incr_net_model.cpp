@@ -3,6 +3,7 @@
 #include <limits>
 #include <numeric>
 #include <stdexcept>
+#include <unordered_map>
 
 namespace coloquinte {
 
@@ -21,35 +22,121 @@ void IncrNetModelBuilder::addNet(const std::vector<int> &cells,
 }
 
 IncrNetModel IncrNetModel::xTopology(const Circuit &circuit) {
-  IncrNetModelBuilder ret(circuit.nbCells());
-  for (int i = 0; i < circuit.nbNets(); ++i) {
-    std::vector<int> cells;
-    std::vector<int> offsets;
-    for (int j = 0; j < circuit.nbPinsNet(i); ++j) {
-      int cell = circuit.pinCell(i, j);
-      int offset = circuit.pinXOffset(i, j);
-      cells.push_back(cell);
-      offsets.push_back(offset);
-    }
-    ret.addNet(cells, offsets);
+  std::vector<int> cells;
+  for (int c = 0; c < circuit.nbCells(); ++c) {
+    cells.push_back(c);
   }
-  return ret.build(circuit.cellX_);
+  return xTopology(circuit, cells);
 }
 
 IncrNetModel IncrNetModel::yTopology(const Circuit &circuit) {
-  IncrNetModelBuilder ret(circuit.nbCells());
+  std::vector<int> cells;
+  for (int c = 0; c < circuit.nbCells(); ++c) {
+    cells.push_back(c);
+  }
+  return yTopology(circuit, cells);
+}
+
+namespace {
+std::unordered_map<int, int> buildCellMapping(const Circuit &circuit,
+                                              const std::vector<int> &cells) {
+  std::unordered_map<int, int> cellMap;
+  for (int i = 0; i < cells.size(); ++i) {
+    int c = cells[i];
+    assert(c >= 0 && c < circuit.nbCells());
+    cellMap[c] = i;
+  }
+  assert(cellMap.size() == cells.size());
+  return cellMap;
+}
+}  // namespace
+
+IncrNetModel IncrNetModel::xTopology(const Circuit &circuit,
+                                     const std::vector<int> &cells) {
+  std::unordered_map<int, int> cellMap = buildCellMapping(circuit, cells);
+
+  int fixedCell = cells.size();
+  std::vector<int> cellX;
+  for (int c : cells) {
+    cellX.push_back(circuit.x(c));
+  }
+  cellX.push_back(0);
+
+  IncrNetModelBuilder ret(cellX.size());
   for (int i = 0; i < circuit.nbNets(); ++i) {
     std::vector<int> cells;
     std::vector<int> offsets;
+    bool hasFixed = false;
+    int minFixed = std::numeric_limits<int>::max();
+    int maxFixed = std::numeric_limits<int>::min();
     for (int j = 0; j < circuit.nbPinsNet(i); ++j) {
       int cell = circuit.pinCell(i, j);
-      int offset = circuit.pinYOffset(i, j);
-      cells.push_back(cell);
-      offsets.push_back(offset);
+      int offset = circuit.pinXOffset(i, j);
+      if (cellMap.count(cell)) {
+        cells.push_back(cellMap[cell]);
+        offsets.push_back(offset);
+      } else {
+        int pos = circuit.x(cell) + offset;
+        minFixed = std::min(pos, minFixed);
+        maxFixed = std::max(pos, maxFixed);
+        hasFixed = true;
+      }
+    }
+    if (hasFixed) {
+      cells.push_back(fixedCell);
+      offsets.push_back(minFixed);
+      if (minFixed != maxFixed) {
+        cells.push_back(fixedCell);
+        offsets.push_back(maxFixed);
+      }
     }
     ret.addNet(cells, offsets);
   }
-  return ret.build(circuit.cellY_);
+  return ret.build(cellX);
+}
+
+IncrNetModel IncrNetModel::yTopology(const Circuit &circuit,
+                                     const std::vector<int> &cells) {
+  std::unordered_map<int, int> cellMap = buildCellMapping(circuit, cells);
+
+  int fixedCell = cells.size();
+  std::vector<int> cellY;
+  for (int c : cells) {
+    cellY.push_back(circuit.y(c));
+  }
+  cellY.push_back(0);
+
+  IncrNetModelBuilder ret(cellY.size());
+  for (int i = 0; i < circuit.nbNets(); ++i) {
+    std::vector<int> cells;
+    std::vector<int> offsets;
+    bool hasFixed = false;
+    int minFixed = std::numeric_limits<int>::max();
+    int maxFixed = std::numeric_limits<int>::min();
+    for (int j = 0; j < circuit.nbPinsNet(i); ++j) {
+      int cell = circuit.pinCell(i, j);
+      int offset = circuit.pinYOffset(i, j);
+      if (cellMap.count(cell)) {
+        cells.push_back(cellMap[cell]);
+        offsets.push_back(offset);
+      } else {
+        int pos = circuit.y(cell) + offset;
+        minFixed = std::min(pos, minFixed);
+        maxFixed = std::max(pos, maxFixed);
+        hasFixed = true;
+      }
+    }
+    if (hasFixed) {
+      cells.push_back(fixedCell);
+      offsets.push_back(minFixed);
+      if (minFixed != maxFixed) {
+        cells.push_back(fixedCell);
+        offsets.push_back(maxFixed);
+      }
+    }
+    ret.addNet(cells, offsets);
+  }
+  return ret.build(cellY);
 }
 
 void IncrNetModel::exportPlacementX(Circuit &circuit) const {

@@ -40,6 +40,13 @@ struct Rectangle {
   }
 
   /**
+   * @brief Returns whether the rectangle contains another one
+   */
+  bool contains(Rectangle o) const {
+    return minX <= o.minX && maxX >= o.maxX && minY <= o.minY && maxY >= o.maxY;
+  }
+
+  /**
    * @brief Return the overlapping area of the rectangles if they intersect
    */
   static Rectangle intersection(Rectangle a, Rectangle b) {
@@ -76,7 +83,8 @@ enum class LegalizationModel {
  */
 enum class NetModelOption {
   /**
-   * @brief Classical bound-to-bound model (connect to the extreme points of the net)
+   * @brief Classical bound-to-bound model (connect to the extreme points of the
+   * net)
    */
   BoundToBound,
   /**
@@ -91,7 +99,7 @@ enum class NetModelOption {
    * @brief Relaxed star model, with weighting more similar to bound-to-bound
    */
   LightStar
-  };
+};
 
 /**
  * @brief Orientation of a cell
@@ -408,7 +416,9 @@ class Circuit {
   /**
    * @brief Return the rows after removing the obstacles
    */
-  std::vector<Rectangle> computeRows() const;
+  std::vector<Rectangle> computeRows(
+      const std::vector<Rectangle> &additionalObstacles =
+          std::vector<Rectangle>()) const;
 
   /**
    * @brief Return the current width of the cell (depends on its orientation)
@@ -434,6 +444,14 @@ class Circuit {
   int y(int cell) const {
     assert(cell < nbCells());
     return cellY_[cell];
+  }
+
+  /**
+   * @brief Return the placement occupied by the cell
+   */
+  Rectangle placement(int cell) const {
+    return Rectangle(x(cell), x(cell) + placedWidth(cell), y(cell),
+                     y(cell) + placedHeight(cell));
   }
 
   /**

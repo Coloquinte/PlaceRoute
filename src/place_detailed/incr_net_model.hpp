@@ -64,6 +64,20 @@ class IncrNetModel {
   static IncrNetModel yTopology(const Circuit &);
 
   /**
+   * @brief Create the horizontal view of the HPWL model
+   *
+   * @param cells Subset of the cells to extract
+   */
+  static IncrNetModel xTopology(const Circuit &, const std::vector<int> &cells);
+
+  /**
+   * @brief Create the vertical view of the HPWL model
+   *
+   * @param cells Subset of the cells to extract
+   */
+  static IncrNetModel yTopology(const Circuit &, const std::vector<int> &cells);
+
+  /**
    * @brief Export the horizontal placement to the ISPD circuit
    */
   void exportPlacementX(Circuit &circuit) const;

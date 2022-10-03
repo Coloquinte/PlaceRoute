@@ -439,10 +439,10 @@ void DetailedPlacer::runShiftsOnCells(const std::vector<int> &cells) {
         constraint_arcs.push_back(arc_pair(Ar, -pin_offs));
       } else {  // Fixed offset
         auto Al = g.addArc(fixed, Lnet_nodes[net]);
-        constraint_arcs.push_back(arc_pair(Al, placement_.cellX(c) + pin_offs));
+        constraint_arcs.push_back(arc_pair(Al, xtopo_.cellPos(c) + pin_offs));
         auto Ar = g.addArc(Unet_nodes[net], fixed);
         constraint_arcs.push_back(
-            arc_pair(Ar, -placement_.cellX(c) - pin_offs));
+            arc_pair(Ar, -xtopo_.cellPos(c) - pin_offs));
       }
     }
   }

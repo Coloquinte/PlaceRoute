@@ -301,14 +301,15 @@ Rectangle Circuit::computePlacementArea() const {
   return Rectangle(minX, maxX, minY, maxY);
 }
 
-std::vector<Rectangle> Circuit::computeRows() const {
-  std::vector<Rectangle> obstacles;
+std::vector<Rectangle> Circuit::computeRows(
+    const std::vector<Rectangle> &additionalObstacles) const {
+  std::vector<Rectangle> obstacles = additionalObstacles;
   for (int i = 0; i < nbCells(); ++i) {
     if (!isFixed(i)) continue;
     if (!isObstruction(i)) continue;
-    obstacles.emplace_back(x(i), x(i) + placedWidth(i), y(i),
-                           y(i) + placedHeight(i));
+    obstacles.emplace_back(placement(i));
   }
+  // Use boost::polygon ro compute the difference of each row to every other
   std::vector<Rectangle> ret;
   for (Rectangle row : rows_) {
     bpl::polygon_90_set_data<int> row_set;

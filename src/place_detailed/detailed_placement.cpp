@@ -13,28 +13,87 @@ DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit) {
       widths[i] = -1;
     }
   }
+  std::vector<int> cellIndex;
+  for (int i = 0; i < circuit.nbCells(); ++i) {
+    cellIndex.push_back(i);
+  }
+  // TODO: check that the orientations of the cells are compatible with the rows
   return DetailedPlacement(circuit.computeRows(), widths, circuit.cellX_,
-                           circuit.cellY_);
+                           circuit.cellY_, cellIndex);
+}
+
+DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit,
+                                                     const Rectangle &region) {
+  // Compute the cells in the placement region
+  std::vector<int> cellIndex;
+  std::vector<Rectangle> obstacles;
+  for (int c = 0; c < circuit.nbCells(); ++c) {
+    if (circuit.isFixed(c)) continue;
+    Rectangle pl = circuit.placement(c);
+    if (region.contains(pl)) {
+      cellIndex.push_back(c);
+    } else if (region.intersects(pl)) {
+      // This will cover some of the rows: we need to reduce their size
+      obstacles.push_back(pl);
+    }
+  }
+
+  // Compute the rows in the placement region
+  std::vector<Rectangle> rows;
+  for (Rectangle row : circuit.computeRows(obstacles)) {
+    // Height must be completely contained in the region
+    if (row.minY < region.minY) continue;
+    if (row.maxY > region.maxY) continue;
+    // Laterally we just need to have an intersection
+    if (row.minX >= region.maxX) continue;
+    if (row.maxX <= region.minX) continue;
+    Rectangle actual(std::max(row.minX, region.minX),
+                     std::min(row.maxX, region.maxX), row.minY, row.maxY);
+    rows.push_back(actual);
+  }
+
+  // Setup the widths and positions
+  std::vector<int> widths(cellIndex.size());
+  std::vector<int> cellX(cellIndex.size());
+  std::vector<int> cellY(cellIndex.size());
+  for (int i = 0; i < cellIndex.size(); ++i) {
+    int c = cellIndex[i];
+    widths[i] = circuit.cellWidth()[c];
+    cellX[i] = circuit.cellX()[c];
+    cellY[i] = circuit.cellY()[c];
+  }
+  // Additional fixed cell
+  cellIndex.push_back(-1);
+  widths.push_back(-1);
+  cellX.push_back(0);
+  cellY.push_back(0);
+
+  return DetailedPlacement(rows, widths, cellX, cellY, cellIndex);
 }
 
 void DetailedPlacement::exportPlacement(Circuit &circuit) {
-  for (int i = 0; i < circuit.nbCells(); ++i) {
-    if (circuit.isFixed(i)) continue;
-    circuit.cellX_[i] = cellX(i);
-    circuit.cellY_[i] = cellY(i);
+  for (int i = 0; i < nbCells(); ++i) {
+    int cell = cellIndex_[i];
+    if (cell < 0) continue;
+    if (circuit.isFixed(cell)) continue;
+    circuit.cellX_[cell] = cellX(i);
+    circuit.cellY_[cell] = cellY(i);
   }
 }
 
 DetailedPlacement::DetailedPlacement(const std::vector<Rectangle> &rows,
                                      const std::vector<int> &width,
                                      const std::vector<int> &posX,
-                                     const std::vector<int> &posY) {
+                                     const std::vector<int> &posY,
+                                     const std::vector<int> &cellIndex) {
   assert(posX.size() == width.size());
   assert(posY.size() == width.size());
+  assert(cellIndex.size() == width.size());
   rows_ = rows;
   cellX_ = posX;
   cellY_ = posY;
   cellWidth_ = width;
+  cellIndex_ = cellIndex;
 
   std::sort(rows_.begin(), rows_.end(), [](Rectangle a, Rectangle b) -> bool {
     return a.minY < b.minY || (a.minY == b.minY && a.minX < b.minX);
@@ -98,6 +157,8 @@ DetailedPlacement::DetailedPlacement(const std::vector<Rectangle> &rows,
     rowFirstCell_[row] = rowToCells[row].front();
     rowLastCell_[row] = rowToCells[row].back();
   }
+
+  check();
 }
 
 std::vector<int> DetailedPlacement::rowCells(int row) const {
@@ -297,6 +358,8 @@ void DetailedPlacement::check() const {
   if (cellX_.size() != nbCells())
     throw std::runtime_error("Cell size mismatch");
   if (cellY_.size() != nbCells())
+    throw std::runtime_error("Cell size mismatch");
+  if (cellIndex_.size() != nbCells())
     throw std::runtime_error("Cell size mismatch");
   for (int i = 0; i < nbRows(); ++i) {
     int fc = rowFirstCell(i);

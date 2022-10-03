@@ -18,6 +18,12 @@ class DetailedPlacement {
   static DetailedPlacement fromIspdCircuit(const Circuit &circuit);
 
   /**
+   * @brief Initialize the datastructure from a region of a circuit
+   */
+  static DetailedPlacement fromIspdCircuit(const Circuit &circuit,
+                                           const Rectangle &rectangle);
+
+  /**
    * @brief Export the placement obtained to the circuit datastructure
    */
   void exportPlacement(Circuit &circuit);
@@ -32,7 +38,8 @@ class DetailedPlacement {
    */
   DetailedPlacement(const std::vector<Rectangle> &rows,
                     const std::vector<int> &width, const std::vector<int> &posX,
-                    const std::vector<int> &posY);
+                    const std::vector<int> &posY,
+                    const std::vector<int> &cellIndex);
 
   /**
    * @brief Return the number of rows
@@ -142,6 +149,11 @@ class DetailedPlacement {
   }
 
   /**
+   * @brief Return indices of the cells in the original circuit
+   */
+  const std::vector<int> &cellIndex() const { return cellIndex_; }
+
+  /**
    * @brief Return the x boundary before the cell (beginning of row or end of
    * previous cell)
    */
@@ -241,6 +253,7 @@ class DetailedPlacement {
   std::vector<int> cellRow_;
   std::vector<int> cellX_;
   std::vector<int> cellY_;
+  std::vector<int> cellIndex_;
 
   friend class DetailedPlacer;
 };
