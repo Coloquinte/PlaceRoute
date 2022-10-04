@@ -98,9 +98,12 @@ void DetailedPlacer::place(Circuit &circuit,
     // Async rather than foreach, as foreach requires a TBB dependency
     std::vector<std::future<void> > pending;
     for (DetailedPlacer &placer : placers) {
+      placer.runOnce(circuit, params);
+      /*
       auto ret = std::async(std::launch::async, &DetailedPlacer::runOnce,
                             &placer, std::ref(circuit), std::ref(params));
       pending.emplace_back(std::move(ret));
+      */
     }
     for (auto &f : pending) f.get();
   }
@@ -110,7 +113,8 @@ void DetailedPlacer::place(Circuit &circuit,
 
 void DetailedPlacer::runOnce(Circuit &circuit,
                              const DetailedPlacerParameters &params) {
-  std::cout << "Running thread" << std::endl;
+  std::cout << "Running thread with " << placement_.nbCells() << " cells and "
+            << placement_.nbRows() << " rows" << std::endl;
   runSwaps(params.localSearchNbNeighbours, params.localSearchNbRows);
   std::cout << "Local search done" << std::endl;
   runShifts(params.shiftNbRows, params.shiftMaxNbCells);
@@ -573,8 +577,11 @@ void DetailedPlacer::check() const {
   placement_.check();
   xtopo_.check();
   ytopo_.check();
-  assert(xtopo_.nbCells() == placement_.nbCells());
-  assert(ytopo_.nbCells() == placement_.nbCells());
+  // Potentially one dummy cell in the topologies
+  assert(xtopo_.nbCells() >= placement_.nbCells());
+  assert(ytopo_.nbCells() >= placement_.nbCells());
+  assert(xtopo_.nbCells() <= placement_.nbCells() + 1);
+  assert(ytopo_.nbCells() <= placement_.nbCells() + 1);
   for (int c = 0; c < placement_.nbCells(); ++c) {
     if (placement_.isPlaced(c)) {
       if (xtopo_.cellPos(c) != placement_.cellX(c)) {

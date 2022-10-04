@@ -62,11 +62,6 @@ DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit,
     cellX[i] = circuit.cellX()[c];
     cellY[i] = circuit.cellY()[c];
   }
-  // Additional fixed cell
-  cellIndex.push_back(-1);
-  widths.push_back(-1);
-  cellX.push_back(0);
-  cellY.push_back(0);
 
   return DetailedPlacement(rows, widths, cellX, cellY, cellIndex);
 }
@@ -74,7 +69,6 @@ DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit,
 void DetailedPlacement::exportPlacement(Circuit &circuit) {
   for (int i = 0; i < nbCells(); ++i) {
     int cell = cellIndex_[i];
-    if (cell < 0) continue;
     if (circuit.isFixed(cell)) continue;
     circuit.cellX_[cell] = cellX(i);
     circuit.cellY_[cell] = cellY(i);
