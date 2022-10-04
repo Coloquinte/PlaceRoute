@@ -6,6 +6,8 @@
 #include <cmath>
 #include <numeric>
 
+#include "utils/helpers.hpp"
+
 namespace bpl = boost::polygon;
 
 namespace coloquinte {
@@ -35,10 +37,7 @@ DensityGrid DensityGrid::fromIspdCircuit(const Circuit &circuit,
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (!circuit.isFixed(i)) continue;
     if (!circuit.isObstruction(i)) continue;
-    int x = circuit.cellX_[i];
-    int y = circuit.cellY_[i];
-    obstacles.emplace_back(x, x + circuit.cellWidth_[i], y,
-                           y + circuit.cellHeight_[i]);
+    obstacles.emplace_back(circuit.placement(i));
   }
   return DensityGrid(sizeFactor * minCellHeight, circuit.rows_, obstacles);
 }
@@ -72,6 +71,8 @@ std::vector<Rectangle> DensityGrid::computeActualRegions(
 }
 
 void DensityGrid::updateBinCenters() {
+  binX_.clear();
+  binY_.clear();
   int binsX = binLimitX_.size() - 1;
   for (int i = 0; i < binsX; ++i) {
     binX_.push_back(0.5f * (binLimitX_[i] + binLimitX_[i + 1]));
@@ -118,22 +119,10 @@ void DensityGrid::updateBinCapacity(const std::vector<Rectangle> &regions) {
 }
 
 void DensityGrid::updateBinsToNumber(int binsX, int binsY) {
-  binLimitX_.clear();
-  binLimitY_.clear();
-  binX_.clear();
-  binY_.clear();
-  for (int i = 0; i < binsX + 1; ++i) {
-    binLimitX_.push_back(
-        placementArea_.minX +
-        (i * (placementArea_.maxX - placementArea_.minX) / binsX));
-  }
-  assert(binLimitX_.size() == binsX + 1);
-  for (int i = 0; i < binsY + 1; ++i) {
-    binLimitY_.push_back(
-        placementArea_.minY +
-        (i * (placementArea_.maxY - placementArea_.minY) / binsY));
-  }
-  assert(binLimitY_.size() == binsY + 1);
+  binLimitX_ =
+      computeSubdivisions(placementArea_.minX, placementArea_.maxX, binsX);
+  binLimitY_ =
+      computeSubdivisions(placementArea_.minY, placementArea_.maxY, binsY);
   updateBinCenters();
   updateBinCapacity();
 }
@@ -670,4 +659,4 @@ void HierarchicalDensityPlacement::check() const {
   }
   assert(capacity == totalCapacity());
 }
-}
+}  // namespace coloquinte
