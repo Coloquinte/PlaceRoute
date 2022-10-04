@@ -11,22 +11,20 @@ namespace coloquinte {
 class DetailedPlacer {
  public:
   /**
-   * @brief Run detailed placement on the circuit representation
-   *
-   * @param circuit The circuit to be modified
-   * @param effort Effort level, between 0 and 9
-   */
-  static void place(Circuit &circuit, int effort) {
-    place(circuit, DetailedPlacerParameters(effort));
-  }
-
-  /**
-   * @brief Run detailed placement on the circuit representation
+   * @brief Run detailed placement on the circuit
    *
    * @param circuit The circuit to be modified
    * @param params Placement parameters
    */
   static void place(Circuit &circuit, const DetailedPlacerParameters &params);
+
+  /**
+   * @brief Run legalization
+   *
+   * @param circuit The circuit to be modified
+   * @param params Placement parameters
+   */
+  static void legalize(Circuit &circuit, const DetailedPlacerParameters &params);
 
   /**
    * @brief Initialize the datastructure

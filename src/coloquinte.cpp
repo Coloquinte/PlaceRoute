@@ -360,6 +360,10 @@ void Circuit::placeGlobal(const GlobalPlacerParameters &params) {
   GlobalPlacer::place(*this, params);
 }
 
+void Circuit::legalize(const DetailedPlacerParameters &params) {
+  DetailedPlacer::legalize(*this, params);
+}
+
 void Circuit::placeDetailed(const DetailedPlacerParameters &params) {
   DetailedPlacer::place(*this, params);
 }

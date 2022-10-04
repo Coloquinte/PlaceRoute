@@ -37,8 +37,8 @@ void DetailedPlacerParameters::check() const {
   }
 }
 
-void DetailedPlacer::place(Circuit &circuit,
-                           const DetailedPlacerParameters &params) {
+void DetailedPlacer::legalize(Circuit &circuit,
+                              const DetailedPlacerParameters &params) {
   params.check();
   std::cout << "Wirelength before legalization: " << circuit.hpwl()
             << std::endl;
@@ -46,6 +46,12 @@ void DetailedPlacer::place(Circuit &circuit,
   leg.run();
   leg.exportPlacement(circuit);
   std::cout << "Wirelength after legalization: " << circuit.hpwl() << std::endl;
+}
+
+void DetailedPlacer::place(Circuit &circuit,
+                           const DetailedPlacerParameters &params) {
+  legalize(circuit, params);
+  params.check();
   DetailedPlacer pl(circuit);
   pl.check();
   for (int i = 0; i < params.nbPasses; ++i) {

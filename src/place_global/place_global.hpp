@@ -17,16 +17,6 @@ class GlobalPlacer {
    * @brief Run global placement on the circuit representation
    *
    * @param circuit The circuit to be modified
-   * @param effort Effort level, between 0 and 9
-   */
-  static void place(Circuit &circuit, int effort) {
-    place(circuit, GlobalPlacerParameters(effort));
-  }
-
-  /**
-   * @brief Run global placement on the circuit representation
-   *
-   * @param circuit The circuit to be modified
    * @param params Placement parameters
    */
   static void place(Circuit &circuit, const GlobalPlacerParameters &params);

@@ -161,6 +161,20 @@ Construct a circuit.
           },
           "Run the global placement algorithm")
       .def(
+          "legalize",
+          [](Circuit &circuit, int effort) {
+            py::gil_scoped_release release;
+            circuit.legalize(effort);
+          },
+          "Run the detailed placement algorithm")
+      .def(
+          "legalize",
+          [](Circuit &circuit, const DetailedPlacerParameters &params) {
+            py::gil_scoped_release release;
+            circuit.legalize(params);
+          },
+          "Run the detailed placement algorithm")
+      .def(
           "place_detailed",
           [](Circuit &circuit, int effort) {
             py::gil_scoped_release release;

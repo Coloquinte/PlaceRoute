@@ -538,6 +538,18 @@ class Circuit {
   void placeGlobal(const GlobalPlacerParameters &params);
 
   /**
+   * @brief Run the legalization algorithm
+   */
+  void legalize(int effort) {
+    legalize(DetailedPlacerParameters(effort));
+  }
+
+  /**
+   * @brief Run the legalization algorithm
+   */
+  void legalize(const DetailedPlacerParameters &params);
+
+  /**
    * @brief Run the detailed placement algorithm
    */
   void placeDetailed(int effort) {
