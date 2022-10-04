@@ -474,12 +474,15 @@ def main():
                         help="Load initial placement", metavar='FILE')
     parser.add_argument("--save-solution",
                         help="Save final placement", metavar='FILE')
-    parser.add_argument("--no-global", help="Do not run global placement",
-                        action="store_false", dest="run_global")
-    parser.add_argument("--no-detailed", help="Do not run detailed placement",
-                        action="store_false", dest="run_detailed")
     parser.add_argument("--show-parameters", help="Show parameter values",
                         action="store_true")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--no-global", help="Skip global placement",
+                       action="store_true")
+    group.add_argument("--only-global", help="Run only global placement (no legalization)",
+                       action="store_true")
+    group.add_argument("--no-detailed", help="Skip detailed placement",
+                       action="store_true")
 
     global_group = parser.add_argument_group("Global placement parameters")
     detailed_group = parser.add_argument_group("Detailed placement parameters")
@@ -507,17 +510,21 @@ def main():
         print(f"Loading initial solution")
         circuit.load_placement(args.load_solution)
 
-    if args.run_global:
+    if args.no_global:
+        print("Global placement skipped at user's request")
+    else:
         print("Running global placement")
         circuit.place_global(global_params)
-    else:
-        print("Global placement skipped at user's request")
 
-    if args.run_detailed:
-        print("Running detailed placement")
-        circuit.place_detailed(detailed_params)
-    else:
+    if args.only_global:
+        print("Legalization and detailed placement skipped at user's request")
+    elif args.no_detailed:
+        print("Running legalization")
+        circuit.legalize(detailed_params)
         print("Detailed placement skipped at user's request")
+    else:
+        print("Running legalization and detailed placement")
+        circuit.place_detailed(detailed_params)
     circuit.write_placement(args.save_solution)
 
 
@@ -531,3 +538,6 @@ __all__ = [
     "CellOrientation",
     "main",
 ]
+
+if __name__ == "__main__":
+    main()
