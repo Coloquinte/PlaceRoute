@@ -24,7 +24,8 @@ class DetailedPlacer {
    * @param circuit The circuit to be modified
    * @param params Placement parameters
    */
-  static void legalize(Circuit &circuit, const DetailedPlacerParameters &params);
+  static void legalize(Circuit &circuit,
+                       const DetailedPlacerParameters &params);
 
   /**
    * @brief Initialize the datastructure
@@ -32,9 +33,19 @@ class DetailedPlacer {
   explicit DetailedPlacer(const Circuit &circuit);
 
   /**
+   * @brief Initialize the datastructure
+   */
+  explicit DetailedPlacer(const Circuit &circuit, const Rectangle &region);
+
+  /**
    * @brief Check the consistency of the datastructure
    */
   void check() const;
+
+  /**
+   * @brief Run once and export the results
+   */
+  void runOnce(Circuit &, const DetailedPlacerParameters &params);
 
   /**
    * @brief Run a simple optimization using only cell swapping

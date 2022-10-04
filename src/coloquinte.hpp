@@ -258,6 +258,11 @@ struct DetailedPlacerParameters {
   LegalizationModel legalizationCostModel;
 
   /**
+   * @brief Size of regions that are placed in parallel, as a multiple of the standard cell height
+   */
+  float splitRegionSize;
+
+  /**
    * @brief Random seed
    */
   int seed;
@@ -412,6 +417,11 @@ class Circuit {
    * @brief Return a bounding box of the placement area
    */
   Rectangle computePlacementArea() const;
+
+  /**
+   * @brief Return the estimated standard cell height
+   */
+  int computeStandardCellHeight() const;
 
   /**
    * @brief Return the rows after removing the obstacles

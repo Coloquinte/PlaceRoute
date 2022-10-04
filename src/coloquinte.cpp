@@ -98,6 +98,7 @@ DetailedPlacerParameters::DetailedPlacerParameters(int effort, int seed)
   legalizationCostModel = LegalizationModel::L1;
   shiftNbRows = 3;
   shiftMaxNbCells = 100;
+  splitRegionSize = 100.0;
   check();
 }
 
@@ -110,7 +111,8 @@ std::string DetailedPlacerParameters::toString() const {
      << "\n\tShift nb rows: " << shiftNbRows
      << "\n\tShift max nb cells: " << shiftMaxNbCells
      << "\n\tLegalization cost model: "
-     << coloquinte::toString(legalizationCostModel);
+     << coloquinte::toString(legalizationCostModel)
+     << "\n\tSplit region size: " << splitRegionSize;
   if (seed != -1) {
     ss << "\n\tSeed: " << seed;
   }
@@ -299,6 +301,17 @@ Rectangle Circuit::computePlacementArea() const {
     maxY = std::max(row.maxY, maxY);
   }
   return Rectangle(minX, maxX, minY, maxY);
+}
+
+int Circuit::computeStandardCellHeight() const {
+  if (rows_.empty()) {
+    return 1;
+  }
+  int height = rows_[0].height();
+  for (Rectangle row : rows_) {
+    height = std::min(height, row.height());
+  }
+  return height;
 }
 
 std::vector<Rectangle> Circuit::computeRows(

@@ -3,11 +3,14 @@
 #include <lemon/network_simplex.h>
 #include <lemon/smart_graph.h>
 
+#include <algorithm>
+#include <future>
 #include <iostream>
 #include <unordered_set>
 
 #include "legalizer.hpp"
 #include "row_neighbourhood.hpp"
+#include "utils/helpers.hpp"
 
 namespace coloquinte {
 
@@ -35,6 +38,10 @@ void DetailedPlacerParameters::check() const {
   if (legalizationCostModel != LegalizationModel::L1) {
     throw std::runtime_error("Only L1 legalization model is supported");
   }
+  if (splitRegionSize < 10.0) {
+    throw std::runtime_error(
+        "Regions smaller than 10 cell heights are too small to split");
+  }
 }
 
 void DetailedPlacer::legalize(Circuit &circuit,
@@ -50,24 +57,83 @@ void DetailedPlacer::legalize(Circuit &circuit,
 
 void DetailedPlacer::place(Circuit &circuit,
                            const DetailedPlacerParameters &params) {
-  legalize(circuit, params);
   params.check();
-  DetailedPlacer pl(circuit);
-  pl.check();
-  for (int i = 0; i < params.nbPasses; ++i) {
-    pl.runSwaps(params.localSearchNbNeighbours, params.localSearchNbRows);
-    pl.runShifts(params.shiftNbRows, params.shiftMaxNbCells);
+  legalize(circuit, params);
+
+  // Decide where we split the placement area
+  Rectangle area = circuit.computePlacementArea();
+  int targetSize = params.splitRegionSize * circuit.computeStandardCellHeight();
+  // Ensure that we don't have too many regions, as the creation of the
+  // subproblems doesn't scale too well
+  int maxNb = 4;
+  int nbXSplit = std::clamp(area.width() / targetSize, 1, maxNb);
+  int nbYSplit = std::clamp(area.height() / targetSize, 1, maxNb);
+  std::vector<int> xLimits =
+      computeSubdivisions(area.minX, area.maxX, nbXSplit);
+  std::vector<int> yLimits =
+      computeSubdivisions(area.minY, area.maxY, nbYSplit);
+  for (int p = 0; p < params.nbPasses; ++p) {
+    std::cout << "Building the detailed placers for step " << p << std::endl;
+    std::vector<DetailedPlacer> placers;
+    for (int i = 0; i + 1 < xLimits.size(); ++i) {
+      for (int j = 0; j + 1 < yLimits.size(); ++j) {
+        Rectangle region =
+            Rectangle(xLimits[i], xLimits[i + 1], yLimits[j], yLimits[j + 1]);
+        placers.push_back(DetailedPlacer(circuit, region));
+      }
+    }
+    std::cout << "Running detailed placement with " << placers.size()
+              << " subproblems" << std::endl;
+    std::unordered_set<int> cells;
+    for (DetailedPlacer &placer : placers) {
+      for (int c : placer.placement_.cellIndex()) {
+        if (c < 0) continue;
+        if (cells.count(c))
+          throw std::runtime_error(
+              "There is overlap between the detailed placer instances!");
+        cells.insert(c);
+      }
+    }
+    // Optimize each in parallel
+    // Async rather than foreach, as foreach requires a TBB dependency
+    std::vector<std::future<void> > pending;
+    for (DetailedPlacer &placer : placers) {
+      auto ret = std::async(std::launch::async, &DetailedPlacer::runOnce,
+                            &placer, std::ref(circuit), std::ref(params));
+      pending.emplace_back(std::move(ret));
+    }
+    for (auto &f : pending) f.get();
   }
-  pl.check();
-  pl.placement_.exportPlacement(circuit);
   std::cout << "Wirelength after detailed placement: " << circuit.hpwl()
             << std::endl;
+}
+
+void DetailedPlacer::runOnce(Circuit &circuit,
+                             const DetailedPlacerParameters &params) {
+  std::cout << "Running thread" << std::endl;
+  runSwaps(params.localSearchNbNeighbours, params.localSearchNbRows);
+  std::cout << "Local search done" << std::endl;
+  runShifts(params.shiftNbRows, params.shiftMaxNbCells);
+  std::cout << "Shifts done" << std::endl;
+  placement_.exportPlacement(circuit);
+  check();
 }
 
 DetailedPlacer::DetailedPlacer(const Circuit &circuit)
     : placement_(DetailedPlacement::fromIspdCircuit(circuit)),
       xtopo_(IncrNetModel::xTopology(circuit)),
-      ytopo_(IncrNetModel::yTopology(circuit)) {}
+      ytopo_(IncrNetModel::yTopology(circuit)) {
+  check();
+}
+
+DetailedPlacer::DetailedPlacer(const Circuit &circuit, const Rectangle &region)
+    : placement_(DetailedPlacement::fromIspdCircuit(circuit, region)),
+      // A bit dangerous: we use placement_ here already, so this is sensitive
+      // to the order of definition
+      xtopo_(IncrNetModel::xTopology(circuit, placement_.cellIndex())),
+      ytopo_(IncrNetModel::yTopology(circuit, placement_.cellIndex())) {
+  check();
+}
 
 void DetailedPlacer::doSwap(int c1, int c2) {
   assert(placement_.canSwap(c1, c2));
@@ -507,6 +573,8 @@ void DetailedPlacer::check() const {
   placement_.check();
   xtopo_.check();
   ytopo_.check();
+  assert(xtopo_.nbCells() == placement_.nbCells());
+  assert(ytopo_.nbCells() == placement_.nbCells());
   for (int c = 0; c < placement_.nbCells(); ++c) {
     if (placement_.isPlaced(c)) {
       if (xtopo_.cellPos(c) != placement_.cellX(c)) {
