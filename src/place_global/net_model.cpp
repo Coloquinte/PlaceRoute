@@ -6,7 +6,7 @@
 #include <limits>
 
 namespace coloquinte {
-NetModel::Parameters::Parameters(float approximationDistance) {
+NetModel::Parameters::Parameters() {
   netModel = NetModelOption::BoundToBound;
   approximationDistance = 10.0;
   penaltyCutoffDistance = 100.0;

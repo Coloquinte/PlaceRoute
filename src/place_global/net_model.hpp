@@ -18,7 +18,7 @@ class NetModel {
       float tolerance;
       int maxNbIterations;
 
-      Parameters(float approximationDistance=10.0);
+      Parameters();
   };
 
   /**

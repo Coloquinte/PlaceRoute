@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_CASE(b2b_singlepin) {
   BOOST_CHECK_EQUAL(model.nbPins(2), 2);
   BOOST_CHECK_EQUAL(model.nbPins(3), 2);
   std::vector<float> place = {10.0f, 20.0f, 30.0f, 40.0f};
-  auto res = model.solveB2B(place, 1.0e-8);
+  auto res = model.solveB2B(place, NetModel::Parameters());
   BOOST_CHECK_CLOSE(res[0], 4.0, 0.001);
   BOOST_CHECK_CLOSE(res[1], -4.0, 0.001);
   BOOST_CHECK_CLOSE(res[2], 8.0, 0.001);
@@ -36,7 +36,9 @@ BOOST_AUTO_TEST_CASE(b2b_mid) {
   NetModel model(nbCells);
   model.addNet({0, 1}, {0.0f, 0.0f}, 0.0f, 4.0f);
   std::vector<float> place = {2.0f, 3.0f};
-  auto res = model.solveB2B(place, NetModel::Parameters(1.0e-8));
+  NetModel::Parameters params;
+  params.approximationDistance = 1.0e-8;
+  auto res = model.solveB2B(place, params);
   BOOST_CHECK_CLOSE(res[0], 2.0, 0.001);
   BOOST_CHECK_CLOSE(res[1], 3.0, 0.001);
 }
@@ -46,7 +48,9 @@ BOOST_AUTO_TEST_CASE(b2b_two_pins) {
   NetModel model(nbCells);
   model.addNet({0}, {0.0f}, 0.0f, 4.0f);
   std::vector<float> place = {8.0f};
-  auto res = model.solveB2B(place, NetModel::Parameters(1.0e-8));
+  NetModel::Parameters params;
+  params.approximationDistance = 1.0e-8;
+  auto res = model.solveB2B(place, params);
   BOOST_CHECK_CLOSE(res[0], 8.0 / 3, 0.001);
 }
 
@@ -58,7 +62,7 @@ BOOST_AUTO_TEST_CASE(star_singlepin) {
   model.addNet({2}, {-6.0f}, 2.0f, 2.0f);
   model.addNet({3}, {2.0f}, 3.0f, 3.0f);
   std::vector<float> place = {10.0f, 20.0f, 30.0f, 40.0f};
-  auto res = model.solveStar(place, NetModel::Parameters(1.0e-8));
+  auto res = model.solveStar(place, NetModel::Parameters());
   BOOST_CHECK_CLOSE(res[0], 4.0, 0.001);
   BOOST_CHECK_CLOSE(res[1], -4.0, 0.001);
   BOOST_CHECK_CLOSE(res[2], 8.0, 0.001);
@@ -70,7 +74,7 @@ BOOST_AUTO_TEST_CASE(star_mid) {
   NetModel model(nbCells);
   model.addNet({0, 1}, {0.0f, 0.0f}, 0.0f, 4.0f);
   std::vector<float> place = {2.0f, 3.0f};
-  auto res = model.solveStar(place, NetModel::Parameters(1.0e-8));
+  auto res = model.solveStar(place, NetModel::Parameters());
   BOOST_CHECK_CLOSE(res[0], 2.0, 0.001);
   BOOST_CHECK_CLOSE(res[1], 3.0, 0.001);
 }
