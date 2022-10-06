@@ -90,18 +90,22 @@ void DetailedPlacer::runSwaps(int nbRows, int nbNeighbours) {
   RowNeighbourhood rowsNeighbours(placement_.rows(), nbRows);
   //  Optimize each row with neighbours after it
   for (int i = 0; i < placement_.nbRows(); ++i) {
-    for (int j : rowsNeighbours.rowsAbove(i))
+    for (int j : rowsNeighbours.rowsAbove(i)) {
       runSwapsTwoRowsAmplify(i, j, nbNeighbours);
-    for (int j : rowsNeighbours.rowsRight(i))
+    }
+    for (int j : rowsNeighbours.rowsRight(i)) {
       runSwapsTwoRowsAmplify(i, j, nbNeighbours);
+    }
   }
   // Optimize each row with neighbours before it;
   // We do both for symmetry and to allow large cell movements
   for (int i = placement_.nbRows() - 1; i >= 1; --i) {
-    for (int j : rowsNeighbours.rowsBelow(i))
+    for (int j : rowsNeighbours.rowsBelow(i)) {
       runSwapsTwoRowsAmplify(i, j, nbNeighbours);
-    for (int j : rowsNeighbours.rowsLeft(i))
+    }
+    for (int j : rowsNeighbours.rowsLeft(i)) {
       runSwapsTwoRowsAmplify(i, j, nbNeighbours);
+    }
   }
 }
 
@@ -164,8 +168,9 @@ void DetailedPlacer::runSwapsTwoRowsAmplify(int r1, int r2, int nbNeighbours) {
   int from = placement_.rowFirstCell(r2);
   for (int c = placement_.rowFirstCell(r1); c != -1;
        c = placement_.cellNext(c)) {
-    while (bestSwapUpdate(c, from, nbNeighbours))
+    while (bestSwapUpdate(c, from, nbNeighbours)) {
       ;
+    }
     from = findCellAfter(c, from);
   }
 }
@@ -241,7 +246,9 @@ bool DetailedPlacer::bestSwapUpdate(int &c, int &from, int nbNeighbours) {
   }
   if (found) {
     doSwap(c, bestCandidate);
-    if (bestCandidate == from) from = c;
+    if (bestCandidate == from) {
+      from = c;
+    }
     c = bestCandidate;
   }
   return found;
@@ -277,11 +284,17 @@ std::pair<bool, long long> DetailedPlacer::valueOnInsert(int c, int row,
 
 int DetailedPlacer::findCellAfter(int target, int fromCell) const {
   int c = fromCell;
-  if (c == -1) return c;
+  if (c == -1) {
+    return c;
+  }
   while (true) {
     int nextC = placement_.cellNext(c);
-    if (nextC == -1) break;
-    if (placement_.cellX(nextC) > placement_.cellX(target)) break;
+    if (nextC == -1) {
+      break;
+    }
+    if (placement_.cellX(nextC) > placement_.cellX(target)) {
+      break;
+    }
     c = nextC;
   }
   return c;
@@ -289,13 +302,18 @@ int DetailedPlacer::findCellAfter(int target, int fromCell) const {
 
 int DetailedPlacer::findCellBefore(int target, int fromCell) const {
   int c = fromCell;
-  if (c == -1) return c;
+  if (c == -1) {
+    return c;
+  }
   while (true) {
     int nextC = placement_.cellPred(c);
-    if (nextC == -1) break;
-    if (placement_.cellX(nextC) + placement_.cellWidth(nextC) <
-        placement_.cellX(target) + placement_.cellWidth(target))
+    if (nextC == -1) {
       break;
+    }
+    if (placement_.cellX(nextC) + placement_.cellWidth(nextC) <
+        placement_.cellX(target) + placement_.cellWidth(target)) {
+      break;
+    }
     c = nextC;
   }
   return c;
@@ -309,8 +327,8 @@ std::vector<int> DetailedPlacer::computeClosestIndexInRow(
   }
   std::vector<int> ret;
   int closest = 0;
-  for (int i = 0; i < row1Cells.size(); ++i) {
-    int x = placement_.cellX(row1Cells[i]);
+  for (int row1Cell : row1Cells) {
+    int x = placement_.cellX(row1Cell);
     while (true) {
       int c = row2Cells[closest];
       if (closest == row2Cells.size() - 1) {
@@ -327,7 +345,9 @@ std::vector<int> DetailedPlacer::computeClosestIndexInRow(
 }
 
 void DetailedPlacer::runShifts(int nbRows, int maxNbCells) {
-  if (nbRows < 2) return;
+  if (nbRows < 2) {
+    return;
+  }
   RowNeighbourhood rowsNeighbours(placement_.rows(), nbRows / 2);
 
   for (int r = 0; r < placement_.nbRows(); r += nbRows / 2) {
@@ -355,6 +375,8 @@ void DetailedPlacer::runShiftsOnRows(const std::vector<int> &rows,
   }
   std::stable_sort(sortedCells.begin(), sortedCells.end());
   std::vector<int> cells;
+  cells.reserve(sortedCells.size());
+
   for (auto p : sortedCells) {
     cells.push_back(p.second);
   }
@@ -403,7 +425,7 @@ void DetailedPlacer::runShiftsOnCells(const std::vector<int> &cells) {
   // Two nodes for position constraints
   Node fixed = g.addNode();
   typedef std::pair<SmartDigraph::Arc, int> arc_pair;
-  typedef std::pair<SmartDigraph::Node, int> node_pair;
+  using node_pair = std::pair<SmartDigraph::Node, int>;
 
   // The arcs corresponding to constraints of the original problem
   std::vector<arc_pair> constraint_arcs;
@@ -413,23 +435,22 @@ void DetailedPlacer::runShiftsOnCells(const std::vector<int> &cells) {
   for (int c : cells) {
     int pred = placement_.cellPred(c);
     int next = placement_.cellNext(c);
-    if (cell_set.count(next)) {
+    if (cell_set.count(next) != 0u) {
       // Two movable cells
       auto A = g.addArc(cell_nodes[next], cell_nodes[c]);
-      constraint_arcs.push_back(arc_pair(A, -placement_.cellWidth(c)));
+      constraint_arcs.emplace_back(A, -placement_.cellWidth(c));
     }
     if (cell_set.count(pred) == 0) {
       // Predecessor fixed
       int boundary = placement_.boundaryBefore(c);
       auto A = g.addArc(cell_nodes[c], fixed);
-      constraint_arcs.push_back(arc_pair(A, -boundary));
+      constraint_arcs.emplace_back(A, -boundary);
     }
     if (cell_set.count(next) == 0) {
       // Successor fixed
       int boundary = placement_.boundaryAfter(c);
       auto A = g.addArc(fixed, cell_nodes[c]);
-      constraint_arcs.push_back(
-          arc_pair(A, boundary - placement_.cellWidth(c)));
+      constraint_arcs.emplace_back(A, boundary - placement_.cellWidth(c));
     }
   }
 
@@ -438,17 +459,16 @@ void DetailedPlacer::runShiftsOnCells(const std::vector<int> &cells) {
     for (int i = 0; i < xtopo_.nbNetPins(net); ++i) {
       int c = xtopo_.pinCell(net, i);
       int pin_offs = xtopo_.netPinOffset(net, i);
-      if (cell_set.count(c)) {
+      if (cell_set.count(c) != 0u) {
         Arc Al = g.addArc(cell_nodes[c], Lnet_nodes[net]);
-        constraint_arcs.push_back(arc_pair(Al, pin_offs));
+        constraint_arcs.emplace_back(Al, pin_offs);
         Arc Ar = g.addArc(Unet_nodes[net], cell_nodes[c]);
-        constraint_arcs.push_back(arc_pair(Ar, -pin_offs));
+        constraint_arcs.emplace_back(Ar, -pin_offs);
       } else {  // Fixed offset
         auto Al = g.addArc(fixed, Lnet_nodes[net]);
-        constraint_arcs.push_back(arc_pair(Al, xtopo_.cellPos(c) + pin_offs));
+        constraint_arcs.emplace_back(Al, xtopo_.cellPos(c) + pin_offs);
         auto Ar = g.addArc(Unet_nodes[net], fixed);
-        constraint_arcs.push_back(
-            arc_pair(Ar, -xtopo_.cellPos(c) - pin_offs));
+        constraint_arcs.emplace_back(Ar, -xtopo_.cellPos(c) - pin_offs);
       }
     }
   }
@@ -456,8 +476,8 @@ void DetailedPlacer::runShiftsOnCells(const std::vector<int> &cells) {
   // Then the only capacitated arcs: the ones for the nets
   std::vector<node_pair> net_supplies;
   for (int net : nets) {
-    net_supplies.push_back(node_pair(Unet_nodes[net], 1));
-    net_supplies.push_back(node_pair(Lnet_nodes[net], -1));
+    net_supplies.emplace_back(Unet_nodes[net], 1);
+    net_supplies.emplace_back(Lnet_nodes[net], -1);
   }
 
   // Create the maps to have cost and capacity for the arcs

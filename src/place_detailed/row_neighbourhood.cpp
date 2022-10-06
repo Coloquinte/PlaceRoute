@@ -26,7 +26,9 @@ void RowNeighbourhood::check() const {
 
 namespace {
 std::vector<int> keepFirstK(const std::vector<int> &inds, int nb) {
-  if (inds.size() <= nb) return inds;
+  if (inds.size() <= nb) {
+    return inds;
+  }
   return std::vector<int>(inds.begin(), inds.begin() + nb);
 }
 
@@ -60,19 +62,31 @@ void RowNeighbourhood::simpleSetup(const std::vector<Rectangle> &rows,
 
 bool RowNeighbourhood::isBelow(Rectangle r1, Rectangle r2) {
   // Only rows strictly below
-  if (r2.minY <= r1.minY) return false;
+  if (r2.minY <= r1.minY) {
+    return false;
+  }
   // Only rows that share part of their x range
-  if (r2.minX >= r1.maxX) return false;
-  if (r2.maxX <= r1.minX) return false;
+  if (r2.minX >= r1.maxX) {
+    return false;
+  }
+  if (r2.maxX <= r1.minX) {
+    return false;
+  }
   return true;
 }
 
 bool RowNeighbourhood::isAbove(Rectangle r1, Rectangle r2) {
   // Only rows strictly above
-  if (r2.minY >= r1.minY) return false;
+  if (r2.minY >= r1.minY) {
+    return false;
+  }
   // Only rows that share part of their x range
-  if (r2.minX >= r1.maxX) return false;
-  if (r2.maxX <= r1.minX) return false;
+  if (r2.minX >= r1.maxX) {
+    return false;
+  }
+  if (r2.maxX <= r1.minX) {
+    return false;
+  }
   return true;
 }
 
@@ -90,6 +104,8 @@ std::vector<std::vector<int> > RowNeighbourhood::rowsBelow(
     const std::vector<Rectangle> &rows, int nbNeighbourRows) {
   std::vector<std::vector<int> > ret(rows.size());
   std::vector<std::pair<int, Rectangle> > sortedRows;
+  sortedRows.reserve(rows.size());
+
   for (int i = 0; i < rows.size(); ++i) {
     sortedRows.emplace_back(i, rows[i]);
   }
@@ -115,6 +131,8 @@ std::vector<std::vector<int> > RowNeighbourhood::rowsAbove(
     const std::vector<Rectangle> &rows, int nbNeighbourRows) {
   std::vector<std::vector<int> > ret(rows.size());
   std::vector<std::pair<int, Rectangle> > sortedRows;
+  sortedRows.reserve(rows.size());
+
   for (int i = 0; i < rows.size(); ++i) {
     sortedRows.emplace_back(i, rows[i]);
   }
@@ -137,14 +155,20 @@ std::vector<std::vector<int> > RowNeighbourhood::rowsAbove(
 }
 
 std::vector<int> RowNeighbourhood::buildLeftFrom(
-    Rectangle row, const std::vector<Rectangle> &rows, int ind) {
+    Rectangle row, const std::vector<Rectangle> &rows, int ind) const {
   std::vector<int> candidates;
   candidates.push_back(ind);
-  for (int c : rowsAbove(ind)) candidates.push_back(c);
-  for (int c : rowsBelow(ind)) candidates.push_back(c);
+  for (int c : rowsAbove(ind)) {
+    candidates.push_back(c);
+  }
+  for (int c : rowsBelow(ind)) {
+    candidates.push_back(c);
+  }
   std::vector<std::pair<int, Rectangle> > sortedRows;
   for (int c : candidates) {
-    if (isLeft(rows[c], row)) sortedRows.emplace_back(c, rows[c]);
+    if (isLeft(rows[c], row)) {
+      sortedRows.emplace_back(c, rows[c]);
+    }
   }
   std::sort(sortedRows.begin(), sortedRows.end(),
             [row](std::pair<int, Rectangle> a, std::pair<int, Rectangle> b) {
@@ -159,6 +183,8 @@ std::vector<int> RowNeighbourhood::buildLeftFrom(
               return ad < bd || (ad == bd && a.first < b.first);
             });
   std::vector<int> ret;
+  ret.reserve(sortedRows.size());
+
   for (auto p : sortedRows) {
     ret.push_back(p.first);
   }
@@ -166,14 +192,20 @@ std::vector<int> RowNeighbourhood::buildLeftFrom(
 }
 
 std::vector<int> RowNeighbourhood::buildRightFrom(
-    Rectangle row, const std::vector<Rectangle> &rows, int ind) {
+    Rectangle row, const std::vector<Rectangle> &rows, int ind) const {
   std::vector<int> candidates;
   candidates.push_back(ind);
-  for (int c : rowsAbove(ind)) candidates.push_back(c);
-  for (int c : rowsBelow(ind)) candidates.push_back(c);
+  for (int c : rowsAbove(ind)) {
+    candidates.push_back(c);
+  }
+  for (int c : rowsBelow(ind)) {
+    candidates.push_back(c);
+  }
   std::vector<std::pair<int, Rectangle> > sortedRows;
   for (int c : candidates) {
-    if (isRight(rows[c], row)) sortedRows.emplace_back(c, rows[c]);
+    if (isRight(rows[c], row)) {
+      sortedRows.emplace_back(c, rows[c]);
+    }
   }
   std::sort(sortedRows.begin(), sortedRows.end(),
             [row](std::pair<int, Rectangle> a, std::pair<int, Rectangle> b) {
@@ -188,6 +220,8 @@ std::vector<int> RowNeighbourhood::buildRightFrom(
               return ad < bd || (ad == bd && a.first < b.first);
             });
   std::vector<int> ret;
+  ret.reserve(sortedRows.size());
+
   for (auto p : sortedRows) {
     ret.push_back(p.first);
   }
@@ -201,6 +235,8 @@ void RowNeighbourhood::buildRowsSides(const std::vector<Rectangle> &rows,
   rowsRight_.clear();
   rowsRight_.resize(rows.size());
   std::vector<std::pair<int, Rectangle> > sortedRows;
+  sortedRows.reserve(rows.size());
+
   for (int i = 0; i < rows.size(); ++i) {
     sortedRows.emplace_back(i, rows[i]);
   }

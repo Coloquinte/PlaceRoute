@@ -14,7 +14,9 @@ IncrNetModelBuilder::IncrNetModelBuilder(int nbCells) : nbCells_(nbCells) {
 void IncrNetModelBuilder::addNet(const std::vector<int> &cells,
                                  const std::vector<int> &pinOffsets) {
   assert(cells.size() == pinOffsets.size());
-  if (cells.size() <= 1) return;
+  if (cells.size() <= 1) {
+    return;
+  }
   netLimits_.push_back(netLimits_.back() + cells.size());
   netCells_.insert(netCells_.end(), cells.begin(), cells.end());
   netPinOffsets_.insert(netPinOffsets_.end(), pinOffsets.begin(),
@@ -23,6 +25,8 @@ void IncrNetModelBuilder::addNet(const std::vector<int> &cells,
 
 IncrNetModel IncrNetModel::xTopology(const Circuit &circuit) {
   std::vector<int> cells;
+  cells.reserve(circuit.nbCells());
+
   for (int c = 0; c < circuit.nbCells(); ++c) {
     cells.push_back(c);
   }
@@ -31,6 +35,8 @@ IncrNetModel IncrNetModel::xTopology(const Circuit &circuit) {
 
 IncrNetModel IncrNetModel::yTopology(const Circuit &circuit) {
   std::vector<int> cells;
+  cells.reserve(circuit.nbCells());
+
   for (int c = 0; c < circuit.nbCells(); ++c) {
     cells.push_back(c);
   }
@@ -57,6 +63,8 @@ IncrNetModel IncrNetModel::xTopology(const Circuit &circuit,
 
   int fixedCell = cells.size();
   std::vector<int> cellX;
+  cellX.reserve(cells.size());
+
   for (int c : cells) {
     cellX.push_back(circuit.x(c));
   }
@@ -72,7 +80,7 @@ IncrNetModel IncrNetModel::xTopology(const Circuit &circuit,
     for (int j = 0; j < circuit.nbPinsNet(i); ++j) {
       int cell = circuit.pinCell(i, j);
       int offset = circuit.pinXOffset(i, j);
-      if (cellMap.count(cell)) {
+      if (cellMap.count(cell) != 0u) {
         cells.push_back(cellMap[cell]);
         offsets.push_back(offset);
       } else {
@@ -101,6 +109,8 @@ IncrNetModel IncrNetModel::yTopology(const Circuit &circuit,
 
   int fixedCell = cells.size();
   std::vector<int> cellY;
+  cellY.reserve(cells.size());
+
   for (int c : cells) {
     cellY.push_back(circuit.y(c));
   }
@@ -116,7 +126,7 @@ IncrNetModel IncrNetModel::yTopology(const Circuit &circuit,
     for (int j = 0; j < circuit.nbPinsNet(i); ++j) {
       int cell = circuit.pinCell(i, j);
       int offset = circuit.pinYOffset(i, j);
-      if (cellMap.count(cell)) {
+      if (cellMap.count(cell) != 0u) {
         cells.push_back(cellMap[cell]);
         offsets.push_back(offset);
       } else {

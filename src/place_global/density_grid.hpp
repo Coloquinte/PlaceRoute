@@ -30,8 +30,9 @@ class DensityGrid {
    * @brief Initialize a grid with placement regions (usually rows) and
    * obstacles
    */
-  DensityGrid(int binSize, std::vector<Rectangle> regions,
-              std::vector<Rectangle> obstacles = std::vector<Rectangle>());
+  DensityGrid(
+      int binSize, const std::vector<Rectangle> &regions,
+      const std::vector<Rectangle> &obstacles = std::vector<Rectangle>());
 
   /**
    * @brief Initialize a grid from a circuit, and initialize the bins from the
@@ -336,13 +337,13 @@ class HierarchicalDensityPlacement {
    * @brief Get the bin index corresponding to this x coordinate. If the
    * coordinate is out of the grid, return the closest valid bin
    */
-  int findBinByX(int x) const;
+  int findBinByX(int coord) const;
 
   /**
    * @brief Get the bin index corresponding to this y coordinate. If the
    * coordinate is out of the grid, return the closest valid bin
    */
-  int findBinByY(int y) const;
+  int findBinByY(int coord) const;
 
   /**
    * @brief Get the capacity of a given bin in the current view
@@ -418,7 +419,7 @@ class HierarchicalDensityPlacement {
   /**
    * @brief Update the cells in the given bin
    */
-  void setBinCells(int x, int y, std::vector<int> cells);
+  void setBinCells(int x, int y, const std::vector<int> &cells);
 
   /**
    * @brief Return the x index of the bin where the cell is located
@@ -557,4 +558,4 @@ class HierarchicalDensityPlacement {
   std::vector<int> cellBinX_;
   std::vector<int> cellBinY_;
 };
-}
+}  // namespace coloquinte

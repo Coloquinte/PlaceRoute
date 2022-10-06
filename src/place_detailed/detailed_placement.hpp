@@ -21,7 +21,7 @@ class DetailedPlacement {
    * @brief Initialize the datastructure from a region of a circuit
    */
   static DetailedPlacement fromIspdCircuit(const Circuit &circuit,
-                                           const Rectangle &rectangle);
+                                           const Rectangle &region);
 
   /**
    * @brief Export the placement obtained to the circuit datastructure

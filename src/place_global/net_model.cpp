@@ -306,7 +306,9 @@ class MatrixCreator {
 
 void MatrixCreator::addMovingPin(int c1, int c2, float offs1, float offs2,
                                  float weight) {
-  if (c1 == c2) return;
+  if (c1 == c2) {
+    return;
+  }
   assert(c1 >= 0);
   assert(c2 >= 0);
   mat_.emplace_back(c1, c2, -weight);
@@ -315,20 +317,22 @@ void MatrixCreator::addMovingPin(int c1, int c2, float offs1, float offs2,
   mat_.emplace_back(c2, c2, weight);
   rhs_[c1] += weight * (offs2 - offs1);
   rhs_[c2] += weight * (offs1 - offs2);
-  hasNonZero_[c1] = true;
-  hasNonZero_[c2] = true;
+  hasNonZero_[c1] = 1;
+  hasNonZero_[c2] = 1;
 }
 
 void MatrixCreator::addFixedPin(int c1, float offs1, float pos, float weight) {
   assert(c1 >= 0);
   mat_.emplace_back(c1, c1, weight);
   rhs_[c1] += weight * (pos - offs1);
-  hasNonZero_[c1] = true;
+  hasNonZero_[c1] = 1;
 }
 
 void MatrixCreator::addPin(int c1, int c2, float offs1, float offs2,
                            float weight) {
-  if (c1 == c2) return;
+  if (c1 == c2) {
+    return;
+  }
   if (c1 == -1) {
     addFixedPin(c2, offs2, offs1, weight);
     return;
@@ -357,7 +361,7 @@ void MatrixCreator::addPenalty(const std::vector<float> &netPlacement,
 int MatrixCreator::addCell(float initialPos) {
   initial_.push_back(initialPos);
   rhs_.push_back(0.0f);
-  hasNonZero_.push_back(false);
+  hasNonZero_.push_back(0);
   int ret = nbCells_ + nbSupps_;
   nbSupps_++;
   return ret;
@@ -368,13 +372,15 @@ MatrixCreator MatrixCreator::create(const NetModel &topo,
                                     NetModelOption netModel) {
   if (netModel == NetModelOption::BoundToBound) {
     return MatrixCreator::createB2B(topo, pl, epsilon);
-  } else if (netModel == NetModelOption::Star) {
-    return MatrixCreator::createStar(topo, pl, epsilon);
-  } else if (netModel == NetModelOption::Clique) {
-    return MatrixCreator::createClique(topo, pl, epsilon);
-  } else {
-    return MatrixCreator::createLightStar(topo, pl, epsilon);
   }
+  if (netModel == NetModelOption::Star) {
+    return MatrixCreator::createStar(topo, pl, epsilon);
+  }
+  if (netModel == NetModelOption::Clique) {
+    return MatrixCreator::createClique(topo, pl, epsilon);
+  }
+
+  return MatrixCreator::createLightStar(topo, pl, epsilon);
 }
 
 MatrixCreator MatrixCreator::createStar(const NetModel &topo) {
@@ -542,10 +548,14 @@ void MatrixCreator::addB2B(int net, const std::vector<float> &pl,
   for (int i = 0; i < topo_.nbPins(net); ++i) {
     float pos = topo_.pinPosition(net, i, pl);
     int c = topo_.pinCell(net, i);
-    if (i == minI) continue;
+    if (i == minI) {
+      continue;
+    }
     float distMin = w / std::max(epsilon, std::abs(pos - minPos));
     addPin(c, minCell, topo_.pinOffset(net, i), minOffset, distMin);
-    if (i == maxI) continue;
+    if (i == maxI) {
+      continue;
+    }
     float distMax = w / std::max(epsilon, std::abs(pos - maxPos));
     addPin(c, maxCell, topo_.pinOffset(net, i), maxOffset, distMax);
   }
@@ -556,10 +566,10 @@ void MatrixCreator::finalize() {
   // This avoids crashes in IncompleteCholesky code, and may avert
   // numerical issues (division by zero) elsewhere
   for (int i = 0; i < matSize(); ++i) {
-    if (!hasNonZero_[i]) {
+    if (hasNonZero_[i] == 0) {
       mat_.emplace_back(i, i, 1.0e-8f);
     }
-    hasNonZero_[i] = true;
+    hasNonZero_[i] = 1;
   }
 }
 
@@ -571,7 +581,9 @@ std::vector<float> MatrixCreator::solve(float tolerance, int maxIterations) {
   Eigen::Map<Eigen::Matrix<float, -1, 1> > rhs(rhs_.data(), rhs_.size());
   Eigen::Map<Eigen::Matrix<float, -1, 1> > initial(initial_.data(),
                                                    initial_.size());
-  Eigen::ConjugateGradient<Eigen::SparseMatrix<float>, Eigen::Lower|Eigen::Upper> solver;
+  Eigen::ConjugateGradient<Eigen::SparseMatrix<float>,
+                           Eigen::Lower | Eigen::Upper>
+      solver;
   solver.compute(mat);
   solver.setTolerance(tolerance);
   solver.setMaxIterations(maxIterations);

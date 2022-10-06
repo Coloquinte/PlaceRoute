@@ -92,6 +92,8 @@ std::vector<float> GlobalPlacer::computePerCellPenalty() const {
   int nbCells = leg_.nbNonEmptyCells();
   float meanArea = leg_.totalDemand() / std::max(1, nbCells);
   std::vector<float> ret;
+  ret.reserve(leg_.nbCells());
+
   for (int i = 0; i < leg_.nbCells(); ++i) {
     ret.push_back(std::sqrt(leg_.cellDemand(i) / meanArea));
   }
@@ -108,7 +110,9 @@ void GlobalPlacer::run() {
     float lb = valueLB();
     std::cout << "#" << step_ << ":\tLB " << lb << "\tUB " << ub << std::endl;
     float gap = (ub - lb) / ub;
-    if (gap < params_.gapTolerance) break;
+    if (gap < params_.gapTolerance) {
+      break;
+    }
     penalty_ *= params_.penaltyUpdateFactor;
   }
   runUB();
@@ -141,9 +145,13 @@ void GlobalPlacer::runLB() {
 
   // Compute the per-cell penalty with randomization
   std::vector<float> penalty = perCellPenalty_;
-  for (float &s : penalty) s *= penalty_;
+  for (float &s : penalty) {
+    s *= penalty_;
+  }
   float rand = std::uniform_real_distribution<float>(-1.0e-4f, 1.0e-4f)(rgen_);
-  for (float &s : penalty) s *= (1.0f + rand);
+  for (float &s : penalty) {
+    s *= (1.0f + rand);
+  }
 
   // Solve the continuous model (x and y independently)
   std::future<std::vector<float> > x =

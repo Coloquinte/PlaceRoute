@@ -14,6 +14,8 @@ DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit) {
     }
   }
   std::vector<int> cellIndex;
+  cellIndex.reserve(circuit.nbCells());
+
   for (int i = 0; i < circuit.nbCells(); ++i) {
     cellIndex.push_back(i);
   }
@@ -28,7 +30,9 @@ DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit,
   std::vector<int> cellIndex;
   std::vector<Rectangle> obstacles;
   for (int c = 0; c < circuit.nbCells(); ++c) {
-    if (circuit.isFixed(c)) continue;
+    if (circuit.isFixed(c)) {
+      continue;
+    }
     Rectangle pl = circuit.placement(c);
     if (region.contains(pl)) {
       cellIndex.push_back(c);
@@ -42,11 +46,19 @@ DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit,
   std::vector<Rectangle> rows;
   for (Rectangle row : circuit.computeRows(obstacles)) {
     // Height must be completely contained in the region
-    if (row.minY < region.minY) continue;
-    if (row.maxY > region.maxY) continue;
+    if (row.minY < region.minY) {
+      continue;
+    }
+    if (row.maxY > region.maxY) {
+      continue;
+    }
     // Laterally we just need to have an intersection
-    if (row.minX >= region.maxX) continue;
-    if (row.maxX <= region.minX) continue;
+    if (row.minX >= region.maxX) {
+      continue;
+    }
+    if (row.maxX <= region.minX) {
+      continue;
+    }
     Rectangle actual(std::max(row.minX, region.minX),
                      std::min(row.maxX, region.maxX), row.minY, row.maxY);
     rows.push_back(actual);
@@ -74,8 +86,12 @@ DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit,
 void DetailedPlacement::exportPlacement(Circuit &circuit) {
   for (int i = 0; i < nbCells(); ++i) {
     int cell = cellIndex_[i];
-    if (cell < 0) continue;
-    if (circuit.isFixed(cell)) continue;
+    if (cell < 0) {
+      continue;
+    }
+    if (circuit.isFixed(cell)) {
+      continue;
+    }
     circuit.cellX_[cell] = cellX(i);
     circuit.cellY_[cell] = cellY(i);
   }
@@ -102,7 +118,9 @@ DetailedPlacement::DetailedPlacement(const std::vector<Rectangle> &rows,
   // Find the cells allocated to each row
   std::vector<std::vector<int> > rowToCells(nbRows());
   for (int i = 0; i < nbCells(); ++i) {
-    if (isIgnored(i)) continue;
+    if (isIgnored(i)) {
+      continue;
+    }
     int x = posX[i];
     int y = posY[i];
     // Find the first row starting after the cell
@@ -141,7 +159,9 @@ DetailedPlacement::DetailedPlacement(const std::vector<Rectangle> &rows,
   rowLastCell_.assign(nbRows(), -1);
   // Now setup the cells in the rows
   for (int row = 0; row < nbRows(); ++row) {
-    if (rowToCells[row].empty()) continue;
+    if (rowToCells[row].empty()) {
+      continue;
+    }
     for (int c : rowToCells[row]) {
       cellRow_[c] = row;
     }
@@ -174,9 +194,8 @@ int DetailedPlacement::boundaryBefore(int c) const {
   int pred = cellPred(c);
   if (pred == -1) {
     return rows_[cellRow(c)].minX;
-  } else {
-    return cellX(pred) + cellWidth(pred);
   }
+  return cellX(pred) + cellWidth(pred);
 }
 
 int DetailedPlacement::boundaryAfter(int c) const {
@@ -184,9 +203,8 @@ int DetailedPlacement::boundaryAfter(int c) const {
   int next = cellNext(c);
   if (next == -1) {
     return rows_[cellRow(c)].maxX;
-  } else {
-    return cellX(next);
   }
+  return cellX(next);
 }
 
 int DetailedPlacement::siteBegin(int row, int pred) const {
@@ -232,14 +250,17 @@ bool DetailedPlacement::canSwap(int c1, int c2) const {
   if (cellPred(c1) == c2 || cellPred(c2) == c1) {
     // We can always swap neighbours
     return true;
-  } else {
-    // Otherwise check if there is enough space for both cells
-    int b1 = boundaryBefore(c1);
-    int b2 = boundaryBefore(c2);
-    int e1 = boundaryAfter(c1);
-    int e2 = boundaryAfter(c2);
-    return e2 - b2 >= cellWidth(c1) && e1 - b1 >= cellWidth(c2);
-  }
+  }  // Otherwise check if there is enough space for both cells
+
+  int b1 = boundaryBefore(c1);
+
+  int b2 = boundaryBefore(c2);
+
+  int e1 = boundaryAfter(c1);
+
+  int e2 = boundaryAfter(c2);
+
+  return e2 - b2 >= cellWidth(c1) && e1 - b1 >= cellWidth(c2);
 }
 
 void DetailedPlacement::place(int c, int row, int pred, int x) {
@@ -342,32 +363,45 @@ Point DetailedPlacement::positionOnInsert(int c, int row, int pred) const {
 }
 
 void DetailedPlacement::check() const {
-  if (rows_.size() != nbRows()) throw std::runtime_error("Row size mismatch");
-  if (rowFirstCell_.size() != nbRows())
+  if (rows_.size() != nbRows()) {
     throw std::runtime_error("Row size mismatch");
-  if (rowLastCell_.size() != nbRows())
+  }
+  if (rowFirstCell_.size() != nbRows()) {
     throw std::runtime_error("Row size mismatch");
-  if (cellWidth_.size() != nbCells())
+  }
+  if (rowLastCell_.size() != nbRows()) {
+    throw std::runtime_error("Row size mismatch");
+  }
+  if (cellWidth_.size() != nbCells()) {
     throw std::runtime_error("Cell size mismatch");
-  if (cellPred_.size() != nbCells())
+  }
+  if (cellPred_.size() != nbCells()) {
     throw std::runtime_error("Cell size mismatch");
-  if (cellNext_.size() != nbCells())
+  }
+  if (cellNext_.size() != nbCells()) {
     throw std::runtime_error("Cell size mismatch");
-  if (cellRow_.size() != nbCells())
+  }
+  if (cellRow_.size() != nbCells()) {
     throw std::runtime_error("Cell size mismatch");
-  if (cellX_.size() != nbCells())
+  }
+  if (cellX_.size() != nbCells()) {
     throw std::runtime_error("Cell size mismatch");
-  if (cellY_.size() != nbCells())
+  }
+  if (cellY_.size() != nbCells()) {
     throw std::runtime_error("Cell size mismatch");
-  if (cellIndex_.size() != nbCells())
+  }
+  if (cellIndex_.size() != nbCells()) {
     throw std::runtime_error("Cell size mismatch");
+  }
   for (int i = 0; i < nbRows(); ++i) {
     int fc = rowFirstCell(i);
     int lc = rowLastCell(i);
     if ((lc == -1) != (fc == -1)) {
       throw std::runtime_error("Inconcistency between first and last cell");
     }
-    if (fc == -1) continue;
+    if (fc == -1) {
+      continue;
+    }
     if (cellRow(fc) != i) {
       throw std::runtime_error("Inconsistency in the first row cell");
     }

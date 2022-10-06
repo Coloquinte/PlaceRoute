@@ -27,7 +27,9 @@ inline int RowLegalizer::getDisplacement(int width, int targetPos,
 
     // Remember which bounds we encountered in order to reset the object to its
     // initial state
-    if (not update) passed_bounds.push_back(bounds.top());
+    if (not update) {
+      passed_bounds.push_back(bounds.top());
+    }
     bounds.pop();
   }
   // Always before the end, after the beginning, and not pushed beyond the
@@ -91,4 +93,4 @@ std::vector<int> RowLegalizer::getPlacement() const {
   }
   return ret;
 }
-}
+}  // namespace coloquinte

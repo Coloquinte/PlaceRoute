@@ -5,20 +5,21 @@
 #include <cassert>
 #include <cmath>
 #include <iostream>
+#include <utility>
 
 #include "utils/norm.hpp"
 
 namespace coloquinte {
 DensityLegalizer::DensityLegalizer(DensityGrid grid,
                                    std::vector<int> cellDemand)
-    : HierarchicalDensityPlacement(grid, cellDemand) {
+    : HierarchicalDensityPlacement(std::move(grid), std::move(cellDemand)) {
   costModel_ = LegalizationModel::L1;
   cellTargetX_.assign(nbCells(), 0.0f);
   cellTargetY_.assign(nbCells(), 0.0f);
 }
 
 DensityLegalizer::DensityLegalizer(HierarchicalDensityPlacement pl)
-    : HierarchicalDensityPlacement(pl) {
+    : HierarchicalDensityPlacement(std::move(pl)) {
   costModel_ = LegalizationModel::L1;
   cellTargetX_.assign(nbCells(), 0.0f);
   cellTargetY_.assign(nbCells(), 0.0f);
@@ -35,7 +36,9 @@ void DensityLegalizer::exportPlacement(Circuit &circuit) {
   std::vector<float> cellY = spreadCoordY(cellTargetY_);
   assert(nbCells() == circuit.nbCells());
   for (int i = 0; i < circuit.nbCells(); ++i) {
-    if (circuit.isFixed(i)) continue;
+    if (circuit.isFixed(i)) {
+      continue;
+    }
     circuit.cellX_[i] = std::round(cellX[i]);
     circuit.cellY_[i] = std::round(cellY[i]);
   }
@@ -91,7 +94,9 @@ void DensityLegalizer::report(bool verbose) const {
   std::cout << "Mean dist: " << meanDistance(costModel_) << std::endl;
   std::cout << "RMS dist " << rmsDistance(costModel_) << std::endl;
   std::cout << "Max dist " << maxDistance(costModel_) << std::endl;
-  if (!verbose) return;
+  if (!verbose) {
+    return;
+  }
   std::cout << std::endl;
   for (int j = 0; j < nbBinsY(); ++j) {
     for (int i = 0; i < nbBinsX(); ++i) {
@@ -103,7 +108,8 @@ void DensityLegalizer::report(bool verbose) const {
 }
 
 std::vector<std::pair<float, int> > DensityLegalizer::computeCellCosts(
-    float cx1, float cy1, float cx2, float cy2, std::vector<int> cells) const {
+    float cx1, float cy1, float cx2, float cy2,
+    const std::vector<int> &cells) const {
   // TODO: always add a secondary objective using squared distance to improve
   // stability
   std::vector<std::pair<float, int> > cellCosts;
@@ -183,7 +189,9 @@ int DensityLegalizer::findConstrainedSplitPos(
 }
 
 void DensityLegalizer::rebisect(int x1, int y1, int x2, int y2) {
-  if (x1 == x2 && y1 == y2) return;
+  if (x1 == x2 && y1 == y2) {
+    return;
+  }
 
   // Get all cells
   std::vector<int> cells;

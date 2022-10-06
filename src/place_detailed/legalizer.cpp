@@ -195,6 +195,8 @@ std::vector<int> Legalizer::computeCellOrder(float weightX, float weightWidth,
   }
   std::stable_sort(sortedCells.begin(), sortedCells.end());
   std::vector<int> cells;
+  cells.reserve(sortedCells.size());
+
   for (auto p : sortedCells) {
     cells.push_back(p.second);
   }
@@ -204,22 +206,24 @@ std::vector<int> Legalizer::computeCellOrder(float weightX, float weightWidth,
 int Legalizer::closestRow(int y) const {
   auto it = std::lower_bound(rows_.begin(), rows_.end(), y,
                              [](Rectangle r, int v) { return r.minY < v; });
-  if (it == rows_.end()) return nbRows() - 1;
-  if (it == rows_.begin()) return 0;
+  if (it == rows_.end()) {
+    return nbRows() - 1;
+  }
+  if (it == rows_.begin()) {
+    return 0;
+  }
   int row = it - rows_.begin();
   assert(row >= 1);
   if (rows_[row].minX - y > y - rows_[row - 1].minX) {
     return row - 1;
-  } else {
-    return row;
   }
+  return row;
 }
 
 std::vector<int> Legalizer::cellLegalX() const {
   std::vector<int> ret(nbCells());
   for (int r = 0; r < nbRows(); ++r) {
-    for (int i = 0; i < rowToCells_[r].size(); ++i) {
-      int c = rowToCells_[r][i];
+    for (int c : rowToCells_[r]) {
       ret[c] = cellToX_[c];
     }
   }
@@ -241,7 +245,9 @@ void Legalizer::exportPlacement(Circuit &circuit) {
   std::vector<int> cellX = cellLegalX();
   std::vector<int> cellY = cellLegalY();
   for (int i = 0; i < circuit.nbCells(); ++i) {
-    if (isIgnored(i)) continue;
+    if (isIgnored(i)) {
+      continue;
+    }
     circuit.cellX_[i] = cellX[i];
     circuit.cellY_[i] = cellY[i];
   }
@@ -253,7 +259,9 @@ void Legalizer::report(bool verbose) const {
   std::cout << "Mean dist: " << meanDistance(costModel_) << std::endl;
   std::cout << "RMS dist " << rmsDistance(costModel_) << std::endl;
   std::cout << "Max dist " << maxDistance(costModel_) << std::endl;
-  if (!verbose) return;
+  if (!verbose) {
+    return;
+  }
   for (int row = 0; row < nbRows(); ++row) {
     std::cout << "Row " << rows_[row].minY << ", " << rows_[row].minX << " to "
               << rows_[row].maxX << ": ";
@@ -275,7 +283,9 @@ std::vector<float> Legalizer::allDistances(LegalizationModel model) const {
   std::vector<float> distances;
   distances.reserve(nbCells());
   for (int i = 0; i < nbCells(); ++i) {
-    if (isIgnored(i)) distances.push_back(0.0f);
+    if (isIgnored(i)) {
+      distances.push_back(0.0f);
+    }
     float dx = targetX[i] - cellX[i];
     float dy = targetY[i] - cellY[i];
     distances.push_back(norm(dx, dy, model));
@@ -309,7 +319,9 @@ float Legalizer::maxDistance(LegalizationModel model) const {
 int Legalizer::totalCellWidth() const {
   int ret = 0;
   for (int c = 0; c < nbCells(); ++c) {
-    if (isIgnored(c)) continue;
+    if (isIgnored(c)) {
+      continue;
+    }
     ret += cellWidth_[c];
   }
   return ret;

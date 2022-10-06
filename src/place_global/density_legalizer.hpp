@@ -163,7 +163,8 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
 
   // Bisection algorithm helpers
   std::vector<std::pair<float, int> > computeCellCosts(
-      float cx1, float cy1, float cx2, float cy2, std::vector<int> cells) const;
+      float cx1, float cy1, float cx2, float cy2,
+      const std::vector<int> &cells) const;
   int findIdealSplitPos(
       const std::vector<std::pair<float, int> > &cellCosts) const;
   int findConstrainedSplitPos(

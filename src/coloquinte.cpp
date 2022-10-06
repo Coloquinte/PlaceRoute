@@ -50,7 +50,7 @@ std::string Rectangle::toString() const {
   return ss.str();
 }
 
-GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
+GlobalPlacerParameters::GlobalPlacerParameters(int  effort, int seed)
     : seed(seed) {
   maxNbSteps = 30;
   gapTolerance = 0.05;
@@ -136,7 +136,9 @@ void Circuit::addNet(const std::vector<int> &cells,
   if (cells.size() != xOffsets.size() || cells.size() != yOffsets.size()) {
     throw std::runtime_error("Inconsistent number of pins for the net");
   }
-  if (cells.empty()) return;
+  if (cells.empty()) {
+    return;
+  }
   netLimits_.push_back(netLimits_.back() + cells.size());
   pinCells_.insert(pinCells_.end(), cells.begin(), cells.end());
   pinXOffsets_.insert(pinXOffsets_.end(), xOffsets.begin(), xOffsets.end());
@@ -305,8 +307,12 @@ std::vector<Rectangle> Circuit::computeRows(
     const std::vector<Rectangle> &additionalObstacles) const {
   std::vector<Rectangle> obstacles = additionalObstacles;
   for (int i = 0; i < nbCells(); ++i) {
-    if (!isFixed(i)) continue;
-    if (!isObstruction(i)) continue;
+    if (!isFixed(i)) {
+      continue;
+    }
+    if (!isObstruction(i)) {
+      continue;
+    }
     obstacles.emplace_back(placement(i));
   }
   // Use boost::polygon ro compute the difference of each row to every other
@@ -322,7 +328,7 @@ std::vector<Rectangle> Circuit::computeRows(
 
     std::vector<bpl::rectangle_data<int> > diff;
     bpl::get_rectangles(diff, row_set);
-    for (auto r : diff) {
+    for (const auto &r : diff) {
       Rectangle newRow(bpl::xl(r), bpl::xh(r), bpl::yl(r), bpl::yh(r));
       // Filter out partially covered rows
       if (newRow.height() == row.height()) {
@@ -382,7 +388,7 @@ int place_ispd(int nb_cells, int nb_nets, int *cell_widths, int *cell_heights,
         std::vector<int>(cell_heights, cell_heights + nb_cells));
     std::vector<bool> cell_fixed_vec;
     for (char *f = cell_fixed; f != cell_fixed + nb_cells; ++f) {
-      cell_fixed_vec.push_back(*f);
+      cell_fixed_vec.push_back(*f != 0);
     }
     circuit.setCellIsFixed(cell_fixed_vec);
     int nb_pins = net_limits[nb_nets];
@@ -393,11 +399,15 @@ int place_ispd(int nb_cells, int nb_nets, int *cell_widths, int *cell_heights,
     circuit.setCellX(std::vector<int>(cell_x, cell_x + nb_cells));
     circuit.setCellY(std::vector<int>(cell_y, cell_y + nb_cells));
     std::vector<CellOrientation> orient;
+    orient.reserve(nb_cells);
+
     for (int i = 0; i < nb_cells; ++i) {
       orient.push_back(static_cast<CellOrientation>(cell_orientation[i]));
     }
     circuit.setCellOrientation(orient);
     std::vector<Rectangle> rows;
+    rows.reserve(nb_rows);
+
     for (int i = 0; i < nb_rows; ++i) {
       rows.emplace_back(row_min_x[i], row_max_x[i], row_min_y[i], row_max_y[i]);
     }
