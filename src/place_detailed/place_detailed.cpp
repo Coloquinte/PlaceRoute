@@ -228,16 +228,16 @@ bool DetailedPlacer::bestSwapUpdate(int &c, int &from, int nbNeighbours) {
   long long bestValue = value();
   bool found = false;
   int bestCandidate = -1;
-  for (int candidate = from; candidate != -1;
-       candidate = placement_.cellNext(candidate)) {
+  for (int candidate = from, count = 0; candidate != -1 && count < nbNeighbours;
+       candidate = placement_.cellNext(candidate), ++count) {
     auto [feasible, val] = valueOnSwap(c, candidate);
     if (feasible && val < bestValue) {
       found = true;
       bestCandidate = candidate;
     }
   }
-  for (int candidate = from; candidate != -1;
-       candidate = placement_.cellPred(candidate)) {
+  for (int candidate = from, count = 0; candidate != -1 && count < nbNeighbours;
+       candidate = placement_.cellPred(candidate), ++count) {
     auto [feasible, val] = valueOnSwap(c, candidate);
     if (feasible && val < bestValue) {
       found = true;

@@ -93,7 +93,7 @@ std::string GlobalPlacerParameters::toString() const {
 DetailedPlacerParameters::DetailedPlacerParameters(int effort, int seed)
     : seed(seed) {
   nbPasses = effort / 3 + 1;
-  localSearchNbNeighbours = effort / 2 + 1;
+  localSearchNbNeighbours = effort + 1;
   localSearchNbRows = effort / 2 + 1;
   legalizationCostModel = LegalizationModel::L1;
   shiftNbRows = 3;
