@@ -52,7 +52,7 @@ std::string Rectangle::toString() const {
 
 GlobalPlacerParameters::GlobalPlacerParameters(int  effort, int seed)
     : seed(seed) {
-  maxNbSteps = 30;
+  maxNbSteps = 200;
   gapTolerance = 0.05;
   penaltyCutoffDistance = 10.0;
   initialPenalty = 0.02;
