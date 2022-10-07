@@ -31,19 +31,6 @@ DensityLegalizer DensityLegalizer::fromIspdCircuit(const Circuit &circuit,
       HierarchicalDensityPlacement::fromIspdCircuit(circuit, sizeFactor));
 }
 
-void DensityLegalizer::exportPlacement(Circuit &circuit) {
-  std::vector<float> cellX = spreadCoordX(cellTargetX_);
-  std::vector<float> cellY = spreadCoordY(cellTargetY_);
-  assert(nbCells() == circuit.nbCells());
-  for (int i = 0; i < circuit.nbCells(); ++i) {
-    if (circuit.isFixed(i)) {
-      continue;
-    }
-    circuit.cellX_[i] = std::round(cellX[i]);
-    circuit.cellY_[i] = std::round(cellY[i]);
-  }
-}
-
 std::vector<float> DensityLegalizer::allDistances(
     LegalizationModel model) const {
   std::vector<float> cellX = simpleCoordX();

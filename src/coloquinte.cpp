@@ -64,6 +64,7 @@ GlobalPlacerParameters::GlobalPlacerParameters(int  effort, int seed)
   roughLegalizationCostModel = LegalizationModel::L1;
   roughLegalizationNbSteps = 2;
   roughLegalizationBinSize = 5.0;
+  exportWeighting = 1.0;
   check();
 }
 

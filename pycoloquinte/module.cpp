@@ -86,6 +86,8 @@ Construct the parameters
                      &GlobalPlacerParameters::roughLegalizationNbSteps)
       .def_readwrite("rough_legalization_bin_size",
                      &GlobalPlacerParameters::roughLegalizationBinSize)
+      .def_readwrite("export_weighting",
+                     &GlobalPlacerParameters::exportWeighting)
       .def("check", &GlobalPlacerParameters::check)
       .def("__str__", &GlobalPlacerParameters::toString)
       .def("__repr__", &GlobalPlacerParameters::toString);

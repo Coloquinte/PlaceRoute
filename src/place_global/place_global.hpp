@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <random>
+#include <vector>
 
 #include "coloquinte.hpp"
 #include "place_global/density_legalizer.hpp"
@@ -56,6 +56,11 @@ class GlobalPlacer {
    * @brief Obtain the upper-bound placement for one iteration
    */
   void runUB();
+
+  /**
+   * @brief Export the placement to the ISPD circuit
+   */
+  void exportPlacement(Circuit &);
 
   /**
    * @brief Compute the average cell size of the circuit

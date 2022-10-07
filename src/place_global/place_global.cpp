@@ -1,5 +1,6 @@
 #include "place_global.hpp"
 
+#include <cassert>
 #include <cmath>
 #include <future>
 #include <iostream>
@@ -57,6 +58,10 @@ void GlobalPlacerParameters::check() const {
     throw std::runtime_error(
         "Bin size should not be too large (10 should be enough)");
   }
+  if (exportWeighting < -0.5f || exportWeighting > 1.5f) {
+    throw std::runtime_error(
+        "Export weighting should generally be between 0 and 1");
+  }
 }
 
 void GlobalPlacer::place(Circuit &circuit,
@@ -64,7 +69,7 @@ void GlobalPlacer::place(Circuit &circuit,
   params.check();
   GlobalPlacer pl(circuit, params);
   pl.run();
-  pl.leg_.exportPlacement(circuit);
+  pl.exportPlacement(circuit);
 }
 
 GlobalPlacer::GlobalPlacer(Circuit &circuit,
@@ -80,6 +85,20 @@ GlobalPlacer::GlobalPlacer(Circuit &circuit,
   perCellPenalty_ = computePerCellPenalty();
   leg_.setCostModel(params.roughLegalizationCostModel);
   leg_.setNbSteps(params.roughLegalizationNbSteps);
+}
+
+void GlobalPlacer::exportPlacement(Circuit &circuit) {
+  assert(leg_.nbCells() == circuit.nbCells());
+  float w = params_.exportWeighting;
+  for (int i = 0; i < circuit.nbCells(); ++i) {
+    if (circuit.isFixed(i)) {
+      continue;
+    }
+    circuit.cellX_[i] =
+        std::round(((1.0f - w) * xPlacementLB_[i] + w * xPlacementUB_[i]));
+    circuit.cellY_[i] =
+        std::round(((1.0f - w) * yPlacementLB_[i] + w * yPlacementUB_[i]));
+  }
 }
 
 float GlobalPlacer::computeAverageCellSize() const {

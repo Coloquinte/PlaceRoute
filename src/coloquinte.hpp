@@ -198,6 +198,12 @@ struct GlobalPlacerParameters {
   double roughLegalizationBinSize;
 
   /**
+   * @brief Export a weighted sum of lower-bound and upper-bound placement;
+   * 0 to use lower bound, 1 to use upper bound
+   */
+  double exportWeighting;
+
+  /**
    * @brief Random seed
    */
   int seed;
