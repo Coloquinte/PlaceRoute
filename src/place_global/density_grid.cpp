@@ -319,9 +319,14 @@ std::vector<float> spreadCells(const std::vector<float> &targets,
   std::vector<float> coords(order.size(), 0.0f);
   for (auto &i : order) {
     int c = i.second;
-    dem += 0.5f * demands[c] * invTotalDemand;
+    float curDemand = demands[c];
+    if (curDemand <= 0.0f) {
+      // Avoid numerical issues
+      continue;
+    }
+    dem += 0.5f * curDemand * invTotalDemand;
     coords[c] = dem * maxCoord + (1.0f - dem) * minCoord;
-    dem += 0.5f * demands[c] * invTotalDemand;
+    dem += 0.5f * curDemand * invTotalDemand;
   }
   return coords;
 }
