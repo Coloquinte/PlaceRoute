@@ -168,7 +168,7 @@ void GlobalPlacer::runUB() {
   leg_.updateCellTargetX(xPlacementLB_);
   leg_.updateCellTargetY(yPlacementLB_);
   leg_.run();
-  xPlacementUB_ = leg_.simpleCoordX();
-  yPlacementUB_ = leg_.simpleCoordY();
+  xPlacementUB_ = leg_.spreadCoordX(xPlacementLB_);
+  yPlacementUB_ = leg_.spreadCoordY(yPlacementLB_);
 }
 }  // namespace coloquinte
