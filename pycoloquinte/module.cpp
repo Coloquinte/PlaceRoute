@@ -88,6 +88,7 @@ Construct the parameters
                      &GlobalPlacerParameters::roughLegalizationBinSize)
       .def_readwrite("export_weighting",
                      &GlobalPlacerParameters::exportWeighting)
+      .def_readwrite("seed", &GlobalPlacerParameters::seed)
       .def("check", &GlobalPlacerParameters::check)
       .def("__str__", &GlobalPlacerParameters::toString)
       .def("__repr__", &GlobalPlacerParameters::toString);
@@ -110,6 +111,7 @@ Construct the parameters
                      &DetailedPlacerParameters::shiftMaxNbCells)
       .def_readwrite("legalization_cost_model",
                      &DetailedPlacerParameters::legalizationCostModel)
+      .def_readwrite("seed", &DetailedPlacerParameters::seed)
       .def("check", &DetailedPlacerParameters::check)
       .def("__str__", &DetailedPlacerParameters::toString)
       .def("__repr__", &DetailedPlacerParameters::toString);
