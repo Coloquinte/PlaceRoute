@@ -9,9 +9,14 @@ import os
 import sys
 
 import coloquinte_pybind
-from coloquinte_pybind import (CellOrientation, DetailedPlacerParameters,
-                               GlobalPlacerParameters, LegalizationModel,
-                               NetModel, Rectangle)
+from coloquinte_pybind import (
+    CellOrientation,
+    DetailedPlacerParameters,
+    GlobalPlacerParameters,
+    LegalizationModel,
+    NetModel,
+    Rectangle,
+)
 
 
 def _open_file(name, write=False):
@@ -48,7 +53,8 @@ def _read_aux(filename):
             filename = os.path.join(filename, default_name)
         else:
             raise RuntimeError(
-                f"There should be one file ending with .aux, got {', '.join(all_files)}")
+                f"There should be one file ending with .aux, got {', '.join(all_files)}"
+            )
     elif not os.path.exists(filename):
         filename = filename + ".aux"
     dirname = os.path.dirname(filename)
@@ -69,16 +75,17 @@ def _read_aux(filename):
         raise RuntimeError("There should be a .pl file in .aux")
     if len(scl_files) != 1:
         raise RuntimeError("There should be a .scl file in .aux")
-    return (filename,
-            os.path.join(dirname, node_files[0]),
-            os.path.join(dirname, net_files[0]),
-            os.path.join(dirname, pl_files[0]),
-            os.path.join(dirname, scl_files[0]),
-            )
+    return (
+        filename,
+        os.path.join(dirname, node_files[0]),
+        os.path.join(dirname, net_files[0]),
+        os.path.join(dirname, pl_files[0]),
+        os.path.join(dirname, scl_files[0]),
+    )
 
 
 def _parse_num_line(line):
-    tokens = line.split(':')
+    tokens = line.split(":")
     if len(tokens) != 2:
         raise RuntimeError(f"Couldn't interpret <{line}> as <Key : Value>")
     return int(tokens[1].strip())
@@ -180,7 +187,8 @@ def _read_nets(filename, cell_names, cell_widths, cell_heights, sort_entries=Fal
     for name, net_degree, pins in nets:
         if net_degree != len(pins):
             raise RuntimeError(
-                f"Net degree for {name} is {len(pins)}; expected {net_degree}")
+                f"Net degree for {name} is {len(pins)}; expected {net_degree}"
+            )
         total_pins += net_degree
     if nb_nets is not None:
         assert len(nets) == nb_nets
@@ -261,13 +269,13 @@ def _read_rows(filename):
             width = None
             height = None
             for i in range(1, len(desc)):
-                if desc[i-1].lower() == "coordinate":
+                if desc[i - 1].lower() == "coordinate":
                     min_y = int(desc[i])
-                if desc[i-1].lower() == "subroworigin":
+                if desc[i - 1].lower() == "subroworigin":
                     min_x = int(desc[i])
-                if desc[i-1].lower() == "numsites":
+                if desc[i - 1].lower() == "numsites":
                     width = int(desc[i])
-                if desc[i-1].lower() == "height":
+                if desc[i - 1].lower() == "height":
                     height = int(desc[i])
 
             assert min_x is not None
@@ -290,19 +298,21 @@ def _rows_to_area(rows):
     min_x = list(sorted(set(min_x)))
     if len(min_x) != 1:
         print(
-            f"Only one row origin is supported, got {', '.join([str(i) for i in min_x])}")
+            f"Only one row origin is supported, got {', '.join([str(i) for i in min_x])}"
+        )
 
     # All rows have same max x, otherwise we take the min
     max_x = list(sorted(set(max_x)))
     if len(max_x) != 1:
         print(
-            f"Only one row end is supported, got {', '.join([str(i) for i in max_x])}")
+            f"Only one row end is supported, got {', '.join([str(i) for i in max_x])}"
+        )
 
     # Rows are contiguous
     row_y = [p for p in zip(min_y, max_y)]
     row_y.sort()
-    for i in range(len(row_y)-1):
-        y_b = row_y[i+1][0]
+    for i in range(len(row_y) - 1):
+        y_b = row_y[i + 1][0]
         y_e = row_y[i][1]
         if y_b != y_e:
             print(f"Hole between rows at coordinates {y_b} and {y_e}")
@@ -316,7 +326,8 @@ def _rows_to_height(rows):
     heights = list(sorted(set(heights)))
     if len(set(heights)) != 1:
         raise RuntimeError(
-            f"Only one row height is supported, got {', '.join([str(i) for i in heights])}")
+            f"Only one row height is supported, got {', '.join([str(i) for i in heights])}"
+        )
     return heights[0]
 
 
@@ -332,12 +343,17 @@ class Circuit(coloquinte_pybind.Circuit):
         """
         Read an ISPD benchmark from its .aux file
         """
-        aux_filename, node_filename, net_filename, pl_filename, scl_filename = _read_aux(
-            filename)
+        (
+            aux_filename,
+            node_filename,
+            net_filename,
+            pl_filename,
+            scl_filename,
+        ) = _read_aux(filename)
         cell_names, cell_widths, cell_heights, cell_is_fixed = _read_nodes(
-            node_filename)
-        nets = _read_nets(
-            net_filename, cell_names, cell_widths, cell_heights)
+            node_filename
+        )
+        nets = _read_nets(net_filename, cell_names, cell_widths, cell_heights)
         cell_x, cell_y, cell_orient = _read_place(pl_filename, cell_names)
         rows = _read_rows(scl_filename)
 
@@ -407,23 +423,26 @@ class Circuit(coloquinte_pybind.Circuit):
 
 def _add_arguments(parser, obj, prefix):
     for name in obj.__dir__():
-        if name.startswith('_'):
+        if name.startswith("_"):
             continue
         if name == "check":
             continue
         arg_type = type(getattr(obj, name))
         if arg_type in (int, float):
-            parser.add_argument("--" + prefix + "." + name,
-                                type=arg_type, metavar=name.upper())
+            parser.add_argument(
+                "--" + prefix + "." + name, type=arg_type, metavar=name.upper()
+            )
         else:
-            parser.add_argument("--" + prefix + "." + name,
-                                choices=list(arg_type.__members__.keys()),
-                                metavar=name.upper())
+            parser.add_argument(
+                "--" + prefix + "." + name,
+                choices=list(arg_type.__members__.keys()),
+                metavar=name.upper(),
+            )
 
 
 def _parse_arguments(args, obj, prefix):
     for name in obj.__dir__():
-        if name.startswith('_'):
+        if name.startswith("_"):
             continue
         if name == "check":
             continue
@@ -444,7 +463,7 @@ def _parse_arguments(args, obj, prefix):
 
 def _show_params(obj, prefix):
     for name in obj.__dir__():
-        if name.startswith('_'):
+        if name.startswith("_"):
             continue
         if name == "check":
             continue
@@ -460,29 +479,36 @@ def main():
     Run the whole placement algorithm from the command line
     """
     import argparse
+
     parser = argparse.ArgumentParser(
-        description="Place a benchmark circuit from the command line")
+        description="Place a benchmark circuit from the command line"
+    )
     parser.add_argument("instance", help="Benchmark instance")
-    parser.add_argument("--effort", help="Placement effort",
-                        type=int, default=3)
-    parser.add_argument("--seed", help="Random seed",
-                        type=int, default=-1)
-    parser.add_argument("--ignore-macros",
-                        help="Ignore macros when placing standard cells", action="store_true",
-                        dest="ignore_obstructions")
-    parser.add_argument("--load-solution",
-                        help="Load initial placement", metavar='FILE')
-    parser.add_argument("--save-solution",
-                        help="Save final placement", metavar='FILE')
-    parser.add_argument("--show-parameters", help="Show parameter values",
-                        action="store_true")
+    parser.add_argument("--effort", help="Placement effort", type=int, default=3)
+    parser.add_argument("--seed", help="Random seed", type=int, default=-1)
+    parser.add_argument(
+        "--ignore-macros",
+        help="Ignore macros when placing standard cells",
+        action="store_true",
+        dest="ignore_obstructions",
+    )
+    parser.add_argument(
+        "--load-solution", help="Load initial placement", metavar="FILE"
+    )
+    parser.add_argument("--save-solution", help="Save final placement", metavar="FILE")
+    parser.add_argument(
+        "--show-parameters", help="Show parameter values", action="store_true"
+    )
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("--no-global", help="Skip global placement",
-                       action="store_true")
-    group.add_argument("--only-global", help="Run only global placement (no legalization)",
-                       action="store_true")
-    group.add_argument("--no-detailed", help="Skip detailed placement",
-                       action="store_true")
+    group.add_argument("--no-global", help="Skip global placement", action="store_true")
+    group.add_argument(
+        "--only-global",
+        help="Run only global placement (no legalization)",
+        action="store_true",
+    )
+    group.add_argument(
+        "--no-detailed", help="Skip detailed placement", action="store_true"
+    )
 
     global_group = parser.add_argument_group("Global placement parameters")
     detailed_group = parser.add_argument_group("Detailed placement parameters")
