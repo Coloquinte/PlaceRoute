@@ -3,6 +3,7 @@
 #include <lemon/network_simplex.h>
 #include <lemon/smart_graph.h>
 
+#include <chrono>
 #include <iostream>
 #include <unordered_set>
 
@@ -42,10 +43,14 @@ void DetailedPlacer::legalize(Circuit &circuit,
   params.check();
   std::cout << "Legalization starting (WL " << circuit.hpwl() << ")"
             << std::endl;
+  auto startTime = std::chrono::steady_clock::now();
   Legalizer leg = Legalizer::fromIspdCircuit(circuit);
   leg.run();
+  auto endTime = std::chrono::steady_clock::now();
+  std::chrono::duration<float> duration = endTime - startTime;
   leg.exportPlacement(circuit);
-  std::cout << "Legalization done (WL " << circuit.hpwl() << ")" << std::endl;
+  std::cout << "Legalization done (WL " << circuit.hpwl() << ") in "
+            << duration.count() << "s" << std::endl;
 }
 
 void DetailedPlacer::place(Circuit &circuit,
@@ -53,6 +58,7 @@ void DetailedPlacer::place(Circuit &circuit,
   legalize(circuit, params);
   params.check();
   std::cout << "Detailed placement starting" << std::endl;
+  auto startTime = std::chrono::steady_clock::now();
   DetailedPlacer pl(circuit);
   pl.check();
   for (int i = 1; i <= params.nbPasses; ++i) {
@@ -64,9 +70,11 @@ void DetailedPlacer::place(Circuit &circuit,
               << shiftValue << std::endl;
   }
   pl.check();
+  auto endTime = std::chrono::steady_clock::now();
   pl.placement_.exportPlacement(circuit);
-  std::cout << "Detailed placement done (WL " << circuit.hpwl() << ")"
-            << std::endl;
+  std::chrono::duration<float> duration = endTime - startTime;
+  std::cout << "Detailed placement done (WL " << circuit.hpwl() << ") in "
+            << duration.count() << "s" << std::endl;
 }
 
 DetailedPlacer::DetailedPlacer(const Circuit &circuit)

@@ -1,6 +1,7 @@
 #include "place_global.hpp"
 
 #include <cassert>
+#include <chrono>
 #include <cmath>
 #include <future>
 #include <iostream>
@@ -128,6 +129,7 @@ std::vector<float> GlobalPlacer::computePerCellPenalty() const {
 
 void GlobalPlacer::run() {
   std::cout << "Global placement starting" << std::endl;
+  auto startTime = std::chrono::steady_clock::now();
   runInitialLB();
   penalty_ = params_.initialPenalty;
   for (step_ = params_.nbInitialSteps + 1; step_ <= params_.maxNbSteps;
@@ -144,7 +146,10 @@ void GlobalPlacer::run() {
     penalty_ *= params_.penaltyUpdateFactor;
   }
   runUB();
-  std::cout << "Global placement done" << std::endl;
+  auto endTime = std::chrono::steady_clock::now();
+  std::chrono::duration<float> duration = endTime - startTime;
+  std::cout << "Global placement done in " << duration.count() << "s"
+            << std::endl;
 }
 
 float GlobalPlacer::valueLB() const {
