@@ -2,6 +2,7 @@
 #include "coloquinte.hpp"
 
 #include <boost/polygon/polygon.hpp>
+#include <cassert>
 #include <iostream>
 #include <sstream>
 
@@ -50,19 +51,39 @@ std::string Rectangle::toString() const {
   return ss.str();
 }
 
-GlobalPlacerParameters::GlobalPlacerParameters(int  effort, int seed)
+namespace {
+
+float interpolateEffort(double minVal, double maxVal, int effort,
+                        int minEffort = 1, int maxEffort = 9) {
+  assert(minEffort < maxEffort && minVal <= maxVal);
+  assert(effort >= minEffort && effort <= maxEffort);
+  double fact = (effort - minEffort) / (float)(maxEffort - minEffort);
+  return maxVal * fact + minVal * (1.0 - fact);
+}
+
+float interpolateLogEffort(double minVal, double maxVal, int effort,
+                           int minEffort = 1, int maxEffort = 9) {
+  return std::exp(interpolateEffort(std::log(minVal), std::log(maxVal), effort,
+                                    minEffort, maxEffort));
+}
+}  // namespace
+
+GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
     : seed(seed) {
+  if (effort < 1 || effort > 9) {
+    throw std::runtime_error("Placement effort must be between 1 and 9");
+  }
   maxNbSteps = 200;
-  gapTolerance = 0.05;
+  gapTolerance = interpolateLogEffort(0.1, 0.02, effort);
   penaltyCutoffDistance = 10.0;
   initialPenalty = 0.02;
-  penaltyUpdateFactor = 1.2;
+  penaltyUpdateFactor = interpolateLogEffort(1.3, 1.05, effort);
   netModel = NetModelOption::BoundToBound;
-  approximationDistance = 0.5;
+  approximationDistance = 1.0;
   maxNbConjugateGradientSteps = 1000;
   conjugateGradientErrorTolerance = 1.0e-6;
   roughLegalizationCostModel = LegalizationModel::L1;
-  roughLegalizationNbSteps = 2;
+  roughLegalizationNbSteps = 3;
   roughLegalizationBinSize = 5.0;
   exportWeighting = 1.0;
   check();
@@ -93,6 +114,9 @@ std::string GlobalPlacerParameters::toString() const {
 
 DetailedPlacerParameters::DetailedPlacerParameters(int effort, int seed)
     : seed(seed) {
+  if (effort < 1 || effort > 9) {
+    throw std::runtime_error("Placement effort must be between 1 and 9");
+  }
   nbPasses = effort / 3 + 1;
   localSearchNbNeighbours = effort + 1;
   localSearchNbRows = effort / 2 + 1;
