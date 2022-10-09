@@ -198,20 +198,20 @@ class BlackboxEnumVariable:
 
 
 optimization_variables = {
-    "global_max_nb_steps": BlackboxIntVariable(20, 150),
+    "global_max_nb_steps": BlackboxIntVariable(30, 200),
     "global_nb_initial_steps": BlackboxIntVariable(0, 2),
     "global_gap_tolerance": BlackboxLogFloatVariable(0.01, 0.2),
-    "global_initial_penalty": BlackboxFloatVariable(0.01, 0.05),
-    "global_penalty_update_factor": BlackboxLogFloatVariable(1.01, 1.3),
+    "global_initial_penalty": BlackboxFloatVariable(0.02, 0.08),
+    "global_penalty_update_factor": BlackboxLogFloatVariable(1.05, 1.3),
     "global_penalty_cutoff_distance": BlackboxLogFloatVariable(2.0, 50.0),
     "global_approximation_distance": BlackboxLogFloatVariable(0.1, 10.0),
     "global_max_nb_conjugate_gradient_steps": BlackboxLogIntVariable(100, 1000),
     "global_nb_rough_legalization_steps": BlackboxIntVariable(1, 3),
     "global_export_weighting": BlackboxFloatVariable(0.5, 1.0),
     "detailed_nb_passes": BlackboxIntVariable(1, 5),
-    "detailed_local_search_nb_neighbours": BlackboxIntVariable(1, 6),
+    "detailed_local_search_nb_neighbours": BlackboxIntVariable(2, 16),
     "detailed_local_search_nb_rows": BlackboxIntVariable(1, 3),
-    "detailed_shift_nb_rows": BlackboxIntVariable(2, 10),
+    "detailed_shift_nb_rows": BlackboxIntVariable(2, 8),
     "detailed_shift_max_nb_cells": BlackboxLogIntVariable(20, 150),
 }
 
