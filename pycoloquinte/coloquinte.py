@@ -539,17 +539,14 @@ def main():
     if args.no_global:
         print("Global placement skipped at user's request")
     else:
-        print("Running global placement")
         circuit.place_global(global_params)
 
     if args.only_global:
         print("Legalization and detailed placement skipped at user's request")
     elif args.no_detailed:
-        print("Running legalization")
         circuit.legalize(detailed_params)
         print("Detailed placement skipped at user's request")
     else:
-        print("Running legalization and detailed placement")
         circuit.place_detailed(detailed_params)
     circuit.write_placement(args.save_solution)
 

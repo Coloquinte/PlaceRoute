@@ -40,27 +40,32 @@ void DetailedPlacerParameters::check() const {
 void DetailedPlacer::legalize(Circuit &circuit,
                               const DetailedPlacerParameters &params) {
   params.check();
-  std::cout << "Wirelength before legalization: " << circuit.hpwl()
+  std::cout << "Legalization starting (WL " << circuit.hpwl() << ")"
             << std::endl;
   Legalizer leg = Legalizer::fromIspdCircuit(circuit);
   leg.run();
   leg.exportPlacement(circuit);
-  std::cout << "Wirelength after legalization: " << circuit.hpwl() << std::endl;
+  std::cout << "Legalization done (WL " << circuit.hpwl() << ")" << std::endl;
 }
 
 void DetailedPlacer::place(Circuit &circuit,
                            const DetailedPlacerParameters &params) {
   legalize(circuit, params);
   params.check();
+  std::cout << "Detailed placement starting" << std::endl;
   DetailedPlacer pl(circuit);
   pl.check();
-  for (int i = 0; i < params.nbPasses; ++i) {
+  for (int i = 1; i <= params.nbPasses; ++i) {
     pl.runSwaps(params.localSearchNbNeighbours, params.localSearchNbRows);
+    auto swapValue = pl.value();
     pl.runShifts(params.shiftNbRows, params.shiftMaxNbCells);
+    auto shiftValue = pl.value();
+    std::cout << "#" << i << ":\tSwaps " << swapValue << "\tShifts "
+              << shiftValue << std::endl;
   }
   pl.check();
   pl.placement_.exportPlacement(circuit);
-  std::cout << "Wirelength after detailed placement: " << circuit.hpwl()
+  std::cout << "Detailed placement done (WL " << circuit.hpwl() << ")"
             << std::endl;
 }
 

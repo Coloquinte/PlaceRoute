@@ -127,6 +127,7 @@ std::vector<float> GlobalPlacer::computePerCellPenalty() const {
 }
 
 void GlobalPlacer::run() {
+  std::cout << "Global placement starting" << std::endl;
   runInitialLB();
   penalty_ = params_.initialPenalty;
   for (step_ = params_.nbInitialSteps + 1; step_ <= params_.maxNbSteps;
@@ -143,6 +144,7 @@ void GlobalPlacer::run() {
     penalty_ *= params_.penaltyUpdateFactor;
   }
   runUB();
+  std::cout << "Global placement done" << std::endl;
 }
 
 float GlobalPlacer::valueLB() const {
