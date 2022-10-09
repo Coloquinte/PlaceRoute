@@ -12,13 +12,13 @@ namespace coloquinte {
 class NetModel {
  public:
   struct Parameters {
-      NetModelOption netModel;
-      float approximationDistance;
-      float penaltyCutoffDistance;
-      float tolerance;
-      int maxNbIterations;
+    NetModelOption netModel;
+    float approximationDistance;
+    float penaltyCutoffDistance;
+    float tolerance;
+    int maxNbIterations;
 
-      Parameters();
+    Parameters();
   };
 
   /**
@@ -128,7 +128,20 @@ class NetModel {
   float value(const std::vector<float> &pl) const;
 
   /**
-   * @brief Solve using a local approximation of the actual wirelength, specified in the parameters
+   * @brief Solve using a local approximation of the actual wirelength,
+   * specified in the parameters
+   *
+   * @param netPlacement Initial positions to build the approximation
+   * @param params Net model parameters
+   *
+   * @return New positions for the cells
+   */
+  std::vector<float> solve(const std::vector<float> &netPlacement,
+                           const Parameters &params = Parameters()) const;
+
+  /**
+   * @brief Solve using a local approximation of the actual wirelength,
+   * specified in the parameters
    *
    * @param netPlacement Initial positions to build the approximation
    * @param placementTarget Target positions to pull the cells
@@ -138,17 +151,17 @@ class NetModel {
    *
    * @return New positions for the cells
    */
-  std::vector<float> solve(const std::vector<float> &netPlacement,
-                               const std::vector<float> &placementTarget,
-                               const std::vector<float> &penaltyStrength,
-                               const Parameters &params=Parameters()) const;
+  std::vector<float> solveWithPenalty(const std::vector<float> &netPlacement,
+                           const std::vector<float> &placementTarget,
+                           const std::vector<float> &penaltyStrength,
+                           const Parameters &params = Parameters()) const;
 
   /**
    * @brief Solve with a quadratic star model
    *
    * @return Positions for the cells that minimize the wirelength
    */
-  std::vector<float> solveStar(const Parameters &params=Parameters()) const;
+  std::vector<float> solveStar(const Parameters &params = Parameters()) const;
 
   /**
    * @brief Solve using the star model as a local approximation of the actual
@@ -160,8 +173,7 @@ class NetModel {
    * @return New positions for the cells
    */
   std::vector<float> solveStar(const std::vector<float> &placement,
-                              const Parameters &params=Parameters()) const;
-
+                               const Parameters &params = Parameters()) const;
 
   /**
    * @brief Solve using the star model as a local approximation of the actual
@@ -177,7 +189,7 @@ class NetModel {
   std::vector<float> solveStar(const std::vector<float> &netPlacement,
                                const std::vector<float> &placementTarget,
                                const std::vector<float> &penaltyStrength,
-                               const Parameters &params=Parameters()) const;
+                               const Parameters &params = Parameters()) const;
 
   /**
    * @brief Solve using the bound-to-bound model as a local approximation of the
@@ -188,7 +200,7 @@ class NetModel {
    * @return New positions for the cells
    */
   std::vector<float> solveB2B(const std::vector<float> &placement,
-                              const Parameters &params=Parameters()) const;
+                              const Parameters &params = Parameters()) const;
 
   /**
    * @brief Solve the bound-to-bound model as a local approximation of the
@@ -205,7 +217,7 @@ class NetModel {
   std::vector<float> solveB2B(const std::vector<float> &netPlacement,
                               const std::vector<float> &placementTarget,
                               const std::vector<float> &penaltyStrength,
-                              const Parameters &params=Parameters()) const;
+                              const Parameters &params = Parameters()) const;
 
   /**
    * @brief Check the consistency of the datastructure
@@ -243,4 +255,4 @@ class NetModel {
 
   friend class MatrixCreator;
 };
-}
+}  // namespace coloquinte

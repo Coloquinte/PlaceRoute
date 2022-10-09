@@ -74,6 +74,7 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
     throw std::runtime_error("Placement effort must be between 1 and 9");
   }
   maxNbSteps = 200;
+  nbInitialSteps = 0;
   gapTolerance = interpolateLogEffort(0.1, 0.02, effort);
   penaltyCutoffDistance = 10.0;
   initialPenalty = 0.02;

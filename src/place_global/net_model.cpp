@@ -614,9 +614,16 @@ std::vector<float> NetModel::solveStar(const std::vector<float> &placement,
 }
 
 std::vector<float> NetModel::solve(const std::vector<float> &netPlacement,
-                                   const std::vector<float> &placementTarget,
-                                   const std::vector<float> &penaltyStrength,
                                    const Parameters &params) const {
+  MatrixCreator builder = MatrixCreator::create(
+      *this, netPlacement, params.approximationDistance, params.netModel);
+  return builder.solve(params.tolerance, params.maxNbIterations);
+}
+
+std::vector<float> NetModel::solveWithPenalty(
+    const std::vector<float> &netPlacement,
+    const std::vector<float> &placementTarget,
+    const std::vector<float> &penaltyStrength, const Parameters &params) const {
   MatrixCreator builder = MatrixCreator::create(
       *this, netPlacement, params.approximationDistance, params.netModel);
   builder.addPenalty(netPlacement, placementTarget, penaltyStrength,

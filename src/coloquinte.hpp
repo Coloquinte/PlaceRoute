@@ -136,6 +136,11 @@ struct GlobalPlacerParameters {
   int maxNbSteps;
 
   /**
+   * @brief Number of initial placement steps, without penalization
+   */
+  int nbInitialSteps;
+
+  /**
    * @brief Gap between lower and upper bound placement at which to stop
    * placement early
    */

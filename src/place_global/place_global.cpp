@@ -15,6 +15,13 @@ void GlobalPlacerParameters::check() const {
   if (maxNbSteps < 0) {
     throw std::runtime_error("Invalid number of steps");
   }
+  if (nbInitialSteps < 0) {
+    throw std::runtime_error("Invalid number of initial steps");
+  }
+  if (nbInitialSteps >= maxNbSteps) {
+    throw std::runtime_error(
+        "Number of initial steps should be lower than max number");
+  }
   if (gapTolerance < 0.0f || gapTolerance > 2.0f) {
     throw std::runtime_error("Invalid gap tolerance");
   }
@@ -122,7 +129,8 @@ std::vector<float> GlobalPlacer::computePerCellPenalty() const {
 void GlobalPlacer::run() {
   runInitialLB();
   penalty_ = params_.initialPenalty;
-  for (step_ = 1; step_ <= params_.maxNbSteps; ++step_) {
+  for (step_ = params_.nbInitialSteps + 1; step_ <= params_.maxNbSteps;
+       ++step_) {
     runUB();
     float ub = valueUB();
     runLB();
@@ -147,10 +155,17 @@ float GlobalPlacer::valueUB() const {
 
 void GlobalPlacer::runInitialLB() {
   NetModel::Parameters params;
+  params.netModel = params_.netModel;
   params.tolerance = params_.conjugateGradientErrorTolerance;
   params.maxNbIterations = params_.maxNbConjugateGradientSteps;
   xPlacementLB_ = xtopo_.solveStar(params);
   yPlacementLB_ = ytopo_.solveStar(params);
+  std::cout << "#0:\tLB " << valueLB() << std::endl;
+  for (step_ = 1; step_ <= params_.nbInitialSteps; ++step_) {
+    xPlacementLB_ = xtopo_.solve(xPlacementLB_, params);
+    yPlacementLB_ = ytopo_.solve(yPlacementLB_, params);
+    std::cout << "#" << step_ << ":\tLB " << valueLB() << std::endl;
+  }
 }
 
 void GlobalPlacer::runLB() {
@@ -174,11 +189,11 @@ void GlobalPlacer::runLB() {
 
   // Solve the continuous model (x and y independently)
   std::future<std::vector<float> > x =
-      std::async(std::launch::async, &NetModel::solve, &xtopo_, xPlacementLB_,
-                 xPlacementUB_, penalty, params);
+      std::async(std::launch::async, &NetModel::solveWithPenalty, &xtopo_,
+                 xPlacementLB_, xPlacementUB_, penalty, params);
   std::future<std::vector<float> > y =
-      std::async(std::launch::async, &NetModel::solve, &ytopo_, yPlacementLB_,
-                 yPlacementUB_, penalty, params);
+      std::async(std::launch::async, &NetModel::solveWithPenalty, &ytopo_,
+                 yPlacementLB_, yPlacementUB_, penalty, params);
   xPlacementLB_ = x.get();
   yPlacementLB_ = y.get();
 }

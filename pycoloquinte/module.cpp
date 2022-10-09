@@ -67,6 +67,8 @@ Construct the parameters
 )pbdoc",
            py::arg("effort") = 3, py::arg("seed") = -1)
       .def_readwrite("max_nb_steps", &GlobalPlacerParameters::maxNbSteps)
+      .def_readwrite("nb_initial_steps",
+                     &GlobalPlacerParameters::nbInitialSteps)
       .def_readwrite("gap_tolerance", &GlobalPlacerParameters::gapTolerance)
       .def_readwrite("penalty_cutoff_distance",
                      &GlobalPlacerParameters::penaltyCutoffDistance)
