@@ -4,9 +4,14 @@ import os
 import sqlite3
 import time
 
+import percache
+
 import coloquinte
 
 import numpy as np
+
+
+cache = percache.Cache("persistent_cache.db")
 
 
 class BenchmarkRun:
@@ -108,6 +113,12 @@ class BenchmarkRun:
         ret["prefix"] = self._prefix
         ret["ignore_macros"] = self._ignore_macros
         return ret
+
+
+@cache
+def evaluate_benchmark(params_dict):
+    return BenchmarkRun.from_dict(params_dict).run()
+
 
 
 class BlackboxFloatVariable:
@@ -235,9 +246,6 @@ class Optimizer:
         del data["detailed_seed"]
         return data
 
-    def evaluate_single(self, params_dict):
-        return BenchmarkRun.from_dict(params_dict).run()
-
     def evaluate(self, params_dict):
         """
         Return the geometric mean of the metrics across the benchmarks, with the given time/quality tradeoff
@@ -251,7 +259,7 @@ class Optimizer:
                 params["prefix"] = self.prefix
                 params["global.seed"] = seed
                 params["detailed.seed"] = seed
-                cur = self.evaluate_single(params)
+                cur = evaluate_benchmark(params)
                 for k, v in cur.items():
                     if k in metrics:
                         metrics[k].append(v)
