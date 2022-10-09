@@ -261,6 +261,14 @@ class Optimizer:
         m = {}
         for k, v in metrics.items():
             m[k] = np.exp(np.mean(np.log(v)))
+        return m
+
+    def evaluate_localsolver(self, params_map):
+        params_dict = Optimizer.default_params()
+        for i, name in enumerate(self.variable_names):
+            v = optimization_variables[name]
+            params_dict[name] = v.value(params_map[i])
+        m = self.evaluate(params_dict)
         t = m["time_total"]
         q = m["hpwl"]
         # Just normalization so numbers are not too horrible
@@ -269,17 +277,11 @@ class Optimizer:
         val = math.exp(
             math.log(q / norm_q) + math.log(t / norm_t) / self.time_for_quality
         )
-        print(f"Objective:\tQuality{q}\tTime {t}\tObj {val}")
-        return val
-
-    def evaluate_localsolver(self, params_map):
-        params_dict = Optimizer.default_params()
-        print("Evaluation of a new incumbent: ")
+        print("New incumbent evaluated: ")
         for i, name in enumerate(self.variable_names):
-            v = optimization_variables[name]
-            params_dict[name] = v.value(params_map[i])
             print(f"\t{name}: {params_dict[name]}")
-        ret = self.evaluate(params_dict)
+        print(f"Objective:\tQuality {q:.0f}\tTime {t:.2f}\tObj {val:.2f}")
+        return val
         return ret
 
     def define_variables(self, model):
