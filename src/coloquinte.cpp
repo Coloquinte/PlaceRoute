@@ -117,12 +117,12 @@ DetailedPlacerParameters::DetailedPlacerParameters(int effort, int seed)
   if (effort < 1 || effort > 9) {
     throw std::runtime_error("Placement effort must be between 1 and 9");
   }
-  nbPasses = effort / 3 + 1;
-  localSearchNbNeighbours = effort + 1;
-  localSearchNbRows = effort / 2 + 1;
+  nbPasses = std::round(interpolateLogEffort(2.0, 8.0, effort));
+  localSearchNbNeighbours = std::round(interpolateLogEffort(2.0, 16.0, effort));
+  localSearchNbRows = std::round(interpolateEffort(1.0, 4.0, effort));
   legalizationCostModel = LegalizationModel::L1;
   shiftNbRows = 3;
-  shiftMaxNbCells = 100;
+  shiftMaxNbCells = std::round(interpolateLogEffort(50, 120.0, effort));
   check();
 }
 
