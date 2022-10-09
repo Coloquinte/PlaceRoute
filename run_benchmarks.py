@@ -266,9 +266,11 @@ class Optimizer:
         # Just normalization so numbers are not too horrible
         norm_q = 1.0e6
         norm_t = 100
-        return math.exp(
+        val = math.exp(
             math.log(q / norm_q) + math.log(t / norm_t) / self.time_for_quality
         )
+        print(f"Objective:\tQuality{q}\tTime {t}\tObj {val}")
+        return val
 
     def evaluate_localsolver(self, params_map):
         params_dict = Optimizer.default_params()
@@ -278,7 +280,6 @@ class Optimizer:
             params_dict[name] = v.value(params_map[i])
             print(f"\t{name}: {params_dict[name]}")
         ret = self.evaluate(params_dict)
-        print(f"Objective function: {ret}")
         return ret
 
     def define_variables(self, model):
@@ -312,11 +313,10 @@ class Optimizer:
             ls.solve()
 
             # Get the result
-            result = {}
+            print(f"Optimization result:")
             for name, p in zip(self.variable_names, model_params):
                 v = optimization_variables[name]
-                result[name] = v.value(p.value)
-            print(f"Optimization result: {result}")
+                print(f"\t{name}: {v.value(p.value)}")
 
 
 parser = argparse.ArgumentParser()
