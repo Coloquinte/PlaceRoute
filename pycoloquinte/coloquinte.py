@@ -536,11 +536,13 @@ def main():
         print(f"Loading initial solution")
         circuit.load_placement(args.load_solution)
 
+    sys.stdout.flush()
     if args.no_global:
         print("Global placement skipped at user's request")
     else:
         circuit.place_global(global_params)
 
+    sys.stdout.flush()
     if args.only_global:
         print("Legalization and detailed placement skipped at user's request")
     elif args.no_detailed:
