@@ -10,7 +10,14 @@ import numpy as np
 
 
 class BenchmarkRun:
-    def __init__(self, benchmark, global_params=None, detailed_params=None, ignore_macros=False, prefix="benchmarks/ISPD06/"):
+    def __init__(
+        self,
+        benchmark,
+        global_params=None,
+        detailed_params=None,
+        ignore_macros=False,
+        prefix="benchmarks/ISPD06/",
+    ):
         if global_params is None:
             global_params = coloquinte.GlobalPlacerParameters()
         if detailed_params is None:
@@ -39,7 +46,9 @@ class BenchmarkRun:
 
     def run(self):
         circuit = coloquinte.Circuit.read_ispd(
-            os.path.join(self._prefix, self.benchmark), ignore_obstructions=self.ignore_macros)
+            os.path.join(self._prefix, self.benchmark),
+            ignore_obstructions=self.ignore_macros,
+        )
         # Global placement
         global_start_time = time.time()
         circuit.place_global(self.gp)
@@ -56,7 +65,7 @@ class BenchmarkRun:
             "time_total": global_duration + detailed_duration,
             "time_global": global_duration,
             "time_detailed": detailed_duration,
-            "hpwl": hpwl
+            "hpwl": hpwl,
         }
         return metrics
 
@@ -196,7 +205,15 @@ optimization_variables = {
 
 
 class Optimizer:
-    def __init__(self, variables, time_for_quality, benchmarks=None, nb_runs=1, ignore_macros=False, prefix="benchmarks/ISPD06/"):
+    def __init__(
+        self,
+        variables,
+        time_for_quality,
+        benchmarks=None,
+        nb_runs=1,
+        ignore_macros=False,
+        prefix="benchmarks/ISPD06/",
+    ):
         if benchmarks is None:
             benchmarks = os.listdir(prefix)
         if variables is None:
@@ -248,7 +265,9 @@ class Optimizer:
         # Just normalization so numbers are not too horrible
         norm_q = 1.0e6
         norm_t = 100
-        return math.exp(math.log(q / norm_q) + math.log(t / norm_t) / self.time_for_quality)
+        return math.exp(
+            math.log(q / norm_q) + math.log(t / norm_t) / self.time_for_quality
+        )
 
     def evaluate_localsolver(self, params_map):
         params_dict = Optimizer.default_params()
@@ -262,7 +281,9 @@ class Optimizer:
         return ret
 
     def define_variables(self, model):
-        return [optimization_variables[name].define(model) for name in self.variable_names]
+        return [
+            optimization_variables[name].define(model) for name in self.variable_names
+        ]
 
     def run(self, time_limit=None):
         import localsolver
@@ -271,8 +292,7 @@ class Optimizer:
             # Create a simple model with an external function
             model = ls.model
             model_params = self.define_variables(model)
-            f = model.create_double_external_function(
-                self.evaluate_localsolver)
+            f = model.create_double_external_function(self.evaluate_localsolver)
             func_call = model.call(f, *model_params)
             model.minimize(func_call)
             surrogate_params = f.external_context.enable_surrogate_modeling()
@@ -300,16 +320,33 @@ class Optimizer:
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "benchmarks", help="Benchmark instances to optimize", nargs="+", type=str)
-parser.add_argument("--ignore-macros",
-                    help="Ignore the macros during placement for more stable benchmarks", action="store_true")
-parser.add_argument("--nb-runs",
-                    help="Number of runs for each benchmark to reduce noise", type=int, default=1)
-parser.add_argument("--time-quality-tradeoff",
-                    help="Tradeoff between time and quality; higher is higher quality", type=float, default=10.0)
-parser.add_argument("--time-limit",
-                    help="Time limit for optimization", type=int)
-parser.add_argument("--variables", help="Variables to optimize over", type=str, nargs="+", choices=[v for v in optimization_variables.keys()])
+    "benchmarks", help="Benchmark instances to optimize", nargs="+", type=str
+)
+parser.add_argument(
+    "--ignore-macros",
+    help="Ignore the macros during placement for more stable benchmarks",
+    action="store_true",
+)
+parser.add_argument(
+    "--nb-runs",
+    help="Number of runs for each benchmark to reduce noise",
+    type=int,
+    default=1,
+)
+parser.add_argument(
+    "--time-quality-tradeoff",
+    help="Tradeoff between time and quality; higher is higher quality",
+    type=float,
+    default=10.0,
+)
+parser.add_argument("--time-limit", help="Time limit for optimization", type=int)
+parser.add_argument(
+    "--variables",
+    help="Variables to optimize over",
+    type=str,
+    nargs="+",
+    choices=[v for v in optimization_variables.keys()],
+)
 
 args = parser.parse_args()
 
@@ -318,5 +355,6 @@ optimizer = Optimizer(
     time_for_quality=args.time_quality_tradeoff,
     benchmarks=args.benchmarks,
     nb_runs=args.nb_runs,
-    ignore_macros=args.ignore_macros)
+    ignore_macros=args.ignore_macros,
+)
 optimizer.run(time_limit=args.time_limit)
