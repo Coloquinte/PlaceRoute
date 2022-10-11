@@ -58,11 +58,17 @@ if($inname =~ /\.gz$/) {
 elsif($inname =~ /\.bz2$/) {
     $inname = "bzip2 -dc $inname |";
 }
+elsif($inname =~ /\.xz$/) {
+    $inname = "xz -dc $inname |";
+}
 if($routename =~ /\.gz$/) {
     $routename = "gzip -dc $routename |";
 }
 elsif($routename =~ /\.bz2$/) {
     $routename = "bzip2 -dc $routename |";
+}
+elsif($routename =~ /\.xz$/) {
+    $routename = "xz -dc $routename |";
 }
 
 ###############################################################################
