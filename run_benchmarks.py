@@ -298,18 +298,30 @@ class Optimizer:
             optimization_variables[name].define(model) for name in self.variable_names
         ]
 
+    def load_results(self):
+        import pickle
+        pkl_path = "results.pkl"
+        if os.path.exists(pkl_path):
+            with open(pkl_path, 'rb') as f:
+                return pickle.load(f)
+        return []
+
     def save_result(self, params_dict, metrics):
+        import pickle
         import pandas as pd
         results = dict(params_dict)
         results.update(metrics)
-        df = pd.DataFrame([results], index=[0])
-        csv_path = "results.csv"
+        results = [results]
         pkl_path = "results.pkl"
+        csv_path = "results.csv"
         if os.path.exists(pkl_path):
-            old_df = pd.read_pickle(pkl_path)
-            df = pd.concat([old_df, df], ignore_index=True).drop_duplicates()
-        df.to_pickle(pkl_path)
-        df.to_csv(csv_path, index=False)
+            with open(pkl_path, 'rb') as f:
+                old_results = pickle.load(f)
+            assert isinstance(old_results, list)
+            results.extend(old_results)
+        with open(pkl_path, 'wb') as f:
+            pickle.dump(results, f)
+        pd.DataFrame(results).to_csv(csv_path, index=False)
 
     def run(self, time_limit=None):
         import localsolver
