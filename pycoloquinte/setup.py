@@ -169,7 +169,7 @@ with open('../README.md') as f:
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="coloquinte",
-    version="0.1.0",
+    version="0.2.0",
     author="Gabriel Gouvine",
     author_email="gabriel.gouvine_git@m4x.org",
     url="https://github.com/Coloquinte/PlaceRoute",
