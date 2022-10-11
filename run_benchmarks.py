@@ -260,6 +260,7 @@ class Optimizer:
                 params["global.seed"] = seed
                 params["detailed.seed"] = seed
                 cur = evaluate_benchmark(params)
+                self.save_result(params, cur)
                 for k, v in cur.items():
                     if k in metrics:
                         metrics[k].append(v)
@@ -296,6 +297,19 @@ class Optimizer:
         return [
             optimization_variables[name].define(model) for name in self.variable_names
         ]
+
+    def save_result(self, params_dict, metrics):
+        import pandas as pd
+        results = dict(params_dict)
+        results.update(metrics)
+        df = pd.DataFrame([results], index=[0])
+        csv_path = "results.csv"
+        pkl_path = "results.pkl"
+        if os.path.exists(pkl_path):
+            old_df = pd.read_pickle(pkl_path)
+            df = pd.concat([old_df, df], ignore_index=True).drop_duplicates()
+        df.to_pickle(pkl_path)
+        df.to_csv(csv_path, index=False)
 
     def run(self, time_limit=None):
         import localsolver
