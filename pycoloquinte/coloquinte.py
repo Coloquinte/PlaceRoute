@@ -286,6 +286,160 @@ def _read_rows(filename):
         return rows
 
 
+def _read_routing_numbers(lines, prefix):
+    for l in lines:
+        if l.startswith(prefix):
+            d = l[len(prefix):].split()
+            return [int(a) for a in d]
+    raise RuntimeError(f"Line <{prefix}> not found")
+
+
+class GlobalRoutingProblem:
+    @staticmethod
+    def read_ispd(filename):
+        with _open_file(filename) as f:
+            lines = [l.strip() for l in f]
+            lines = [l for l in lines if len(l) != 0]
+            width, height, nb_layers = _read_routing_numbers(lines, "grid")
+            vertical_capacity = _read_routing_numbers(
+                lines, "vertical capacity")
+            horizontal_capacity = _read_routing_numbers(
+                lines, "horizontal capacity")
+            minimum_width = _read_routing_numbers(lines, "minimum width")
+            minimum_spacing = _read_routing_numbers(lines, "minimum spacing")
+            via_spacing = _read_routing_numbers(lines, "via spacing")
+            assert len(vertical_capacity) == nb_layers
+            assert len(horizontal_capacity) == nb_layers
+            assert all(w == 1 for w in minimum_width)
+            assert all(w == 1 for w in minimum_spacing)
+            assert all(w == 1 for w in via_spacing)
+            lower_x, lower_y, tile_width, tile_height = [
+                int(a) for a in lines[6].split()]
+            nb_nets, = _read_routing_numbers(lines, "num net")
+            nets = []
+            line_no = 8
+            for i in range(nb_nets):
+                name, _, nb_pins, min_width = lines[line_no].split()
+                assert int(
+                    min_width) == 1, f"Net {name} has non-unit width {int(min_width)}"
+                nb_pins = int(nb_pins)
+                pins = []
+                for j in range(line_no + 1, line_no + nb_pins + 1):
+                    x, y, layer = [int(a) for a in lines[j].split()]
+                    pins.append((x, y, layer))
+                nets.append((name, pins))
+                line_no += nb_pins + 1
+            nb_adjustments = int(lines[line_no])
+            adjustments = []
+            for i in range(line_no + 1, line_no + 1 + nb_adjustments):
+                adjustments.append([int(a) for a in lines[i].split()])
+
+        ret = GlobalRoutingProblem()
+        ret._width = width
+        ret._height = height
+        ret._nb_layers = nb_layers
+        ret._net_name = [n[0] for n in nets]
+        ret._net_pins = []
+
+        # Compute pin positions in the grid
+        for name, pins in nets:
+            actual_pins = []
+            for x, y, layer in pins:
+                actual_x = (x - lower_x) // tile_width
+                actual_y = (y - lower_y) // tile_height
+                actual_pins.append((actual_x, actual_y, layer - 1))
+            ret._net_pins.append(actual_pins)
+
+        # Setup default capacities
+        ret._x_capacities = []
+        for l in range(nb_layers):
+            capa = horizontal_capacity[l]
+            ret._x_capacities.append(
+                [[capa for i in range(width - 1)] for j in range(height)])
+        ret._y_capacities = []
+        for l in range(nb_layers):
+            capa = vertical_capacity[l]
+            ret._y_capacities.append(
+                [[capa for i in range(height - 1)] for j in range(width)])
+
+        # Take capacity adjustments into account
+        for col1, row1, l1, col2, row2, l2, capa in adjustments:
+            assert l1 == l2
+            assert 0 <= l1 < nb_layers
+            if col1 != col2:
+                assert abs(col1 - col2) <= 1
+                assert row1 == row2
+                assert 0 <= row1 < height, f"Invalid row {row1} >= {height}"
+                assert 0 <= col1 < width - \
+                    1, f"Invalid column {col1} >= {width} - 1"
+                ret._x_capacities[l1-1][row1][min(col1, col2)] = capa
+            if row1 != row2:
+                assert abs(row1 - row2) <= 1
+                assert col1 == col2
+                assert 0 <= col1 < width, f"Invalid column {col1} >= {width}"
+                assert 0 <= row1 < height - \
+                    1, f"Invalid row {row1} >= {height} - 1"
+                ret._y_capacities[l1-1][col1][min(row1, row2)] = capa
+
+        # Update capacity to reflect the benchmarks' minimum width and spacing (1 + 1)
+        for l in range(nb_layers):
+            for i in range(height):
+                for j in range(width-1):
+                    ret._x_capacities[l][i][j] //= 2
+        for l in range(nb_layers):
+            for i in range(width):
+                for j in range(height-1):
+                    ret._y_capacities[l][i][j] //= 2
+        return ret
+
+    @property
+    def width(self):
+        return self._width
+
+    @property
+    def height(self):
+        return self._height
+
+    @property
+    def nb_layers(self):
+        return self._nb_layers
+
+    @property
+    def nb_nets(self):
+        return len(self._net_pins)
+
+    @property
+    def nb_pins(self):
+        ret = 0
+        for n in self._net_pins:
+            ret += len(n)
+        return ret
+
+    def check(self):
+        assert len(self._x_capacities) == self.nb_layers
+        assert len(self._y_capacities) == self.nb_layers
+        for c in self._x_capacities:
+            assert len(c) == self.height
+            for cl in c:
+                assert len(cl) == self.width - 1
+        for c in self._y_capacities:
+            assert len(c) == self.width
+            for cl in c:
+                assert len(cl) == self.height - 1
+        assert len(self._net_name) == len(self._net_pins)
+        for net in self._net_pins:
+            for x, y, l in net:
+                assert 0 <= x < self.width
+                assert 0 <= y < self.height
+                assert 0 <= l < self.nb_layers
+
+    def __str__(self):
+        return (
+            f"Routing problem: {self.nb_nets} nets, {self.nb_pins} pins, "
+            f"{self.width}x{self.height} grid, {self.nb_layers} layers"
+        )
+
+
 class Circuit(coloquinte_pybind.Circuit):
     def __init__(self, nb_cells):
         super(Circuit, self).__init__(nb_cells)
