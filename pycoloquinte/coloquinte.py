@@ -380,7 +380,7 @@ def _add_arguments(parser, obj, prefix):
     for name in obj.__dir__():
         if name.startswith("_"):
             continue
-        if name == "check":
+        if name in ["check", "seed"]:
             continue
         arg_type = type(getattr(obj, name))
         if arg_type in (int, float):
@@ -399,7 +399,7 @@ def _parse_arguments(args, obj, prefix):
     for name in obj.__dir__():
         if name.startswith("_"):
             continue
-        if name == "check":
+        if name in ["check", "seed"]:
             continue
         val = getattr(args, prefix + "." + name)
         if val is not None:
@@ -420,7 +420,7 @@ def _show_params(obj, prefix):
     for name in obj.__dir__():
         if name.startswith("_"):
             continue
-        if name == "check":
+        if name in ["check", "seed"]:
             continue
         default_val = getattr(obj, name)
         arg_type = type(default_val)
