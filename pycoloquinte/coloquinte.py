@@ -17,7 +17,7 @@ from coloquinte_pybind import (
     NetModel,
     Rectangle,
     GlobalRoutingPin,
-    GlobalRoutingSegment,
+    GlobalRouterParameters,
 )
 
 
@@ -519,15 +519,7 @@ def _show_params(obj, prefix):
         print(f"\t--{prefix}.{name}: {default_val}")
 
 
-def main():
-    """
-    Run the whole placement algorithm from the command line
-    """
-    import argparse
-
-    parser = argparse.ArgumentParser(
-        description="Place a benchmark circuit from the command line"
-    )
+def _make_placement_arguments(parser):
     parser.add_argument("instance", help="Benchmark instance")
     parser.add_argument("--effort", help="Placement effort",
                         type=int, default=3)
@@ -562,8 +554,25 @@ def main():
     detailed_group = parser.add_argument_group("Detailed placement parameters")
     _add_arguments(global_group, GlobalPlacerParameters(), "global")
     _add_arguments(detailed_group, DetailedPlacerParameters(), "detailed")
-    args = parser.parse_args()
+    parser.set_defaults(func=_place)
 
+
+def _make_routing_arguments(parser):
+    parser.add_argument("instance", help="Benchmark instance")
+    parser.add_argument("--effort", help="Placement effort",
+                        type=int, default=3)
+    parser.add_argument("--seed", help="Random seed", type=int, default=-1)
+    params_group = parser.add_argument_group("Global routing parameters")
+
+    parser.add_argument(
+        "--show-parameters", help="Show parameter values", action="store_true"
+    )
+
+    _add_arguments(params_group, GlobalRouterParameters(), "route")
+    parser.set_defaults(func=_route)
+
+
+def _place(args):
     global_params = GlobalPlacerParameters(args.effort, args.seed)
     _parse_arguments(args, global_params, "global")
     global_params.check()
@@ -601,15 +610,48 @@ def main():
     circuit.write_placement(args.save_solution)
 
 
+def _route(args):
+    params = GlobalRouterParameters(args.effort, args.seed)
+    _parse_arguments(args, params, "route")
+    params.check()
+
+    if args.show_parameters:
+        print("Parameter values:")
+        _show_params(params, "route")
+
+    pb = GlobalRoutingProblem.read_ispd(args.instance)
+    pb.route(params)
+
+
+def main():
+    """
+    Run the whole placement algorithm from the command line
+    """
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Run Coloquinte on placement and routing benchmarks"
+    )
+    subparsers = parser.add_subparsers()
+    _make_placement_arguments(subparsers.add_parser("place"))
+    _make_routing_arguments(subparsers.add_parser("route"))
+    args = parser.parse_args()
+    args.func(args)
+
+
 __all__ = [
     "Circuit",
     "GlobalPlacerParameters",
     "DetailedPlacerParameters",
+    "GlobalRouterParameters",
     "Rectangle",
     "LegalizationModel",
     "NetModel",
     "CellOrientation",
     "main",
+    "GlobalRoutingProblem",
+    "GlobalRoutingPin",
+    "GlobalRoutingSegment",
 ]
 
 if __name__ == "__main__":
