@@ -595,6 +595,140 @@ class Circuit {
   std::vector<Rectangle> rows_;
 };
 
+struct GlobalRoutingPin {
+  int x;
+  int y;
+  int z;
+
+  GlobalRoutingPin(int x, int y, int z) : x(x), y(y), z(z) {}
+};
+
+struct GlobalRoutingSegment {
+  GlobalRoutingPin a;
+  GlobalRoutingPin b;
+
+  GlobalRoutingSegment(GlobalRoutingPin a, GlobalRoutingPin b) : a(a), b(b) {}
+  bool isHorizontal() const;
+  bool isVertical() const;
+  bool isVia() const;
+  int length() const;
+};
+
+/**
+ * @brief Representation of a global routing problem, from ISPD benchmarks
+ */
+class GlobalRoutingProblem {
+ public:
+  /**
+   * @brief Initialize the datastructure
+   */
+  GlobalRoutingProblem(int width, int height, int nbLayers);
+
+  /**
+   * @brief Return the width of the routing grid
+   */
+  int width() const { return width_; }
+
+  /**
+   * @brief Return the height of the routing grid
+   */
+  int height() const { return height_; }
+
+  /**
+   * @brief Return the number of layers of the routing grid
+   */
+  int nbLayers() const { return nbLayers_; }
+
+  /**
+   * @brief Return the number of nets to be routed
+   */
+  int nbNets() const { return nets_.size(); }
+
+  /**
+   * @brief Return the total number of pins
+   */
+  int nbPins() const;
+
+  /**
+   * @brief Set the horizontal capacity for a whole layer
+   */
+  void setHorizontalCapacity(int layer, int capa);
+
+  /**
+   * @brief Set the vertical capacity for a whole layer
+   */
+  void setVerticalCapacity(int layer, int capa);
+
+  /**
+   * @brief Set the via capacity globally
+   */
+  void setViaCapacity(int capa);
+
+  /**
+   * @brief Return the routing capacity between two positions;
+   * error if they are not adjacent
+   */
+  int capacity(GlobalRoutingPin p1, GlobalRoutingPin p2) const;
+
+  /**
+   * @brief Set the routing capacity between two positions;
+   * error if they are not adjacent
+   */
+  void setCapacity(GlobalRoutingPin p1, GlobalRoutingPin p2, int capa);
+
+  /**
+   * @brief Get the pins of a net
+   */
+  const std::vector<GlobalRoutingPin> pins(int net) const { return nets_[net]; }
+
+  /**
+   * @brief Get the routing of a net
+   */
+  const std::vector<GlobalRoutingSegment> routing(int net) const {
+    return routing_[net];
+  }
+
+  /**
+   * @brief Add a new net from its pins
+   */
+  void addNet(const std::vector<GlobalRoutingPin> &pins) {
+    nets_.push_back(pins);
+  }
+
+  /**
+   * @brief Instantiate the routing for a net
+   */
+  void setRouting(int net, const std::vector<GlobalRoutingSegment> &routing) {
+    routing_[net] = routing;
+  }
+
+  /**
+   * @brief Obtain a string representation
+   */
+  std::string toString() const;
+
+  /**
+   * @brief Consistency checking
+   */
+  void check() const;
+
+ private:
+  void check(GlobalRoutingPin p) const;
+
+ private:
+  int width_;
+  int height_;
+  int nbLayers_;
+
+  std::vector<std::vector<GlobalRoutingPin> > nets_;
+  std::vector<std::vector<GlobalRoutingSegment> > routing_;
+
+  // These are all of order W x H x L for simplicity
+  std::vector<std::vector<std::vector<int> > > horizontalCapa_;
+  std::vector<std::vector<std::vector<int> > > verticalCapa_;
+  std::vector<std::vector<std::vector<int> > > viaCapa_;
+};
+
 extern "C" {
 /**
  * @brief Ugly interface to easily call Coloquinte from external code

@@ -400,6 +400,162 @@ void Circuit::placeDetailed(const DetailedPlacerParameters &params) {
   DetailedPlacer::place(*this, params);
 }
 
+bool GlobalRoutingSegment::isHorizontal() const {
+  return a.y == b.y && a.z == b.z;
+}
+
+bool GlobalRoutingSegment::isVertical() const {
+  return a.x == b.x && a.z == b.z;
+}
+
+bool GlobalRoutingSegment::isVia() const { return a.x == b.x && a.y == b.y; }
+
+int GlobalRoutingSegment::length() const {
+  return std::abs(a.x - b.x) + std::abs(a.y - b.y) + std::abs(a.z - b.z);
+}
+
+int GlobalRoutingProblem::nbPins() const {
+  int ret = 0;
+  for (int i = 0; i < nbNets(); ++i) {
+    ret += pins(i).size();
+  }
+  return ret;
+}
+
+void GlobalRoutingProblem::setHorizontalCapacity(int layer, int capa) {
+  assert(layer < nbLayers());
+  for (int i = 0; i + 1 < width(); ++i) {
+    for (int j = 0; j < height(); ++j) {
+      horizontalCapa_[i][j][layer] = capa;
+    }
+  }
+}
+
+void GlobalRoutingProblem::setVerticalCapacity(int layer, int capa) {
+  assert(layer < nbLayers());
+  for (int i = 0; i < width(); ++i) {
+    for (int j = 0; j + 1 < height(); ++j) {
+      verticalCapa_[i][j][layer] = capa;
+    }
+  }
+}
+
+void GlobalRoutingProblem::setViaCapacity(int capa) {
+  for (int i = 0; i < width(); ++i) {
+    for (int j = 0; j < height(); ++j) {
+      for (int l = 0; l + 1 < nbLayers(); ++l) {
+        viaCapa_[i][j][l] = capa;
+      }
+    }
+  }
+}
+
+int GlobalRoutingProblem::capacity(GlobalRoutingPin p1,
+                                   GlobalRoutingPin p2) const {
+  GlobalRoutingSegment seg(p1, p2);
+  if (seg.length() != 1) {
+    throw std::runtime_error(
+        "Cannot access routing capacity on non-adjacent locations");
+  }
+  if (seg.isHorizontal()) {
+    return horizontalCapa_[std::min(p1.x, p2.x)][p1.y][p1.z];
+  }
+  if (seg.isVertical()) {
+    return verticalCapa_[p1.x][std::min(p1.y, p2.y)][p1.z];
+  }
+  if (seg.isVia()) {
+    return viaCapa_[p1.x][p1.y][std::min(p1.z, p2.z)];
+  }
+  throw std::runtime_error("Invalid routing segment");
+}
+
+void GlobalRoutingProblem::setCapacity(GlobalRoutingPin p1, GlobalRoutingPin p2,
+                                       int capa) {
+  GlobalRoutingSegment seg(p1, p2);
+  if (seg.length() != 1) {
+    throw std::runtime_error(
+        "Cannot access routing capacity on non-adjacent locations");
+  }
+  if (seg.isHorizontal()) {
+    horizontalCapa_[std::min(p1.x, p2.x)][p1.y][p1.z] = capa;
+  }
+  if (seg.isVertical()) {
+    verticalCapa_[p1.x][std::min(p1.y, p2.y)][p1.z] = capa;
+  }
+  if (seg.isVia()) {
+    viaCapa_[p1.x][p1.y][std::min(p1.z, p2.z)] = capa;
+  }
+  throw std::runtime_error("Invalid routing segment");
+}
+
+GlobalRoutingProblem::GlobalRoutingProblem(int width, int height, int nbLayers)
+    : width_(width), height_(height), nbLayers_(nbLayers) {
+  horizontalCapa_.assign(
+      width_ - 1,
+      std::vector<std::vector<int> >(height_, std::vector<int>(nbLayers_, 0)));
+  verticalCapa_.assign(
+      width_, std::vector<std::vector<int> >(height_ - 1,
+                                             std::vector<int>(nbLayers_, 0)));
+  viaCapa_.assign(width_, std::vector<std::vector<int> >(
+                              height_, std::vector<int>(nbLayers_ - 1, 0)));
+}
+
+std::string GlobalRoutingProblem::toString() const {
+  std::stringstream ss;
+  ss << "Routing problem with " << nbNets() << " nets, " << nbPins()
+     << " pins on " << width() << "x" << height() << " grid with " << nbLayers()
+     << " layers";
+  return ss.str();
+}
+
+void GlobalRoutingProblem::check() const {
+  assert(horizontalCapa_.size() == width() - 1);
+  for (auto &c1 : horizontalCapa_) {
+    assert(c1.size() == height());
+    for (auto &c2 : c1) {
+      assert(c2.size() == nbLayers());
+    }
+  }
+  assert(verticalCapa_.size() == width());
+  for (auto &c1 : verticalCapa_) {
+    assert(c1.size() == height() - 1);
+    for (auto &c2 : c1) {
+      assert(c2.size() == nbLayers());
+    }
+  }
+  assert(viaCapa_.size() == width());
+  for (auto &c1 : viaCapa_) {
+    assert(c1.size() == height());
+    for (auto &c2 : c1) {
+      assert(c2.size() == nbLayers() - 1);
+    }
+  }
+  assert(routing_.size() == nets_.size());
+  for (auto &ps : nets_) {
+    for (auto p : ps) {
+      check(p);
+    }
+  }
+  for (auto &segs : routing_) {
+    for (auto seg : segs) {
+      check(seg.a);
+      check(seg.b);
+    }
+  }
+}
+
+void GlobalRoutingProblem::check(GlobalRoutingPin p) const {
+  if (p.x < 0 || p.x > width()) {
+    throw std::runtime_error("Pin X out of bound");
+  }
+  if (p.y < 0 || p.y > height()) {
+    throw std::runtime_error("Pin Y out of bound");
+  }
+  if (p.z < 0 || p.z > nbLayers()) {
+    throw std::runtime_error("Pin Z out of bound");
+  }
+}
+
 extern "C" {
 int place_ispd(int nb_cells, int nb_nets, int *cell_widths, int *cell_heights,
                char *cell_fixed, int *net_limits, int *pin_cells,
