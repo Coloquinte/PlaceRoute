@@ -286,51 +286,6 @@ def _read_rows(filename):
         return rows
 
 
-def _rows_to_area(rows):
-    min_x = [row[0] for row in rows]
-    min_y = [row[1] for row in rows]
-    max_x = [row[2] for row in rows]
-    max_y = [row[3] for row in rows]
-
-    # Various checks, since our placement is simplified
-
-    # All rows have same min x, otherwise we take the min
-    min_x = list(sorted(set(min_x)))
-    if len(min_x) != 1:
-        print(
-            f"Only one row origin is supported, got {', '.join([str(i) for i in min_x])}"
-        )
-
-    # All rows have same max x, otherwise we take the min
-    max_x = list(sorted(set(max_x)))
-    if len(max_x) != 1:
-        print(
-            f"Only one row end is supported, got {', '.join([str(i) for i in max_x])}"
-        )
-
-    # Rows are contiguous
-    row_y = [p for p in zip(min_y, max_y)]
-    row_y.sort()
-    for i in range(len(row_y) - 1):
-        y_b = row_y[i + 1][0]
-        y_e = row_y[i][1]
-        if y_b != y_e:
-            print(f"Hole between rows at coordinates {y_b} and {y_e}")
-
-    return (min(min_x), min(max_x), min(min_y), max(max_y))
-
-
-def _rows_to_height(rows):
-    heights = [row[3] - row[1] for row in rows]
-    # All rows have same height
-    heights = list(sorted(set(heights)))
-    if len(set(heights)) != 1:
-        raise RuntimeError(
-            f"Only one row height is supported, got {', '.join([str(i) for i in heights])}"
-        )
-    return heights[0]
-
-
 class Circuit(coloquinte_pybind.Circuit):
     def __init__(self, nb_cells):
         super(Circuit, self).__init__(nb_cells)
@@ -484,7 +439,8 @@ def main():
         description="Place a benchmark circuit from the command line"
     )
     parser.add_argument("instance", help="Benchmark instance")
-    parser.add_argument("--effort", help="Placement effort", type=int, default=3)
+    parser.add_argument("--effort", help="Placement effort",
+                        type=int, default=3)
     parser.add_argument("--seed", help="Random seed", type=int, default=-1)
     parser.add_argument(
         "--ignore-macros",
@@ -495,12 +451,14 @@ def main():
     parser.add_argument(
         "--load-solution", help="Load initial placement", metavar="FILE"
     )
-    parser.add_argument("--save-solution", help="Save final placement", metavar="FILE")
+    parser.add_argument("--save-solution",
+                        help="Save final placement", metavar="FILE")
     parser.add_argument(
         "--show-parameters", help="Show parameter values", action="store_true"
     )
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("--no-global", help="Skip global placement", action="store_true")
+    group.add_argument(
+        "--no-global", help="Skip global placement", action="store_true")
     group.add_argument(
         "--only-global",
         help="Run only global placement (no legalization)",

@@ -551,9 +551,7 @@ class Circuit {
   /**
    * @brief Run the legalization algorithm
    */
-  void legalize(int effort) {
-    legalize(DetailedPlacerParameters(effort));
-  }
+  void legalize(int effort) { legalize(DetailedPlacerParameters(effort)); }
 
   /**
    * @brief Run the legalization algorithm
