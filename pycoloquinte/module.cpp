@@ -146,6 +146,8 @@ Construct a circuit.
                     "Obstruction status flag of the cells")
       .def_property("cell_orientation", &Circuit::cellOrientation,
                     &Circuit::setCellOrientation, "Orientation of the cells")
+      .def_property_readonly("cell_placement", &Circuit::cellPlacement,
+                             "Place occupied by the cells")
       .def_property("rows", &Circuit::rows, &Circuit::setRows,
                     "Standard cell rows")
       .def("add_net", &Circuit::addNet, "Add a net to the circuit")

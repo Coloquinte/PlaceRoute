@@ -465,6 +465,14 @@ class Circuit {
                      y(cell) + placedHeight(cell));
   }
 
+  std::vector<Rectangle> cellPlacement() const {
+    std::vector<Rectangle> ret;
+    for (int i = 0; i < nbCells(); ++i) {
+      ret.push_back(placement(i));
+    }
+    return ret;
+  }
+
   /**
    * @brief Return the current orientation of the cell
    */
