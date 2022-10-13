@@ -197,4 +197,56 @@ Construct a circuit.
       .def("check", &Circuit::check, "Check the datastructure")
       .def("__str__", &Circuit::toString)
       .def("__repr__", &Circuit::toString);
+
+  py::class_<GlobalRoutingPin>(m, "GlobalRoutingPin")
+      .def(py::init<int, int, int>(), R"pbdoc(
+        Construct a routing pin
+)pbdoc",
+           py::arg("x"), py::arg("y"), py::arg("z"))
+      .def_readwrite("x", &GlobalRoutingPin::x)
+      .def_readwrite("y", &GlobalRoutingPin::y)
+      .def_readwrite("z", &GlobalRoutingPin::z);
+
+  py::class_<GlobalRoutingSegment>(m, "GlobalRoutingSegment")
+      .def(py::init<GlobalRoutingPin, GlobalRoutingPin>(), R"pbdoc(
+        Construct a routing segment
+)pbdoc",
+           py::arg("a"), py::arg("b"))
+      .def_property_readonly("is_horizontal",
+                             &GlobalRoutingSegment::isHorizontal)
+      .def_property_readonly("is_vertical", &GlobalRoutingSegment::isVertical)
+      .def_property_readonly("is_via", &GlobalRoutingSegment::isVia)
+      .def_property_readonly("length", &GlobalRoutingSegment::length)
+      .def_readwrite("a", &GlobalRoutingSegment::a)
+      .def_readwrite("b", &GlobalRoutingSegment::b);
+
+  py::class_<GlobalRoutingProblem>(m, "GlobalRoutingProblem")
+      .def(py::init<int, int, int>(), R"pbdoc(
+        Initialize a routing problem
+)pbdoc",
+           py::arg("width"), py::arg("height"), py::arg("nb_layers"))
+      .def_property_readonly("width", &GlobalRoutingProblem::width,
+                             "Width of the grid")
+      .def_property_readonly("height", &GlobalRoutingProblem::height,
+                             "Height of the grid")
+      .def_property_readonly("nb_layers", &GlobalRoutingProblem::nbLayers,
+                             "Number of layers of the grid")
+      .def("set_horizontal_capacity",
+           &GlobalRoutingProblem::setHorizontalCapacity,
+           "Set the horizontal capacity for a whole layer")
+      .def("set_vertical_capacity", &GlobalRoutingProblem::setVerticalCapacity,
+           "Set the vertical capacity for a whole layer")
+      .def("set_via_capacity", &GlobalRoutingProblem::setViaCapacity,
+           "Set the via capacity globally")
+      .def("get_capacity", &GlobalRoutingProblem::capacity,
+           "Get the capacity between neighbours")
+      .def("set_capacity", &GlobalRoutingProblem::setCapacity,
+           "Set the capacity between neighbours")
+      .def("add_net", &GlobalRoutingProblem::addNet, "Add a net to the problem")
+      .def("get_pins", &GlobalRoutingProblem::pins, "Get the pins of a net")
+      .def("get_routing", &GlobalRoutingProblem::routing,
+           "Get the routing of a net")
+      .def("check", &GlobalRoutingProblem::check, "Check the datastructure")
+      .def("__str__", &GlobalRoutingProblem::toString)
+      .def("__repr__", &GlobalRoutingProblem::toString);
 }

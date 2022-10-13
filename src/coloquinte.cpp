@@ -450,8 +450,33 @@ void GlobalRoutingProblem::setViaCapacity(int capa) {
   }
 }
 
+int GlobalRoutingProblem::addNet(const std::vector<GlobalRoutingPin> &pins) {
+  int ret = nbNets();
+  nets_.push_back(pins);
+  routing_.emplace_back();
+  return ret;
+}
+
+void GlobalRoutingProblem::setRouting(
+    int net, const std::vector<GlobalRoutingSegment> &routing) {
+  for (const GlobalRoutingSegment &seg : routing) {
+    checkPin(seg.a);
+    checkPin(seg.b);
+    if (seg.length() == 0) {
+      throw std::runtime_error("Routing should have no zero-length segment");
+    }
+    if (!seg.isHorizontal() && !seg.isVertical() && !seg.isVia()) {
+      throw std::runtime_error(
+          "Routing segments should follow coordinate axes");
+    }
+  }
+  routing_[net] = routing;
+}
+
 int GlobalRoutingProblem::capacity(GlobalRoutingPin p1,
                                    GlobalRoutingPin p2) const {
+  checkPin(p1);
+  checkPin(p2);
   GlobalRoutingSegment seg(p1, p2);
   if (seg.length() != 1) {
     throw std::runtime_error(
@@ -471,6 +496,8 @@ int GlobalRoutingProblem::capacity(GlobalRoutingPin p1,
 
 void GlobalRoutingProblem::setCapacity(GlobalRoutingPin p1, GlobalRoutingPin p2,
                                        int capa) {
+  checkPin(p1);
+  checkPin(p2);
   GlobalRoutingSegment seg(p1, p2);
   if (seg.length() != 1) {
     throw std::runtime_error(
@@ -478,26 +505,31 @@ void GlobalRoutingProblem::setCapacity(GlobalRoutingPin p1, GlobalRoutingPin p2,
   }
   if (seg.isHorizontal()) {
     horizontalCapa_[std::min(p1.x, p2.x)][p1.y][p1.z] = capa;
+    return;
   }
   if (seg.isVertical()) {
     verticalCapa_[p1.x][std::min(p1.y, p2.y)][p1.z] = capa;
+    return;
   }
   if (seg.isVia()) {
     viaCapa_[p1.x][p1.y][std::min(p1.z, p2.z)] = capa;
+    return;
   }
   throw std::runtime_error("Invalid routing segment");
 }
 
+namespace {
+std::vector<std::vector<std::vector<int> > > makeGrid(int w, int h, int d) {
+  return std::vector<std::vector<std::vector<int> > >(
+      w, std::vector<std::vector<int> >(h, std::vector<int>(d, 0)));
+}
+}  // namespace
+
 GlobalRoutingProblem::GlobalRoutingProblem(int width, int height, int nbLayers)
     : width_(width), height_(height), nbLayers_(nbLayers) {
-  horizontalCapa_.assign(
-      width_ - 1,
-      std::vector<std::vector<int> >(height_, std::vector<int>(nbLayers_, 0)));
-  verticalCapa_.assign(
-      width_, std::vector<std::vector<int> >(height_ - 1,
-                                             std::vector<int>(nbLayers_, 0)));
-  viaCapa_.assign(width_, std::vector<std::vector<int> >(
-                              height_, std::vector<int>(nbLayers_ - 1, 0)));
+  horizontalCapa_ = makeGrid(width_ - 1, height_, nbLayers_);
+  verticalCapa_ = makeGrid(width_, height_ - 1, nbLayers_);
+  viaCapa_ = makeGrid(width_, height_, nbLayers_ - 1);
 }
 
 std::string GlobalRoutingProblem::toString() const {
@@ -533,18 +565,18 @@ void GlobalRoutingProblem::check() const {
   assert(routing_.size() == nets_.size());
   for (auto &ps : nets_) {
     for (auto p : ps) {
-      check(p);
+      checkPin(p);
     }
   }
   for (auto &segs : routing_) {
     for (auto seg : segs) {
-      check(seg.a);
-      check(seg.b);
+      checkPin(seg.a);
+      checkPin(seg.b);
     }
   }
 }
 
-void GlobalRoutingProblem::check(GlobalRoutingPin p) const {
+void GlobalRoutingProblem::checkPin(GlobalRoutingPin p) const {
   if (p.x < 0 || p.x > width()) {
     throw std::runtime_error("Pin X out of bound");
   }

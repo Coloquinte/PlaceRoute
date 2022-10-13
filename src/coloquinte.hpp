@@ -691,16 +691,12 @@ class GlobalRoutingProblem {
   /**
    * @brief Add a new net from its pins
    */
-  void addNet(const std::vector<GlobalRoutingPin> &pins) {
-    nets_.push_back(pins);
-  }
+  int addNet(const std::vector<GlobalRoutingPin> &pins);
 
   /**
    * @brief Instantiate the routing for a net
    */
-  void setRouting(int net, const std::vector<GlobalRoutingSegment> &routing) {
-    routing_[net] = routing;
-  }
+  void setRouting(int net, const std::vector<GlobalRoutingSegment> &routing);
 
   /**
    * @brief Obtain a string representation
@@ -713,7 +709,7 @@ class GlobalRoutingProblem {
   void check() const;
 
  private:
-  void check(GlobalRoutingPin p) const;
+  void checkPin(GlobalRoutingPin p) const;
 
  private:
   int width_;
