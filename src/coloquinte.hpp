@@ -293,6 +293,39 @@ struct DetailedPlacerParameters {
 };
 
 /**
+ * @brief Parameters for the global router
+ */
+struct GlobalRouterParameters {
+  /**
+   * @brief Maximum number of global routing steps
+   */
+  int maxNbSteps;
+
+  /**
+   * @brief Random seed
+   */
+  int seed;
+
+  /**
+   * @brief Initialize the parameters with sensible defaults
+   *
+   * @param effort Routing effort between 1 and 9
+   * @param seed Random seed
+   */
+  explicit GlobalRouterParameters(int effort = 3, int seed = -1);
+
+  /**
+   * @brief Obtain a string representation
+   */
+  std::string toString() const;
+
+  /**
+   * @brief Check that the parameters make sense
+   */
+  void check() const {}
+};
+
+/**
  * @brief Flat representation of a circuit
  */
 class Circuit {
@@ -697,6 +730,16 @@ class GlobalRoutingProblem {
    * @brief Instantiate the routing for a net
    */
   void setRouting(int net, const std::vector<GlobalRoutingSegment> &routing);
+
+  /**
+   * @brief Run the global routing algorithm
+   */
+  void route(int effort) { route(GlobalRouterParameters(effort)); }
+
+  /**
+   * @brief Run the global routing algorithm
+   */
+  void route(const GlobalRouterParameters &params);
 
   /**
    * @brief Obtain a string representation

@@ -144,6 +144,26 @@ std::string DetailedPlacerParameters::toString() const {
   return ss.str();
 }
 
+GlobalRouterParameters::GlobalRouterParameters(int effort, int seed)
+    : seed(seed) {
+  if (effort < 1 || effort > 9) {
+    throw std::runtime_error("Placement effort must be between 1 and 9");
+  }
+  maxNbSteps = 200;
+  check();
+}
+
+std::string GlobalRouterParameters::toString() const {
+  std::stringstream ss;
+  ss << "Global router params:"
+     << "\n\tMax nb steps: " << maxNbSteps;
+  if (seed != -1) {
+    ss << "\n\tSeed: " << seed;
+  }
+  ss << std::endl;
+  return ss.str();
+}
+
 Circuit::Circuit(int nbCells) {
   cellWidth_.resize(nbCells);
   cellHeight_.resize(nbCells);
@@ -530,6 +550,10 @@ GlobalRoutingProblem::GlobalRoutingProblem(int width, int height, int nbLayers)
   horizontalCapa_ = makeGrid(width_ - 1, height_, nbLayers_);
   verticalCapa_ = makeGrid(width_, height_ - 1, nbLayers_);
   viaCapa_ = makeGrid(width_, height_, nbLayers_ - 1);
+}
+
+void GlobalRoutingProblem::route(const GlobalRouterParameters &params) {
+  throw std::runtime_error("Routing not implemented yet");
 }
 
 std::string GlobalRoutingProblem::toString() const {

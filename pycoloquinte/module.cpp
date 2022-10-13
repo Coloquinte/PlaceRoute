@@ -118,6 +118,20 @@ Construct the parameters
       .def("__str__", &DetailedPlacerParameters::toString)
       .def("__repr__", &DetailedPlacerParameters::toString);
 
+  py::class_<GlobalRouterParameters>(m, "GlobalRouterParameters")
+      .def(py::init<int, int>(), R"pbdoc(
+Construct the parameters
+
+:param int effort: Effort level
+:param int seed: Random seed
+)pbdoc",
+           py::arg("effort") = 3, py::arg("seed") = -1)
+      .def_readwrite("max_nb_steps", &GlobalRouterParameters::maxNbSteps)
+      .def_readwrite("seed", &GlobalRouterParameters::seed)
+      .def("check", &GlobalRouterParameters::check)
+      .def("__str__", &GlobalRouterParameters::toString)
+      .def("__repr__", &GlobalRouterParameters::toString);
+
   py::class_<Circuit>(m, "Circuit")
       .def(py::init<int>(), R"pbdoc(
 Construct a circuit.
@@ -246,6 +260,20 @@ Construct a circuit.
       .def("get_pins", &GlobalRoutingProblem::pins, "Get the pins of a net")
       .def("get_routing", &GlobalRoutingProblem::routing,
            "Get the routing of a net")
+      .def(
+          "route",
+          [](GlobalRoutingProblem &pb, int effort) {
+            py::gil_scoped_release release;
+            pb.route(effort);
+          },
+          "Run the global routing algorithm")
+      .def(
+          "route",
+          [](GlobalRoutingProblem &pb, const GlobalRouterParameters &params) {
+            py::gil_scoped_release release;
+            pb.route(params);
+          },
+          "Run the global routing algorithm")
       .def("check", &GlobalRoutingProblem::check, "Check the datastructure")
       .def("__str__", &GlobalRoutingProblem::toString)
       .def("__repr__", &GlobalRoutingProblem::toString);
