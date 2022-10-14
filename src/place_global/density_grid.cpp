@@ -15,18 +15,15 @@ namespace coloquinte {
 DensityGrid::DensityGrid(int binSize, Rectangle area)
     : DensityGrid(binSize, std::vector<Rectangle>({area})) {}
 
-DensityGrid::DensityGrid(int binSize, const std::vector<Rectangle> &regions,
-                         const std::vector<Rectangle> &obstacles) {
+DensityGrid::DensityGrid(int binSize, const std::vector<Rectangle> &regions) {
   placementArea_ = computePlacementArea(regions);
   updateBinsToSize(binSize);
-  std::vector<Rectangle> actualRegions =
-      computeActualRegions(regions, obstacles);
-  updateBinCapacity(actualRegions);
+  updateBinCapacity(regions);
   check();
 }
 
 DensityGrid DensityGrid::fromIspdCircuit(const Circuit &circuit,
-                                         float sizeFactor) {
+                                         float sizeFactor, float sideMargin) {
   int minCellHeight = std::numeric_limits<int>::max();
   for (int i = 0; i < circuit.nbCells(); ++i) {
     int height = circuit.cellHeight_[i];
@@ -34,17 +31,18 @@ DensityGrid DensityGrid::fromIspdCircuit(const Circuit &circuit,
       minCellHeight = std::min(height, minCellHeight);
     }
   }
-  std::vector<Rectangle> obstacles;
-  for (int i = 0; i < circuit.nbCells(); ++i) {
-    if (!circuit.isFixed(i)) {
+  std::vector<Rectangle> rows = circuit.computeRows();
+  // Add a small margin on each side of each row so we leave some empty area
+  int margin = sideMargin * minCellHeight;
+  std::vector<Rectangle> clippedRows;
+  for (Rectangle row : rows) {
+    if (row.width() <= 2 * margin) {
       continue;
     }
-    if (!circuit.isObstruction(i)) {
-      continue;
-    }
-    obstacles.emplace_back(circuit.placement(i));
+    clippedRows.emplace_back(row.minX + margin, row.maxX - margin, row.minY,
+                             row.maxY);
   }
-  return DensityGrid(sizeFactor * minCellHeight, circuit.rows_, obstacles);
+  return DensityGrid(sizeFactor * minCellHeight, clippedRows);
 }
 
 DensityGrid::DensityGrid(std::vector<int> xLimits, std::vector<int> yLimits,
@@ -53,28 +51,6 @@ DensityGrid::DensityGrid(std::vector<int> xLimits, std::vector<int> yLimits,
   binLimitY_ = std::move(yLimits);
   binCapacity_ = std::move(binCapacity);
   updateBinCenters();
-}
-
-std::vector<Rectangle> DensityGrid::computeActualRegions(
-    const std::vector<Rectangle> &regions,
-    const std::vector<Rectangle> &obstacles) {
-  bpl::polygon_90_set_data<int> region_set;
-  for (Rectangle r : regions) {
-    region_set.insert(bpl::rectangle_data<int>(r.minX, r.minY, r.maxX, r.maxY));
-  }
-  for (Rectangle r : obstacles) {
-    region_set.insert(bpl::rectangle_data<int>(r.minX, r.minY, r.maxX, r.maxY),
-                      true);
-  }
-  std::vector<bpl::rectangle_data<int> > diff;
-  bpl::get_rectangles(diff, region_set);
-  std::vector<Rectangle> ret;
-  ret.reserve(diff.size());
-
-  for (const auto &r : diff) {
-    ret.emplace_back(bpl::xl(r), bpl::xh(r), bpl::yl(r), bpl::yh(r));
-  }
-  return ret;
 }
 
 void DensityGrid::updateBinCenters() {
@@ -226,8 +202,9 @@ Rectangle DensityGrid::computePlacementArea(
 }
 
 HierarchicalDensityPlacement HierarchicalDensityPlacement::fromIspdCircuit(
-    const Circuit &circuit, float sizeFactor) {
-  DensityGrid grid = DensityGrid::fromIspdCircuit(circuit, sizeFactor);
+    const Circuit &circuit, float sizeFactor, float sideMargin) {
+  DensityGrid grid =
+      DensityGrid::fromIspdCircuit(circuit, sizeFactor, sideMargin);
   std::vector<int> demands;
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (circuit.isFixed(i)) {

@@ -25,7 +25,8 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
    * @brief Initialize from a circuit
    */
   static DensityLegalizer fromIspdCircuit(const Circuit &circuit,
-                                          float sizeFactor = 10.0);
+                                          float sizeFactor,
+                                          float sideMargin);
 
   /**
    * @brief Target x position for the cell

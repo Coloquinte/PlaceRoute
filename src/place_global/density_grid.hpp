@@ -30,16 +30,15 @@ class DensityGrid {
    * @brief Initialize a grid with placement regions (usually rows) and
    * obstacles
    */
-  DensityGrid(
-      int binSize, const std::vector<Rectangle> &regions,
-      const std::vector<Rectangle> &obstacles = std::vector<Rectangle>());
+  DensityGrid(int binSize, const std::vector<Rectangle> &regions);
 
   /**
    * @brief Initialize a grid from a circuit, and initialize the bins from the
    * standard cell height
    */
   static DensityGrid fromIspdCircuit(const Circuit &circuit,
-                                     float sizeFactor = 10.0);
+                                     float sizeFactor,
+                                     float sideMargin);
 
   /**
    * @brief Get the total number of bins
@@ -174,14 +173,6 @@ class DensityGrid {
    */
   static Rectangle computePlacementArea(const std::vector<Rectangle> &regions);
 
-  /**
-   * @brief Obtain cleaned-up placement regions by removing any overlap between
-   * regions and obstacles
-   */
-  static std::vector<Rectangle> computeActualRegions(
-      const std::vector<Rectangle> &regions,
-      const std::vector<Rectangle> &obstacles);
-
  private:
   /**
    * @brief Boundaries of the placement area
@@ -238,7 +229,8 @@ class HierarchicalDensityPlacement {
    * @brief Initialize from a circuit
    */
   static HierarchicalDensityPlacement fromIspdCircuit(const Circuit &circuit,
-                                                      float sizeFactor = 10.0);
+                                                      float sizeFactor,
+                                                      float sideMargin);
 
   /**
    * @brief Access the underlying grid

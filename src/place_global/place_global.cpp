@@ -83,8 +83,9 @@ void GlobalPlacer::place(Circuit &circuit,
 GlobalPlacer::GlobalPlacer(Circuit &circuit,
                            const GlobalPlacerParameters &params)
     : circuit_(circuit),
-      leg_(DensityLegalizer::fromIspdCircuit(circuit,
-                                             params.roughLegalizationBinSize)),
+      leg_(DensityLegalizer::fromIspdCircuit(
+          circuit, params.roughLegalizationBinSize,
+          params.roughLegalizationSideMargin)),
       xtopo_(NetModel::xTopology(circuit)),
       ytopo_(NetModel::yTopology(circuit)),
       params_(params) {

@@ -86,6 +86,7 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
   roughLegalizationCostModel = LegalizationModel::L1;
   roughLegalizationNbSteps = 3;
   roughLegalizationBinSize = 5.0;
+  roughLegalizationSideMargin = 1.0;
   exportWeighting = 1.0;
   check();
 }
@@ -105,7 +106,8 @@ std::string GlobalPlacerParameters::toString() const {
      << "\n\tRough legalization cost model: "
      << coloquinte::toString(roughLegalizationCostModel)
      << "\n\tNb rough legalization steps: " << roughLegalizationNbSteps
-     << "\n\tRough legalization bin size: " << roughLegalizationBinSize;
+     << "\n\tRough legalization bin size: " << roughLegalizationBinSize
+     << "\n\tRough legalization side margin: " << roughLegalizationSideMargin;
   if (seed != -1) {
     ss << "\n\tSeed: " << seed;
   }

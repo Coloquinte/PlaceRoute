@@ -197,10 +197,16 @@ struct GlobalPlacerParameters {
   int roughLegalizationNbSteps;
 
   /**
-   * @brief Size of the rough legalization bin relative to the average standard
-   * cell length
+   * @brief Size of the rough legalization bin relative to the standard cell
+   * height
    */
   double roughLegalizationBinSize;
+
+  /**
+   * @brief Margin to use on the sides of each row to account for lost space,
+   * relative to the standard cell height
+   */
+  double roughLegalizationSideMargin;
 
   /**
    * @brief Export a weighted sum of lower-bound and upper-bound placement;

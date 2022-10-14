@@ -88,6 +88,8 @@ Construct the parameters
                      &GlobalPlacerParameters::roughLegalizationNbSteps)
       .def_readwrite("rough_legalization_bin_size",
                      &GlobalPlacerParameters::roughLegalizationBinSize)
+      .def_readwrite("rough_legalization_side_margin",
+                     &GlobalPlacerParameters::roughLegalizationSideMargin)
       .def_readwrite("export_weighting",
                      &GlobalPlacerParameters::exportWeighting)
       .def_readwrite("seed", &GlobalPlacerParameters::seed)

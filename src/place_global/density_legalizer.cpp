@@ -26,9 +26,10 @@ DensityLegalizer::DensityLegalizer(HierarchicalDensityPlacement pl)
 }
 
 DensityLegalizer DensityLegalizer::fromIspdCircuit(const Circuit &circuit,
-                                                   float sizeFactor) {
-  return DensityLegalizer(
-      HierarchicalDensityPlacement::fromIspdCircuit(circuit, sizeFactor));
+                                                   float sizeFactor,
+                                                   float sideMargin) {
+  return DensityLegalizer(HierarchicalDensityPlacement::fromIspdCircuit(
+      circuit, sizeFactor, sideMargin));
 }
 
 std::vector<float> DensityLegalizer::allDistances(
