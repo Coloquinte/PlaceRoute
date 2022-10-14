@@ -375,6 +375,48 @@ class Circuit(coloquinte_pybind.Circuit):
                     orient += " /FIXED"
                 print(f"{name}\t{x}\t{y}\t: {orient}", file=f)
 
+    def write_image(self, filename, macros_only=False):
+        img = self._draw_cells(macros_only)
+        img.save(filename)
+
+    def write_displacement(self, filename, pl1, pl2):
+        from PIL import ImageDraw
+        img = self._draw_cells(True)
+        draw = ImageDraw.Draw(img)
+        fixed = self.cell_is_fixed
+        assert len(pl1) == len(pl2)
+        for i in range(self.nb_cells):
+            if not fixed[i]:
+                x1 = (pl1[i].min_x + pl1[i].max_x) // 2
+                x2 = (pl2[i].min_x + pl2[i].max_x) // 2
+                y1 = (pl1[i].min_y + pl1[i].max_y) // 2
+                y2 = (pl2[i].min_y + pl2[i].max_y) // 2
+                draw.line([(x1, y1), (x2, y2)], fill="red", width=2)
+                draw.arc([x1 - 1, y1 - 1, x1 + 1, y1 + 1],
+                         0, 360, fill="black")
+        img.save(filename)
+
+    def _draw_cells(self, macros_only):
+        from PIL import Image, ImageDraw
+        placement = self.cell_placement
+        fixed = self.cell_is_fixed
+
+        min_x = min(pl.min_x for pl in placement)
+        min_y = min(pl.min_y for pl in placement)
+        max_x = max(pl.max_x for pl in placement)
+        max_y = max(pl.max_y for pl in placement)
+        img = Image.new(
+            "RGB", (max_x - min_x, max_y - min_y), (255, 255, 255))
+        draw = ImageDraw.Draw(img)
+        for i, pl in enumerate(placement):
+            if fixed[i]:
+                draw.rectangle(
+                    [(pl.min_x, pl.min_y), (pl.max_x, pl.max_y)], fill="gray", outline="black")
+            elif not macros_only:
+                draw.rectangle(
+                    [(pl.min_x, pl.min_y), (pl.max_x, pl.max_y)], fill="blue", outline="navy")
+        return img
+
 
 def _add_arguments(parser, obj, prefix):
     for name in obj.__dir__():
@@ -456,6 +498,9 @@ def main():
     parser.add_argument(
         "--show-parameters", help="Show parameter values", action="store_true"
     )
+    parser.add_argument(
+        "--save-images", help=argparse.SUPPRESS, type=str
+    )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         "--no-global", help="Skip global placement", action="store_true")
@@ -495,19 +540,40 @@ def main():
         circuit.load_placement(args.load_solution)
 
     sys.stdout.flush()
+    if args.save_images is not None:
+        circuit.write_image(args.save_images + "_macros.png", True)
+
     if args.no_global:
         print("Global placement skipped at user's request")
     else:
         circuit.place_global(global_params)
+        if args.save_images is not None:
+            circuit.write_image(args.save_images + "_global.png")
+            result_global = circuit.cell_placement
 
     sys.stdout.flush()
     if args.only_global:
         print("Legalization and detailed placement skipped at user's request")
     elif args.no_detailed:
         circuit.legalize(detailed_params)
+        if args.save_images is not None:
+            circuit.write_image(args.save_images + "_legal.png")
+            circuit.write_displacement(
+                args.save_images + "_legal_displacement.png", result_global, circuit.cell_placement)
         print("Detailed placement skipped at user's request")
     else:
+        if args.save_images is not None:
+            # Separate legalization so we can save it
+            circuit.legalize(detailed_params)
+            circuit.write_image(args.save_images + "_legal.png")
+            result_legal = circuit.cell_placement
+            circuit.write_displacement(
+                args.save_images + "_legal_displacement.png", result_global, result_legal)
         circuit.place_detailed(detailed_params)
+        if args.save_images is not None:
+            circuit.write_image(args.save_images + "_detailed.png")
+            circuit.write_displacement(
+                args.save_images + "_detailed_displacement.png", result_legal, circuit.cell_placement)
     circuit.write_placement(args.save_solution)
 
 
