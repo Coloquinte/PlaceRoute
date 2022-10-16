@@ -38,10 +38,10 @@ Legalizer::Legalizer(const std::vector<Rectangle> &rows,
       rows_.begin(), rows_.end(), [](Rectangle a, Rectangle b) -> bool {
         return a.minY < b.minY || (a.minY == b.minY && a.minX < b.minX);
       });
-  for (Rectangle row : rows) {
+  for (Rectangle row : rows_) {
     rowLegalizers_.emplace_back(row.minX, row.maxX);
   }
-  rowToCells_.resize(rows.size());
+  rowToCells_.resize(rows_.size());
   cellToX_ = cellTargetX_;
   cellToY_ = cellTargetY_;
   cellToRow_.assign(width.size(), -1);
