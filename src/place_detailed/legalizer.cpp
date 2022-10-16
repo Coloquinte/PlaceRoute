@@ -91,6 +91,9 @@ void Legalizer::check() const {
   if (rowToCells_.size() != nbRows()) {
     throw std::runtime_error("Number of row cells does not match");
   }
+  if (rowLegalizers_.size() != nbRows()) {
+    throw std::runtime_error("Number of row legalizers does not match");
+  }
   for (int i = 0; i < nbRows(); ++i) {
     for (int c : rowToCells_[i]) {
       if (cellToRow_[c] != i) {
@@ -214,7 +217,7 @@ int Legalizer::closestRow(int y) const {
   }
   int row = it - rows_.begin();
   assert(row >= 1);
-  if (rows_[row].minX - y > y - rows_[row - 1].minX) {
+  if (rows_[row].minY - y > y - rows_[row - 1].minY) {
     return row - 1;
   }
   return row;
