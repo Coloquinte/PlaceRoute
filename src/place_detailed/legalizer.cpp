@@ -26,10 +26,7 @@ Legalizer::Legalizer(const std::vector<Rectangle> &rows,
                      const std::vector<int> &width,
                      const std::vector<int> &targetX,
                      const std::vector<int> &targetY)
-    : costModel_(LegalizationModel::L1),
-      cellWidth_(width),
-      cellTargetX_(targetX),
-      cellTargetY_(targetY) {
+    : cellWidth_(width), cellTargetX_(targetX), cellTargetY_(targetY) {
   assert(width.size() == targetX.size());
   assert(width.size() == targetY.size());
   // Sort the rows
@@ -47,11 +44,12 @@ Legalizer::Legalizer(const std::vector<Rectangle> &rows,
   cellToRow_.assign(width.size(), -1);
 }
 
-void Legalizer::run() {
-  std::vector<int> cellOrder = computeCellOrder(1.0, 0.5, 0.01);
+void Legalizer::run(const DetailedPlacerParameters &params) {
+  std::vector<int> cellOrder = computeCellOrder(
+      1.0, params.legalizationOrderingWidth, params.legalizationOrderingY);
 
   for (int c : cellOrder) {
-    placeCellOptimally(c);
+    placeCellOptimally(c, params.legalizationCostModel);
   }
   for (int i = 0; i < nbRows(); ++i) {
     std::vector<int> pl = rowLegalizers_[i].getPlacement();
@@ -119,7 +117,7 @@ void Legalizer::check() const {
   }
 }
 
-bool Legalizer::placeCellOptimally(int cell) {
+bool Legalizer::placeCellOptimally(int cell, LegalizationModel costModel) {
   /**
    * Simple algorithm that tries close row first and stops early if no
    * improvement can be found
@@ -134,13 +132,14 @@ bool Legalizer::placeCellOptimally(int cell) {
   long long bestDist = std::numeric_limits<long long>::max();
 
   auto tryPlace = [&](int row) {
-    int yDist = norm(0, rows_[row].minY - targetY, costModel_);
+    int yDist = norm(0, rows_[row].minY - targetY, costModel);
     if (bestRow != -1 && yDist > bestDist) {
       // Not possible to do better since the rows are sorted
       return true;
     }
     // Find the best position for the cell
     auto [ok, dist] = placeCellOptimally(cell, row);
+    // TODO: extend this to non-L1 cases
     dist += yDist;
     if (!ok) {
       // Not possible to place in this row, but cannot stop yet
@@ -171,7 +170,7 @@ bool Legalizer::placeCellOptimally(int cell) {
 
   if (bestRow == -1) {
     throw std::runtime_error(
-        "Unable to place a cell with the naive legalization algorithm");
+        "Unable to place a cell with the greedy legalization algorithm");
   }
   rowLegalizers_[bestRow].push(cellWidth_[cell], targetX);
   rowToCells_[bestRow].push_back(cell);
@@ -253,28 +252,6 @@ void Legalizer::exportPlacement(Circuit &circuit) {
     }
     circuit.cellX_[i] = cellX[i];
     circuit.cellY_[i] = cellY[i];
-  }
-}
-
-void Legalizer::report(bool verbose) const {
-  std::cout << "Legalizer with " << nbCells() << " cells on " << nbRows()
-            << " rows" << std::endl;
-  std::cout << "Mean dist: " << meanDistance(costModel_) << std::endl;
-  std::cout << "RMS dist " << rmsDistance(costModel_) << std::endl;
-  std::cout << "Max dist " << maxDistance(costModel_) << std::endl;
-  if (!verbose) {
-    return;
-  }
-  for (int row = 0; row < nbRows(); ++row) {
-    std::cout << "Row " << rows_[row].minY << ", " << rows_[row].minX << " to "
-              << rows_[row].maxX << ": ";
-    for (int c : rowToCells_[row]) {
-      int x = cellToX_[c];
-      int w = cellWidth_[c];
-      std::cout << c << " (" << x << " - " << x + w << ", target "
-                << cellTargetX_[c] << "," << cellTargetY_[c] << ") ";
-    }
-    std::cout << std::endl;
   }
 }
 

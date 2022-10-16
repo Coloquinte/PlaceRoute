@@ -61,16 +61,6 @@ class Legalizer {
   const std::vector<int> &cellTargetY() const { return cellTargetY_; }
 
   /**
-   * @brief Return the cost model used by the algorithm
-   */
-  LegalizationModel costModel() const { return costModel_; }
-
-  /**
-   * @brief Set the cost model used by the algorithm
-   */
-  void setCostModel(LegalizationModel m) { costModel_ = m; }
-
-  /**
    * @brief Return the mean displacement with the given cost model
    */
   float meanDistance(LegalizationModel model) const;
@@ -93,7 +83,7 @@ class Legalizer {
   /**
    * @brief Run the algorithm
    */
-  void run();
+  void run(const DetailedPlacerParameters &parameters);
 
   /**
    * @brief Compute the x coordinates after legalization
@@ -125,7 +115,7 @@ class Legalizer {
    * @brief Place a single cell optimally
    * Return true if successful
    */
-  bool placeCellOptimally(int cell);
+  bool placeCellOptimally(int cell, LegalizationModel costModel);
 
   /**
    * @brief Simulate placing a single cell in a given row, pushing other cells
@@ -165,7 +155,6 @@ class Legalizer {
 
  private:
   // Placement data
-  LegalizationModel costModel_;
   std::vector<Rectangle> rows_;
   std::vector<int> cellWidth_;
   std::vector<int> cellTargetX_;

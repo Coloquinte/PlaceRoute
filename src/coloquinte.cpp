@@ -123,9 +123,11 @@ DetailedPlacerParameters::DetailedPlacerParameters(int effort, int seed)
   nbPasses = std::round(interpolateLogEffort(2.0, 8.0, effort));
   localSearchNbNeighbours = std::round(interpolateLogEffort(2.0, 16.0, effort));
   localSearchNbRows = std::round(interpolateEffort(1.0, 4.0, effort));
-  legalizationCostModel = LegalizationModel::L1;
   shiftNbRows = 3;
   shiftMaxNbCells = std::round(interpolateLogEffort(50, 120.0, effort));
+  legalizationCostModel = LegalizationModel::L1;
+  legalizationOrderingWidth = 0.0;
+  legalizationOrderingY = 0.0;
   check();
 }
 
@@ -138,7 +140,9 @@ std::string DetailedPlacerParameters::toString() const {
      << "\n\tShift nb rows: " << shiftNbRows
      << "\n\tShift max nb cells: " << shiftMaxNbCells
      << "\n\tLegalization cost model: "
-     << coloquinte::toString(legalizationCostModel);
+     << coloquinte::toString(legalizationCostModel)
+     << "\n\tLegalization ordering width: " << legalizationOrderingWidth
+     << "\n\tLegalization ordering y: " << legalizationOrderingY;
   if (seed != -1) {
     ss << "\n\tSeed: " << seed;
   }

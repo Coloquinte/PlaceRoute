@@ -36,6 +36,14 @@ void DetailedPlacerParameters::check() const {
   if (legalizationCostModel != LegalizationModel::L1) {
     throw std::runtime_error("Only L1 legalization model is supported");
   }
+  if (legalizationOrderingWidth > 2.0 || legalizationOrderingWidth < -1.0) {
+    throw std::runtime_error(
+        "Legalization ordering width should be small (0 < ... < 1)");
+  }
+  if (legalizationOrderingY > 0.2 || legalizationOrderingY < -0.2) {
+    throw std::runtime_error(
+        "Legalization ordering y should be small (-0.1 < ... < 0.1)");
+  }
 }
 
 void DetailedPlacer::legalize(Circuit &circuit,
@@ -45,7 +53,7 @@ void DetailedPlacer::legalize(Circuit &circuit,
             << std::endl;
   auto startTime = std::chrono::steady_clock::now();
   Legalizer leg = Legalizer::fromIspdCircuit(circuit);
-  leg.run();
+  leg.run(params);
   auto endTime = std::chrono::steady_clock::now();
   std::chrono::duration<float> duration = endTime - startTime;
   leg.exportPlacement(circuit);

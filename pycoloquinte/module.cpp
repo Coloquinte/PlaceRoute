@@ -115,6 +115,10 @@ Construct the parameters
                      &DetailedPlacerParameters::shiftMaxNbCells)
       .def_readwrite("legalization_cost_model",
                      &DetailedPlacerParameters::legalizationCostModel)
+      .def_readwrite("legalization_ordering_width",
+                     &DetailedPlacerParameters::legalizationOrderingWidth)
+      .def_readwrite("legalization_ordering_y",
+                     &DetailedPlacerParameters::legalizationOrderingY)
       .def_readwrite("seed", &DetailedPlacerParameters::seed)
       .def("check", &DetailedPlacerParameters::check)
       .def("__str__", &DetailedPlacerParameters::toString)

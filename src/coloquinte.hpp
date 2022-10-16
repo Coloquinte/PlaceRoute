@@ -275,6 +275,25 @@ struct DetailedPlacerParameters {
   LegalizationModel legalizationCostModel;
 
   /**
+   * @brief Weight placed on the width when ordering of the legalization
+   * heuristic
+   *
+   * @details This weight decides which cells are legalized first; 0.0 orders
+   * by left side, 1.0 by right side, 0.5 by middle
+   */
+  double legalizationOrderingWidth;
+
+  /**
+   * @brief Weight placed on the y position when ordering of the legalization
+   * heuristic
+   *
+   * @details This weight decides which cells are legalized first, and tends to
+   * start to legalize up (-1.0) or down (1.0). It should be small in absolute
+   * value, as x ordering is preferred
+   */
+  double legalizationOrderingY;
+
+  /**
    * @brief Random seed
    */
   int seed;
