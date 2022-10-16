@@ -60,7 +60,12 @@ class GlobalPlacer {
   /**
    * @brief Export the placement to the ISPD circuit
    */
-  void exportPlacement(Circuit &);
+  void exportPlacement(Circuit &) const;
+
+  /**
+   * @brief Export a given placement to the ISPD circuit
+   */
+  static void exportPlacement(Circuit &, const std::vector<float> &xplace, const std::vector<float> &yplace);
 
   /**
    * @brief Compute the average cell size of the circuit

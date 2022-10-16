@@ -96,17 +96,32 @@ GlobalPlacer::GlobalPlacer(Circuit &circuit,
   leg_.setNbSteps(params.roughLegalizationNbSteps);
 }
 
-void GlobalPlacer::exportPlacement(Circuit &circuit) {
+void GlobalPlacer::exportPlacement(Circuit &circuit) const {
+  assert(xtopo_.nbCells() == circuit.nbCells());
+  assert(ytopo_.nbCells() == circuit.nbCells());
   assert(leg_.nbCells() == circuit.nbCells());
   float w = params_.exportWeighting;
+  std::vector<float> xplace;
+  std::vector<float> yplace;
+  for (int i = 0; i < circuit.nbCells(); ++i) {
+    xplace.push_back(((1.0f - w) * xPlacementLB_[i] + w * xPlacementUB_[i]));
+    yplace.push_back(((1.0f - w) * yPlacementLB_[i] + w * yPlacementUB_[i]));
+  }
+  exportPlacement(circuit, xplace, yplace);
+}
+
+void GlobalPlacer::exportPlacement(Circuit &circuit,
+                                   const std::vector<float> &xplace,
+                                   const std::vector<float> &yplace) {
+  assert(xplace.size() == circuit.nbCells());
+  assert(yplace.size() == circuit.nbCells());
+
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (circuit.isFixed(i)) {
       continue;
     }
-    circuit.cellX_[i] =
-        std::round(((1.0f - w) * xPlacementLB_[i] + w * xPlacementUB_[i]));
-    circuit.cellY_[i] =
-        std::round(((1.0f - w) * yPlacementLB_[i] + w * yPlacementUB_[i]));
+    circuit.cellX_[i] = std::round(xplace[i] - 0.5 * circuit.placedWidth(i));
+    circuit.cellY_[i] = std::round(yplace[i] - 0.5 * circuit.placedHeight(i));
   }
 }
 
