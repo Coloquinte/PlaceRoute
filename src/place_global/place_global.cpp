@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cmath>
 #include <future>
+#include <iomanip>
 #include <iostream>
 #include <numeric>
 
@@ -154,7 +155,12 @@ void GlobalPlacer::run() {
     float ub = valueUB();
     runLB();
     float lb = valueLB();
-    std::cout << "#" << step_ << ":\tLB " << lb << "\tUB " << ub << std::endl;
+    std::cout << "#" << step_;
+    std::cout << std::defaultfloat << std::setprecision(4) << ":\tUB " << ub;
+    std::cout << std::fixed << std::setprecision(1) << "\tDist "
+              << leg_.quality();
+    std::cout << std::defaultfloat << std::setprecision(4) << "\tLB " << lb
+              << std::endl;
     float gap = (ub - lb) / ub;
     if (gap < params_.gapTolerance) {
       break;
@@ -164,8 +170,8 @@ void GlobalPlacer::run() {
   runUB();
   auto endTime = std::chrono::steady_clock::now();
   std::chrono::duration<float> duration = endTime - startTime;
-  std::cout << "Global placement done in " << duration.count() << "s"
-            << std::endl;
+  std::cout << std::fixed << std::setprecision(2) << "Global placement done in "
+            << duration.count() << "s" << std::endl;
 }
 
 float GlobalPlacer::valueLB() const {
@@ -183,11 +189,13 @@ void GlobalPlacer::runInitialLB() {
   params.maxNbIterations = params_.maxNbConjugateGradientSteps;
   xPlacementLB_ = xtopo_.solveStar(params);
   yPlacementLB_ = ytopo_.solveStar(params);
-  std::cout << "#0:\tLB " << valueLB() << std::endl;
+  std::cout << std::defaultfloat << std::setprecision(4) << "#0:\tLB "
+            << valueLB() << std::endl;
   for (step_ = 1; step_ <= params_.nbInitialSteps; ++step_) {
     xPlacementLB_ = xtopo_.solve(xPlacementLB_, params);
     yPlacementLB_ = ytopo_.solve(yPlacementLB_, params);
-    std::cout << "#" << step_ << ":\tLB " << valueLB() << std::endl;
+    std::cout << std::defaultfloat << std::setprecision(4) << "#" << step_
+              << ":\tLB " << valueLB() << std::endl;
   }
 }
 

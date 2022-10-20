@@ -4,6 +4,7 @@
 #include <lemon/smart_graph.h>
 
 #include <chrono>
+#include <iomanip>
 #include <iostream>
 #include <unordered_set>
 
@@ -56,9 +57,12 @@ void DetailedPlacer::legalize(Circuit &circuit,
   leg.run(params);
   auto endTime = std::chrono::steady_clock::now();
   std::chrono::duration<float> duration = endTime - startTime;
+  float distance = leg.meanDistance(params.legalizationCostModel);
   leg.exportPlacement(circuit);
-  std::cout << "Legalization done (WL " << circuit.hpwl() << ") in "
-            << duration.count() << "s" << std::endl;
+  std::cout << "Legalization done (WL " << circuit.hpwl();
+  std::cout << std::fixed << std::setprecision(1) << ", dist " << distance;
+  std::cout << std::fixed << std::setprecision(2) << ") in " << duration.count()
+            << "s" << std::endl;
 }
 
 void DetailedPlacer::place(Circuit &circuit,
@@ -81,8 +85,9 @@ void DetailedPlacer::place(Circuit &circuit,
   auto endTime = std::chrono::steady_clock::now();
   pl.placement_.exportPlacement(circuit);
   std::chrono::duration<float> duration = endTime - startTime;
-  std::cout << "Detailed placement done (WL " << circuit.hpwl() << ") in "
-            << duration.count() << "s" << std::endl;
+  std::cout << "Detailed placement done (WL " << circuit.hpwl();
+  std::cout << std::fixed << std::setprecision(2) << ") in " << duration.count()
+            << "s" << std::endl;
 }
 
 DetailedPlacer::DetailedPlacer(const Circuit &circuit)

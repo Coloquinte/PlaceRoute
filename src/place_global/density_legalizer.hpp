@@ -175,6 +175,7 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
   std::vector<float> allDistances(LegalizationModel model) const;
 
  private:
+  // Parameters
   LegalizationModel costModel_;
   int nbSteps_;
   std::vector<float> cellTargetX_;
