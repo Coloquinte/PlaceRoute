@@ -376,11 +376,14 @@ class Circuit(coloquinte_pybind.Circuit):
                 print(f"{name}\t{x}\t{y}\t: {orient}", file=f)
 
     def write_image(self, filename, macros_only=False):
+        from PIL import Image
         img = self._draw_cells(macros_only)
+        new_height = int(2048 * img.height / img.width)
+        img = img.resize((2048, new_height), Image.LANCZOS)
         img.save(filename)
 
     def write_displacement(self, filename, pl1, pl2):
-        from PIL import ImageDraw
+        from PIL import Image, ImageDraw
         img = self._draw_cells(True)
         draw = ImageDraw.Draw(img)
         fixed = self.cell_is_fixed
@@ -394,6 +397,8 @@ class Circuit(coloquinte_pybind.Circuit):
                 draw.line([(x1, y1), (x2, y2)], fill="red", width=2)
                 draw.arc([x1 - 1, y1 - 1, x1 + 1, y1 + 1],
                          0, 360, fill="black")
+        new_height = int(2048 * img.height / img.width)
+        img = img.resize((2048, new_height), Image.LANCZOS)
         img.save(filename)
 
     def _draw_cells(self, macros_only):
@@ -411,10 +416,10 @@ class Circuit(coloquinte_pybind.Circuit):
         for i, pl in enumerate(placement):
             if fixed[i]:
                 draw.rectangle(
-                    [(pl.min_x, pl.min_y), (pl.max_x, pl.max_y)], fill="gray", outline="black")
+                    [(pl.min_x, pl.min_y), (pl.max_x, pl.max_y)], fill="gray", outline="black", width=8)
             elif not macros_only:
                 draw.rectangle(
-                    [(pl.min_x, pl.min_y), (pl.max_x, pl.max_y)], fill="blue", outline="navy")
+                    [(pl.min_x, pl.min_y), (pl.max_x, pl.max_y)], fill="blue")
         return img
 
 
@@ -541,14 +546,14 @@ def main():
 
     sys.stdout.flush()
     if args.save_images is not None:
-        circuit.write_image(args.save_images + "_macros.png", True)
+        circuit.write_image(args.save_images + "_macros.webp", True)
 
     if args.no_global:
         print("Global placement skipped at user's request")
     else:
         circuit.place_global(global_params)
         if args.save_images is not None:
-            circuit.write_image(args.save_images + "_global.png")
+            circuit.write_image(args.save_images + "_global.webp")
             result_global = circuit.cell_placement
 
     sys.stdout.flush()
@@ -557,23 +562,23 @@ def main():
     elif args.no_detailed:
         circuit.legalize(detailed_params)
         if args.save_images is not None:
-            circuit.write_image(args.save_images + "_legal.png")
+            circuit.write_image(args.save_images + "_legal.webp")
             circuit.write_displacement(
-                args.save_images + "_legal_displacement.png", result_global, circuit.cell_placement)
+                args.save_images + "_legal_displacement.webp", result_global, circuit.cell_placement)
         print("Detailed placement skipped at user's request")
     else:
         if args.save_images is not None:
             # Separate legalization so we can save it
             circuit.legalize(detailed_params)
-            circuit.write_image(args.save_images + "_legal.png")
+            circuit.write_image(args.save_images + "_legal.webp")
             result_legal = circuit.cell_placement
             circuit.write_displacement(
-                args.save_images + "_legal_displacement.png", result_global, result_legal)
+                args.save_images + "_legal_displacement.webp", result_global, result_legal)
         circuit.place_detailed(detailed_params)
         if args.save_images is not None:
-            circuit.write_image(args.save_images + "_detailed.png")
+            circuit.write_image(args.save_images + "_detailed.webp")
             circuit.write_displacement(
-                args.save_images + "_detailed_displacement.png", result_legal, circuit.cell_placement)
+                args.save_images + "_detailed_displacement.webp", result_legal, circuit.cell_placement)
     circuit.write_placement(args.save_solution)
 
 
