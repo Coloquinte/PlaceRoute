@@ -73,16 +73,9 @@ void DetailedPlacer::place(Circuit &circuit,
   params.check();
   std::cout << "Detailed placement starting" << std::endl;
   auto startTime = std::chrono::steady_clock::now();
-  DetailedPlacer pl(circuit);
+  DetailedPlacer pl(circuit, params);
   pl.check();
-  for (int i = 1; i <= params.nbPasses; ++i) {
-    pl.runSwaps(params.localSearchNbNeighbours, params.localSearchNbRows);
-    auto swapValue = pl.value();
-    pl.runShifts(params.shiftNbRows, params.shiftMaxNbCells);
-    auto shiftValue = pl.value();
-    std::cout << "#" << i << ":\tSwaps " << swapValue << "\tShifts "
-              << shiftValue << std::endl;
-  }
+  pl.run();
   pl.check();
   auto endTime = std::chrono::steady_clock::now();
   pl.placement_.exportPlacement(circuit);
@@ -92,10 +85,23 @@ void DetailedPlacer::place(Circuit &circuit,
             << "s" << std::endl;
 }
 
-DetailedPlacer::DetailedPlacer(const Circuit &circuit)
+DetailedPlacer::DetailedPlacer(const Circuit &circuit,
+                               const DetailedPlacerParameters &params)
     : placement_(DetailedPlacement::fromIspdCircuit(circuit)),
       xtopo_(IncrNetModel::xTopology(circuit)),
-      ytopo_(IncrNetModel::yTopology(circuit)) {}
+      ytopo_(IncrNetModel::yTopology(circuit)),
+      params_(params) {}
+
+void DetailedPlacer::run() {
+  for (int i = 1; i <= params_.nbPasses; ++i) {
+    runSwaps(params_.localSearchNbNeighbours, params_.localSearchNbRows);
+    auto swapValue = value();
+    runShifts(params_.shiftNbRows, params_.shiftMaxNbCells);
+    auto shiftValue = value();
+    std::cout << "#" << i << ":\tSwaps " << swapValue << "\tShifts "
+              << shiftValue << std::endl;
+  }
+}
 
 void DetailedPlacer::doSwap(int c1, int c2) {
   assert(placement_.canSwap(c1, c2));

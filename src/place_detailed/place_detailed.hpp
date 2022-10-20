@@ -31,7 +31,12 @@ class DetailedPlacer {
   /**
    * @brief Initialize the datastructure
    */
-  explicit DetailedPlacer(const Circuit &circuit);
+  explicit DetailedPlacer(const Circuit &circuit, const DetailedPlacerParameters &params);
+
+  /**
+   * @brief Run the whole detailed placement algorithm
+   */
+  void run();
 
   /**
    * @brief Check the consistency of the datastructure
@@ -219,5 +224,7 @@ class DetailedPlacer {
   DetailedPlacement placement_;
   IncrNetModel xtopo_;
   IncrNetModel ytopo_;
+
+  DetailedPlacerParameters params_;
 };
 }  // namespace coloquinte

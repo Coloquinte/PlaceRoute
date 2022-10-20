@@ -94,7 +94,6 @@ class GlobalPlacer {
   }
 
  private:
-  Circuit &circuit_;
   DensityLegalizer leg_;
   NetModel xtopo_;
   NetModel ytopo_;

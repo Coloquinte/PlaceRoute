@@ -76,15 +76,20 @@ void GlobalPlacerParameters::check() const {
 void GlobalPlacer::place(Circuit &circuit, const GlobalPlacerParameters &params,
                          const std::vector<PlacementCallback> &callbacks) {
   params.check();
+  std::cout << "Global placement starting" << std::endl;
+  auto startTime = std::chrono::steady_clock::now();
   GlobalPlacer pl(circuit, params);
   pl.run();
+  auto endTime = std::chrono::steady_clock::now();
+  std::chrono::duration<float> duration = endTime - startTime;
+  std::cout << std::fixed << std::setprecision(2) << "Global placement done in "
+            << duration.count() << "s" << std::endl;
   pl.exportPlacement(circuit);
 }
 
 GlobalPlacer::GlobalPlacer(Circuit &circuit,
                            const GlobalPlacerParameters &params)
-    : circuit_(circuit),
-      leg_(DensityLegalizer::fromIspdCircuit(
+    : leg_(DensityLegalizer::fromIspdCircuit(
           circuit, params.roughLegalizationBinSize,
           params.roughLegalizationSideMargin)),
       xtopo_(NetModel::xTopology(circuit)),
@@ -145,8 +150,6 @@ std::vector<float> GlobalPlacer::computePerCellPenalty() const {
 }
 
 void GlobalPlacer::run() {
-  std::cout << "Global placement starting" << std::endl;
-  auto startTime = std::chrono::steady_clock::now();
   runInitialLB();
   penalty_ = params_.initialPenalty;
   for (step_ = params_.nbInitialSteps + 1; step_ <= params_.maxNbSteps;
@@ -168,10 +171,6 @@ void GlobalPlacer::run() {
     penalty_ *= params_.penaltyUpdateFactor;
   }
   runUB();
-  auto endTime = std::chrono::steady_clock::now();
-  std::chrono::duration<float> duration = endTime - startTime;
-  std::cout << std::fixed << std::setprecision(2) << "Global placement done in "
-            << duration.count() << "s" << std::endl;
 }
 
 float GlobalPlacer::valueLB() const {
