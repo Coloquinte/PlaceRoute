@@ -154,6 +154,10 @@ Construct a circuit.
                     &Circuit::setCellOrientation, "Orientation of the cells")
       .def_property_readonly("cell_placement", &Circuit::cellPlacement,
                              "Place occupied by the cells")
+      .def_property_readonly("placement_area", &Circuit::computePlacementArea,
+                             "Bounding box of the placement area")
+      .def_property_readonly("row_height", &Circuit::rowHeight,
+                             "Standard-cell row height")
       .def_property("rows", &Circuit::rows, &Circuit::setRows,
                     "Standard cell rows")
       .def("add_net", &Circuit::addNet, "Add a net to the circuit")

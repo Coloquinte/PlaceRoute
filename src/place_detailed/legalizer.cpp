@@ -12,10 +12,15 @@
 namespace coloquinte {
 Legalizer Legalizer::fromIspdCircuit(const Circuit &circuit) {
   // Represent fixed cells with -1 width so they are not considered
+  int rowHeight = circuit.rowHeight();
   std::vector<int> widths = circuit.cellWidth_;
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (circuit.cellIsFixed_[i]) {
       widths[i] = -1;
+    } else if (circuit.cellHeight_[i] != rowHeight) {
+      throw std::runtime_error(
+          "Some placeable cells have a height that is different from the row "
+          "height");
     }
   }
   return Legalizer(circuit.computeRows(), widths, circuit.cellX_,

@@ -450,6 +450,11 @@ class Circuit {
   Rectangle computePlacementArea() const;
 
   /**
+   * @brief Return the height of the rows
+   */
+  int rowHeight() const;
+
+  /**
    * @brief Return the rows after removing the obstacles
    */
   std::vector<Rectangle> computeRows(

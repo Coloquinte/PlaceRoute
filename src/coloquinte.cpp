@@ -374,6 +374,19 @@ std::vector<Rectangle> Circuit::computeRows(
   return ret;
 }
 
+int Circuit::rowHeight() const {
+  if (nbRows() == 0) {
+    throw std::runtime_error("Cannot compute row height as no row has been defined");
+  }
+  int ret = rows_[0].height();
+  for (Rectangle row : rows_) {
+    if (row.height() != ret) {
+      throw std::runtime_error("The circuit contains rows of different heights");
+    }
+  }
+  return ret;
+}
+
 std::string Circuit::toString() const {
   std::stringstream ss;
   ss << "Circuit with " << nbCells() << " cells, " << nbNets() << " nets and "
@@ -421,10 +434,7 @@ void Circuit::check() const {
 }
 
 std::string Circuit::report() const {
-  int rowHeight = 0;
-  for (Rectangle row : rows_) {
-    rowHeight = std::max(rowHeight, row.height());
-  }
+  int stdCellHeight = rowHeight();
   int nbMacros = 0;
   int nbSingleRowCells = 0;
   int nbMultiRowCells = 0;
@@ -437,10 +447,10 @@ std::string Circuit::report() const {
       if (isObstruction(i)) {
         ++nbMacros;
       }
-    } else if (cellHeight_[i] <= rowHeight) {
+    } else if (cellHeight_[i] <= stdCellHeight) {
       ++nbSingleRowCells;
       singleRowCellArea += area(i);
-    } else if (cellHeight_[i] <= 4 * rowHeight) {
+    } else if (cellHeight_[i] <= 4 * stdCellHeight) {
       ++nbMultiRowCells;
       multiRowCellArea += area(i);
     } else {
