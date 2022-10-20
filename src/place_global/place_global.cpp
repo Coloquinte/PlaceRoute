@@ -79,6 +79,7 @@ void GlobalPlacer::place(Circuit &circuit, const GlobalPlacerParameters &params,
   std::cout << "Global placement starting" << std::endl;
   auto startTime = std::chrono::steady_clock::now();
   GlobalPlacer pl(circuit, params);
+  pl.callback_ = callback;
   pl.run();
   auto endTime = std::chrono::steady_clock::now();
   std::chrono::duration<float> duration = endTime - startTime;
@@ -94,7 +95,8 @@ GlobalPlacer::GlobalPlacer(Circuit &circuit,
           params.roughLegalizationSideMargin)),
       xtopo_(NetModel::xTopology(circuit)),
       ytopo_(NetModel::yTopology(circuit)),
-      params_(params) {
+      params_(params),
+      circuit_(circuit) {
   rgen_.seed(params_.seed);
   averageCellLength_ = computeAverageCellSize();
   perCellPenalty_ = computePerCellPenalty();
@@ -190,11 +192,13 @@ void GlobalPlacer::runInitialLB() {
   yPlacementLB_ = ytopo_.solveStar(params);
   std::cout << std::defaultfloat << std::setprecision(4) << "#0:\tLB "
             << valueLB() << std::endl;
+  callback(PlacementStep::LowerBound, xPlacementLB_, yPlacementLB_);
   for (step_ = 1; step_ <= params_.nbInitialSteps; ++step_) {
     xPlacementLB_ = xtopo_.solve(xPlacementLB_, params);
     yPlacementLB_ = ytopo_.solve(yPlacementLB_, params);
     std::cout << std::defaultfloat << std::setprecision(4) << "#" << step_
               << ":\tLB " << valueLB() << std::endl;
+    callback(PlacementStep::LowerBound, xPlacementLB_, yPlacementLB_);
   }
 }
 
@@ -226,6 +230,7 @@ void GlobalPlacer::runLB() {
                  yPlacementLB_, yPlacementUB_, penalty, params);
   xPlacementLB_ = x.get();
   yPlacementLB_ = y.get();
+  callback(PlacementStep::LowerBound, xPlacementLB_, yPlacementLB_);
 }
 
 void GlobalPlacer::runUB() {
@@ -234,5 +239,14 @@ void GlobalPlacer::runUB() {
   leg_.run();
   xPlacementUB_ = leg_.spreadCoordX(xPlacementLB_);
   yPlacementUB_ = leg_.spreadCoordY(yPlacementLB_);
+  callback(PlacementStep::UpperBound, xPlacementUB_, yPlacementUB_);
+}
+
+void GlobalPlacer::callback(PlacementStep step,
+                            const std::vector<float> &xplace,
+                            const std::vector<float> &yplace) {
+  if (!callback_.has_value()) return;
+  exportPlacement(circuit_, xplace, yplace);
+  callback_.value()(step);
 }
 }  // namespace coloquinte

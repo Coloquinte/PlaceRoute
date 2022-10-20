@@ -64,33 +64,38 @@ void DetailedPlacer::legalize(Circuit &circuit,
   std::cout << std::fixed << std::setprecision(1) << ", dist " << distance;
   std::cout << std::fixed << std::setprecision(2) << ") in " << duration.count()
             << "s" << std::endl;
+  if (callback.has_value()) {
+    callback.value()(PlacementStep::Detailed);
+  }
 }
 
 void DetailedPlacer::place(Circuit &circuit,
                            const DetailedPlacerParameters &params,
                            std::optional<PlacementCallback> callback) {
-  legalize(circuit, params);
+  legalize(circuit, params, callback);
   params.check();
   std::cout << "Detailed placement starting" << std::endl;
   auto startTime = std::chrono::steady_clock::now();
   DetailedPlacer pl(circuit, params);
+  pl.callback_ = callback;
   pl.check();
   pl.run();
   pl.check();
   auto endTime = std::chrono::steady_clock::now();
-  pl.placement_.exportPlacement(circuit);
+  pl.exportPlacement(circuit);
   std::chrono::duration<float> duration = endTime - startTime;
   std::cout << "Detailed placement done (WL " << circuit.hpwl();
   std::cout << std::fixed << std::setprecision(2) << ") in " << duration.count()
             << "s" << std::endl;
 }
 
-DetailedPlacer::DetailedPlacer(const Circuit &circuit,
+DetailedPlacer::DetailedPlacer(Circuit &circuit,
                                const DetailedPlacerParameters &params)
     : placement_(DetailedPlacement::fromIspdCircuit(circuit)),
       xtopo_(IncrNetModel::xTopology(circuit)),
       ytopo_(IncrNetModel::yTopology(circuit)),
-      params_(params) {}
+      params_(params),
+      circuit_(circuit) {}
 
 void DetailedPlacer::run() {
   for (int i = 1; i <= params_.nbPasses; ++i) {
@@ -100,7 +105,18 @@ void DetailedPlacer::run() {
     auto shiftValue = value();
     std::cout << "#" << i << ":\tSwaps " << swapValue << "\tShifts "
               << shiftValue << std::endl;
+    callback();
   }
+}
+
+void DetailedPlacer::exportPlacement(Circuit &circuit) {
+  placement_.exportPlacement(circuit);
+}
+
+void DetailedPlacer::callback() {
+  if (!callback_.has_value()) return;
+  exportPlacement(circuit_);
+  callback_.value()(PlacementStep::Detailed);
 }
 
 void DetailedPlacer::doSwap(int c1, int c2) {

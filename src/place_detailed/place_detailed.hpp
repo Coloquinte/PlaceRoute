@@ -31,12 +31,18 @@ class DetailedPlacer {
   /**
    * @brief Initialize the datastructure
    */
-  explicit DetailedPlacer(const Circuit &circuit, const DetailedPlacerParameters &params);
+  explicit DetailedPlacer(Circuit &circuit,
+                          const DetailedPlacerParameters &params);
 
   /**
    * @brief Run the whole detailed placement algorithm
    */
   void run();
+
+  /**
+   * @brief Call the callback with the current placement
+   */
+  void callback();
 
   /**
    * @brief Check the consistency of the datastructure
@@ -127,6 +133,11 @@ class DetailedPlacer {
    * @brief Return the current objective value
    */
   long long value() const { return xtopo_.value() + ytopo_.value(); }
+
+  /**
+   * @brief Export the placement result
+   */
+  void exportPlacement(Circuit &circuit);
 
  private:
   /**
@@ -226,5 +237,9 @@ class DetailedPlacer {
   IncrNetModel ytopo_;
 
   DetailedPlacerParameters params_;
+
+  // Only for callbacks
+  Circuit &circuit_;
+  std::optional<PlacementCallback> callback_;
 };
 }  // namespace coloquinte

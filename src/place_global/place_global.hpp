@@ -8,6 +8,7 @@
 #include "place_global/net_model.hpp"
 
 namespace coloquinte {
+
 /**
  * @brief Main class for global placement
  */
@@ -57,6 +58,12 @@ class GlobalPlacer {
    * @brief Obtain the upper-bound placement for one iteration
    */
   void runUB();
+
+  /**
+   * @brief Call the callback with this placement
+   */
+  void callback(PlacementStep step, const std::vector<float> &xplace,
+                const std::vector<float> &yplace);
 
   /**
    * @brief Export the placement to the ISPD circuit
@@ -110,5 +117,10 @@ class GlobalPlacer {
   int step_;
   float penalty_;
   std::mt19937 rgen_;
+
+  // Only for callbacks
+  Circuit &circuit_;
+  std::optional<PlacementCallback> callback_;
 };
+
 }  // namespace coloquinte

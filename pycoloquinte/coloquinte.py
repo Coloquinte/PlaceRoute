@@ -405,17 +405,12 @@ class Circuit(coloquinte_pybind.Circuit):
                     orient += " /FIXED"
                 print(f"{name}\t{x}\t{y}\t: {orient}", file=f)
 
-    def write_image(self, filename, macros_only=False):
-        from PIL import Image
-
+    def write_image(self, filename, macros_only=False, image_width=2048):
         img = self._draw_cells(macros_only)
-        new_height = int(2048 * img.height / img.width)
-        img = img.resize((2048, new_height), Image.LANCZOS)
-        img.save(filename)
+        self._save_image(img, filename, image_width)
 
-    def write_displacement(self, filename, pl1, pl2):
-        from PIL import Image, ImageDraw
-
+    def write_displacement(self, filename, pl1, pl2, image_width=2048):
+        from PIL import ImageDraw
         img = self._draw_cells(True)
         draw = ImageDraw.Draw(img)
         fixed = self.cell_is_fixed
@@ -429,8 +424,12 @@ class Circuit(coloquinte_pybind.Circuit):
                 draw.line([(x1, y1), (x2, y2)], fill="red", width=2)
                 draw.arc([x1 - 1, y1 - 1, x1 + 1, y1 + 1],
                          0, 360, fill="black")
-        new_height = int(2048 * img.height / img.width)
-        img = img.resize((2048, new_height), Image.LANCZOS)
+        self._save_image(img, filename, image_width)
+
+    def _save_image(self, img, filename, image_width):
+        from PIL import Image
+        new_height = int(image_width * img.height / img.width)
+        img = img.resize((image_width, new_height), Image.LANCZOS)
         img.save(filename)
 
     def _draw_cells(self, macros_only):
@@ -515,6 +514,20 @@ def _show_params(obj, prefix):
         print(f"\t--{prefix}.{name}: {default_val}")
 
 
+class WriteImagesCallback:
+    def __init__(self, circuit, prefix, image_width, extension):
+        self.circuit = circuit
+        self.step = 1
+        self.prefix = prefix
+        self.image_width = image_width
+        self.extension = extension
+
+    def __call__(self, step_name):
+        filename = f"{self.prefix}_{self.step:04d}_{step_name.name.lower()}.{self.extension}"
+        self.circuit.write_image(filename, image_width=self.image_width)
+        self.step += 1
+
+
 def main():
     """
     Run the whole placement algorithm from the command line
@@ -536,7 +549,6 @@ def main():
     parser.add_argument(
         "--show-parameters", help="Show parameter values", action="store_true"
     )
-    parser.add_argument("--save-images", help=argparse.SUPPRESS, type=str)
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         "--no-global", help="Skip global placement", action="store_true")
@@ -553,6 +565,18 @@ def main():
         help="Ignore macros when placing standard cells",
         action="store_true",
     )
+
+    # Prefix to save images
+    parser.add_argument("--save-images", help=argparse.SUPPRESS, type=str)
+    # Save intermediate placement images
+    parser.add_argument("--save-all-images",
+                        help=argparse.SUPPRESS, action="store_true")
+    # Save intermediate placement images
+    parser.add_argument(
+        "--image-width", help=argparse.SUPPRESS, type=int, default=1080)
+    # Save intermediate placement images
+    parser.add_argument("--image-extension",
+                        help=argparse.SUPPRESS, type=str, default="webp")
 
     global_group = parser.add_argument_group("Global placement parameters")
     detailed_group = parser.add_argument_group("Detailed placement parameters")
@@ -581,49 +605,31 @@ def main():
         circuit.load_placement(args.load_solution)
 
     sys.stdout.flush()
+    callback = None
     if args.save_images is not None:
-        circuit.write_image(args.save_images + "_macros.webp", True)
+        circuit.write_image(
+            f"{args.save_images}_macros.{args.image_extension}", True, args.image_width)
+        image_writer = WriteImagesCallback(
+            circuit, args.save_images, args.image_width, args.image_extension)
+        if args.save_all_images:
+            callback = image_writer
 
     if args.no_global:
         print("Global placement skipped at user's request")
     else:
-        circuit.place_global(global_params)
-        if args.save_images is not None:
-            circuit.write_image(args.save_images + "_global.webp")
-            result_global = circuit.cell_placement
+        circuit.place_global(global_params, callback)
 
     sys.stdout.flush()
     if args.only_global:
         print("Legalization and detailed placement skipped at user's request")
     elif args.no_detailed:
-        circuit.legalize(detailed_params)
-        if args.save_images is not None:
-            circuit.write_image(args.save_images + "_legal.webp")
-            circuit.write_displacement(
-                args.save_images + "_legal_displacement.webp",
-                result_global,
-                circuit.cell_placement,
-            )
+        circuit.legalize(detailed_params, callback)
         print("Detailed placement skipped at user's request")
     else:
-        if args.save_images is not None:
-            # Separate legalization so we can save it
-            circuit.legalize(detailed_params)
-            circuit.write_image(args.save_images + "_legal.webp")
-            result_legal = circuit.cell_placement
-            circuit.write_displacement(
-                args.save_images + "_legal_displacement.webp",
-                result_global,
-                result_legal,
-            )
-        circuit.place_detailed(detailed_params)
-        if args.save_images is not None:
-            circuit.write_image(args.save_images + "_detailed.webp")
-            circuit.write_displacement(
-                args.save_images + "_detailed_displacement.webp",
-                result_legal,
-                circuit.cell_placement,
-            )
+        circuit.place_detailed(detailed_params, callback)
+    if args.save_images is not None:
+        circuit.write_image(
+            f"{args.save_images}_placed.{args.image_extension}", True, args.image_width)
     circuit.write_placement(args.save_solution)
 
 
