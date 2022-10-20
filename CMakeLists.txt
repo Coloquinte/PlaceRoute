@@ -29,6 +29,7 @@ SET(SOURCES
   src/place_detailed/detailed_placement.cpp
   src/place_detailed/incr_net_model.cpp
   src/place_detailed/row_neighbourhood.cpp
+  src/place_global/transportation.cpp
 )
 
 add_library(coloquinte STATIC ${SOURCES})
