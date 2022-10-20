@@ -140,7 +140,7 @@ bool Legalizer::placeCellOptimally(int cell, LegalizationModel costModel) {
     // Find the best position for the cell
     auto [ok, dist] = placeCellOptimally(cell, row);
     // TODO: extend this to non-L1 cases
-    dist += yDist;
+    dist += cellWidth_[cell] * yDist;
     if (!ok) {
       // Not possible to place in this row, but cannot stop yet
       return false;
