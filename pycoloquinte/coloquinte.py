@@ -377,6 +377,7 @@ class Circuit(coloquinte_pybind.Circuit):
 
     def write_image(self, filename, macros_only=False):
         from PIL import Image
+
         img = self._draw_cells(macros_only)
         new_height = int(2048 * img.height / img.width)
         img = img.resize((2048, new_height), Image.LANCZOS)
@@ -384,6 +385,7 @@ class Circuit(coloquinte_pybind.Circuit):
 
     def write_displacement(self, filename, pl1, pl2):
         from PIL import Image, ImageDraw
+
         img = self._draw_cells(True)
         draw = ImageDraw.Draw(img)
         fixed = self.cell_is_fixed
@@ -395,14 +397,14 @@ class Circuit(coloquinte_pybind.Circuit):
                 y1 = (pl1[i].min_y + pl1[i].max_y) // 2
                 y2 = (pl2[i].min_y + pl2[i].max_y) // 2
                 draw.line([(x1, y1), (x2, y2)], fill="red", width=2)
-                draw.arc([x1 - 1, y1 - 1, x1 + 1, y1 + 1],
-                         0, 360, fill="black")
+                draw.arc([x1 - 1, y1 - 1, x1 + 1, y1 + 1], 0, 360, fill="black")
         new_height = int(2048 * img.height / img.width)
         img = img.resize((2048, new_height), Image.LANCZOS)
         img.save(filename)
 
     def _draw_cells(self, macros_only):
         from PIL import Image, ImageDraw
+
         placement = self.cell_placement
         fixed = self.cell_is_fixed
 
@@ -410,16 +412,20 @@ class Circuit(coloquinte_pybind.Circuit):
         min_y = min(pl.min_y for pl in placement)
         max_x = max(pl.max_x for pl in placement)
         max_y = max(pl.max_y for pl in placement)
-        img = Image.new(
-            "RGB", (max_x - min_x, max_y - min_y), (255, 255, 255))
+        img = Image.new("RGB", (max_x - min_x, max_y - min_y), (255, 255, 255))
         draw = ImageDraw.Draw(img)
         for i, pl in enumerate(placement):
             if fixed[i]:
                 draw.rectangle(
-                    [(pl.min_x, pl.min_y), (pl.max_x, pl.max_y)], fill="gray", outline="black", width=8)
+                    [(pl.min_x, pl.min_y), (pl.max_x, pl.max_y)],
+                    fill="gray",
+                    outline="black",
+                    width=8,
+                )
             elif not macros_only:
                 draw.rectangle(
-                    [(pl.min_x, pl.min_y), (pl.max_x, pl.max_y)], fill="blue")
+                    [(pl.min_x, pl.min_y), (pl.max_x, pl.max_y)], fill="blue"
+                )
         return img
 
 
@@ -432,7 +438,9 @@ def _add_arguments(parser, obj, prefix):
         arg_type = type(getattr(obj, name))
         if arg_type in (int, float):
             parser.add_argument(
-                "--" + prefix + "." + name, type=arg_type, metavar=name.upper()
+                "--" + prefix + "." + name,
+                type=arg_type,
+                metavar=name.upper(),
             )
         else:
             parser.add_argument(
@@ -486,29 +494,18 @@ def main():
         description="Place a benchmark circuit from the command line"
     )
     parser.add_argument("instance", help="Benchmark instance")
-    parser.add_argument("--effort", help="Placement effort",
-                        type=int, default=3)
+    parser.add_argument("--effort", help="Placement effort", type=int, default=3)
     parser.add_argument("--seed", help="Random seed", type=int, default=-1)
-    parser.add_argument(
-        "--ignore-macros",
-        help="Ignore macros when placing standard cells",
-        action="store_true",
-        dest="ignore_obstructions",
-    )
     parser.add_argument(
         "--load-solution", help="Load initial placement", metavar="FILE"
     )
-    parser.add_argument("--save-solution",
-                        help="Save final placement", metavar="FILE")
+    parser.add_argument("--save-solution", help="Save final placement", metavar="FILE")
     parser.add_argument(
         "--show-parameters", help="Show parameter values", action="store_true"
     )
-    parser.add_argument(
-        "--save-images", help=argparse.SUPPRESS, type=str
-    )
+    parser.add_argument("--save-images", help=argparse.SUPPRESS, type=str)
     group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "--no-global", help="Skip global placement", action="store_true")
+    group.add_argument("--no-global", help="Skip global placement", action="store_true")
     group.add_argument(
         "--only-global",
         help="Run only global placement (no legalization)",
@@ -516,6 +513,11 @@ def main():
     )
     group.add_argument(
         "--no-detailed", help="Skip detailed placement", action="store_true"
+    )
+    parser.add_argument(
+        "--ignore-obstructions",
+        help="Ignore macros when placing standard cells",
+        action="store_true",
     )
 
     global_group = parser.add_argument_group("Global placement parameters")
@@ -564,7 +566,10 @@ def main():
         if args.save_images is not None:
             circuit.write_image(args.save_images + "_legal.webp")
             circuit.write_displacement(
-                args.save_images + "_legal_displacement.webp", result_global, circuit.cell_placement)
+                args.save_images + "_legal_displacement.webp",
+                result_global,
+                circuit.cell_placement,
+            )
         print("Detailed placement skipped at user's request")
     else:
         if args.save_images is not None:
@@ -573,12 +578,18 @@ def main():
             circuit.write_image(args.save_images + "_legal.webp")
             result_legal = circuit.cell_placement
             circuit.write_displacement(
-                args.save_images + "_legal_displacement.webp", result_global, result_legal)
+                args.save_images + "_legal_displacement.webp",
+                result_global,
+                result_legal,
+            )
         circuit.place_detailed(detailed_params)
         if args.save_images is not None:
             circuit.write_image(args.save_images + "_detailed.webp")
             circuit.write_displacement(
-                args.save_images + "_detailed_displacement.webp", result_legal, circuit.cell_placement)
+                args.save_images + "_detailed_displacement.webp",
+                result_legal,
+                circuit.cell_placement,
+            )
     circuit.write_placement(args.save_solution)
 
 
