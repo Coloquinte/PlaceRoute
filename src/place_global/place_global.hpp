@@ -20,7 +20,7 @@ class GlobalPlacer {
    * @param params Placement parameters
    */
   static void place(Circuit &circuit, const GlobalPlacerParameters &params,
-                    const std::vector<PlacementCallback> &callbacks = {});
+                    std::optional<PlacementCallback> callback = {});
 
  private:
   /**

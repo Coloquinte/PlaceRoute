@@ -74,7 +74,7 @@ void GlobalPlacerParameters::check() const {
 }
 
 void GlobalPlacer::place(Circuit &circuit, const GlobalPlacerParameters &params,
-                         const std::vector<PlacementCallback> &callbacks) {
+                         std::optional<PlacementCallback> callback) {
   params.check();
   std::cout << "Global placement starting" << std::endl;
   auto startTime = std::chrono::steady_clock::now();

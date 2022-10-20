@@ -1,6 +1,7 @@
 
 cmake_minimum_required(VERSION 3.10)
 PROJECT(COLOQUINTE)
+SET(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(thirdparty/lemon)
 add_subdirectory(thirdparty/pybind11)

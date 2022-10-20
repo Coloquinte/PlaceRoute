@@ -173,25 +173,25 @@ Construct a circuit.
       .def(
           "place_global",
           [](Circuit &circuit, const GlobalPlacerParameters &params,
-             const std::vector<PlacementCallback> &callbacks) {
+             std::optional<PlacementCallback> callback) {
             py::gil_scoped_release release;
-            circuit.placeGlobal(params, callbacks);
+            circuit.placeGlobal(params, callback);
           },
           "Run the global placement algorithm")
       .def(
           "legalize",
           [](Circuit &circuit, const DetailedPlacerParameters &params,
-             const std::vector<PlacementCallback> &callbacks) {
+             std::optional<PlacementCallback> callback) {
             py::gil_scoped_release release;
-            circuit.legalize(params, callbacks);
+            circuit.legalize(params, callback);
           },
           "Run the detailed placement algorithm")
       .def(
           "place_detailed",
           [](Circuit &circuit, const DetailedPlacerParameters &params,
-             const std::vector<PlacementCallback> &callbacks) {
+             std::optional<PlacementCallback> callback) {
             py::gil_scoped_release release;
-            circuit.placeDetailed(params, callbacks);
+            circuit.placeDetailed(params, callback);
           },
           "Run the detailed placement algorithm")
       .def("check", &Circuit::check, "Check the datastructure")

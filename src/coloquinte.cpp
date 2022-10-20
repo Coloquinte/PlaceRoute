@@ -524,18 +524,18 @@ std::string Circuit::report() const {
 }
 
 void Circuit::placeGlobal(const GlobalPlacerParameters &params,
-                          const std::vector<PlacementCallback> &callbacks) {
-  GlobalPlacer::place(*this, params, callbacks);
+                          std::optional<PlacementCallback> callback) {
+  GlobalPlacer::place(*this, params, callback);
 }
 
 void Circuit::legalize(const DetailedPlacerParameters &params,
-                       const std::vector<PlacementCallback> &callbacks) {
-  DetailedPlacer::legalize(*this, params, callbacks);
+                       std::optional<PlacementCallback> callback) {
+  DetailedPlacer::legalize(*this, params, callback);
 }
 
 void Circuit::placeDetailed(const DetailedPlacerParameters &params,
-                            const std::vector<PlacementCallback> &callbacks) {
-  DetailedPlacer::place(*this, params, callbacks);
+                            const std::optional<PlacementCallback> callback) {
+  DetailedPlacer::place(*this, params, callback);
 }
 
 extern "C" {

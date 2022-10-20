@@ -344,34 +344,31 @@ class Circuit(coloquinte_pybind.Circuit):
         """
         Run the global placement
         """
-        callbacks = [] if callback is None else callback
         if not isinstance(params, GlobalPlacerParameters):
             if not isinstance(params, int):
                 raise TypeError("Argument should be an integer effort")
             params = GlobalPlacerParameters(params)
-        super().place_global(params, callbacks)
+        super().place_global(params, callback)
 
     def legalize(self, params, callback=None):
         """
         Run the legalization
         """
-        callbacks = [] if callback is None else callback
         if not isinstance(params, DetailedPlacerParameters):
             if not isinstance(params, int):
                 raise TypeError("Argument should be an integer effort")
             params = DetailedPlacerParameters(params)
-        super().legalize(params, callbacks)
+        super().legalize(params, callback)
 
     def place_detailed(self, params, callback=None):
         """
         Run the detailed placement
         """
-        callbacks = [] if callback is None else callback
         if not isinstance(params, DetailedPlacerParameters):
             if not isinstance(params, int):
                 raise TypeError("Argument should be an integer effort")
             params = DetailedPlacerParameters(params)
-        super().place_detailed(params, callbacks)
+        super().place_detailed(params, callback)
 
     def load_placement(self, filename):
         if filename is None:

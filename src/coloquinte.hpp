@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <functional>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -597,7 +598,7 @@ class Circuit {
    * @brief Run the global placement algorithm
    */
   void placeGlobal(const GlobalPlacerParameters &params,
-                   const std::vector<PlacementCallback> &callbacks = {});
+                   std::optional<PlacementCallback> callback = {});
 
   /**
    * @brief Run the legalization algorithm
@@ -608,7 +609,7 @@ class Circuit {
    * @brief Run the legalization algorithm
    */
   void legalize(const DetailedPlacerParameters &params,
-                const std::vector<PlacementCallback> &callbacks = {});
+                std::optional<PlacementCallback> callback = {});
 
   /**
    * @brief Run the detailed placement algorithm
@@ -621,7 +622,7 @@ class Circuit {
    * @brief Run the detailed placement algorithm
    */
   void placeDetailed(const DetailedPlacerParameters &params,
-                     const std::vector<PlacementCallback> &callbacks = {});
+                     std::optional<PlacementCallback> callback = {});
 
   /**
    * @brief Return a brief description of the circuit
