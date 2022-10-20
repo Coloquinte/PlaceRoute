@@ -73,8 +73,8 @@ void GlobalPlacerParameters::check() const {
   }
 }
 
-void GlobalPlacer::place(Circuit &circuit,
-                         const GlobalPlacerParameters &params) {
+void GlobalPlacer::place(Circuit &circuit, const GlobalPlacerParameters &params,
+                         const std::vector<PlacementCallback> &callbacks) {
   params.check();
   GlobalPlacer pl(circuit, params);
   pl.run();

@@ -19,7 +19,8 @@ class GlobalPlacer {
    * @param circuit The circuit to be modified
    * @param params Placement parameters
    */
-  static void place(Circuit &circuit, const GlobalPlacerParameters &params);
+  static void place(Circuit &circuit, const GlobalPlacerParameters &params,
+                    const std::vector<PlacementCallback> &callbacks = {});
 
  private:
   /**
@@ -65,7 +66,8 @@ class GlobalPlacer {
   /**
    * @brief Export a given placement to the ISPD circuit
    */
-  static void exportPlacement(Circuit &, const std::vector<float> &xplace, const std::vector<float> &yplace);
+  static void exportPlacement(Circuit &, const std::vector<float> &xplace,
+                              const std::vector<float> &yplace);
 
   /**
    * @brief Compute the average cell size of the circuit

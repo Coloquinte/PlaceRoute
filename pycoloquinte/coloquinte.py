@@ -340,6 +340,39 @@ class Circuit(coloquinte_pybind.Circuit):
         ret.check()
         return ret
 
+    def place_global(self, params, callback=None):
+        """
+        Run the global placement
+        """
+        callbacks = [] if callback is None else callback
+        if not isinstance(params, GlobalPlacerParameters):
+            if not isinstance(params, int):
+                raise TypeError("Argument should be an integer effort")
+            params = GlobalPlacerParameters(params)
+        super().place_global(params, callbacks)
+
+    def legalize(self, params, callback=None):
+        """
+        Run the legalization
+        """
+        callbacks = [] if callback is None else callback
+        if not isinstance(params, DetailedPlacerParameters):
+            if not isinstance(params, int):
+                raise TypeError("Argument should be an integer effort")
+            params = DetailedPlacerParameters(params)
+        super().legalize(params, callbacks)
+
+    def place_detailed(self, params, callback=None):
+        """
+        Run the detailed placement
+        """
+        callbacks = [] if callback is None else callback
+        if not isinstance(params, DetailedPlacerParameters):
+            if not isinstance(params, int):
+                raise TypeError("Argument should be an integer effort")
+            params = DetailedPlacerParameters(params)
+        super().place_detailed(params, callbacks)
+
     def load_placement(self, filename):
         if filename is None:
             return
@@ -397,7 +430,8 @@ class Circuit(coloquinte_pybind.Circuit):
                 y1 = (pl1[i].min_y + pl1[i].max_y) // 2
                 y2 = (pl2[i].min_y + pl2[i].max_y) // 2
                 draw.line([(x1, y1), (x2, y2)], fill="red", width=2)
-                draw.arc([x1 - 1, y1 - 1, x1 + 1, y1 + 1], 0, 360, fill="black")
+                draw.arc([x1 - 1, y1 - 1, x1 + 1, y1 + 1],
+                         0, 360, fill="black")
         new_height = int(2048 * img.height / img.width)
         img = img.resize((2048, new_height), Image.LANCZOS)
         img.save(filename)
@@ -494,18 +528,21 @@ def main():
         description="Place a benchmark circuit from the command line"
     )
     parser.add_argument("instance", help="Benchmark instance")
-    parser.add_argument("--effort", help="Placement effort", type=int, default=3)
+    parser.add_argument("--effort", help="Placement effort",
+                        type=int, default=3)
     parser.add_argument("--seed", help="Random seed", type=int, default=-1)
     parser.add_argument(
         "--load-solution", help="Load initial placement", metavar="FILE"
     )
-    parser.add_argument("--save-solution", help="Save final placement", metavar="FILE")
+    parser.add_argument("--save-solution",
+                        help="Save final placement", metavar="FILE")
     parser.add_argument(
         "--show-parameters", help="Show parameter values", action="store_true"
     )
     parser.add_argument("--save-images", help=argparse.SUPPRESS, type=str)
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("--no-global", help="Skip global placement", action="store_true")
+    group.add_argument(
+        "--no-global", help="Skip global placement", action="store_true")
     group.add_argument(
         "--only-global",
         help="Run only global placement (no legalization)",

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -59,6 +60,11 @@ struct Rectangle {
    */
   std::string toString() const;
 };
+
+/**
+ * @brief Step of the placement process, for use in callbacks
+ */
+enum class PlacementStep { LowerBound, UpperBound, Detailed };
 
 /**
  * @brief Cost model to use when doing legalization
@@ -125,6 +131,12 @@ enum class CellOrientation {
 
 std::string toString(LegalizationModel model);
 std::string toString(NetModelOption model);
+
+/**
+ * @brief Placement callbacks are called with the current step.
+ * The circuit can be accessed (not modified) when the callback is called
+ */
+using PlacementCallback = std::function<void(PlacementStep)>;
 
 /**
  * @brief Parameters for the global placer
@@ -584,7 +596,8 @@ class Circuit {
   /**
    * @brief Run the global placement algorithm
    */
-  void placeGlobal(const GlobalPlacerParameters &params);
+  void placeGlobal(const GlobalPlacerParameters &params,
+                   const std::vector<PlacementCallback> &callbacks = {});
 
   /**
    * @brief Run the legalization algorithm
@@ -594,7 +607,8 @@ class Circuit {
   /**
    * @brief Run the legalization algorithm
    */
-  void legalize(const DetailedPlacerParameters &params);
+  void legalize(const DetailedPlacerParameters &params,
+                const std::vector<PlacementCallback> &callbacks = {});
 
   /**
    * @brief Run the detailed placement algorithm
@@ -606,7 +620,8 @@ class Circuit {
   /**
    * @brief Run the detailed placement algorithm
    */
-  void placeDetailed(const DetailedPlacerParameters &params);
+  void placeDetailed(const DetailedPlacerParameters &params,
+                     const std::vector<PlacementCallback> &callbacks = {});
 
   /**
    * @brief Return a brief description of the circuit

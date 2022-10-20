@@ -16,7 +16,8 @@ class DetailedPlacer {
    * @param circuit The circuit to be modified
    * @param params Placement parameters
    */
-  static void place(Circuit &circuit, const DetailedPlacerParameters &params);
+  static void place(Circuit &circuit, const DetailedPlacerParameters &params,
+                    const std::vector<PlacementCallback> &callbacks = {});
 
   /**
    * @brief Run legalization
@@ -24,7 +25,8 @@ class DetailedPlacer {
    * @param circuit The circuit to be modified
    * @param params Placement parameters
    */
-  static void legalize(Circuit &circuit, const DetailedPlacerParameters &params);
+  static void legalize(Circuit &circuit, const DetailedPlacerParameters &params,
+                       const std::vector<PlacementCallback> &callbacks = {});
 
   /**
    * @brief Initialize the datastructure

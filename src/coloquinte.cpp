@@ -376,12 +376,14 @@ std::vector<Rectangle> Circuit::computeRows(
 
 int Circuit::rowHeight() const {
   if (nbRows() == 0) {
-    throw std::runtime_error("Cannot compute row height as no row has been defined");
+    throw std::runtime_error(
+        "Cannot compute row height as no row has been defined");
   }
   int ret = rows_[0].height();
   for (Rectangle row : rows_) {
     if (row.height() != ret) {
-      throw std::runtime_error("The circuit contains rows of different heights");
+      throw std::runtime_error(
+          "The circuit contains rows of different heights");
     }
   }
   return ret;
@@ -521,16 +523,19 @@ std::string Circuit::report() const {
   return ss.str();
 }
 
-void Circuit::placeGlobal(const GlobalPlacerParameters &params) {
-  GlobalPlacer::place(*this, params);
+void Circuit::placeGlobal(const GlobalPlacerParameters &params,
+                          const std::vector<PlacementCallback> &callbacks) {
+  GlobalPlacer::place(*this, params, callbacks);
 }
 
-void Circuit::legalize(const DetailedPlacerParameters &params) {
-  DetailedPlacer::legalize(*this, params);
+void Circuit::legalize(const DetailedPlacerParameters &params,
+                       const std::vector<PlacementCallback> &callbacks) {
+  DetailedPlacer::legalize(*this, params, callbacks);
 }
 
-void Circuit::placeDetailed(const DetailedPlacerParameters &params) {
-  DetailedPlacer::place(*this, params);
+void Circuit::placeDetailed(const DetailedPlacerParameters &params,
+                            const std::vector<PlacementCallback> &callbacks) {
+  DetailedPlacer::place(*this, params, callbacks);
 }
 
 extern "C" {

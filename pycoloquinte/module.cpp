@@ -58,6 +58,12 @@ PYBIND11_MODULE(coloquinte_pybind, m) {
       .value("LightStar", NetModelOption::LightStar)
       .export_values();
 
+  py::enum_<PlacementStep>(m, "PlacementStep")
+      .value("LowerBound", PlacementStep::LowerBound)
+      .value("UpperBound", PlacementStep::UpperBound)
+      .value("Detailed", PlacementStep::Detailed)
+      .export_values();
+
   py::class_<GlobalPlacerParameters>(m, "GlobalPlacerParameters")
       .def(py::init<int, int>(), R"pbdoc(
 Construct the parameters
@@ -166,44 +172,26 @@ Construct a circuit.
            "Run the whole placement algorithm (global and detailed)")
       .def(
           "place_global",
-          [](Circuit &circuit, int effort) {
+          [](Circuit &circuit, const GlobalPlacerParameters &params,
+             const std::vector<PlacementCallback> &callbacks) {
             py::gil_scoped_release release;
-            circuit.placeGlobal(effort);
-          },
-          "Run the global placement algorithm")
-      .def(
-          "place_global",
-          [](Circuit &circuit, const GlobalPlacerParameters &params) {
-            py::gil_scoped_release release;
-            circuit.placeGlobal(params);
+            circuit.placeGlobal(params, callbacks);
           },
           "Run the global placement algorithm")
       .def(
           "legalize",
-          [](Circuit &circuit, int effort) {
+          [](Circuit &circuit, const DetailedPlacerParameters &params,
+             const std::vector<PlacementCallback> &callbacks) {
             py::gil_scoped_release release;
-            circuit.legalize(effort);
-          },
-          "Run the detailed placement algorithm")
-      .def(
-          "legalize",
-          [](Circuit &circuit, const DetailedPlacerParameters &params) {
-            py::gil_scoped_release release;
-            circuit.legalize(params);
+            circuit.legalize(params, callbacks);
           },
           "Run the detailed placement algorithm")
       .def(
           "place_detailed",
-          [](Circuit &circuit, int effort) {
+          [](Circuit &circuit, const DetailedPlacerParameters &params,
+             const std::vector<PlacementCallback> &callbacks) {
             py::gil_scoped_release release;
-            circuit.placeDetailed(effort);
-          },
-          "Run the detailed placement algorithm")
-      .def(
-          "place_detailed",
-          [](Circuit &circuit, const DetailedPlacerParameters &params) {
-            py::gil_scoped_release release;
-            circuit.placeDetailed(params);
+            circuit.placeDetailed(params, callbacks);
           },
           "Run the detailed placement algorithm")
       .def("check", &Circuit::check, "Check the datastructure")
