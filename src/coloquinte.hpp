@@ -609,6 +609,11 @@ class Circuit {
   std::string toString() const;
 
   /**
+   * @brief Obtain a detailed report
+   */
+  std::string report() const;
+
+  /**
    * @brief Check the consistency of the datastructure
    */
   void check() const;

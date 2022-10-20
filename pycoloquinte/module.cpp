@@ -203,6 +203,7 @@ Construct a circuit.
           },
           "Run the detailed placement algorithm")
       .def("check", &Circuit::check, "Check the datastructure")
+      .def("report", &Circuit::report)
       .def("__str__", &Circuit::toString)
       .def("__repr__", &Circuit::toString);
 }

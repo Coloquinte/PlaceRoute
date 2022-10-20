@@ -3,8 +3,10 @@
 
 #include <boost/polygon/polygon.hpp>
 #include <cassert>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <unordered_set>
 
 #include "coloquinte.hpp"
 #include "place_detailed/place_detailed.hpp"
@@ -380,18 +382,133 @@ std::string Circuit::toString() const {
 }
 
 void Circuit::check() const {
-  assert(cellWidth_.size() == nbCells());
-  assert(cellHeight_.size() == nbCells());
-  assert(cellIsFixed_.size() == nbCells());
-  assert(cellIsObstruction_.size() == nbCells());
-  assert(cellX_.size() == nbCells());
-  assert(cellY_.size() == nbCells());
-  assert(cellOrientation_.size() == nbCells());
-  assert(!netLimits_.empty());
-  assert(netLimits_.front() == 0);
-  assert(pinCells_.size() == nbPins());
-  assert(pinXOffsets_.size() == nbPins());
-  assert(pinYOffsets_.size() == nbPins());
+  if (cellWidth_.size() != nbCells()) {
+    throw std::runtime_error("Size mismatch");
+  }
+  if (cellHeight_.size() != nbCells()) {
+    throw std::runtime_error("Size mismatch");
+  }
+  if (cellIsFixed_.size() != nbCells()) {
+    throw std::runtime_error("Size mismatch");
+  }
+  if (cellIsObstruction_.size() != nbCells()) {
+    throw std::runtime_error("Size mismatch");
+  }
+  if (cellX_.size() != nbCells()) {
+    throw std::runtime_error("Size mismatch");
+  }
+  if (cellY_.size() != nbCells()) {
+    throw std::runtime_error("Size mismatch");
+  }
+  if (cellOrientation_.size() != nbCells()) {
+    throw std::runtime_error("Size mismatch");
+  }
+  if (netLimits_.empty()) {
+    throw std::runtime_error("Size mismatch");
+  }
+  if (netLimits_.front() != 0) {
+    throw std::runtime_error("Size mismatch");
+  }
+  if (pinCells_.size() != nbPins()) {
+    throw std::runtime_error("Size mismatch");
+  }
+  if (pinXOffsets_.size() != nbPins()) {
+    throw std::runtime_error("Size mismatch");
+  }
+  if (pinYOffsets_.size() != nbPins()) {
+    throw std::runtime_error("Size mismatch");
+  }
+}
+
+std::string Circuit::report() const {
+  int rowHeight = 0;
+  for (Rectangle row : rows_) {
+    rowHeight = std::max(rowHeight, row.height());
+  }
+  int nbMacros = 0;
+  int nbSingleRowCells = 0;
+  int nbMultiRowCells = 0;
+  int nbPlaceableMacros = 0;
+  long long singleRowCellArea = 0;
+  long long multiRowCellArea = 0;
+  long long placeableMacroArea = 0;
+  for (int i = 0; i < nbCells(); ++i) {
+    if (isFixed(i)) {
+      if (isObstruction(i)) {
+        ++nbMacros;
+      }
+    } else if (cellHeight_[i] <= rowHeight) {
+      ++nbSingleRowCells;
+      singleRowCellArea += area(i);
+    } else if (cellHeight_[i] <= 4 * rowHeight) {
+      ++nbMultiRowCells;
+      multiRowCellArea += area(i);
+    } else {
+      ++nbPlaceableMacros;
+      placeableMacroArea += area(i);
+    }
+  }
+  int nbPlaceableCells = nbSingleRowCells + nbMultiRowCells + nbPlaceableMacros;
+  long long placeableCellArea =
+      singleRowCellArea + multiRowCellArea + placeableMacroArea;
+  int nbFixedPins = 0;
+  for (int i = 0; i < nbNets(); ++i) {
+    for (int j = 0; j < nbPinsNet(i); ++j) {
+      int c = pinCell(i, j);
+      if (isFixed(c)) {
+        ++nbFixedPins;
+      }
+    }
+  }
+  int nbMoveablePins = nbPins() - nbFixedPins;
+  long long availableArea = 0;
+  for (Rectangle row : computeRows()) {
+    availableArea += row.area();
+  }
+  long long totalArea = 0;
+  for (Rectangle row : rows_) {
+    totalArea += row.area();
+  }
+  std::stringstream ss;
+  ss << std::fixed << std::setprecision(1);
+  ss << "Circuit report:\n";
+  ss << "\t" << nbPlaceableCells << " cells (" << nbSingleRowCells
+     << " single-row cells";
+  if (nbMultiRowCells > 0) {
+    ss << ", " << nbMultiRowCells << " multi-row cells";
+  }
+  if (nbPlaceableMacros > 0) {
+    ss << ", " << nbPlaceableMacros << " placeable macro blocks";
+  } else {
+    ss << ", no placeable macro block";
+  }
+  ss << ")\n";
+
+  ss << "\t" << nbNets() << " nets, " << nbMoveablePins << " pins + "
+     << nbFixedPins << " fixed"
+     << ", " << (float)nbPins() / nbNets() << " pins/net\n";
+
+  ss << "\t";
+  if (totalArea != availableArea) {
+    ss << 100.0 * (totalArea - availableArea) / totalArea
+       << "% fixed macro blocks, ";
+  }
+  ss << 100.0 * placeableCellArea / availableArea << "% density";
+  if (multiRowCellArea > 0 || placeableMacroArea > 0) {
+    ss << " (" << 100.0 * singleRowCellArea / availableArea
+       << "% single-row cells";
+    if (multiRowCellArea > 0) {
+      ss << ", " << 100.0 * multiRowCellArea / availableArea
+         << "% multi-row cells";
+    }
+    if (placeableMacroArea > 0) {
+      ss << ", " << 100.0 * placeableMacroArea / availableArea
+         << "% placeable macro blocks";
+    }
+    ss << ")";
+  }
+  ss << "\n";
+  return ss.str();
 }
 
 void Circuit::placeGlobal(const GlobalPlacerParameters &params) {

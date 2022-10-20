@@ -537,7 +537,7 @@ def main():
         _show_params(detailed_params, "detailed")
 
     circuit = Circuit.read_ispd(args.instance, args.ignore_obstructions)
-    print(circuit)
+    print(circuit.report())
     if args.ignore_obstructions:
         print("Ignoring macros for standard cell placement")
     if args.load_solution is not None:
