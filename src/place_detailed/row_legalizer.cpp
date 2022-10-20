@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cmath>
 #include <numeric>
+#include <stdexcept>
 #include <utility>
 
 namespace coloquinte {
@@ -32,8 +33,9 @@ inline int RowLegalizer::getDisplacement(int width, int targetPos,
     }
     bounds.pop();
   }
-  // Always before the end, after the beginning, and not pushed beyond the
-  // target position
+  assert(cur_pos >= begin_);
+
+  // Always before the end and not pushed beyond the target position
   int finalAbsPos =
       std::min(end_ - usedSpace() - width,
                std::max(begin_, slope >= 0 ? cur_pos : targetAbsPos));
@@ -49,9 +51,10 @@ inline int RowLegalizer::getDisplacement(int width, int targetPos,
     if (slope > 0) {  // Remaining capacity of an encountered bound
       bounds.push(Bound(slope, cur_pos));
     }
-    // The new bound, minus what it absorbs of the remaining slope
+    // The new bound, depending on whether it was passed or not
     if (targetAbsPos > begin_) {
-      bounds.push(Bound(2 * width + std::min(slope, 0), targetAbsPos));
+      bounds.push(Bound(2 * width + std::min(slope, 0),
+                        std::min(targetAbsPos, finalAbsPos)));
     }
   } else {
     for (Bound b : passed_bounds) {
@@ -92,5 +95,22 @@ std::vector<int> RowLegalizer::getPlacement() const {
     assert(finalAbsPos[i] + cumWidth_[i + 1] <= end_);
   }
   return ret;
+}
+
+void RowLegalizer::check() const {
+  std::vector<int> pl = getPlacement();
+  for (int i = 0; i < nbElements(); ++i) {
+    if (pl[i] < begin_) {
+      throw std::runtime_error("A cell is placed before the row");
+    }
+    if (pl[i] + width(i) > end_) {
+      throw std::runtime_error("A cell is placed after the row");
+    }
+  }
+  for (int i = 0; i + 1 < nbElements(); ++i) {
+    if (pl[i + 1] - pl[i] < width(i)) {
+      throw std::runtime_error("Two cells overlap");
+    }
+  }
 }
 }  // namespace coloquinte

@@ -51,6 +51,11 @@ class RowLegalizer {
   std::vector<int> getPlacement() const;
 
   /**
+   * @brief Check the consistency
+   */
+  void check() const;
+
+  /**
    * @brief Remove all cells from the datastructure
    */
   void clear();
@@ -65,9 +70,22 @@ class RowLegalizer {
     /// Will be proportional to the width of the cell
     int weight;
 
-    bool operator<(Bound const o) const { return absolutePos < o.absolutePos; }
+    bool operator<(Bound const o) const {
+      return absolutePos < o.absolutePos ||
+             (absolutePos == o.absolutePos && weight < o.weight);
+    }
     Bound(int w, int absPos) : absolutePos(absPos), weight(w) {}
   };
+
+  /**
+   * @brief Return the number of elements
+   */
+  int nbElements() const { return cumWidth_.size() - 1; }
+
+  /**
+   * @brief Return the width of this element
+   */
+  int width(int ind) const { return cumWidth_[ind + 1] - cumWidth_[ind]; }
 
   /// Get the cost of pushing a cell on the row
   int getDisplacement(int width, int targetPos, bool update);
@@ -87,4 +105,4 @@ class RowLegalizer {
   /// Priority queue for the cascading descent algorithm
   std::priority_queue<Bound> bounds;
 };
-}
+}  // namespace coloquinte
