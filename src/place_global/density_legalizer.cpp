@@ -152,9 +152,9 @@ int DensityLegalizer::findConstrainedSplitPos(
   }
   int splitPos = targetPos;
   // Remove from the left if overflowed
-  while (splitPos > 0 && demand1 - capa1 > 0) {
+  while (splitPos > 0 && demand1 - capa1 > 0 && capa2 > 0) {
     int dem = cellDemand_[cellCosts[splitPos - 1].second];
-    if (demand1 - capa1 < demand2 - capa2 + dem) {
+    if (capa1 > 0 && demand1 - capa1 < demand2 - capa2 + dem) {
       // Stop if overflow would be bigger on the other side
       break;
     }
@@ -163,9 +163,9 @@ int DensityLegalizer::findConstrainedSplitPos(
     --splitPos;
   }
   // Remove from the right if overflowed
-  while (splitPos < cellCosts.size() && demand2 - capa2 > 0) {
+  while (splitPos < cellCosts.size() && demand2 - capa2 > 0 && capa1 > 0) {
     int dem = cellDemand_[cellCosts[splitPos].second];
-    if (demand2 - capa2 < demand1 - capa1 + dem) {
+    if (capa2 > 0 && demand2 - capa2 < demand1 - capa1 + dem) {
       // Stop if overflow would be bigger on the other side
       break;
     }
