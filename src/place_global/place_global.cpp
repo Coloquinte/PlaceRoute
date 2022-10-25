@@ -68,6 +68,19 @@ void GlobalPlacerParameters::check() const {
     throw std::runtime_error(
         "Bin size should not be too large (10 should be enough)");
   }
+  if (roughLegalizationReoptLength < 1 ||
+      roughLegalizationReoptSquareSize < 1) {
+    throw std::runtime_error("Rough legalization reopt should be at least 1");
+  }
+  if (roughLegalizationReoptLength > 64 ||
+      roughLegalizationReoptSquareSize > 8) {
+    throw std::runtime_error("Rough legalization reopt should be small");
+  }
+  if (roughLegalizationReoptLength < 2 &&
+      roughLegalizationReoptSquareSize < 2) {
+    throw std::runtime_error(
+        "At least one rough legalization reopt value should be 2 or more");
+  }
   if (exportWeighting < -0.5f || exportWeighting > 1.5f) {
     throw std::runtime_error(
         "Export weighting should generally be between 0 and 1");
@@ -101,8 +114,12 @@ GlobalPlacer::GlobalPlacer(Circuit &circuit,
   rgen_.seed(params_.seed);
   averageCellLength_ = computeAverageCellSize();
   perCellPenalty_ = computePerCellPenalty();
-  leg_.setCostModel(params.roughLegalizationCostModel);
-  leg_.setNbSteps(params.roughLegalizationNbSteps);
+  DensityLegalizer::Parameters legParams;
+  legParams.nbSteps = params.roughLegalizationNbSteps;
+  legParams.costModel = params.roughLegalizationCostModel;
+  legParams.reoptimizationLength = params.roughLegalizationReoptLength;
+  legParams.reoptimizationSquareSize = params.roughLegalizationReoptSquareSize;
+  leg_.setParams(legParams);
 }
 
 void GlobalPlacer::exportPlacement(Circuit &circuit) const {

@@ -11,6 +11,9 @@ namespace coloquinte {
  */
 class NetModel {
  public:
+  /**
+   * @brief Parameters to build and solve the model
+   */
   struct Parameters {
     NetModelOption netModel;
     float approximationDistance;
@@ -151,10 +154,11 @@ class NetModel {
    *
    * @return New positions for the cells
    */
-  std::vector<float> solveWithPenalty(const std::vector<float> &netPlacement,
-                           const std::vector<float> &placementTarget,
-                           const std::vector<float> &penaltyStrength,
-                           const Parameters &params = Parameters()) const;
+  std::vector<float> solveWithPenalty(
+      const std::vector<float> &netPlacement,
+      const std::vector<float> &placementTarget,
+      const std::vector<float> &penaltyStrength,
+      const Parameters &params = Parameters()) const;
 
   /**
    * @brief Solve with a quadratic star model

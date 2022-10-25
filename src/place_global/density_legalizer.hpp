@@ -11,22 +11,46 @@ namespace coloquinte {
 class DensityLegalizer : public HierarchicalDensityPlacement {
  public:
   /**
+   * @brief Parameters to perform rough legalization
+   */
+  struct Parameters {
+    // Number of improvement steps at each grid coarsening level
+    int nbSteps;
+    LegalizationModel costModel;
+    int reoptimizationLength;
+    int reoptimizationSquareSize;
+
+    Parameters();
+  };
+
+  /**
    * @brief Initialize the datastructure from the grid and the cell demands
    * (single bin)
    */
-  DensityLegalizer(DensityGrid grid, std::vector<int> cellDemand);
+  DensityLegalizer(DensityGrid grid, std::vector<int> cellDemand,
+                   const Parameters &params = Parameters());
 
   /**
    * @brief Initialize from an existing hierarchical placement
    */
-  explicit DensityLegalizer(HierarchicalDensityPlacement pl);
+  explicit DensityLegalizer(HierarchicalDensityPlacement pl,
+                            const Parameters &params = Parameters());
 
   /**
    * @brief Initialize from a circuit
    */
   static DensityLegalizer fromIspdCircuit(const Circuit &circuit,
-                                          float sizeFactor,
-                                          float sideMargin);
+                                          float sizeFactor, float sideMargin);
+
+  /**
+   * @brief Access the parameters
+   */
+  const Parameters &params() const { return params_; }
+
+  /**
+   * @brief Set the parameters
+   */
+  void setParams(const Parameters &params) { params_ = params; }
 
   /**
    * @brief Target x position for the cell
@@ -37,26 +61,6 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
    * @brief Target y position for the cell
    */
   float cellTargetY(int c) const { return cellTargetY_[c]; }
-
-  /**
-   * @brief Get the cost model used
-   */
-  LegalizationModel costModel() const { return costModel_; }
-
-  /**
-   * @brief Set the cost model to use
-   */
-  void setCostModel(LegalizationModel model) { costModel_ = model; }
-
-  /**
-   * @brief Get the number of iterations used
-   */
-  int nbSteps() const { return nbSteps_; }
-
-  /**
-   * @brief Set the number of iterations to use
-   */
-  void setNbSteps(int nbSteps) { nbSteps_ = nbSteps; }
 
   /**
    * @brief Update the demands of the cells
@@ -84,7 +88,7 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
   /**
    * @brief Return the mean displacement with the current cost model
    */
-  float quality() const { return meanDistance(costModel_); }
+  float quality() const { return meanDistance(params_.costModel); }
 
   /**
    * @brief Return the mean displacement with the given cost model
@@ -138,24 +142,44 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
 
  private:
   /**
-   * @brief Improve all neighbouring bins in the x direction
+   * @brief Improve neighbouring bins in the x direction
    */
-  void improveX(bool sameParent);
+  void improveXNeighbours(bool sameParent = true);
 
   /**
-   * @brief Improve all neighbouring bins in the y direction
+   * @brief Improve neighbouring bins in the y direction
    */
-  void improveY(bool sameParent);
+  void improveYNeighbours(bool sameParent = true);
 
   /**
-   * @brief Improve all diagonally adjacent bins
+   * @brief Improve groups of horizontally adjacent bins
+   */
+  void improveX();
+
+  /**
+   * @brief Improve groups of horizontally adjacent bins
+   */
+  void improveY();
+
+  /**
+   * @brief Improve groups of diagonally adjacent bins
    */
   void improveDiag();
+
+  /**
+   * @brief Improve squares of adjacent bins
+   */
+  void improveSquare();
 
   /**
    * @brief Redo the bisection for two bins
    */
   void rebisect(int x1, int y1, int x2, int y2);
+
+  /**
+   * @brief Redo the distribution using a transportation algorithm
+   */
+  void reoptimize(const std::vector<std::pair<int, int> > &bins);
 
   // Bisection algorithm helpers
   std::vector<std::pair<float, int> > computeCellCosts(
@@ -175,9 +199,8 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
   std::vector<float> allDistances(LegalizationModel model) const;
 
  private:
-  // Parameters
-  LegalizationModel costModel_;
-  int nbSteps_;
+  Parameters params_;
+
   std::vector<float> cellTargetX_;
   std::vector<float> cellTargetY_;
 };

@@ -216,6 +216,16 @@ struct GlobalPlacerParameters {
   double roughLegalizationBinSize;
 
   /**
+   * @brief Number of aligned bins reoptimized together
+   */
+  int roughLegalizationReoptLength;
+
+  /**
+   * @brief Size ot the square of bins reoptimized together
+   */
+  int roughLegalizationReoptSquareSize;
+
+  /**
    * @brief Margin to use on the sides of each row to account for lost space,
    * relative to the standard cell height
    */
