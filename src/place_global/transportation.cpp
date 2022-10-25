@@ -1,10 +1,15 @@
 
+#include "place_global/transportation.hpp"
+
 #include <cassert>
 #include <limits>
+#include <numeric>
 #include <queue>
 #include <stdexcept>
 #include <utility>
 #include <vector>
+
+namespace coloquinte {
 
 class CurrentAllocation {
   static constexpr int NULL_IND = -1;
@@ -361,3 +366,155 @@ std::vector<std::vector<long long> > solveTransportation(
 
   return transporter.get_allocations();
 }
+
+std::vector<long long> solveTransportation1D(std::vector<t1D_elt> sources,
+                                             std::vector<t1D_elt> sinks) {
+  /* Description of the algorithm:
+   *
+   *    For each cell, put it in its optimal region or the last region where a
+   * cell is if there is no space in it.
+   *
+   *    Push all changes in the derivative of the cost function to a priority
+   * queue; those changes occur
+   *         * when evicting the preceding cell from a region (most such changes
+   * are 0 and not considered, hence the complexity)
+   *         * when moving to a non-full region
+   *
+   *    While the new cell overlaps with a new region, get the new slope
+   * (derivative) at this point and push all preceding cell until this region is
+   * freed or the slope becomes 0 (in which case the new region is now occupied)
+   */
+
+  struct Bound {
+    long long pos;
+    int slope_diff;
+    bool operator<(const Bound o) const { return pos < o.pos; }
+  };
+
+  std::priority_queue<Bound> bounds;
+  std::vector<long long> constraining_pos;
+  std::vector<long long> prev_cap(1, 0), prev_dem(1, 0);
+  for (auto const s : sinks) {
+    prev_cap.push_back(s.second + prev_cap.back());
+  }
+  for (auto const s : sources) {
+    prev_dem.push_back(s.second + prev_dem.back());
+  }
+  // The sinks have enough capacity to hold the whole demand
+  assert(prev_cap.back() >= prev_dem.back());
+
+  const long long min_abs_pos = 0,
+                  max_abs_pos = prev_cap.back() - prev_dem.back();
+  assert(min_abs_pos <= max_abs_pos);
+
+  auto push_bound = [&](long long p, int s) {
+    assert(s >= 0);
+    if (p > min_abs_pos) {
+      Bound b;
+      b.pos = p;
+      b.slope_diff = s;
+      bounds.push(b);
+    }
+  };
+
+  // Distance to the right - distance to the left
+  auto get_slope = [&](int src, int boundary) {
+    assert(boundary + 1 < sinks.size());
+    assert(src < sources.size());
+    return std::abs(sources[src].first - sinks[boundary + 1].first) -
+           std::abs(sources[src].first - sinks[boundary].first);
+  };
+
+  long long cur_abs_pos = min_abs_pos;
+  int opt_r = 0, next_r = 0, first_free_r = 0;
+
+  for (int i = 0; i < sources.size(); ++i) {
+    // Update the optimal region
+    while (opt_r + 1 < sinks.size() and
+           (sinks[opt_r].first + sinks[opt_r + 1].first) / 2 <
+               sources[i].first) {
+      ++opt_r;
+    }
+    // Update the next region
+    int prev_next_r = next_r;
+    while (next_r < sinks.size() and sinks[next_r].first <= sources[i].first) {
+      ++next_r;
+    }
+
+    int dest_reg = std::max(first_free_r, opt_r);
+    assert(dest_reg < sinks.size());
+
+    if (i > 0) {
+      // Push bounds due to changing the source crossing the boundary j/j+1
+      // Linear amortized complexity accross all sources (next_r grows)
+      // get_slope(i-1, j) - get_slope(i, j) == 0 if j >= next_r
+      // get_slope(i-1, j) - get_slope(i, j) == 0 if j < prev_next_r-1
+
+      for (int j = std::max(prev_next_r, 1) - 1;
+           j < std::min(first_free_r, next_r + 1); ++j) {
+        assert(get_slope(i, j) <= get_slope(i - 1, j));
+        push_bound(prev_cap[j + 1] - prev_dem[i],
+                   get_slope(i - 1, j) - get_slope(i, j));
+      }
+    }
+    // Add the bounds due to crossing the boundaries alone
+    for (int j = first_free_r; j < opt_r; ++j) {
+      assert(get_slope(i, j) <= 0);
+      push_bound(prev_cap[j + 1] - prev_dem[i], -get_slope(i, j));
+    }
+
+    first_free_r = std::max(first_free_r, opt_r);
+    // Just after the previous cell or at the beginning of the destination
+    // region
+    long long this_abs_pos =
+        std::max(cur_abs_pos, prev_cap[first_free_r] - prev_dem[i]);
+
+    while (first_free_r + 1 < sinks.size() and
+           this_abs_pos > std::max(prev_cap[first_free_r + 1] - prev_dem[i + 1],
+                                   min_abs_pos)) {
+      // Absolute position that wouldn't make the cell fit in the region, and we
+      // are not in the last region yet
+      long long end_pos =
+          std::max(prev_cap[first_free_r + 1] - prev_dem[i + 1], min_abs_pos);
+
+      int add_slope = get_slope(i, first_free_r);
+      int slope = add_slope;
+
+      while (not bounds.empty() and slope >= 0 and bounds.top().pos > end_pos) {
+        this_abs_pos = bounds.top().pos;
+        slope -= bounds.top().slope_diff;
+        bounds.pop();
+      }
+      if (slope >=
+          0) {  // We still push: the cell completely escapes the region
+        this_abs_pos = end_pos;
+        push_bound(end_pos, add_slope - slope);
+      } else {  // Ok, absorbed the whole slope: push what remains and we still
+                // occupy the next region
+        push_bound(this_abs_pos, -slope);
+        ++first_free_r;
+      }
+    }
+    cur_abs_pos = this_abs_pos;
+    constraining_pos.push_back(this_abs_pos);
+  }
+
+  assert(constraining_pos.size() == sources.size());
+  if (not constraining_pos.empty()) {
+    // Calculate the final constraining_pos
+    constraining_pos.back() = std::min(max_abs_pos, constraining_pos.back());
+  }
+
+  std::partial_sum(
+      constraining_pos.rbegin(), constraining_pos.rend(),
+      constraining_pos.rbegin(),
+      [](long long a, long long b) -> long long { return std::min(a, b); });
+
+  for (int i = 0; i < constraining_pos.size(); ++i) {
+    constraining_pos[i] += prev_dem[i];
+  }
+
+  return constraining_pos;
+}
+
+}  // namespace coloquinte
