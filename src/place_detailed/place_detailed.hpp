@@ -17,7 +17,7 @@ class DetailedPlacer {
    * @param params Placement parameters
    */
   static void place(Circuit &circuit, const DetailedPlacerParameters &params,
-                    std::optional<PlacementCallback> callback = {});
+                    const std::optional<PlacementCallback> &callback = {});
 
   /**
    * @brief Run legalization
@@ -26,7 +26,7 @@ class DetailedPlacer {
    * @param params Placement parameters
    */
   static void legalize(Circuit &circuit, const DetailedPlacerParameters &params,
-                       std::optional<PlacementCallback> callback = {});
+                       const std::optional<PlacementCallback> &callback = {});
 
   /**
    * @brief Initialize the datastructure

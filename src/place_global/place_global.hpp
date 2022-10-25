@@ -21,7 +21,7 @@ class GlobalPlacer {
    * @param params Placement parameters
    */
   static void place(Circuit &circuit, const GlobalPlacerParameters &params,
-                    std::optional<PlacementCallback> callback = {});
+                    const std::optional<PlacementCallback> &callback = {});
 
  private:
   /**

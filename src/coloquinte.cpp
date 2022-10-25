@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 #include <unordered_set>
+#include <utility>
 
 #include "coloquinte.hpp"
 #include "place_detailed/place_detailed.hpp"
@@ -524,17 +525,17 @@ std::string Circuit::report() const {
 }
 
 void Circuit::placeGlobal(const GlobalPlacerParameters &params,
-                          std::optional<PlacementCallback> callback) {
+                          const std::optional<PlacementCallback> &callback) {
   GlobalPlacer::place(*this, params, callback);
 }
 
 void Circuit::legalize(const DetailedPlacerParameters &params,
-                       std::optional<PlacementCallback> callback) {
+                       const std::optional<PlacementCallback> &callback) {
   DetailedPlacer::legalize(*this, params, callback);
 }
 
 void Circuit::placeDetailed(const DetailedPlacerParameters &params,
-                            const std::optional<PlacementCallback> callback) {
+                            const std::optional<PlacementCallback> &callback) {
   DetailedPlacer::place(*this, params, callback);
 }
 

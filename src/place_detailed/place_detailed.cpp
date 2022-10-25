@@ -47,9 +47,9 @@ void DetailedPlacerParameters::check() const {
   }
 }
 
-void DetailedPlacer::legalize(Circuit &circuit,
-                              const DetailedPlacerParameters &params,
-                              std::optional<PlacementCallback> callback) {
+void DetailedPlacer::legalize(
+    Circuit &circuit, const DetailedPlacerParameters &params,
+    const std::optional<PlacementCallback> &callback) {
   params.check();
   std::cout << "Legalization starting (WL " << circuit.hpwl() << ")"
             << std::endl;
@@ -71,7 +71,7 @@ void DetailedPlacer::legalize(Circuit &circuit,
 
 void DetailedPlacer::place(Circuit &circuit,
                            const DetailedPlacerParameters &params,
-                           std::optional<PlacementCallback> callback) {
+                           const std::optional<PlacementCallback> &callback) {
   legalize(circuit, params, callback);
   params.check();
   std::cout << "Detailed placement starting" << std::endl;

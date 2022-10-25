@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <iostream>
 #include <numeric>
+#include <utility>
 
 #include "density_legalizer.hpp"
 #include "net_model.hpp"
@@ -74,7 +75,7 @@ void GlobalPlacerParameters::check() const {
 }
 
 void GlobalPlacer::place(Circuit &circuit, const GlobalPlacerParameters &params,
-                         std::optional<PlacementCallback> callback) {
+                         const std::optional<PlacementCallback> &callback) {
   params.check();
   std::cout << "Global placement starting" << std::endl;
   auto startTime = std::chrono::steady_clock::now();

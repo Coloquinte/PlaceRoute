@@ -3,6 +3,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include <utility>
+
 #include "coloquinte.hpp"
 
 using namespace coloquinte;
@@ -176,7 +178,7 @@ Construct a circuit.
           [](Circuit &circuit, const GlobalPlacerParameters &params,
              std::optional<PlacementCallback> callback) {
             py::gil_scoped_release release;
-            circuit.placeGlobal(params, callback);
+            circuit.placeGlobal(params, std::move(callback));
           },
           "Run the global placement algorithm")
       .def(
@@ -184,7 +186,7 @@ Construct a circuit.
           [](Circuit &circuit, const DetailedPlacerParameters &params,
              std::optional<PlacementCallback> callback) {
             py::gil_scoped_release release;
-            circuit.legalize(params, callback);
+            circuit.legalize(params, std::move(callback));
           },
           "Run the detailed placement algorithm")
       .def(
@@ -192,7 +194,7 @@ Construct a circuit.
           [](Circuit &circuit, const DetailedPlacerParameters &params,
              std::optional<PlacementCallback> callback) {
             py::gil_scoped_release release;
-            circuit.placeDetailed(params, callback);
+            circuit.placeDetailed(params, std::move(callback));
           },
           "Run the detailed placement algorithm")
       .def("check", &Circuit::check, "Check the datastructure")
