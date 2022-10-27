@@ -357,36 +357,47 @@ void DensityLegalizer::improveXY() {
   int nb = params_.reoptimizationLength;
   if (nb == 1) return;
 
+  int mid = (nb + 1) / 2;
+  int stride = 2 * mid;
+
   // X (first)
-  improveRectangles(nb, 1, nb, 1, 0, 0);
+  improveRectangles(nb, 1, stride, 1, 0, 0);
   // Y (first)
-  improveRectangles(1, nb, 1, nb, 0, 0);
+  improveRectangles(1, nb, 1, stride, 0, 0);
   // X (second, overlapping)
-  improveRectangles(nb, 1, nb, 1, nb / 2, 0);
+  improveRectangles(nb, 1, stride, 1, mid, 0);
   // Y (second, overlapping)
-  improveRectangles(1, nb, 1, nb, 0, nb / 2);
+  improveRectangles(1, nb, 1, stride, 0, mid);
 }
 
 void DensityLegalizer::improveDiagonals() {
   int nb = params_.reoptimizationLength;
   if (nb == 1) return;
 
+  int mid = (nb + 1) / 2;
+  int stride = 2 * mid;
+
   // X + Y direction (first)
-  improveDiagonalRectangles(1, nb, 1, nb, 0, 0);
+  improveDiagonalRectangles(1, nb, 1, stride, 0, 0);
   // X - Y direction (first)
-  improveDiagonalRectangles(nb, 1, nb, 1, 0, 0);
+  improveDiagonalRectangles(nb, 1, stride, 1, 0, 0);
   // X + Y direction (second, overlapping)
-  improveDiagonalRectangles(1, nb, 1, nb, 0, nb / 2);
+  improveDiagonalRectangles(1, nb, 1, stride, 0, mid);
   // X - Y direction (second, overlapping)
-  improveDiagonalRectangles(nb, 1, nb, 1, nb / 2, 0);
+  improveDiagonalRectangles(nb, 1, stride, 1, mid, 0);
 }
 
 void DensityLegalizer::improveSquare() {
   int nb = params_.reoptimizationSquareSize;
   if (nb == 1) return;
 
-  improveRectangles(nb, nb, nb, nb, 0, 0);
-  improveRectangles(nb, nb, nb, nb, nb / 2, nb / 2);
+  int mid = (nb + 1) / 2;
+  int stride = 2 * mid;
+
+  improveRectangles(nb, nb, stride, stride, 0, 0);
+  improveRectangles(nb, nb, stride, stride, mid, mid);
+  improveRectangles(nb, nb, stride, stride, 0, mid);
+  improveRectangles(nb, nb, stride, stride, mid, 0);
 }
 
 void DensityLegalizer::improveRectangles(int width, int height, int strideX,
