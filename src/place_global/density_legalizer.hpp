@@ -157,19 +157,14 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
   void improveSquareNeighbours(bool sameParent = true);
 
   /**
-   * @brief Improve groups of horizontally adjacent bins
+   * @brief Improve groups of side-adjacent bins
    */
-  void improveX();
-
-  /**
-   * @brief Improve groups of horizontally adjacent bins
-   */
-  void improveY();
+  void improveXY();
 
   /**
    * @brief Improve groups of diagonally adjacent bins
    */
-  void improveDiag();
+  void improveDiagonals();
 
   /**
    * @brief Improve squares of adjacent bins
@@ -180,6 +175,11 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
    * @brief Generic improvement of rectangles applied over the grid
    */
   void improveRectangles(int width, int height, int strideX, int strideY, int startX, int startY);
+
+  /**
+   * @brief Generic improvement of diagonal rectangles applied over the grid
+   */
+  void improveDiagonalRectangles(int xmySize, int xpySize, int strideX, int strideY, int startX, int startY);
 
   /**
    * @brief Redo the bisection for two bins

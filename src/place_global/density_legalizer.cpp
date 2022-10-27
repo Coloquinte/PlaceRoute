@@ -312,9 +312,8 @@ void DensityLegalizer::refine() {
 void DensityLegalizer::improve() {
   for (int i = 0; i < params_.nbSteps; ++i) {
     improveSquare();
-    improveX();
-    improveY();
-    improveDiag();
+    improveXY();
+    improveDiagonals();
   }
 }
 
@@ -354,35 +353,32 @@ void DensityLegalizer::improveSquareNeighbours(bool sameParent) {
   }
 }
 
-void DensityLegalizer::improveX() {
+void DensityLegalizer::improveXY() {
   int nb = params_.reoptimizationLength;
   if (nb == 1) return;
 
+  // X (first)
   improveRectangles(nb, 1, nb, 1, 0, 0);
-  improveRectangles(nb, 1, nb, 1, nb / 2, 0);
-}
-
-void DensityLegalizer::improveY() {
-  int nb = params_.reoptimizationLength;
-  if (nb == 1) return;
-
+  // Y (first)
   improveRectangles(1, nb, 1, nb, 0, 0);
+  // X (second, overlapping)
+  improveRectangles(nb, 1, nb, 1, nb / 2, 0);
+  // Y (second, overlapping)
   improveRectangles(1, nb, 1, nb, 0, nb / 2);
 }
 
-void DensityLegalizer::improveDiag() {
+void DensityLegalizer::improveDiagonals() {
   int nb = params_.reoptimizationLength;
   if (nb == 1) return;
 
-  for (int i = 0; i + 1 < nbBinsX(); i += nb / 2) {
-    for (int j = 0; j + 1 < nbBinsY(); j += nb / 2) {
-      std::vector<std::pair<int, int> > bins;
-      for (int k = 0; i + k < nbBinsX() && j + k < nbBinsY() && k < nb; ++k) {
-        bins.emplace_back(i + k, j + k);
-      }
-      reoptimize(bins);
-    }
-  }
+  // X + Y direction (first)
+  improveDiagonalRectangles(1, nb, 1, nb, 0, 0);
+  // X - Y direction (first)
+  improveDiagonalRectangles(nb, 1, nb, 1, 0, 0);
+  // X + Y direction (second, overlapping)
+  improveDiagonalRectangles(1, nb, 1, nb, 0, nb / 2);
+  // X - Y direction (second, overlapping)
+  improveDiagonalRectangles(nb, 1, nb, 1, nb / 2, 0);
 }
 
 void DensityLegalizer::improveSquare() {
@@ -403,6 +399,32 @@ void DensityLegalizer::improveRectangles(int width, int height, int strideX,
       for (int k = i; k < nbBinsX() && k < i + width; ++k) {
         for (int l = j; l < nbBinsY() && l < j + height; ++l) {
           bins.emplace_back(k, l);
+        }
+      }
+      reoptimize(bins);
+    }
+  }
+}
+
+void DensityLegalizer::improveDiagonalRectangles(int xmySize, int xpySize,
+                                                 int strideX, int strideY,
+                                                 int startX, int startY) {
+  assert(xmySize >= 1 && xpySize >= 1 && strideX >= 1 && strideY >= 1);
+  if (xmySize * xpySize == 1) return;
+  for (int i = startX; i < nbBinsX(); i += strideX) {
+    for (int j = startY; j < nbBinsY(); j += strideY) {
+      std::vector<std::pair<int, int> > bins;
+      for (int k = 0; k < xmySize; ++k) {
+        for (int l = 0; l < xpySize; ++l) {
+          int x = i + k + l;
+          int y = j - k + l;
+          if (x < 0 || x >= nbBinsX()) {
+            continue;
+          }
+          if (y < 0 || y >= nbBinsY()) {
+            continue;
+          }
+          bins.emplace_back(x, y);
         }
       }
       reoptimize(bins);
