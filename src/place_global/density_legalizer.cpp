@@ -290,22 +290,16 @@ void DensityLegalizer::refine() {
   // coarsest level
   bool doX = levelX() >= levelY();
   bool doY = levelY() >= levelX();
-  if (doX && doY && params_.reoptimizationSquareSize >= 2) {
+
+  if (doX) {
     refineX();
+    improveXNeighbours();
+    improveXNeighbours(false);
+  }
+  if (doY) {
     refineY();
-    improveSquareNeighbours();
-    improveSquareNeighbours(false);
-  } else {
-    if (doX) {
-      refineX();
-      improveXNeighbours();
-      improveXNeighbours(false);
-    }
-    if (doY) {
-      refineY();
-      improveYNeighbours();
-      improveYNeighbours(false);
-    }
+    improveYNeighbours();
+    improveYNeighbours(false);
   }
 }
 
