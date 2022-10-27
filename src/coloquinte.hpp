@@ -226,6 +226,12 @@ struct GlobalPlacerParameters {
   int roughLegalizationReoptSquareSize;
 
   /**
+   * @brief Small quadratic penalty to ensure that closer cells are selected
+   * despite the L1 distance, normalized by the placement area
+   */
+  double roughLegalizationQuadraticPenalty;
+
+  /**
    * @brief Margin to use on the sides of each row to account for lost space,
    * relative to the standard cell height
    */

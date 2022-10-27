@@ -19,6 +19,7 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
     LegalizationModel costModel;
     int reoptimizationLength;
     int reoptimizationSquareSize;
+    double quadraticPenaltyFactor;
 
     Parameters();
   };
@@ -86,24 +87,19 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
   }
 
   /**
-   * @brief Return the mean displacement with the current cost model
+   * @brief Return the mean distance
    */
-  float quality() const { return meanDistance(params_.costModel); }
+  float meanDistance() const;
 
   /**
-   * @brief Return the mean displacement with the given cost model
+   * @brief Return the root-mean-square distance
    */
-  float meanDistance(LegalizationModel model) const;
+  float rmsDistance() const;
 
   /**
-   * @brief Return the root-mean-square displacement with the given cost model
+   * @brief Return the maximum distance
    */
-  float rmsDistance(LegalizationModel model) const;
-
-  /**
-   * @brief Return the maximum displacement with the given cost model
-   */
-  float maxDistance(LegalizationModel model) const;
+  float maxDistance() const;
 
   /**
    * @brief Run the whole legalization process
@@ -174,12 +170,14 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
   /**
    * @brief Generic improvement of rectangles applied over the grid
    */
-  void improveRectangles(int width, int height, int strideX, int strideY, int startX, int startY);
+  void improveRectangles(int width, int height, int strideX, int strideY,
+                         int startX, int startY);
 
   /**
    * @brief Generic improvement of diagonal rectangles applied over the grid
    */
-  void improveDiagonalRectangles(int xmySize, int xpySize, int strideX, int strideY, int startX, int startY);
+  void improveDiagonalRectangles(int xmySize, int xpySize, int strideX,
+                                 int strideY, int startX, int startY);
 
   /**
    * @brief Redo the bisection for two bins
@@ -204,9 +202,14 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
       const std::vector<std::pair<float, int> > &cellCosts, int ind) const;
 
   /**
-   * @brief Return all distances with a given cost model
+   * @brief Return the distance given the parameters (cost model  + penalty)
    */
-  std::vector<float> allDistances(LegalizationModel model) const;
+  float distance(float x, float y) const;
+
+  /**
+   * @brief Return all distances
+   */
+  std::vector<float> allDistances() const;
 
  private:
   Parameters params_;

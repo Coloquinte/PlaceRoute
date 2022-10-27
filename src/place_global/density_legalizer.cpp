@@ -17,6 +17,7 @@ DensityLegalizer::Parameters::Parameters() {
   nbSteps = 1;
   reoptimizationLength = 2;
   reoptimizationSquareSize = 1;
+  quadraticPenaltyFactor = 0.0;
 }
 
 DensityLegalizer::DensityLegalizer(DensityGrid grid,
@@ -41,8 +42,7 @@ DensityLegalizer DensityLegalizer::fromIspdCircuit(const Circuit &circuit,
       circuit, sizeFactor, sideMargin));
 }
 
-std::vector<float> DensityLegalizer::allDistances(
-    LegalizationModel model) const {
+std::vector<float> DensityLegalizer::allDistances() const {
   std::vector<float> cellX = simpleCoordX();
   std::vector<float> cellY = simpleCoordY();
   std::vector<float> distances;
@@ -50,13 +50,13 @@ std::vector<float> DensityLegalizer::allDistances(
   for (int i = 0; i < nbCells(); ++i) {
     float dx = cellTargetX(i) - cellX[i];
     float dy = cellTargetY(i) - cellY[i];
-    distances.push_back(norm(dx, dy, model));
+    distances.push_back(distance(dx, dy));
   }
   return distances;
 }
 
-float DensityLegalizer::meanDistance(LegalizationModel model) const {
-  std::vector<float> dist = allDistances(model);
+float DensityLegalizer::meanDistance() const {
+  std::vector<float> dist = allDistances();
   float disp = 0.0f;
   for (int i = 0; i < nbCells(); ++i) {
     disp += cellDemand(i) * dist[i];
@@ -64,8 +64,8 @@ float DensityLegalizer::meanDistance(LegalizationModel model) const {
   return disp / totalDemand();
 }
 
-float DensityLegalizer::rmsDistance(LegalizationModel model) const {
-  std::vector<float> dist = allDistances(model);
+float DensityLegalizer::rmsDistance() const {
+  std::vector<float> dist = allDistances();
   float disp = 0.0f;
   for (int i = 0; i < nbCells(); ++i) {
     disp += cellDemand(i) * dist[i] * dist[i];
@@ -73,9 +73,15 @@ float DensityLegalizer::rmsDistance(LegalizationModel model) const {
   return std::sqrt(disp / totalDemand());
 }
 
-float DensityLegalizer::maxDistance(LegalizationModel model) const {
-  std::vector<float> dist = allDistances(model);
+float DensityLegalizer::maxDistance() const {
+  std::vector<float> dist = allDistances();
   return *std::max_element(dist.begin(), dist.end());
+}
+
+float DensityLegalizer::distance(float x, float y) const {
+  float d = norm(x, y, params_.costModel);
+  float val = d * (1.0 + params_.quadraticPenaltyFactor * d);
+  return val;
 }
 
 void DensityLegalizer::check() const { HierarchicalDensityPlacement::check(); }
@@ -88,9 +94,9 @@ void DensityLegalizer::report(bool verbose) const {
             << a.maxY << ")" << std::endl;
   std::cout << "Bins " << nbBinsX() << " x " << nbBinsY() << std::endl;
   std::cout << "Overflow: " << overflowRatio() << std::endl;
-  std::cout << "Mean dist: " << meanDistance(params_.costModel) << std::endl;
-  std::cout << "RMS dist " << rmsDistance(params_.costModel) << std::endl;
-  std::cout << "Max dist " << maxDistance(params_.costModel) << std::endl;
+  std::cout << "Mean dist: " << meanDistance() << std::endl;
+  std::cout << "RMS dist " << rmsDistance() << std::endl;
+  std::cout << "Max dist " << maxDistance() << std::endl;
   if (!verbose) {
     return;
   }
@@ -113,8 +119,7 @@ std::vector<std::pair<float, int> > DensityLegalizer::computeCellCosts(
   for (int c : cells) {
     float x = cellTargetX_[c];
     float y = cellTargetY_[c];
-    float cost = norm(x - cx1, y - cy1, params_.costModel) -
-                 norm(x - cx2, y - cy2, params_.costModel);
+    float cost = distance(x - cx1, y - cy1) - distance(x - cx2, y - cy2);
     cellCosts.emplace_back(cost, c);
   }
   std::sort(cellCosts.begin(), cellCosts.end(),
@@ -255,7 +260,7 @@ void DensityLegalizer::reoptimize(
     for (int c : cells) {
       float cx = cellTargetX(c);
       float cy = cellTargetY(c);
-      float cost = norm(bx - cx, by - cy, params_.costModel);
+      float cost = distance(bx - cx, by - cy);
       binCosts.push_back(cost);
     }
     costs.push_back(binCosts);

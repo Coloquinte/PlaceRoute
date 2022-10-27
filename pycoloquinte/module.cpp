@@ -101,6 +101,8 @@ Construct the parameters
                      &GlobalPlacerParameters::roughLegalizationReoptLength)
       .def_readwrite("rough_legalization_reopt_square_size",
                      &GlobalPlacerParameters::roughLegalizationReoptSquareSize)
+      .def_readwrite("rough_legalization_quadratic_penalty",
+                     &GlobalPlacerParameters::roughLegalizationQuadraticPenalty)
       .def_readwrite("rough_legalization_side_margin",
                      &GlobalPlacerParameters::roughLegalizationSideMargin)
       .def_readwrite("export_weighting",

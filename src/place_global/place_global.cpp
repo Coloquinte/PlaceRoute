@@ -81,6 +81,12 @@ void GlobalPlacerParameters::check() const {
     throw std::runtime_error(
         "At least one rough legalization reopt value should be 2 or more");
   }
+  if (roughLegalizationQuadraticPenalty < 0.0 ||
+      roughLegalizationQuadraticPenalty > 1.0) {
+    throw std::runtime_error(
+        "Rough legalization quadratic penalty should be non-negative and small "
+        "(< 1.0)");
+  }
   if (exportWeighting < -0.5f || exportWeighting > 1.5f) {
     throw std::runtime_error(
         "Export weighting should generally be between 0 and 1");
@@ -119,6 +125,13 @@ GlobalPlacer::GlobalPlacer(Circuit &circuit,
   legParams.costModel = params.roughLegalizationCostModel;
   legParams.reoptimizationLength = params.roughLegalizationReoptLength;
   legParams.reoptimizationSquareSize = params.roughLegalizationReoptSquareSize;
+  LegalizationModel m = params.roughLegalizationCostModel;
+  if (m == LegalizationModel::L1 || m == LegalizationModel::L2 ||
+      m == LegalizationModel::LInf) {
+    float dist = leg_.placementArea().width() + leg_.placementArea().height();
+    legParams.quadraticPenaltyFactor =
+        params.roughLegalizationQuadraticPenalty / dist;
+  }
   leg_.setParams(legParams);
 }
 
@@ -181,7 +194,7 @@ void GlobalPlacer::run() {
     std::cout << "#" << step_;
     std::cout << std::defaultfloat << std::setprecision(4) << ":\tUB " << ub;
     std::cout << std::fixed << std::setprecision(1) << "\tDist "
-              << leg_.quality();
+              << leg_.meanDistance();
     std::cout << std::defaultfloat << std::setprecision(4) << "\tLB " << lb
               << std::endl;
     float gap = (ub - lb) / ub;

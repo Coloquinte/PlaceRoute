@@ -92,6 +92,7 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
   roughLegalizationReoptLength = 2;
   roughLegalizationReoptSquareSize = 1;
   roughLegalizationSideMargin = 1.0;
+  roughLegalizationQuadraticPenalty = 0.001;
   exportWeighting = 1.0;
   check();
 }
@@ -113,7 +114,10 @@ std::string GlobalPlacerParameters::toString() const {
      << "\n\tNb rough legalization steps: " << roughLegalizationNbSteps
      << "\n\tRough legalization bin size: " << roughLegalizationBinSize
      << "\n\tRough legalization reopt length: " << roughLegalizationReoptLength
-     << "\n\tRough legalization reopt square size: " << roughLegalizationReoptSquareSize
+     << "\n\tRough legalization reopt square size: "
+     << roughLegalizationReoptSquareSize
+     << "\n\tRough legalization quadratic penalty: "
+     << roughLegalizationQuadraticPenalty
      << "\n\tRough legalization side margin: " << roughLegalizationSideMargin;
   if (seed != -1) {
     ss << "\n\tSeed: " << seed;

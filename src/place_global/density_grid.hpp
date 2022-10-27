@@ -36,8 +36,7 @@ class DensityGrid {
    * @brief Initialize a grid from a circuit, and initialize the bins from the
    * standard cell height
    */
-  static DensityGrid fromIspdCircuit(const Circuit &circuit,
-                                     float sizeFactor,
+  static DensityGrid fromIspdCircuit(const Circuit &circuit, float sizeFactor,
                                      float sideMargin);
 
   /**
@@ -264,6 +263,11 @@ class HierarchicalDensityPlacement {
   int nbNonEmptyCells() const;
 
   /**
+   * @brief Return the enclosing rectangle
+   */
+  Rectangle placementArea() const { return grid_.placementArea(); }
+
+  /**
    * @brief Get the current coarsening level in the x direction. 0 is the fully
    * refined grid.
    */
@@ -343,6 +347,7 @@ class HierarchicalDensityPlacement {
   long long binCapacity(int x, int y) const {
     return grid_.binCapacity(getGroup(x, y));
   }
+
   /**
    * @brief Get the x center of a given bin in the current view
    */
