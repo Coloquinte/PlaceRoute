@@ -356,35 +356,24 @@ void DensityLegalizer::improveSquareNeighbours(bool sameParent) {
 
 void DensityLegalizer::improveX() {
   int nb = params_.reoptimizationLength;
-  assert(nb >= 2);
-  for (int j = 0; j < nbBinsY(); ++j) {
-    for (int i = 0; i < nbBinsX(); i += nb / 2) {
-      std::vector<std::pair<int, int> > bins;
-      for (int k = 0; i + k < nbBinsX() && k < nb; ++k) {
-        bins.emplace_back(i + k, j);
-      }
-      reoptimize(bins);
-    }
-  }
+  if (nb == 1) return;
+
+  improveRectangles(nb, 1, nb, 1, 0, 0);
+  improveRectangles(nb, 1, nb, 1, nb / 2, 0);
 }
 
 void DensityLegalizer::improveY() {
   int nb = params_.reoptimizationLength;
-  assert(nb >= 2);
-  for (int i = 0; i < nbBinsX(); ++i) {
-    for (int j = 0; j < nbBinsY(); j += nb / 2) {
-      std::vector<std::pair<int, int> > bins;
-      for (int k = 0; j + k < nbBinsY() && k < nb; ++k) {
-        bins.emplace_back(i, j + k);
-      }
-      reoptimize(bins);
-    }
-  }
+  if (nb == 1) return;
+
+  improveRectangles(1, nb, 1, nb, 0, 0);
+  improveRectangles(1, nb, 1, nb, 0, nb / 2);
 }
 
 void DensityLegalizer::improveDiag() {
   int nb = params_.reoptimizationLength;
-  assert(nb >= 2);
+  if (nb == 1) return;
+
   for (int i = 0; i + 1 < nbBinsX(); i += nb / 2) {
     for (int j = 0; j + 1 < nbBinsY(); j += nb / 2) {
       std::vector<std::pair<int, int> > bins;
@@ -400,11 +389,19 @@ void DensityLegalizer::improveSquare() {
   int nb = params_.reoptimizationSquareSize;
   if (nb == 1) return;
 
-  for (int i = 0; i < nbBinsX(); i += nb / 2) {
-    for (int j = 0; j < nbBinsY(); j += nb / 2) {
+  improveRectangles(nb, nb, nb, nb, 0, 0);
+  improveRectangles(nb, nb, nb, nb, nb / 2, nb / 2);
+}
+
+void DensityLegalizer::improveRectangles(int width, int height, int strideX,
+                                         int strideY, int startX, int startY) {
+  assert(width >= 1 && height >= 1 && strideX >= 1 && strideY >= 1);
+  if (width * height == 1) return;
+  for (int i = startX; i < nbBinsX(); i += strideX) {
+    for (int j = startY; j < nbBinsY(); j += strideY) {
       std::vector<std::pair<int, int> > bins;
-      for (int k = i; k < nbBinsX() && k < i + nb; ++k) {
-        for (int l = j; l < nbBinsY() && l < j + nb; ++l) {
+      for (int k = i; k < nbBinsX() && k < i + width; ++k) {
+        for (int l = j; l < nbBinsY() && l < j + height; ++l) {
           bins.emplace_back(k, l);
         }
       }

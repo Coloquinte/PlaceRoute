@@ -177,6 +177,11 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
   void improveSquare();
 
   /**
+   * @brief Generic improvement of rectangles applied over the grid
+   */
+  void improveRectangles(int width, int height, int strideX, int strideY, int startX, int startY);
+
+  /**
    * @brief Redo the bisection for two bins
    */
   void rebisect(int x1, int y1, int x2, int y2);
