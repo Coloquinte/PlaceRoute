@@ -290,13 +290,22 @@ void DensityLegalizer::refine() {
   // coarsest level
   bool doX = levelX() >= levelY();
   bool doY = levelY() >= levelX();
-  if (doX) {
+  if (doX && doY && params_.reoptimizationSquareSize >= 2) {
     refineX();
-    improveXNeighbours();
-  }
-  if (doY) {
     refineY();
-    improveYNeighbours();
+    improveSquareNeighbours();
+    improveSquareNeighbours(false);
+  } else {
+    if (doX) {
+      refineX();
+      improveXNeighbours();
+      improveXNeighbours(false);
+    }
+    if (doY) {
+      refineY();
+      improveYNeighbours();
+      improveYNeighbours(false);
+    }
   }
 }
 
@@ -327,6 +336,20 @@ void DensityLegalizer::improveYNeighbours(bool sameParent) {
     }
     for (int i = 0; i < nbBinsX(); ++i) {
       rebisect(i, j, i, j + 1);
+    }
+  }
+}
+
+void DensityLegalizer::improveSquareNeighbours(bool sameParent) {
+  for (int i = 0; i + 1 < nbBinsX(); ++i) {
+    for (int j = 0; j + 1 < nbBinsY(); ++j) {
+      if ((parentX(i) == parentX(i + 1)) != sameParent) {
+        continue;
+      }
+      if ((parentY(j) == parentY(j + 1)) != sameParent) {
+        continue;
+      }
+      reoptimize({{i, j}, {i + 1, j}, {i, j + 1}, {i + 1, j + 1}});
     }
   }
 }

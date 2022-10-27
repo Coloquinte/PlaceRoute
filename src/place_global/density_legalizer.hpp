@@ -142,14 +142,19 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
 
  private:
   /**
-   * @brief Improve neighbouring bins in the x direction
+   * @brief Improve neighbouring bin pairs in the x direction
    */
   void improveXNeighbours(bool sameParent = true);
 
   /**
-   * @brief Improve neighbouring bins in the y direction
+   * @brief Improve neighbouring bin pairs in the y direction
    */
   void improveYNeighbours(bool sameParent = true);
+
+  /**
+   * @brief Improve neighbouring bin squares
+   */
+  void improveSquareNeighbours(bool sameParent = true);
 
   /**
    * @brief Improve groups of horizontally adjacent bins
