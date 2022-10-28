@@ -535,7 +535,8 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Place a benchmark circuit from the command line"
+        description="Place a benchmark circuit from the command line",
+        usage="usage: coloquinte [-h] [--effort EFFORT] [--seed SEED] [--load-solution FILE] [--save-solution FILE] instance"
     )
     parser.add_argument("instance", help="Benchmark instance")
     parser.add_argument("--effort", help="Placement effort",
@@ -561,9 +562,10 @@ def main():
         "--no-detailed", help="Skip detailed placement", action="store_true"
     )
     parser.add_argument(
-        "--ignore-obstructions",
-        help="Ignore macros when placing standard cells",
+        "--ignore-macros",
+        help="Ignore fixed placement obstructions",
         action="store_true",
+        dest="ignore_obstructions",
     )
 
     # Prefix to save images
