@@ -230,8 +230,14 @@ void DensityLegalizer::reoptimize(
   }
 
   std::vector<int> cells;
+  std::vector<int> assignment;
+  int binCnt = 0;
   for (auto [x, y] : bins) {
-    cells.insert(cells.end(), binCells_[x][y].begin(), binCells_[x][y].end());
+    for (int c : binCells_[x][y]) {
+      cells.push_back(c);
+      assignment.push_back(binCnt);
+    }
+    binCnt += 1;
   }
 
   // Build a transportation problem
@@ -243,13 +249,6 @@ void DensityLegalizer::reoptimize(
   std::vector<long long> capacities;
   for (auto [x, y] : bins) {
     capacities.push_back(binCapacity(x, y));
-  }
-  long long totalDemand = std::accumulate(demands.begin(), demands.end(), 0LL);
-  long long totalCapa =
-      std::accumulate(capacities.begin(), capacities.end(), 0LL);
-  long long missingCapa = std::max(totalDemand - totalCapa, 0LL);
-  for (int i = 0; i < bins.size(); ++i) {
-    capacities[i] += (missingCapa + bins.size() - 1) / bins.size();
   }
 
   std::vector<std::vector<float> > costs;
@@ -266,23 +265,17 @@ void DensityLegalizer::reoptimize(
     costs.push_back(binCosts);
   }
 
-  // Solve
-  std::vector<std::vector<long long> > allocation =
-      solveTransportation(capacities, demands, costs);
+  TransportationProblem solver(capacities, demands, costs);
+  solver.increaseCapacity();
+  solver.setAssignment(assignment);
+  solver.makeFeasible();
+  solver.solve();
+  assignment = solver.toAssignment();
 
   // Reallocate the cells
   std::vector<std::vector<int> > binCells(bins.size());
   for (int i = 0; i < cells.size(); ++i) {
-    int cell = cells[i];
-    int bestBin = 0;
-    int highestAlloc = 0;
-    for (int b = 0; b < bins.size(); ++b) {
-      if (allocation[b][i] > highestAlloc) {
-        highestAlloc = allocation[b][i];
-        bestBin = b;
-      }
-    }
-    binCells[bestBin].push_back(cell);
+    binCells[assignment[i]].push_back(cells[i]);
   }
   for (int b = 0; b < bins.size(); ++b) {
     auto [x, y] = bins[b];

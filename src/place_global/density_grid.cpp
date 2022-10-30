@@ -366,7 +366,9 @@ HierarchicalDensityPlacement::HierarchicalDensityPlacement(
   allCells.reserve(nbCells());
 
   for (int c = 0; c < nbCells(); ++c) {
-    allCells.push_back(c);
+    if (cellDemand_[c] > 0LL) {
+      allCells.push_back(c);
+    }
   }
   binCells_.emplace_back();
   binCells_.back().push_back(allCells);
@@ -632,8 +634,8 @@ void HierarchicalDensityPlacement::check() const {
     }
   }
   for (int c = 0; c < nbCells(); ++c) {
-    assert(placeX[c] != -1);
-    assert(placeY[c] != -1);
+    assert(placeX[c] != -1 || cellDemand_[c] == 0LL);
+    assert(placeY[c] != -1 || cellDemand_[c] == 0LL);
     assert(cellBinX(c) == placeX[c]);
     assert(cellBinY(c) == placeY[c]);
   }

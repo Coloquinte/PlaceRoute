@@ -1,7 +1,9 @@
 
 #include "place_global/transportation.hpp"
 
+#include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <limits>
 #include <numeric>
 #include <queue>
@@ -11,510 +13,591 @@
 
 namespace coloquinte {
 
-class CurrentAllocation {
-  static constexpr int NULL_IND = -1;
+using CostElt = std::pair<long long, int>;
+using PrioQueue =
+    std::priority_queue<CostElt, std::vector<CostElt>, std::greater<CostElt> >;
 
-  // Internal data structures
-
-  // Priority queue element to determine the source to be used between regions
-  struct MovableSource {
-    int source;
-    float cost;
-    bool operator<(MovableSource const o) const {
-      return cost > o.cost  // Sorted by cost
-             || (cost == o.cost &&
-                 source < o.source);  // And by index to limit the number of
-                                      // fractional elements between two regions
-    }
-    MovableSource(int s, float c) : source(s), cost(c) {}
-  };
-
-  // Member data
-
-  // The current state
-  // For each region, for each source, the capacity allocated by the region
-  std::vector<std::vector<long long> > sr_allocations_;
-  // The costs from a region to a source
-  std::vector<std::vector<float> > sr_costs_;
-  // The demands of the sources
-  std::vector<long long> s_demands_;
-  // The remaining capacities of the regions
-  std::vector<long long> r_capacities_;
-
-  // Shortest path data
-
-  // The costs of allocating to a region
-  std::vector<float> r_costs_;
-  // The parents of the regions i.e. the regions where we push sources first (or
-  // null_ind)
-  std::vector<int> r_parents_;
-  // The source involved in these edges
-  std::vector<int> r_sources_;
-  // The capacities of the edges to the parents, or of the region if no parent
-  std::vector<long long> arc_capacities_;
-
-  // What is the best source to move to go from region k1 to region k2?
-  std::vector<std::vector<std::priority_queue<MovableSource> > >
-      best_interregions_costs_;
-  int dijkstra_cnt_;
-
-  // Helper functions
-
-  // Number of regions
-  int region_cnt() const {
-    assert(sr_costs_.size() == sr_allocations_.size());
-    return sr_costs_.size();
-  }
-
-  // Update the edge between two regions
-  void update_edge(int r1, int r2);
-  // Add a source to all heaps of a region; returns if we need to update a path
-  bool add_source_to_heaps(int r, int source);
-  // Initialize the heaps of a region
-  void create_heaps(int reg);
-
-  // Run the shortest path algorithm to update the cost of each region
-  void dijkstra_update();
-
-  // Update the edge and returns if we need to rerun Dijkstra
-  bool push_edge(int reg, long long flow);
-  // Updates a full path when pushing an element; returns if we need to rerun
-  // Dijkstra
-  bool push_path(int pushed_reg, long long demanded, long long& flow);
-
+class TransportationSuccessiveShortestPath {
  public:
-  // Add a new source to the transportation problem; should be done in
-  // decreasing order of demand to keep low complexity
-  void add_source(int elt_ind);
+  /**
+   * @brief Solve the problem using the cycle canceling method
+   */
+  static void solve(TransportationProblem& pb);
 
-  CurrentAllocation(const std::vector<long long>& caps,
-                    const std::vector<long long>& demands,
-                    const std::vector<std::vector<float> >& costs)
-      : sr_allocations_(caps.size()),
-        sr_costs_(costs),
-        s_demands_(demands),
-        r_capacities_(caps),
-        r_costs_(caps.size(), 0.0),
-        r_parents_(caps.size(), NULL_IND),
-        r_sources_(caps.size(), NULL_IND),
-        arc_capacities_(caps),
-        best_interregions_costs_(
-            caps.size(),
-            std::vector<std::priority_queue<MovableSource> >(caps.size())),
-        dijkstra_cnt_(0) {
-    assert(caps.size() > 0);
-    assert(costs.size() == caps.size());
-    dijkstra_update();
+  /**
+   * @brief Init from a transportation problem
+   */
+  TransportationSuccessiveShortestPath(TransportationProblem& pb);
+
+  /**
+   * @brief Run the whole algorithm
+   */
+  void run();
+
+  /**
+   * @brief Find the best source to be sent between two sinks
+   */
+  int sentSource(int snk1, int snk2) const {
+    assert(snk1 != snk2);
+    return queues_[snk1][snk2].top().second;
   }
 
-  std::vector<std::vector<long long> > get_allocations() const {
-    return sr_allocations_;
+  /**
+   * @brief Find the cost of sending the best source between two sinks
+   */
+  long long movingCost(int snk1, int snk2) const {
+    if (snk1 == snk2) return 0LL;
+    return queues_[snk1][snk2].top().first;
   }
-  int get_iterations_cnt() const { return dijkstra_cnt_; }
+
+  /**
+   * @brief Available quantity to send between two sinks
+   */
+  long long sentQuantity(int snk1, int snk2) const {
+    int src = sentSource(snk1, snk2);
+    return pb_.allocation(snk1, src);
+  }
+
+  /**
+   * @brief Find a good ordering for the sources (high demand first)
+   */
+  std::vector<int> sortedSourcesByDemand() const;
+
+  /**
+   * @brief Find a good ordering for the sources (high cost discrepancy first)
+   */
+  std::vector<int> sortedSourcesByCost() const;
+
+  /**
+   * @brief Find the best sink to send the source to
+   */
+  int bestSink(int src) const;
+
+  /**
+   * @brief Send as much as possible of the source to the sink; return how much
+   * was sent
+   */
+  void sendSource(int src);
+
+  /**
+   * @brief Send as much as possible of the source to the sink; return how much
+   * was sent
+   */
+  long long sendSource(int src, int sink, long long quantity);
+
+ private:
+  /**
+   * @brief Setup the priority queues for a full sink
+   */
+  void initQueues(int sink);
+
+  /**
+   * @brief Update a sink after a potential source removal
+   */
+  void updateSinkQueues(int sink, int src);
+
+  /**
+   * @brief Update a sink before a potential source addition
+   */
+  void updateDestQueues(int sink, int src);
+
+  /**
+   * @brief Compute all costs
+   */
+  void updateTree();
+
+  /**
+   * @brief Update the costs after a change in parent
+   */
+  void updateCosts(int sink);
+
+ private:
+  TransportationProblem& pb_;
+
+  // Queues between sinks
+  std::vector<std::vector<PrioQueue> > queues_;
+
+  std::vector<long long> remainingCapa_;
+  std::vector<long long> sendingCost_;
+  std::vector<int> sinkParent_;
 };
 
-void CurrentAllocation::update_edge(int r1, int r2) {
-  while (not best_interregions_costs_[r1][r2].empty() and
-         sr_allocations_[r1][best_interregions_costs_[r1][r2].top().source] ==
-             0) {
-    best_interregions_costs_[r1][r2].pop();
-  }
-
-  if (not best_interregions_costs_[r1][r2].empty()) {
-    // There is an edge
-    MovableSource cur = best_interregions_costs_[r1][r2].top();
-    float new_cost = r_costs_[r2] + cur.cost;
-    if (new_cost < r_costs_[r1]) {
-      r_costs_[r1] = cur.cost;
-      r_sources_[r1] = cur.source;
-      r_parents_[r1] = r2;
-      arc_capacities_[r1] = sr_allocations_[r1][cur.source];
-    }
-  }
-}
-
-bool CurrentAllocation::add_source_to_heaps(int r, int source) {
-  bool need_rerun = false;
-  for (int i = 0; i < region_cnt(); ++i) {
-    if (i == r) continue;
-    best_interregions_costs_[r][i].push(
-        MovableSource(source, sr_costs_[i][source] - sr_costs_[r][source]));
-    while (sr_allocations_[r][best_interregions_costs_[r][i].top().source] ==
-           0) {
-      best_interregions_costs_[r][i].pop();
-    }
-    need_rerun =
-        (best_interregions_costs_[r][i].top().source == source) or need_rerun;
-  }
-  return need_rerun;
-}
-
-void CurrentAllocation::create_heaps(int reg) {
-  // Get all relevant elements
-  std::vector<std::vector<MovableSource> > interregion_costs(region_cnt());
-  for (int i = 0; i < sr_allocations_[reg].size(); ++i) {
-    if (sr_allocations_[reg][i] > 0) {
-      for (int oreg = 0; oreg < region_cnt(); ++oreg) {
-        if (oreg == reg) continue;
-        interregion_costs[oreg].push_back(
-            MovableSource(i, sr_costs_[oreg][i] - sr_costs_[reg][i]));
-      }
-    }
-  }
-  // Create the heaps
-  for (int oreg = 0; oreg < region_cnt(); ++oreg) {
-    best_interregions_costs_[reg][oreg] = std::priority_queue<MovableSource>(
-        interregion_costs[oreg].begin(), interregion_costs[oreg].end());
-  }
-}
-
-// Returns if the path has been modified so that we would need to rerun Dijkstra
-bool CurrentAllocation::push_edge(int reg, long long flow) {
-  int cur_source = r_sources_[reg];
-
-  // Does this edge allocates a new source in the destination region? If yes,
-  // update the corresponding heaps
-  bool already_present = sr_allocations_[r_parents_[reg]][cur_source] > 0;
-
-  // Deallocating from the first region is handled by the get_edge function:
-  // just substract the flow
-  sr_allocations_[reg][cur_source] -= flow;
-  sr_allocations_[r_parents_[reg]][cur_source] += flow;
-
-  // The source to be pushed was indeed present in the region
-  assert(sr_allocations_[reg][cur_source] >= 0);
-  // The region is full, which explains why we need to push
-  assert(r_capacities_[reg] == 0);
-  // The flow is not bigger than what can be sent
-  assert(flow <= arc_capacities_[reg]);
-
-  // Just update the capacity if it turns out that we don't need to run Dijkstra
-  arc_capacities_[reg] = sr_allocations_[reg][cur_source];
-
-  if (arc_capacities_[reg] == 0) {
-    // The source may have been deleted from a region: rerun Dijkstra at the end
-    return true;
-  } else if (not already_present and r_capacities_[r_parents_[reg]] == 0) {
-    // A new source is allocated to a full region: rerun Dijkstra at the end if
-    // it changed the heap's top
-    return add_source_to_heaps(r_parents_[reg], cur_source);
-  } else {
-    // The edge is still present with the same cost and non-zero updated
-    // capacity The path still exists: no need to rerun Dijkstra yet
-    return false;
-  }
-}
-
-void CurrentAllocation::dijkstra_update() {
-  // Simple case of the regions with remaining capacity
-  std::vector<int> visited(region_cnt(), 0);
-  int visited_cnt = 0;
-  for (int i = 0; i < region_cnt(); ++i) {
-    r_sources_[i] = NULL_IND;
-    r_parents_[i] = NULL_IND;
-    if (r_capacities_[i] > 0) {
-      r_costs_[i] = 0.0;
-      arc_capacities_[i] = r_capacities_[i];
-
-      visited[i] = 1;
-      ++visited_cnt;
-    } else {
-      r_costs_[i] = std::numeric_limits<float>::infinity();
-      arc_capacities_[i] = 0;
-    }
-  }
-  if (visited_cnt == region_cnt()) {
-    return;
-  }
-  // Get the costs for every non-visited region
-  for (int i = 0; i < region_cnt(); ++i)
-    // For every region that is not visited yet
-    if (visited[i] == 0) {
-      for (int j = 0; j < region_cnt(); ++j)
-        // For every already visited region
-        if (visited[j] == 1) {
-          // Get the best interregion cost
-          update_edge(i, j);
-        }
-    }
-  while (visited_cnt < region_cnt()) {
-    // Find the region with the lowest cost to visit; mark it visited
-    int best_reg = NULL_IND;
-    float best_cost = std::numeric_limits<float>::infinity();
-    for (int i = 0; i < region_cnt(); ++i) {
-      // For every region that is not visited yet
-      if (visited[i] == 0) {
-        if (r_costs_[i] < best_cost) {
-          best_cost = r_costs_[i];
-          best_reg = i;
-        }
-      }
-    }
-    if (best_reg == NULL_IND)
-      break;  // Some regions are unreachable, typically because they have zero
-              // capacity at the beginning
-    visited[best_reg] = 1;
-    ++visited_cnt;
-    // Update the cost for every unvisited region
-    for (int i = 0; i < region_cnt(); ++i) {
-      if (visited[i] == 0) {
-        // For every region that is not visited yet
-        update_edge(i, best_reg);
-      }
-    }
-  }
-}
-
-bool CurrentAllocation::push_path(int pushed_reg, long long demanded,
-                                  long long& flow) {
-  // Get the final flow sent, which is smaller than the capacities on the path
-  flow = demanded;
-  for (int reg = pushed_reg; reg != NULL_IND; reg = r_parents_[reg]) {
-    flow = std::min(flow, arc_capacities_[reg]);
-  }
-
-  bool rerun_dijkstra = false;
-  // Update the path between the regions
-  int reg = pushed_reg;
-  for (; r_parents_[reg] != NULL_IND; reg = r_parents_[reg]) {
-    assert(r_capacities_[reg] == 0);
-    rerun_dijkstra = push_edge(reg, flow) or rerun_dijkstra;
-  }
-
-  assert(r_capacities_[reg] > 0);
-  assert(arc_capacities_[reg] == r_capacities_[reg]);
-  assert(r_capacities_[reg] >= flow);
-
-  // Update the capacities at the end
-  r_capacities_[reg] -= flow;
-  arc_capacities_[reg] -= flow;
-
-  // The last region on the path is the one that satisfies the demand
-  if (r_capacities_[reg] ==
-      0) {  // If we just consumed the available capacity, it becomes useful to
-            // move sources off this region: build the heap
-    create_heaps(reg);
-    rerun_dijkstra = true;
-  }
-
-  assert(flow > 0);
-
-  // If an edge changes cost or a region is full,
-  // we need to update the costs, parents, sources and arc_capacities using a
-  // Dijkstra but later
-  return rerun_dijkstra;
-}
-
-void CurrentAllocation::add_source(
-    int elt_ind) {  // long long demand, std::vector<float> const & costs){
-  for (int i = 0; i < region_cnt(); ++i) {
-    sr_allocations_[i].push_back(0);
-  }
-
-  bool need_rerun = false;
-  long long demand = s_demands_[elt_ind];
-
-  while (demand > 0) {
-    // In case we modified the structures earlier
-    if (need_rerun) {
-      dijkstra_update();
-      need_rerun = false;
-    }
-
-    ++dijkstra_cnt_;
-    int best_reg = NULL_IND;
-    float best_cost = std::numeric_limits<float>::infinity();
-    for (int reg = 0; reg < region_cnt(); ++reg) {
-      // Find the region which gets the source
-      if (r_costs_[reg] + sr_costs_[reg][elt_ind] < best_cost) {
-        best_reg = reg;
-        best_cost = r_costs_[reg] + sr_costs_[reg][elt_ind];
-      }
-    }
-    if (best_reg == NULL_IND) {
-      throw std::runtime_error("No reachable region found\n");
-    }
-
-    long long flow = 0;
-    // Tells us whether we need to update the data structures
-    need_rerun = push_path(best_reg, demand, flow);
-    demand -= flow;
-
-    // Lazily store the change
-    sr_allocations_[best_reg][elt_ind] += flow;
-  }
-
-  // Set the source's demand
-  for (int i = 0; i < region_cnt(); ++i) {
-    if (r_capacities_[i] == 0 and sr_allocations_[i][elt_ind] > 0) {
-      need_rerun = add_source_to_heaps(i, elt_ind) or need_rerun;
-    }
-  }
-  // We leave a clean set with correct paths for the next iteration
-  if (need_rerun) dijkstra_update();
-}
-
-std::vector<std::vector<long long> > solveTransportation(
+TransportationProblem::TransportationProblem(
     const std::vector<long long>& capacities,
     const std::vector<long long>& demands,
+    const std::vector<std::vector<long long> >& costs)
+    : capacities_(capacities), demands_(demands), costs_(costs) {
+  resetAllocations();
+  check();
+}
+
+TransportationProblem::TransportationProblem(
+    const std::vector<long long>& capacities,
+    const std::vector<long long>& demands,
+    const std::vector<std::vector<float> >& costs)
+    : capacities_(capacities), demands_(demands) {
+  costsFromIntegers(costs);
+  resetAllocations();
+  check();
+}
+
+void TransportationProblem::resetAllocations() {
+  allocations_.assign(nbSinks(), std::vector<long long>(nbSources(), 0LL));
+}
+
+void TransportationProblem::costsFromIntegers(
     const std::vector<std::vector<float> >& costs) {
-  CurrentAllocation transporter(capacities, demands, costs);
-
-  for (int i = 0; i < demands.size(); ++i) {
-    transporter.add_source(i);
+  float maxVal = 1.0e-8f;
+  for (auto& c : costs) {
+    for (float d : c) {
+      maxVal = std::max(d, maxVal);
+    }
   }
-
-  return transporter.get_allocations();
+  double maxLong = static_cast<double>(std::numeric_limits<long long>::max());
+  conversionFactor_ = maxLong / maxVal;
+  conversionFactor_ /= 1000.0;
+  conversionFactor_ /= costs.size();
+  costs_.clear();
+  costs_.resize(costs.size());
+  for (int i = 0; i < costs.size(); ++i) {
+    for (int j = 0; j < costs[i].size(); ++j) {
+      costs_[i].push_back(
+          static_cast<long long>(std::round(costs[i][j] * conversionFactor_)));
+    }
+  }
 }
 
-std::vector<long long> solveTransportation1D(std::vector<t1D_elt> sources,
-                                             std::vector<t1D_elt> sinks) {
-  /* Description of the algorithm:
-   *
-   *    For each cell, put it in its optimal region or the last region where a
-   * cell is if there is no space in it.
-   *
-   *    Push all changes in the derivative of the cost function to a priority
-   * queue; those changes occur
-   *         * when evicting the preceding cell from a region (most such changes
-   * are 0 and not considered, hence the complexity)
-   *         * when moving to a non-full region
-   *
-   *    While the new cell overlaps with a new region, get the new slope
-   * (derivative) at this point and push all preceding cell until this region is
-   * freed or the slope becomes 0 (in which case the new region is now occupied)
-   */
-
-  struct Bound {
-    long long pos;
-    int slope_diff;
-    bool operator<(const Bound o) const { return pos < o.pos; }
-  };
-
-  std::priority_queue<Bound> bounds;
-  std::vector<long long> constraining_pos;
-  std::vector<long long> prev_cap(1, 0), prev_dem(1, 0);
-  for (auto const s : sinks) {
-    prev_cap.push_back(s.second + prev_cap.back());
+void TransportationProblem::check() const {
+  if (demands_.size() != nbSources()) {
+    throw std::runtime_error("Inconsistant demands");
   }
-  for (auto const s : sources) {
-    prev_dem.push_back(s.second + prev_dem.back());
+  if (capacities_.size() != nbSinks()) {
+    throw std::runtime_error("Inconsistant capacities");
   }
-  // The sinks have enough capacity to hold the whole demand
-  assert(prev_cap.back() >= prev_dem.back());
-
-  const long long min_abs_pos = 0,
-                  max_abs_pos = prev_cap.back() - prev_dem.back();
-  assert(min_abs_pos <= max_abs_pos);
-
-  auto push_bound = [&](long long p, int s) {
-    assert(s >= 0);
-    if (p > min_abs_pos) {
-      Bound b;
-      b.pos = p;
-      b.slope_diff = s;
-      bounds.push(b);
+  for (long long c : demands_) {
+    if (c <= 0) {
+      throw std::runtime_error("Demands must be non-negative");
     }
-  };
-
-  // Distance to the right - distance to the left
-  auto get_slope = [&](int src, int boundary) {
-    assert(boundary + 1 < sinks.size());
-    assert(src < sources.size());
-    return std::abs(sources[src].first - sinks[boundary + 1].first) -
-           std::abs(sources[src].first - sinks[boundary].first);
-  };
-
-  long long cur_abs_pos = min_abs_pos;
-  int opt_r = 0, next_r = 0, first_free_r = 0;
-
-  for (int i = 0; i < sources.size(); ++i) {
-    // Update the optimal region
-    while (opt_r + 1 < sinks.size() and
-           (sinks[opt_r].first + sinks[opt_r + 1].first) / 2 <
-               sources[i].first) {
-      ++opt_r;
+  }
+  for (long long c : capacities_) {
+    if (c <= 0) {
+      throw std::runtime_error("Capacities must be non-negative");
     }
-    // Update the next region
-    int prev_next_r = next_r;
-    while (next_r < sinks.size() and sinks[next_r].first <= sources[i].first) {
-      ++next_r;
-    }
-
-    int dest_reg = std::max(first_free_r, opt_r);
-    assert(dest_reg < sinks.size());
-
-    if (i > 0) {
-      // Push bounds due to changing the source crossing the boundary j/j+1
-      // Linear amortized complexity accross all sources (next_r grows)
-      // get_slope(i-1, j) - get_slope(i, j) == 0 if j >= next_r
-      // get_slope(i-1, j) - get_slope(i, j) == 0 if j < prev_next_r-1
-
-      for (int j = std::max(prev_next_r, 1) - 1;
-           j < std::min(first_free_r, next_r + 1); ++j) {
-        assert(get_slope(i, j) <= get_slope(i - 1, j));
-        push_bound(prev_cap[j + 1] - prev_dem[i],
-                   get_slope(i - 1, j) - get_slope(i, j));
-      }
-    }
-    // Add the bounds due to crossing the boundaries alone
-    for (int j = first_free_r; j < opt_r; ++j) {
-      assert(get_slope(i, j) <= 0);
-      push_bound(prev_cap[j + 1] - prev_dem[i], -get_slope(i, j));
-    }
-
-    first_free_r = std::max(first_free_r, opt_r);
-    // Just after the previous cell or at the beginning of the destination
-    // region
-    long long this_abs_pos =
-        std::max(cur_abs_pos, prev_cap[first_free_r] - prev_dem[i]);
-
-    while (first_free_r + 1 < sinks.size() and
-           this_abs_pos > std::max(prev_cap[first_free_r + 1] - prev_dem[i + 1],
-                                   min_abs_pos)) {
-      // Absolute position that wouldn't make the cell fit in the region, and we
-      // are not in the last region yet
-      long long end_pos =
-          std::max(prev_cap[first_free_r + 1] - prev_dem[i + 1], min_abs_pos);
-
-      int add_slope = get_slope(i, first_free_r);
-      int slope = add_slope;
-
-      while (not bounds.empty() and slope >= 0 and bounds.top().pos > end_pos) {
-        this_abs_pos = bounds.top().pos;
-        slope -= bounds.top().slope_diff;
-        bounds.pop();
-      }
-      if (slope >=
-          0) {  // We still push: the cell completely escapes the region
-        this_abs_pos = end_pos;
-        push_bound(end_pos, add_slope - slope);
-      } else {  // Ok, absorbed the whole slope: push what remains and we still
-                // occupy the next region
-        push_bound(this_abs_pos, -slope);
-        ++first_free_r;
-      }
-    }
-    cur_abs_pos = this_abs_pos;
-    constraining_pos.push_back(this_abs_pos);
   }
 
-  assert(constraining_pos.size() == sources.size());
-  if (not constraining_pos.empty()) {
-    // Calculate the final constraining_pos
-    constraining_pos.back() = std::min(max_abs_pos, constraining_pos.back());
+  if (costs_.size() != nbSinks()) {
+    throw std::runtime_error(
+        "Inconsistant cost size (first dimension is sinks)");
+  }
+  for (const auto& c : costs_) {
+    if (c.size() != nbSources()) {
+      throw std::runtime_error(
+          "Inconsistant cost size (second dimension is sources)");
+    }
   }
 
-  std::partial_sum(
-      constraining_pos.rbegin(), constraining_pos.rend(),
-      constraining_pos.rbegin(),
-      [](long long a, long long b) -> long long { return std::min(a, b); });
-
-  for (int i = 0; i < constraining_pos.size(); ++i) {
-    constraining_pos[i] += prev_dem[i];
+  if (allocations_.size() != nbSinks()) {
+    throw std::runtime_error(
+        "Inconsistant allocation size (first dimension is sinks)");
   }
-
-  return constraining_pos;
+  for (const auto& c : allocations_) {
+    if (c.size() != nbSources()) {
+      throw std::runtime_error(
+          "Inconsistant allocation size (second dimension is sources)");
+    }
+  }
 }
 
+long long TransportationProblem::totalDemand() const {
+  return std::accumulate(demands_.begin(), demands_.end(), 0LL);
+}
+
+long long TransportationProblem::totalCapacity() const {
+  return std::accumulate(capacities_.begin(), capacities_.end(), 0LL);
+}
+
+void TransportationProblem::addSource(long long demand) {
+  demands_.push_back(demand);
+  for (auto& c : costs_) {
+    c.push_back(0.0f);
+  }
+  for (auto& c : allocations_) {
+    c.push_back(0LL);
+  }
+}
+
+void TransportationProblem::addSink(long long capa) {
+  capacities_.push_back(capa);
+  costs_.emplace_back(nbSources(), 0.0f);
+  allocations_.emplace_back(nbSources(), 0LL);
+}
+
+long long TransportationProblem::allocatedCapacity(int snk) const {
+  long long tot = 0LL;
+  for (int src = 0; src < nbSources(); ++src) {
+    tot += allocations_[snk][src];
+  }
+  return tot;
+}
+
+long long TransportationProblem::allocatedDemand(int src) const {
+  long long tot = 0LL;
+  for (int snk = 0; snk < nbSinks(); ++snk) {
+    tot += allocations_[snk][src];
+  }
+  return tot;
+}
+
+double TransportationProblem::allocationCost() const {
+  double ret = 0.0;
+  for (int snk = 0; snk < nbSinks(); ++snk) {
+    for (int src = 0; src < nbSources(); ++src) {
+      ret += allocations_[snk][src] * static_cast<double>(costs_[snk][src]);
+    }
+  }
+  return ret / totalDemand() / conversionFactor_;
+}
+
+long long TransportationProblem::movingCost(int src, int snk1, int snk2) const {
+  return costs_[snk2][src] - costs_[snk1][src];
+}
+
+bool TransportationProblem::isFeasible() const {
+  if (totalDemand() > totalCapacity()) {
+    throw std::runtime_error(
+        "Cannot check feasibility of an unbalanced problem");
+  }
+  for (int src = 0; src < nbSources(); ++src) {
+    if (allocatedDemand(src) != demand(src)) {
+      return false;
+    }
+  }
+  for (int snk = 0; snk < nbSinks(); ++snk) {
+    if (allocatedCapacity(snk) > capacity(snk)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void TransportationProblem::addDummyCapacity() {
+  long long dem = totalDemand();
+  long long cap = totalCapacity();
+  if (dem > cap) {
+    addSink(dem - cap);
+  }
+}
+
+void TransportationProblem::addDummyDemand() {
+  long long dem = totalDemand();
+  long long cap = totalCapacity();
+  if (dem < cap) {
+    addSource(cap - dem);
+  }
+}
+
+void TransportationProblem::increaseCapacity() {
+  long long missing = totalDemand() - totalCapacity();
+  if (missing <= 0LL) {
+    return;
+  }
+  long long added = missing / nbSinks();
+  for (int i = 0; i < nbSinks(); ++i) {
+    capacities_[i] += added;
+  }
+  missing = missing - added * nbSinks();
+  assert(missing >= 0LL && missing < nbSinks());
+  for (int i = 0; i < missing; ++i) {
+    capacities_[i] += 1;
+  }
+}
+
+void TransportationProblem::increaseDemand() {
+  long long missing = totalCapacity() - totalDemand();
+  if (missing <= 0LL) {
+    return;
+  }
+  long long added = missing / nbSources();
+  for (int i = 0; i < nbSources(); ++i) {
+    demands_[i] += added;
+  }
+  missing = missing - added * nbSources();
+  assert(missing >= 0LL && missing < nbSources());
+  for (int i = 0; i < missing; ++i) {
+    demands_[i] += 1;
+  }
+}
+
+void TransportationProblem::makeFeasible() {
+  if (totalDemand() > totalCapacity()) {
+    throw std::runtime_error(
+        "Cannot make a problem feasible if demand is greater than capacity");
+  }
+  std::vector<long long> remainingCapa = capacities_;
+  for (int src = 0; src < nbSources(); ++src) {
+    long long demand = demands_[src];
+    long long remaining = demand;
+    // Try to follow the initial solution given
+    for (int snk = 0; snk < nbSinks(); ++snk) {
+      long long alloc = allocations_[snk][src];
+      alloc = std::min(alloc, remaining);
+      alloc = std::min(alloc, remainingCapa[snk]);
+      allocations_[snk][src] = alloc;
+      remaining -= alloc;
+      remainingCapa[snk] -= alloc;
+    }
+    // Allocate greedily what's left
+    for (int snk = 0; snk < nbSinks(); ++snk) {
+      long long alloc = std::min(remaining, remainingCapa[snk]);
+      allocations_[snk][src] += alloc;
+      remaining -= alloc;
+      remainingCapa[snk] -= alloc;
+    }
+    if (remaining < 0LL) {
+      // Should never happen if preconditions are met
+      throw std::runtime_error("Could not satisfy demand for one of the cells");
+    }
+  }
+}
+
+void TransportationProblem::setAllocations(
+    const std::vector<std::vector<long long> >& allocations) {
+  allocations_ = allocations;
+  check();
+}
+
+void TransportationProblem::setAssignment(const std::vector<int>& assignment) {
+  allocations_.assign(nbSinks(), std::vector<long long>(nbSources(), 0LL));
+  if (assignment.size() > nbSources()) {
+    throw std::runtime_error(
+        "Assignment should be no larger than the number of sources");
+  }
+  for (int src = 0; src < assignment.size(); ++src) {
+    int sink = assignment[src];
+    if (sink < 0 || sink >= nbSinks()) {
+      throw std::runtime_error("Assignment should be a valid sink index");
+    }
+    allocations_[sink][src] = demands_[src];
+  }
+}
+
+std::vector<int> TransportationProblem::toAssignment() const {
+  std::vector<int> ret(nbSources());
+  for (int src = 0; src < nbSources(); ++src) {
+    int bestSink = 0;
+    long long bestAlloc = -1LL;
+    for (int sink = 0; sink < nbSinks(); ++sink) {
+      if (allocations_[sink][src] > bestAlloc) {
+        bestSink = sink;
+        bestAlloc = allocations_[sink][src];
+      }
+    }
+    ret[src] = bestSink;
+  }
+  return ret;
+}
+
+void TransportationProblem::solve() {
+  TransportationSuccessiveShortestPath::solve(*this);
+}
+
+void TransportationSuccessiveShortestPath::solve(TransportationProblem& pb) {
+  TransportationSuccessiveShortestPath solver(pb);
+  solver.run();
+}
+
+TransportationSuccessiveShortestPath::TransportationSuccessiveShortestPath(
+    TransportationProblem& pb)
+    : pb_(pb) {
+  remainingCapa_ = pb_.capacities_;
+  sendingCost_.assign(pb_.nbSinks(), 0LL);
+  sinkParent_.assign(pb_.nbSinks(), -1);
+  queues_.resize(pb_.nbSinks());
+}
+
+void TransportationSuccessiveShortestPath::run() {
+  std::vector<int> sources = sortedSourcesByDemand();
+  pb_.resetAllocations();
+  for (int src : sources) {
+    sendSource(src);
+  }
+}
+
+std::vector<int> TransportationSuccessiveShortestPath::sortedSourcesByDemand()
+    const {
+  std::vector<std::pair<long long, int> > sources;
+  for (int i = 0; i < pb_.nbSources(); ++i) {
+    sources.emplace_back(-pb_.demand(i), i);
+  }
+  std::sort(sources.begin(), sources.end());
+  std::vector<int> ret;
+  for (auto [d, i] : sources) {
+    ret.push_back(i);
+  }
+  return ret;
+}
+
+int TransportationSuccessiveShortestPath::bestSink(int src) const {
+  int ret = 0;
+  long long bestCost = std::numeric_limits<long long>::max();
+  for (int i = 0; i < pb_.nbSinks(); ++i) {
+    long long cost = sendingCost_[i] + pb_.cost(i, src);
+    if (cost < bestCost) {
+      bestCost = cost;
+      ret = i;
+    }
+  }
+  return ret;
+}
+
+void TransportationSuccessiveShortestPath::sendSource(int src) {
+  long long remaining = pb_.demand(src);
+  while (remaining > 0LL) {
+    int sink = bestSink(src);
+    long long sent = sendSource(src, sink, remaining);
+    assert(sent > 0LL);
+    remaining -= sent;
+  }
+}
+
+void TransportationSuccessiveShortestPath::updateTree() {
+  std::vector<char> toVisit(pb_.nbSinks(), false);
+  sendingCost_.assign(pb_.nbSinks(), std::numeric_limits<long long>::max());
+  for (int i = 0; i < pb_.nbSinks(); ++i) {
+    if (remainingCapa_[i] > 0LL) {
+      sendingCost_[i] = 0LL;
+      toVisit[i] = true;
+    }
+    sinkParent_[i] = -1;
+  }
+
+  while (true) {
+    int bestVisit = -1;
+    long long bestCost = std::numeric_limits<long long>::max();
+    for (int i = 0; i < pb_.nbSinks(); ++i) {
+      if (!toVisit[i]) {
+        continue;
+      }
+      if (sendingCost_[i] < bestCost) {
+        bestCost = sendingCost_[i];
+        bestVisit = i;
+      }
+    }
+    if (bestVisit == -1) {
+      break;
+    }
+    for (int i = 0; i < pb_.nbSinks(); ++i) {
+      if (remainingCapa_[i] > 0LL) {
+        continue;
+      }
+      long long newCost = movingCost(i, bestVisit) + sendingCost_[bestVisit];
+      if (newCost < sendingCost_[i]) {
+        sinkParent_[i] = bestVisit;
+        sendingCost_[i] = newCost;
+        toVisit[i] = true;
+      }
+    }
+    toVisit[bestVisit] = false;
+  }
+}
+
+long long TransportationSuccessiveShortestPath::sendSource(int src, int sink,
+                                                           long long quantity) {
+  // How much we can send
+  assert(quantity > 0LL);
+  long long maxSent = quantity;
+  int snk1 = sink;
+  while (sinkParent_[snk1] != -1) {
+    int snk2 = sinkParent_[snk1];
+    maxSent = std::min(maxSent, sentQuantity(snk1, snk2));
+    assert(maxSent > 0LL);
+    snk1 = snk2;
+  }
+  maxSent = std::min(maxSent, remainingCapa_[snk1]);
+  assert(maxSent > 0LL);
+
+  // Actually send
+  snk1 = sink;
+  int sentSrc = src;
+  bool needUpdate = false;
+  while (sinkParent_[snk1] != -1) {
+    assert(remainingCapa_[snk1] == 0LL);
+    int snk2 = sinkParent_[snk1];
+    long long oldCost = movingCost(snk1, snk2);
+    updateDestQueues(snk1, sentSrc);
+    pb_.allocations_[snk1][sentSrc] += maxSent;
+    sentSrc = sentSource(snk1, snk2);
+    pb_.allocations_[snk1][sentSrc] -= maxSent;
+    updateSinkQueues(snk1, sentSrc);
+    long long newCost = movingCost(snk1, snk2);
+    needUpdate |= newCost > oldCost;
+    snk1 = snk2;
+  }
+  pb_.allocations_[snk1][sentSrc] += maxSent;
+
+  remainingCapa_[snk1] -= maxSent;
+  if (remainingCapa_[snk1] == 0LL) {
+    initQueues(snk1);
+    needUpdate = true;
+  }
+  if (needUpdate) {
+    updateTree();
+  }
+
+  return maxSent;
+}
+
+void TransportationSuccessiveShortestPath::initQueues(int sink) {
+  assert(remainingCapa_[sink] == 0LL);
+  queues_[sink].clear();
+  queues_[sink].resize(pb_.nbSinks());
+  std::vector<int> sources;
+  for (int src = 0; src < pb_.nbSources(); ++src) {
+    if (pb_.allocation(sink, src) == 0LL) {
+      continue;
+    }
+    sources.push_back(src);
+  }
+  for (int dest = 0; dest < pb_.nbSinks(); ++dest) {
+    if (sink == dest) continue;
+    std::vector<std::pair<long long, int> > elements;
+    for (int src : sources) {
+      elements.emplace_back(pb_.movingCost(src, sink, dest), src);
+    }
+    queues_[sink][dest] = PrioQueue(elements.begin(), elements.end());
+  }
+}
+
+void TransportationSuccessiveShortestPath::updateSinkQueues(int sink, int src) {
+  if (pb_.allocations_[sink][src] != 0LL) {
+    return;
+  }
+  for (int dst = 0; dst < pb_.nbSinks(); ++dst) {
+    if (dst == sink) continue;
+    while (true) {
+      if (queues_[sink][dst].empty()) {
+        break;
+      }
+      int bestSource = sentSource(sink, dst);
+      if (pb_.allocations_[sink][bestSource] != 0LL) {
+        break;
+      } else {
+        assert(!queues_[sink][dst].empty());
+        queues_[sink][dst].pop();
+      }
+    }
+  }
+}
+
+void TransportationSuccessiveShortestPath::updateDestQueues(int sink, int src) {
+  if (pb_.allocations_[sink][src] != 0LL) {
+    return;
+  }
+  for (int dst = 0; dst < pb_.nbSinks(); ++dst) {
+    if (dst == sink) continue;
+    assert(!queues_[sink][dst].empty());
+    long long cost = pb_.movingCost(src, sink, dst);
+    queues_[sink][dst].emplace(cost, src);
+  }
+}
 }  // namespace coloquinte

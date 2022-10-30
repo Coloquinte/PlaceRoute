@@ -9,6 +9,7 @@ SET(TESTS
     test_incr_net_model
     test_detailed_placement
     test_row_neighbourhood
+    test_transportation
 )
 
 FOREACH(TEST IN LISTS TESTS)
