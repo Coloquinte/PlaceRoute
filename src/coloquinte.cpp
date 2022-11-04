@@ -58,7 +58,7 @@ namespace {
 
 float interpolateEffort(double minVal, double maxVal, int effort,
                         int minEffort = 1, int maxEffort = 9) {
-  assert(minEffort < maxEffort && minVal <= maxVal);
+  assert(minEffort < maxEffort);
   assert(effort >= minEffort && effort <= maxEffort);
   double fact = (effort - minEffort) / (float)(maxEffort - minEffort);
   return maxVal * fact + minVal * (1.0 - fact);
