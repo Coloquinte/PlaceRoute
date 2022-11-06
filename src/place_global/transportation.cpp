@@ -37,7 +37,7 @@ class TransportationSuccessiveShortestPath {
   /**
    * @brief Find the best source to be sent between two sinks
    */
-  int sentSource(int snk1, int snk2) const {
+  inline int sentSource(int snk1, int snk2) const {
     assert(snk1 != snk2);
     return queues_[snk1][snk2].top().second;
   }
@@ -45,7 +45,7 @@ class TransportationSuccessiveShortestPath {
   /**
    * @brief Find the cost of sending the best source between two sinks
    */
-  long long movingCost(int snk1, int snk2) const {
+  inline long long movingCost(int snk1, int snk2) const {
     if (snk1 == snk2) return 0LL;
     return queues_[snk1][snk2].top().first;
   }
@@ -53,7 +53,7 @@ class TransportationSuccessiveShortestPath {
   /**
    * @brief Available quantity to send between two sinks
    */
-  long long sentQuantity(int snk1, int snk2) const {
+  inline long long sentQuantity(int snk1, int snk2) const {
     int src = sentSource(snk1, snk2);
     return pb_.allocation(snk1, src);
   }
