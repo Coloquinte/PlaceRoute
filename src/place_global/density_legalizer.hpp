@@ -185,6 +185,11 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
   void rebisect(int x1, int y1, int x2, int y2);
 
   /**
+   * @brief Improve a single rectangle of the grid
+   */
+  void improveRectangle(int i, int j, int width, int height);
+
+  /**
    * @brief Redo the distribution using a transportation algorithm
    */
   void reoptimize(const std::vector<std::pair<int, int> > &bins);

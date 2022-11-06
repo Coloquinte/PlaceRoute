@@ -332,15 +332,15 @@ void DensityLegalizer::improveYNeighbours(bool sameParent) {
 }
 
 void DensityLegalizer::improveSquareNeighbours(bool sameParent) {
-  for (int i = 0; i + 1 < nbBinsX(); ++i) {
-    for (int j = 0; j + 1 < nbBinsY(); ++j) {
-      if ((parentX(i) == parentX(i + 1)) != sameParent) {
+  for (int i = 0; i < nbBinsX(); ++i) {
+    if (i + 1 < nbBinsX() && (parentX(i) == parentX(i + 1)) != sameParent) {
+      continue;
+    }
+    for (int j = 0; j < nbBinsY(); ++j) {
+      if (j + 1 < nbBinsY() && (parentY(j) == parentY(j + 1)) != sameParent) {
         continue;
       }
-      if ((parentY(j) == parentY(j + 1)) != sameParent) {
-        continue;
-      }
-      reoptimize({{i, j}, {i + 1, j}, {i, j + 1}, {i + 1, j + 1}});
+      improveRectangle(i, j, 2, 2);
     }
   }
 }
@@ -398,15 +398,20 @@ void DensityLegalizer::improveRectangles(int width, int height, int strideX,
   if (width * height == 1) return;
   for (int i = startX; i < nbBinsX(); i += strideX) {
     for (int j = startY; j < nbBinsY(); j += strideY) {
-      std::vector<std::pair<int, int> > bins;
-      for (int k = i; k < nbBinsX() && k < i + width; ++k) {
-        for (int l = j; l < nbBinsY() && l < j + height; ++l) {
-          bins.emplace_back(k, l);
-        }
-      }
-      reoptimize(bins);
+      improveRectangle(i, j, width, height);
     }
   }
+}
+
+void DensityLegalizer::improveRectangle(int i, int j, int width, int height) {
+  assert(width >= 1 && height >= 1);
+  std::vector<std::pair<int, int> > bins;
+  for (int k = i; k < nbBinsX() && k < i + width; ++k) {
+    for (int l = j; l < nbBinsY() && l < j + height; ++l) {
+      bins.emplace_back(k, l);
+    }
+  }
+  reoptimize(bins);
 }
 
 void DensityLegalizer::improveDiagonalRectangles(int xmySize, int xpySize,
