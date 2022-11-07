@@ -118,7 +118,8 @@ std::string GlobalPlacerParameters::toString() const {
      << roughLegalizationReoptSquareSize
      << "\n\tRough legalization quadratic penalty: "
      << roughLegalizationQuadraticPenalty
-     << "\n\tRough legalization side margin: " << roughLegalizationSideMargin;
+     << "\n\tRough legalization side margin: " << roughLegalizationSideMargin
+     << "\n\tExport weighting: " << exportWeighting;
   if (seed != -1) {
     ss << "\n\tSeed: " << seed;
   }
