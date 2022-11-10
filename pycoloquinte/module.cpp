@@ -105,6 +105,8 @@ Construct the parameters
                      &GlobalPlacerParameters::roughLegalizationQuadraticPenalty)
       .def_readwrite("rough_legalization_side_margin",
                      &GlobalPlacerParameters::roughLegalizationSideMargin)
+      .def_readwrite("rough_legalization_coarsening_limit",
+                     &GlobalPlacerParameters::roughLegalizationCoarseningLimit)
       .def_readwrite("export_weighting",
                      &GlobalPlacerParameters::exportWeighting)
       .def_readwrite("seed", &GlobalPlacerParameters::seed)

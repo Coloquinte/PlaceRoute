@@ -238,6 +238,11 @@ struct GlobalPlacerParameters {
   double roughLegalizationSideMargin;
 
   /**
+   * @brief Decide how much to coarsen compared based on the current distance to legal
+   */
+  double roughLegalizationCoarseningLimit;
+
+  /**
    * @brief Export a weighted sum of lower-bound and upper-bound placement;
    * 0 to use lower bound, 1 to use upper bound
    */

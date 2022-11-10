@@ -125,6 +125,7 @@ GlobalPlacer::GlobalPlacer(Circuit &circuit,
   legParams.costModel = params.roughLegalizationCostModel;
   legParams.reoptimizationLength = params.roughLegalizationReoptLength;
   legParams.reoptimizationSquareSize = params.roughLegalizationReoptSquareSize;
+  legParams.coarseningLimit = params.roughLegalizationCoarseningLimit;
   LegalizationModel m = params.roughLegalizationCostModel;
   if (m == LegalizationModel::L1 || m == LegalizationModel::L2 ||
       m == LegalizationModel::LInf) {

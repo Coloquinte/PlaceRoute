@@ -20,6 +20,7 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
     int reoptimizationLength;
     int reoptimizationSquareSize;
     double quadraticPenaltyFactor;
+    double coarseningLimit;
 
     Parameters();
   };

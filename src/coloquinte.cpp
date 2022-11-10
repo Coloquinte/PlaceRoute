@@ -92,6 +92,7 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
   roughLegalizationReoptLength = 2;
   roughLegalizationReoptSquareSize = 1;
   roughLegalizationSideMargin = 1.0;
+  roughLegalizationCoarseningLimit = std::numeric_limits<double>::infinity();
   roughLegalizationQuadraticPenalty = 0.001;
   exportWeighting = 1.0;
   check();
@@ -116,6 +117,8 @@ std::string GlobalPlacerParameters::toString() const {
      << "\n\tRough legalization reopt length: " << roughLegalizationReoptLength
      << "\n\tRough legalization reopt square size: "
      << roughLegalizationReoptSquareSize
+     << "\n\tRough legalization coarsening limit: "
+     << roughLegalizationCoarseningLimit
      << "\n\tRough legalization quadratic penalty: "
      << roughLegalizationQuadraticPenalty
      << "\n\tRough legalization side margin: " << roughLegalizationSideMargin

@@ -18,6 +18,7 @@ DensityLegalizer::Parameters::Parameters() {
   reoptimizationLength = 2;
   reoptimizationSquareSize = 1;
   quadraticPenaltyFactor = 0.0;
+  coarseningLimit = 1.0;
 }
 
 DensityLegalizer::DensityLegalizer(DensityGrid grid,
@@ -61,7 +62,13 @@ float DensityLegalizer::meanDistance() const {
   for (int i = 0; i < nbCells(); ++i) {
     disp += cellDemand(i) * dist[i];
   }
-  return disp / totalDemand();
+  disp /= totalDemand();
+  if (params_.costModel == LegalizationModel::L1Squared ||
+      params_.costModel == LegalizationModel::L2Squared ||
+      params_.costModel == LegalizationModel::LInfSquared) {
+    disp = std::sqrt(disp);
+  }
+  return disp;
 }
 
 float DensityLegalizer::rmsDistance() const {
@@ -445,7 +452,33 @@ void DensityLegalizer::run() {
   runRefinement();
 }
 
-void DensityLegalizer::runCoarsening() { coarsenFully(); }
+void DensityLegalizer::runCoarsening() {
+  double dist = params_.coarseningLimit * meanDistance();
+  while (true) {
+    bool doX = levelX() + 1 < nbLevelX();
+    bool doY = levelY() + 1 < nbLevelY();
+    double distX = placementArea().width() / (double)nbBinsX();
+    double distY = placementArea().height() / (double)nbBinsY();
+    doX &= distX <= dist;
+    doY &= distY <= dist;
+    if (!doX && !doY) {
+      // Not possible to coarsen
+      break;
+    }
+    if (doX) {
+      coarsenX();
+    }
+    if (doY) {
+      coarsenY();
+    }
+  }
+  while (levelX() + 1 < nbLevelX()) {
+    coarsenX();
+  }
+  while (levelY() + 1 < nbLevelY()) {
+    coarsenY();
+  }
+}
 
 void DensityLegalizer::runRefinement() {
   while (levelX() > 0 || levelY() > 0) {
