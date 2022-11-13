@@ -270,10 +270,11 @@ std::vector<float> Legalizer::allDistances(LegalizationModel model) const {
   for (int i = 0; i < nbCells(); ++i) {
     if (isIgnored(i)) {
       distances.push_back(0.0f);
+    } else {
+      float dx = targetX[i] - cellX[i];
+      float dy = targetY[i] - cellY[i];
+      distances.push_back(norm(dx, dy, model));
     }
-    float dx = targetX[i] - cellX[i];
-    float dy = targetY[i] - cellY[i];
-    distances.push_back(norm(dx, dy, model));
   }
   return distances;
 }
