@@ -117,6 +117,16 @@ class DetailedPlacement {
   std::vector<int> rowCells(int row) const;
 
   /**
+   * @brief Return all cells in the s, sorted by position
+   */
+  std::vector<int> rowCells(const std::vector<int> &rows) const;
+
+  /**
+   * @brief Return all cells in the row strictly between two boundary cells
+   */
+  std::vector<int> cellsBetween(int row, int cellBefore, int cellAfter) const;
+
+  /**
    * @brief Return the x position of the cell
    */
   int cellX(int c) const {
@@ -160,10 +170,22 @@ class DetailedPlacement {
   int boundaryBefore(int c) const;
 
   /**
+   * @brief Return the x boundary before the cell (beginning of row or end of
+   * previous cell), or the end of the row is cell is -1
+   */
+  int boundaryBefore(int row, int c) const;
+
+  /**
    * @brief Return the x boundary after the cell (end of row or beginning of
    * next cell)
    */
   int boundaryAfter(int c) const;
+
+  /**
+   * @brief Return the x boundary after the cell (end of row or beginning of
+   * next cell), or the beginning of the row is cell is -1
+   */
+  int boundaryAfter(int row, int c) const;
 
   /**
    * @brief Return the beginning position of the placement site after this cell

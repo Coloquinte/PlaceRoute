@@ -304,6 +304,16 @@ struct DetailedPlacerParameters {
   int shiftMaxNbCells;
 
   /**
+   * @brief Number of rows considered simultaneously for reordering
+   */
+  int reorderingNbRows;
+
+  /**
+   * @brief Maximum number of cells considered together for reordering
+   */
+  int reorderingMaxNbCells;
+
+  /**
    * @brief Cost model used for legalization
    */
   LegalizationModel legalizationCostModel;

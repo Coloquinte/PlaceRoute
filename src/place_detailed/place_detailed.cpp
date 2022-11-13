@@ -26,13 +26,21 @@ void DetailedPlacerParameters::check() const {
     throw std::runtime_error(
         "Number of detailed placement rows must be non-negative");
   }
-  if (shiftNbRows < 0) {
+  if (shiftNbRows <= 0) {
     throw std::runtime_error(
-        "Number of detailed placement shift rows must be non-negative");
+        "Number of detailed placement shift rows must be positive");
   }
   if (shiftMaxNbCells < 0) {
     throw std::runtime_error(
         "Number of detailed placement shift cells must be non-negative");
+  }
+  if (reorderingNbRows <= 0) {
+    throw std::runtime_error(
+        "Number of detailed placement reordering rows must be positive");
+  }
+  if (reorderingMaxNbCells < 0) {
+    throw std::runtime_error(
+        "Number of detailed placement reordering cells must be non-negative");
   }
   if (legalizationCostModel != LegalizationModel::L1) {
     throw std::runtime_error("Only L1 legalization model is supported");
@@ -99,12 +107,17 @@ DetailedPlacer::DetailedPlacer(Circuit &circuit,
 
 void DetailedPlacer::run() {
   for (int i = 1; i <= params_.nbPasses; ++i) {
+    std::cout << "#" << i << ":" << std::flush;
     runSwaps(params_.localSearchNbNeighbours, params_.localSearchNbRows);
     auto swapValue = value();
+    std::cout << "\tSwaps " << value() << std::flush;
     runShifts(params_.shiftNbRows, params_.shiftMaxNbCells);
     auto shiftValue = value();
-    std::cout << "#" << i << ":\tSwaps " << swapValue << "\tShifts "
-              << shiftValue << std::endl;
+    std::cout << "\tShifts " << shiftValue << std::flush;
+    runReordering(params_.reorderingNbRows, params_.reorderingMaxNbCells);
+    auto reordValue = value();
+    std::cout << "\tReordering " << reordValue << std::flush;
+    std::cout << std::endl;
     callback();
   }
 }
@@ -417,19 +430,7 @@ void DetailedPlacer::runShifts(int nbRows, int maxNbCells) {
 void DetailedPlacer::runShiftsOnRows(const std::vector<int> &rows,
                                      int maxNbCells) {
   // Gather all cells and sort them by x coordinate
-  std::vector<std::pair<int, int> > sortedCells;
-  for (int row : rows) {
-    for (int c : placement_.rowCells(row)) {
-      sortedCells.emplace_back(placement_.cellX(c), c);
-    }
-  }
-  std::stable_sort(sortedCells.begin(), sortedCells.end());
-  std::vector<int> cells;
-  cells.reserve(sortedCells.size());
-
-  for (auto p : sortedCells) {
-    cells.push_back(p.second);
-  }
+  std::vector<int> cells = placement_.rowCells(rows);
 
   // Only select part of the cells so we never solve an optimization problem
   // bigger than maxNbCells
@@ -562,6 +563,284 @@ void DetailedPlacer::runShiftsOnCells(const std::vector<int> &cells) {
     placement_.cellX_[c] = pos;
     xtopo_.updateCellPos(c, pos);
   }
+}
+
+struct ReorderingRegion {
+  int row;
+  int minPos;
+  int maxPos;
+  int cellPred;
+  int cellNext;
+
+  int width() const { return maxPos - minPos; }
+};
+
+class RowReordering {
+ public:
+  /**
+   * @brief Initialize the datastructure
+   */
+  RowReordering(DetailedPlacement &placement, IncrNetModel &xtopo,
+                IncrNetModel &ytopo);
+
+  /**
+   * @brief Number of registered regions
+   */
+  int nbRegions() const { return regions_.size(); }
+
+  /**
+   * @brief Number of registered cells
+   */
+  int nbCells() const { return cells_.size(); }
+
+  /**
+   * @brief Add a region and its cells to be optimized
+   */
+  void addRow(int row, int cellPred, int cellNext);
+
+  /**
+   * @brief Add cells to be optimized at once
+   */
+  void addCells(const std::vector<int> &cells);
+
+  /**
+   * @brief Total cell width allocated to a given region
+   */
+  int allocatedWidth(int region) const;
+
+  /**
+   * @brief Run the full optimization
+   */
+  void run();
+  void runRegionChoice(int cellInd);
+  void runOrdering(int rowInd);
+  long long value() const { return xtopo_.value() + ytopo_.value(); }
+
+  void writeback();
+
+  /**
+   * @brief Check the consistency of the datastructure
+   */
+  void check() const;
+
+ private:
+  DetailedPlacement &placement_;
+  IncrNetModel &xtopo_;
+  IncrNetModel &ytopo_;
+  std::vector<ReorderingRegion> regions_;
+  std::vector<int> cells_;
+
+  std::vector<std::vector<int> > order_;
+  std::vector<std::vector<int> > positions_;
+
+  long long bestVal_;
+  std::vector<std::vector<int> > bestOrder_;
+  std::vector<std::vector<int> > bestPositions_;
+  bool improvement_;
+};
+
+RowReordering::RowReordering(DetailedPlacement &placement, IncrNetModel &xtopo,
+                             IncrNetModel &ytopo)
+    : placement_(placement), xtopo_(xtopo), ytopo_(ytopo) {
+  bestVal_ = std::numeric_limits<long long>::max();
+  improvement_ = false;
+}
+
+void RowReordering::addRow(int row, int cellPred, int cellNext) {
+  ReorderingRegion newRow;
+  newRow.row = row;
+  newRow.cellPred = cellPred;
+  newRow.cellNext = cellNext;
+  assert(cellPred != cellNext);
+  assert(cellPred == -1 || placement_.cellRow(cellPred) == row);
+  assert(cellNext == -1 || placement_.cellRow(cellNext) == row);
+  newRow.minPos = placement_.boundaryAfter(row, cellPred);
+  newRow.maxPos = placement_.boundaryBefore(row, cellNext);
+  regions_.push_back(newRow);
+  std::vector<int> cells = placement_.cellsBetween(row, cellPred, cellNext);
+  // Register cells
+  for (int c : cells) {
+    cells_.push_back(c);
+  }
+  // Add to best known order and position
+  bestOrder_.push_back(cells);
+  std::vector<int> positions;
+  for (int c : cells) {
+    positions.push_back(placement_.cellX(c));
+  }
+  bestPositions_.push_back(positions);
+  order_.emplace_back();
+  positions_.emplace_back();
+}
+
+void RowReordering::addCells(const std::vector<int> &cells) {
+  std::unordered_set<int> cell_set(cells.begin(), cells.end());
+  for (int c : cells) {
+    if (cell_set.count(placement_.cellPred(c))) {
+      // Not the start of a range of cells
+      continue;
+    }
+    int cellPred = placement_.cellPred(c);
+    int cellNext = c;
+    while (cell_set.count(cellNext)) {
+      cellNext = placement_.cellNext(cellNext);
+    }
+    addRow(placement_.cellRow(c), cellPred, cellNext);
+  }
+}
+
+int RowReordering::allocatedWidth(int region) const {
+  int ret = 0;
+  for (int c : order_[region]) {
+    ret += placement_.cellWidth(c);
+  }
+  return ret;
+}
+
+void RowReordering::run() {
+  bestVal_ = xtopo_.value() + ytopo_.value();
+  // Reverse-sorted to interact well with next_permutation
+  std::sort(cells_.begin(), cells_.end(), std::greater<int>());
+  runRegionChoice(cells_.size() - 1);
+  writeback();
+}
+
+void RowReordering::runRegionChoice(int cellInd) {
+  assert(cellInd < nbCells());
+  if (cellInd < 0) {
+    // Leaf case: run ordering optimization
+    runOrdering(nbRegions() - 1);
+  } else {
+    for (int i = 0; i < nbRegions(); ++i) {
+      order_[i].push_back(cells_[cellInd]);
+      if (allocatedWidth(i) <= regions_[i].width()) {
+        // Only if there is enough space left in the row
+        ytopo_.updateCellPos(cells_[cellInd], placement_.rowY(regions_[i].row));
+        runRegionChoice(cellInd - 1);
+      }
+      // Assumes cells are reverse-sorted: order_ is always sorted after
+      // next_permutation calls
+      assert(order_[i].back() == cells_[cellInd]);
+      order_[i].pop_back();
+    }
+  }
+}
+
+void RowReordering::runOrdering(int rowInd) {
+  if (rowInd < 0) {
+    // Leaf case: evaluate
+    long long value = xtopo_.value() + ytopo_.value();
+    if (value < bestVal_) {
+      bestVal_ = value;
+      bestOrder_ = order_;
+      bestPositions_ = positions_;
+      improvement_ = true;
+    }
+  } else {
+    // Iterate on all possible orderings
+    while (
+        std::next_permutation(order_[rowInd].begin(), order_[rowInd].end())) {
+      // Setup the positions
+      positions_[rowInd].clear();
+      int predPos = regions_[rowInd].minPos;
+      for (int c : order_[rowInd]) {
+        positions_[rowInd].push_back(predPos);
+        xtopo_.updateCellPos(c, predPos);
+        predPos += placement_.cellWidth(c);
+      }
+      runOrdering(rowInd - 1);
+    }
+  }
+}
+
+void RowReordering::writeback() {
+  if (improvement_) {
+    // Save the new placement
+    for (int c : cells_) {
+      placement_.unplace(c);
+    }
+    for (int i = 0; i < nbRegions(); ++i) {
+      int pred = regions_[i].cellPred;
+      for (int j = 0; j < bestOrder_[i].size(); ++j) {
+        int c = bestOrder_[i][j];
+        placement_.place(c, regions_[i].row, pred, bestPositions_[i][j]);
+        xtopo_.updateCellPos(c, placement_.cellX(c));
+        ytopo_.updateCellPos(c, placement_.cellY(c));
+        pred = c;
+      }
+    }
+  } else {
+    // Placement order is not modified, but we need to reset cell positions in
+    // the net topologies
+    for (int c : cells_) {
+      xtopo_.updateCellPos(c, placement_.cellX(c));
+      ytopo_.updateCellPos(c, placement_.cellY(c));
+    }
+  }
+}
+
+void RowReordering::check() const {
+  if (nbRegions() != order_.size())
+    throw std::runtime_error("Inconsistent number of regions");
+  if (nbRegions() != positions_.size())
+    throw std::runtime_error("Inconsistent number of regions");
+  if (nbRegions() != bestOrder_.size())
+    throw std::runtime_error("Inconsistent number of regions");
+  if (nbRegions() != bestPositions_.size())
+    throw std::runtime_error("Inconsistent number of regions");
+  for (int i = 0; i < nbRegions(); ++i) {
+    if (bestOrder_[i].size() != bestPositions_[i].size())
+      throw std::runtime_error("Inconsistent number of cells in regions");
+  }
+  std::unordered_set<int> cell_set(cells_.begin(), cells_.end());
+  if (cell_set.size() != cells_.size()) {
+    throw std::runtime_error("The given cells are not unique");
+  }
+  for (const ReorderingRegion &region : regions_) {
+    if (cell_set.count(region.cellPred)) {
+      throw std::runtime_error("Some of the given regions are adjacent");
+    }
+    if (cell_set.count(region.cellNext)) {
+      throw std::runtime_error("Some of the given regions are adjacent");
+    }
+  }
+}
+
+void DetailedPlacer::runReordering(int maxNbRows, int maxNbCells) {
+  if (maxNbCells < 2) {
+    return;
+  }
+
+  RowNeighbourhood rowsNeighbours(placement_.rows(), maxNbRows - 1);
+
+  for (int row = 0; row < placement_.nbRows(); ++row) {
+    std::vector<int> rows = {row};
+    for (int r : rowsNeighbours.rowsAbove(row)) {
+      rows.push_back(r);
+    }
+    runReorderingOnRows(rows, maxNbCells);
+  }
+  check();
+}
+
+void DetailedPlacer::runReorderingOnRows(const std::vector<int> &rows,
+                                         int maxNbCells) {
+  std::vector<int> cells = placement_.rowCells(rows);
+
+  // Only select part of the cells so we never solve an optimization problem
+  // bigger than maxNbCells
+  int overlap = std::min(maxNbCells / 2, 10);
+  for (int start = 0; start < cells.size(); start += maxNbCells - overlap) {
+    int end = std::min(start + maxNbCells, (int)cells.size());
+    std::vector<int> subproblem(cells.begin() + start, cells.begin() + end);
+    runReorderingOnCells(subproblem);
+  }
+}
+
+void DetailedPlacer::runReorderingOnCells(const std::vector<int> &cells) {
+  RowReordering reord(placement_, xtopo_, ytopo_);
+  reord.addCells(cells);
+  reord.run();
 }
 
 void DetailedPlacer::updateCellPos(int c) {

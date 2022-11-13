@@ -127,6 +127,10 @@ Construct the parameters
                      &DetailedPlacerParameters::localSearchNbNeighbours)
       .def_readwrite("local_search_nb_rows",
                      &DetailedPlacerParameters::localSearchNbRows)
+      .def_readwrite("reordering_nb_rows",
+                     &DetailedPlacerParameters::reorderingNbRows)
+      .def_readwrite("reordering_max_nb_cells",
+                     &DetailedPlacerParameters::reorderingMaxNbCells)
       .def_readwrite("shift_nb_rows", &DetailedPlacerParameters::shiftNbRows)
       .def_readwrite("shift_max_nb_cells",
                      &DetailedPlacerParameters::shiftMaxNbCells)

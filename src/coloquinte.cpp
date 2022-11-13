@@ -140,6 +140,8 @@ DetailedPlacerParameters::DetailedPlacerParameters(int effort, int seed)
   localSearchNbRows = std::round(interpolateEffort(1.0, 4.0, effort));
   shiftNbRows = 3;
   shiftMaxNbCells = std::round(interpolateLogEffort(50, 120.0, effort));
+  reorderingNbRows = 1;
+  reorderingMaxNbCells = 1;
   legalizationCostModel = LegalizationModel::L1;
   legalizationOrderingWidth = 0.0;
   legalizationOrderingY = 0.0;
@@ -152,6 +154,8 @@ std::string DetailedPlacerParameters::toString() const {
      << "\n\tNb passes: " << nbPasses
      << "\n\tLocal search nb neighbours: " << localSearchNbNeighbours
      << "\n\tLocal search nb rows: " << localSearchNbRows
+     << "\n\tReordering max nb rows: " << reorderingNbRows
+     << "\n\tReordering max nb cells: " << reorderingMaxNbCells
      << "\n\tShift nb rows: " << shiftNbRows
      << "\n\tShift max nb cells: " << shiftMaxNbCells
      << "\n\tLegalization cost model: "

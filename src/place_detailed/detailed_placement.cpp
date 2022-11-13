@@ -189,6 +189,43 @@ std::vector<int> DetailedPlacement::rowCells(int row) const {
   return ret;
 }
 
+std::vector<int> DetailedPlacement::rowCells(
+    const std::vector<int> &rows) const {
+  std::vector<std::pair<int, int> > sortedCells;
+  for (int row : rows) {
+    for (int c : rowCells(row)) {
+      sortedCells.emplace_back(cellX(c), c);
+    }
+  }
+  std::stable_sort(sortedCells.begin(), sortedCells.end());
+  std::vector<int> cells;
+  cells.reserve(sortedCells.size());
+
+  for (auto p : sortedCells) {
+    cells.push_back(p.second);
+  }
+  return cells;
+}
+
+std::vector<int> DetailedPlacement::cellsBetween(int row, int cellBefore,
+                                                 int cellAfter) const {
+  if (cellBefore != -1 && cellRow(cellBefore) != row) {
+    throw std::runtime_error("First cell row is inconsistent");
+  }
+  if (cellAfter != -1 && cellRow(cellAfter) != row) {
+    throw std::runtime_error("Last cell row is inconsistent");
+  }
+  int firstCell = cellBefore == -1 ? rowFirstCell(row) : cellNext(cellBefore);
+  std::vector<int> ret;
+  for (int c = firstCell; c != cellAfter; c = cellNext(c)) {
+    if (c == -1) {
+      throw std::runtime_error("End range cell was not encountered");
+    }
+    ret.push_back(c);
+  }
+  return ret;
+}
+
 int DetailedPlacement::boundaryBefore(int c) const {
   assert(isPlaced(c));
   int pred = cellPred(c);
@@ -205,6 +242,20 @@ int DetailedPlacement::boundaryAfter(int c) const {
     return rows_[cellRow(c)].maxX;
   }
   return cellX(next);
+}
+
+int DetailedPlacement::boundaryBefore(int row, int c) const {
+  if (c == -1) {
+    return rows_[row].maxX;
+  }
+  return boundaryBefore(c);
+}
+
+int DetailedPlacement::boundaryAfter(int row, int c) const {
+  if (c == -1) {
+    return rows_[row].minX;
+  }
+  return boundaryAfter(c);
 }
 
 int DetailedPlacement::siteBegin(int row, int pred) const {
@@ -253,13 +304,9 @@ bool DetailedPlacement::canSwap(int c1, int c2) const {
   }  // Otherwise check if there is enough space for both cells
 
   int b1 = boundaryBefore(c1);
-
   int b2 = boundaryBefore(c2);
-
   int e1 = boundaryAfter(c1);
-
   int e2 = boundaryAfter(c2);
-
   return e2 - b2 >= cellWidth(c1) && e1 - b1 >= cellWidth(c2);
 }
 

@@ -130,6 +130,21 @@ class DetailedPlacer {
   void runShiftsOnCells(const std::vector<int> &cells);
 
   /**
+   * @brief Run cell ordering optimization
+   */
+  void runReordering(int maxNbRows, int maxNbCells);
+
+  /**
+   * @brief Optimize cell ordering over multiple rows
+   */
+  void runReorderingOnRows(const std::vector<int> &rows, int maxNbCells);
+
+  /**
+   * @brief Optimize cell ordering on multiple cells
+   */
+  void runReorderingOnCells(const std::vector<int> &cells);
+
+  /**
    * @brief Return the current objective value
    */
   long long value() const { return xtopo_.value() + ytopo_.value(); }
@@ -190,7 +205,7 @@ class DetailedPlacer {
 
   /**
    * @brief Perfom the best improvement swap between a cell and another row;
-   * update the inputs if necessary on a swap
+   * update the inputs if necessary on a swap to stay in the same row
    *
    * @return True on a change
    */
