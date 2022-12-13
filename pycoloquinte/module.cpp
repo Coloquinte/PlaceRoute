@@ -79,7 +79,8 @@ Construct the parameters
       .def_readwrite("nb_initial_steps",
                      &GlobalPlacerParameters::nbInitialSteps)
       .def_readwrite("gap_tolerance", &GlobalPlacerParameters::gapTolerance)
-      .def_readwrite("distance_tolerance", &GlobalPlacerParameters::distanceTolerance)
+      .def_readwrite("distance_tolerance",
+                     &GlobalPlacerParameters::distanceTolerance)
       .def_readwrite("penalty_cutoff_distance",
                      &GlobalPlacerParameters::penaltyCutoffDistance)
       .def_readwrite("initial_penalty", &GlobalPlacerParameters::initialPenalty)

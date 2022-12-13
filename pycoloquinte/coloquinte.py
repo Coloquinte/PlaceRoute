@@ -15,6 +15,7 @@ from coloquinte_pybind import (
     GlobalPlacerParameters,
     LegalizationModel,
     NetModel,
+    PlacementStep,
     Rectangle,
 )
 
@@ -514,18 +515,42 @@ def _show_params(obj, prefix):
         print(f"\t--{prefix}.{name}: {default_val}")
 
 
-class WriteImagesCallback:
+class OptimizationCallback:
     def __init__(self, circuit, prefix, image_width, extension):
         self.circuit = circuit
         self.step = 1
         self.prefix = prefix
         self.image_width = image_width
         self.extension = extension
+        self.save_view = True
+        self.history = []
 
     def __call__(self, step_name):
-        filename = f"{self.prefix}_{self.step:04d}_{step_name.name.lower()}.{self.extension}"
-        self.circuit.write_image(filename, image_width=self.image_width)
+        if self.save_view:
+            filename = f"{self.prefix}_{self.step:04d}_{step_name.name.lower()}.{self.extension}"
+            self.circuit.write_image(filename, image_width=self.image_width)
+            self.save_graph()
+        self.history.append((self.step, step_name, self.circuit.hpwl()))
         self.step += 1
+
+    def save_graph(self):
+        import matplotlib.pyplot as plt
+        filename = f"{self.prefix}_WL.{self.extension}"
+        plt.title("Wirelength over time")
+        plt.xlabel("Step")
+        plt.ylabel("Wirelength")
+        for step_name in PlacementStep.LowerBound, PlacementStep.UpperBound, PlacementStep.Detailed:
+            steps = []
+            vals = []
+            for step, name, val in self.history:
+                if name == step_name:
+                    steps.append(step)
+                    vals.append(val)
+            if len(vals) > 0:
+                plt.plot(steps, vals, label=step_name.name)
+                plt.legend(loc="upper left")
+        plt.savefig(filename)
+        plt.clf()
 
 
 def main():
@@ -573,6 +598,8 @@ def main():
     # Save intermediate placement images
     parser.add_argument("--save-all-images",
                         help=argparse.SUPPRESS, action="store_true")
+    parser.add_argument("--save-graph",
+                        help=argparse.SUPPRESS, action="store_true")
     # Save intermediate placement images
     parser.add_argument(
         "--image-width", help=argparse.SUPPRESS, type=int, default=1080)
@@ -611,10 +638,10 @@ def main():
     if args.save_images is not None:
         circuit.write_image(
             f"{args.save_images}_macros.{args.image_extension}", True, args.image_width)
-        image_writer = WriteImagesCallback(
-            circuit, args.save_images, args.image_width, args.image_extension)
-        if args.save_all_images:
-            callback = image_writer
+        if args.save_all_images or args.save_graph:
+            callback = OptimizationCallback(
+                circuit, args.save_images, args.image_width, args.image_extension)
+            callback.save_view = args.save_all_images
 
     if args.no_global:
         print("Global placement skipped at user's request")
@@ -629,10 +656,13 @@ def main():
         print("Detailed placement skipped at user's request")
     else:
         circuit.place_detailed(detailed_params, callback)
+    circuit.write_placement(args.save_solution)
+
     if args.save_images is not None:
         circuit.write_image(
             f"{args.save_images}_placed.{args.image_extension}", True, args.image_width)
-    circuit.write_placement(args.save_solution)
+    if callback is not None:
+        callback.save_graph()
 
 
 __all__ = [

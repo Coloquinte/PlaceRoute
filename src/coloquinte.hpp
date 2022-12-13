@@ -244,7 +244,8 @@ struct GlobalPlacerParameters {
   double roughLegalizationSideMargin;
 
   /**
-   * @brief Decide how much to coarsen compared based on the current distance to legal
+   * @brief Decide how much to coarsen compared based on the current distance to
+   * legal
    */
   double roughLegalizationCoarseningLimit;
 
