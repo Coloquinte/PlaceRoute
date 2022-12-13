@@ -111,12 +111,16 @@ void DetailedPlacer::run() {
     runSwaps(params_.localSearchNbNeighbours, params_.localSearchNbRows);
     auto swapValue = value();
     std::cout << "\tSwaps " << value() << std::flush;
-    runShifts(params_.shiftNbRows, params_.shiftMaxNbCells);
-    auto shiftValue = value();
-    std::cout << "\tShifts " << shiftValue << std::flush;
-    runReordering(params_.reorderingNbRows, params_.reorderingMaxNbCells);
-    auto reordValue = value();
-    std::cout << "\tReordering " << reordValue << std::flush;
+    if (params_.shiftMaxNbCells >= 2) {
+      runShifts(params_.shiftNbRows, params_.shiftMaxNbCells);
+      auto shiftValue = value();
+      std::cout << "\tShifts " << shiftValue << std::flush;
+    }
+    if (params_.reorderingMaxNbCells >= 2) {
+      runReordering(params_.reorderingNbRows, params_.reorderingMaxNbCells);
+      auto reordValue = value();
+      std::cout << "\tReordering " << reordValue << std::flush;
+    }
     std::cout << std::endl;
     callback();
   }
