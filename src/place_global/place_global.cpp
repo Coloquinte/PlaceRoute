@@ -25,8 +25,13 @@ void GlobalPlacerParameters::check() const {
     throw std::runtime_error(
         "Number of initial steps should be lower than max number");
   }
-  if (gapTolerance < 0.0f || gapTolerance > 2.0f) {
-    throw std::runtime_error("Invalid gap tolerance");
+  if (gapTolerance < 0.0f || gapTolerance > 1.0f) {
+    throw std::runtime_error(
+        "Invalid gap tolerance (should be between 0 and 1)");
+  }
+  if (distanceTolerance < 0.0f) {
+    throw std::runtime_error(
+        "Invalid distance tolerance (should be non-negative");
   }
   if (penaltyCutoffDistance < 1.0e-6) {
     throw std::runtime_error("Too small cutoff distance may lead to issues");
@@ -186,22 +191,27 @@ std::vector<float> GlobalPlacer::computePerCellPenalty() const {
 void GlobalPlacer::run() {
   runInitialLB();
   penalty_ = params_.initialPenalty;
+  float lb = valueLB();
   for (step_ = params_.nbInitialSteps + 1; step_ <= params_.maxNbSteps;
        ++step_) {
+    std::cout << "#" << step_ << std::flush;
     runUB();
     float ub = valueUB();
-    runLB();
-    float lb = valueLB();
-    std::cout << "#" << step_;
+    float dist = leg_.meanDistance();
     std::cout << std::defaultfloat << std::setprecision(4) << ":\tUB " << ub;
-    std::cout << std::fixed << std::setprecision(1) << "\tDist "
-              << leg_.meanDistance();
-    std::cout << std::defaultfloat << std::setprecision(4) << "\tLB " << lb
-              << std::endl;
+    std::cout << std::fixed << std::setprecision(1) << "\tDist " << dist;
+    std::cout << std::flush;
+
     float gap = (ub - lb) / ub;
-    if (gap < params_.gapTolerance) {
+    // Stop if distance or the difference between LB and UB is small enough
+    if (gap < params_.gapTolerance || dist < distanceTolerance()) {
+      std::cout << std::endl;
       break;
     }
+    runLB();
+    lb = valueLB();
+    std::cout << std::defaultfloat << std::setprecision(4) << "\tLB " << lb
+              << std::endl;
     penalty_ *= params_.penaltyUpdateFactor;
   }
   runUB();

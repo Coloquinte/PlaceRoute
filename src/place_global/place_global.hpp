@@ -100,6 +100,13 @@ class GlobalPlacer {
     return params_.penaltyCutoffDistance * averageCellLength_;
   }
 
+  /**
+   * @brief Distance between upper and lower bound at which we stop placement
+   */
+  float distanceTolerance() const {
+    return params_.distanceTolerance * averageCellLength_;
+  }
+
  private:
   DensityLegalizer leg_;
   NetModel xtopo_;

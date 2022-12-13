@@ -155,9 +155,15 @@ struct GlobalPlacerParameters {
 
   /**
    * @brief Gap between lower and upper bound placement at which to stop
-   * placement early
+   * global placement early
    */
   double gapTolerance;
+
+  /**
+   * @brief Distance between lower and upper bound placement at which to stop
+   * global placement early
+   */
+  double distanceTolerance;
 
   /**
    * @brief Distance at which the full displacement penalty is obtained,
