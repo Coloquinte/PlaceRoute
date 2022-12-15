@@ -154,6 +154,12 @@ struct GlobalPlacerParameters {
   int nbInitialSteps;
 
   /**
+   * @brief Number of rough legalization steps for one placement optimization
+   * step
+   */
+  int nbStepsPerLegalization;
+
+  /**
    * @brief Gap between lower and upper bound placement at which to stop
    * global placement early
    */

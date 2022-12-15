@@ -78,6 +78,8 @@ Construct the parameters
       .def_readwrite("max_nb_steps", &GlobalPlacerParameters::maxNbSteps)
       .def_readwrite("nb_initial_steps",
                      &GlobalPlacerParameters::nbInitialSteps)
+      .def_readwrite("nb_steps_per_legalization",
+                     &GlobalPlacerParameters::nbStepsPerLegalization)
       .def_readwrite("gap_tolerance", &GlobalPlacerParameters::gapTolerance)
       .def_readwrite("distance_tolerance",
                      &GlobalPlacerParameters::distanceTolerance)

@@ -25,6 +25,10 @@ void GlobalPlacerParameters::check() const {
     throw std::runtime_error(
         "Number of initial steps should be lower than max number");
   }
+  if (nbStepsPerLegalization < 1) {
+    throw std::runtime_error(
+        "Number of steps per legalization should be positive");
+  }
   if (gapTolerance < 0.0f || gapTolerance > 1.0f) {
     throw std::runtime_error(
         "Invalid gap tolerance (should be between 0 and 1)");
@@ -192,13 +196,20 @@ void GlobalPlacer::run() {
   runInitialLB();
   penalty_ = params_.initialPenalty;
   float lb = valueLB();
-  for (step_ = params_.nbInitialSteps + 1; step_ <= params_.maxNbSteps;
-       ++step_) {
-    std::cout << "#" << step_ << ":"  << std::flush;
-    runUB();
-    float ub = valueUB();
+  float ub = std::numeric_limits<float>::infinity();
+  int firstStep = params_.nbInitialSteps + 1;
+  for (step_ = firstStep; step_ <= params_.maxNbSteps; ++step_) {
+    std::cout << "#" << step_ << ":" << std::flush;
+    if ((step_ - firstStep) % params_.nbStepsPerLegalization == 0) {
+      runUB();
+      ub = valueUB();
+      std::cout << std::defaultfloat << std::setprecision(4) << "\tUB " << ub;
+    } else {
+      leg_.updateCellTargetX(xPlacementLB_);
+      leg_.updateCellTargetY(yPlacementLB_);
+      std::cout << "\tUB   ......";
+    }
     float dist = leg_.meanDistance();
-    std::cout << std::defaultfloat << std::setprecision(4) << "\tUB " << ub;
     std::cout << std::fixed << std::setprecision(1) << "\tDist " << dist;
     std::cout << std::flush;
 

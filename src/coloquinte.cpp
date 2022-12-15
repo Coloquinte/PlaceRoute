@@ -78,6 +78,7 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
   }
   maxNbSteps = 200;
   nbInitialSteps = 0;
+  nbStepsPerLegalization = 1;
   gapTolerance = interpolateLogEffort(0.1, 0.02, effort);
   distanceTolerance = 2.0;
   penaltyCutoffDistance = 10.0;
@@ -102,9 +103,11 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
 std::string GlobalPlacerParameters::toString() const {
   std::stringstream ss;
   ss << "Global placer params:"
-     << "\n\tMax nb steps: " << maxNbSteps
      << "\n\tGap tolerance: " << gapTolerance
      << "\n\tDistance tolerance: " << distanceTolerance
+     << "\n\tMax nb steps: " << maxNbSteps
+     << "\n\tInitial placement steps: " << nbInitialSteps
+     << "\n\tPlacement steps per legalization: " << nbStepsPerLegalization
      << "\n\tPenalty cutoff distance: " << penaltyCutoffDistance
      << "\n\tInitial penalty: " << initialPenalty
      << "\n\tPenalty update factor: " << penaltyUpdateFactor
