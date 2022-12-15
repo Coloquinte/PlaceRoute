@@ -194,11 +194,11 @@ void GlobalPlacer::run() {
   float lb = valueLB();
   for (step_ = params_.nbInitialSteps + 1; step_ <= params_.maxNbSteps;
        ++step_) {
-    std::cout << "#" << step_ << std::flush;
+    std::cout << "#" << step_ << ":"  << std::flush;
     runUB();
     float ub = valueUB();
     float dist = leg_.meanDistance();
-    std::cout << std::defaultfloat << std::setprecision(4) << ":\tUB " << ub;
+    std::cout << std::defaultfloat << std::setprecision(4) << "\tUB " << ub;
     std::cout << std::fixed << std::setprecision(1) << "\tDist " << dist;
     std::cout << std::flush;
 
