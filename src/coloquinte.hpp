@@ -178,6 +178,11 @@ struct GlobalPlacerParameters {
   double penaltyCutoffDistance;
 
   /**
+   * @brief Exponent applied to the cell area to compute the penalty
+   */
+  double penaltyAreaExponent;
+
+  /**
    * @brief Initial average strength for the displacement penalty
    */
   double initialPenalty;

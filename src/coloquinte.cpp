@@ -82,6 +82,7 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
   gapTolerance = interpolateLogEffort(0.1, 0.02, effort);
   distanceTolerance = 2.0;
   penaltyCutoffDistance = 10.0;
+  penaltyAreaExponent = 0.5;
   initialPenalty = 0.02;
   penaltyUpdateFactor = interpolateLogEffort(1.3, 1.05, effort);
   netModel = NetModelOption::BoundToBound;
@@ -109,6 +110,7 @@ std::string GlobalPlacerParameters::toString() const {
      << "\n\tInitial placement steps: " << nbInitialSteps
      << "\n\tPlacement steps per legalization: " << nbStepsPerLegalization
      << "\n\tPenalty cutoff distance: " << penaltyCutoffDistance
+     << "\n\tPenalty area exponent: " << penaltyAreaExponent
      << "\n\tInitial penalty: " << initialPenalty
      << "\n\tPenalty update factor: " << penaltyUpdateFactor
      << "\n\tNet model: " << coloquinte::toString(netModel)

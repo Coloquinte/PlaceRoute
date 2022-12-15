@@ -40,6 +40,9 @@ void GlobalPlacerParameters::check() const {
   if (penaltyCutoffDistance < 1.0e-6) {
     throw std::runtime_error("Too small cutoff distance may lead to issues");
   }
+  if (penaltyAreaExponent < 0.49 || penaltyAreaExponent > 1.01) {
+    throw std::runtime_error("Penalty area exponent should be between 0.5 and 1");
+  }
   if (initialPenalty <= 0.0f) {
     throw std::runtime_error("Initial penalty should be positive");
   }
@@ -187,7 +190,8 @@ std::vector<float> GlobalPlacer::computePerCellPenalty() const {
   ret.reserve(leg_.nbCells());
 
   for (int i = 0; i < leg_.nbCells(); ++i) {
-    ret.push_back(std::sqrt(leg_.cellDemand(i) / meanArea));
+    ret.push_back(
+        std::pow(leg_.cellDemand(i) / meanArea, params_.penaltyAreaExponent));
   }
   return ret;
 }

@@ -85,6 +85,8 @@ Construct the parameters
                      &GlobalPlacerParameters::distanceTolerance)
       .def_readwrite("penalty_cutoff_distance",
                      &GlobalPlacerParameters::penaltyCutoffDistance)
+      .def_readwrite("penalty_area_exponent",
+                     &GlobalPlacerParameters::penaltyAreaExponent)
       .def_readwrite("initial_penalty", &GlobalPlacerParameters::initialPenalty)
       .def_readwrite("penalty_update_factor",
                      &GlobalPlacerParameters::penaltyUpdateFactor)
