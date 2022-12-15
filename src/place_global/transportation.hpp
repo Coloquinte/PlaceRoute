@@ -6,7 +6,7 @@
 namespace coloquinte {
 
 using DemandType = long long;
-using CostType = long long;
+using CostType = int;
 
 /**
  * @brief A transportation solver for problems with few sinks and many sources
