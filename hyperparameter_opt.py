@@ -112,6 +112,10 @@ class BenchmarkRun:
         return ret
 
 
+def enum_values(enum_type):
+    return sorted([v for v in enum_type.__members__.keys()])
+
+
 optimization_variables = [
     sp.Int("global_max_nb_steps", 30, 200, log=True),
     sp.Int("global_nb_initial_steps", 0, 2),
@@ -126,6 +130,9 @@ optimization_variables = [
     sp.Int("global_rough_legalization_reopt_square_size", 1, 3),
     sp.Int("global_rough_legalization_reopt_length", 2, 8, log=True),
     sp.Real("global_export_weighting", 0.5, 1.0),
+    sp.Categorical("global_net_model", enum_values(coloquinte.NetModel)),
+    sp.Categorical("global_rough_legalization_cost_model", enum_values(coloquinte.LegalizationModel)),
+    sp.Real("detailed_legalization_ordering_with", 0.0, 1.0),
     sp.Int("detailed_nb_passes", 1, 5),
     sp.Int("detailed_local_search_nb_neighbours", 2, 16),
     sp.Int("detailed_local_search_nb_rows", 1, 3),
@@ -197,15 +204,15 @@ class HPOptimizer:
         return m
 
     def evaluate_openbox(self, config):
+        print("Evaluating new incumbent:")
+        for k, v in config.get_dictionary().items():
+            print(f"\t{k}: {v}")
         params_dict = HPOptimizer.default_params()
         for k, v in config.get_dictionary().items():
             params_dict[k] = v
         m = self.evaluate(params_dict)
         t = m["time_total"]
         q = m["hpwl"]
-        print("New incumbent evaluated: ")
-        for k, v in config.get_dictionary().items():
-            print(f"\t{k}: {v}")
         print(f"Objective:\tQuality {q:.0f}\tTime {t:.2f}")
         return {"objs": [q, t]}
 
@@ -219,7 +226,7 @@ class HPOptimizer:
             num_constraints=0,
             surrogate_type='prf',
             acq_type='ehvi',
-            acq_optimizer_type='random_scipy',
+            #acq_optimizer_type='random_scipy',
             initial_runs=2*len(self.variables)+1,
             max_runs=self.args.max_nb_runs,
             runtime_limit=self.args.time_limit,
