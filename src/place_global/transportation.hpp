@@ -5,6 +5,9 @@
 
 namespace coloquinte {
 
+using DemandType = long long;
+using CostType = long long;
+
 /**
  * @brief A transportation solver for problems with few sinks and many sources
  */
@@ -13,13 +16,13 @@ class TransportationProblem {
   /**
    * @brief Initialize the datastructure
    */
-  TransportationProblem(const std::vector<long long>& capacities,
-                       const std::vector<long long>& demands,
-                       const std::vector<std::vector<long long> >& costs);
+  TransportationProblem(const std::vector<DemandType>& capacities,
+                        const std::vector<DemandType>& demands,
+                        const std::vector<std::vector<CostType> >& costs);
 
-  TransportationProblem(const std::vector<long long>& capacities,
-                       const std::vector<long long>& demands,
-                       const std::vector<std::vector<float> >& costs);
+  TransportationProblem(const std::vector<DemandType>& capacities,
+                        const std::vector<DemandType>& demands,
+                        const std::vector<std::vector<float> >& costs);
 
   /**
    * @brief Number of sources in the problem
@@ -34,61 +37,61 @@ class TransportationProblem {
   /**
    * @brief Compute the total demand from the sources
    */
-  long long totalDemand() const;
+  DemandType totalDemand() const;
 
   /**
    * @brief Compute the total capacity at the sinks
    */
-  long long totalCapacity() const;
+  DemandType totalCapacity() const;
 
   /**
    * @brief Demand of all sources
    */
-  const std::vector<long long>& demands() const { return demands_; }
+  const std::vector<DemandType>& demands() const { return demands_; }
 
   /**
    * @brief Capacities for all sinks
    */
-  const std::vector<long long>& capacities() const { return capacities_; }
+  const std::vector<DemandType>& capacities() const { return capacities_; }
 
   /**
    * @brief Costs between sinks and sources
    */
-  const std::vector<std::vector<long long> >& costs() const { return costs_; }
+  const std::vector<std::vector<CostType> >& costs() const { return costs_; }
 
   /**
    * @brief Allocations between sinks and sources
    */
-  const std::vector<std::vector<long long> >& allocations() const {
+  const std::vector<std::vector<DemandType> >& allocations() const {
     return allocations_;
   }
 
   /**
    * @brief Demand for this source
    */
-  long long demand(int src) const { return demands_[src]; }
+  DemandType demand(int src) const { return demands_[src]; }
 
   /**
    * @brief Capacity for this sink
    */
-  long long capacity(int snk) const { return capacities_[snk]; }
+  DemandType capacity(int snk) const { return capacities_[snk]; }
 
   /**
    * @brief Allocation between one sink and source
    */
-  long long allocation(int snk, int src) const {
+  DemandType allocation(int snk, int src) const {
     return allocations_[snk][src];
   }
 
   /**
    * @brief Cost between one sink and source
    */
-  long long cost(int snk, int src) const { return costs_[snk][src]; }
+  CostType cost(int snk, int src) const { return costs_[snk][src]; }
 
   /**
    * @brief Cost moving a source between sinks
    */
-  long long movingCost(int src, int snk1, int snk2) const;
+  CostType movingCost(int src, int snk1, int snk2) const;
 
   /**
    * @brief Cost between one sink and source, with scaling removed
@@ -100,12 +103,12 @@ class TransportationProblem {
   /**
    * @brief Demand allocated in the current solution for this source
    */
-  long long allocatedDemand(int src) const;
+  DemandType allocatedDemand(int src) const;
 
   /**
    * @brief Capacity allocated in the current solution for this sink
    */
-  long long allocatedCapacity(int snk) const;
+  DemandType allocatedCapacity(int snk) const;
 
   /**
    * @brief Cost of the current allocation
@@ -115,12 +118,12 @@ class TransportationProblem {
   /**
    * @brief Add a dummy source with 0 cost
    */
-  void addSource(long long demand);
+  void addSource(DemandType demand);
 
   /**
    * @brief Add a dummy sink with 0 cost
    */
-  void addSink(long long capa);
+  void addSink(DemandType capa);
 
   /**
    * @brief Return true if the problem is balanced
@@ -143,12 +146,14 @@ class TransportationProblem {
   void increaseDemand();
 
   /**
-   * @brief Ensure that the capacity is greater or equal than the demand with an additional sink
+   * @brief Ensure that the capacity is greater or equal than the demand with an
+   * additional sink
    */
   void addDummyCapacity();
 
   /**
-   * @brief Ensure that the demand is greater or equal than the capacity with an additional source
+   * @brief Ensure that the demand is greater or equal than the capacity with an
+   * additional source
    */
   void addDummyDemand();
 
@@ -160,7 +165,7 @@ class TransportationProblem {
   /**
    * @brief Initialize with an initial solution
    */
-  void setAllocations(const std::vector<std::vector<long long> >& allocations);
+  void setAllocations(const std::vector<std::vector<DemandType> >& allocations);
 
   /**
    * @brief Initialize with an initial solution from a target assignment
@@ -196,12 +201,12 @@ class TransportationProblem {
 
  private:
   // Problem data
-  std::vector<long long> demands_;
-  std::vector<long long> capacities_;
-  std::vector<std::vector<long long> > costs_;
+  std::vector<DemandType> demands_;
+  std::vector<DemandType> capacities_;
+  std::vector<std::vector<CostType> > costs_;
 
   // Current solution
-  std::vector<std::vector<long long> > allocations_;
+  std::vector<std::vector<DemandType> > allocations_;
 
   // Optional conversion factor between internal fixed-point costs and external
   double conversionFactor_;

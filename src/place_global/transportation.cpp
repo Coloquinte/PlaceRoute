@@ -12,8 +12,7 @@
 #include <vector>
 
 namespace coloquinte {
-
-using CostElt = std::pair<long long, int>;
+using CostElt = std::pair<CostType, int>;
 using PrioQueue =
     std::priority_queue<CostElt, std::vector<CostElt>, std::greater<CostElt> >;
 
@@ -45,7 +44,7 @@ class TransportationSuccessiveShortestPath {
   /**
    * @brief Find the cost of sending the best source between two sinks
    */
-  inline long long movingCost(int snk1, int snk2) const {
+  inline CostType movingCost(int snk1, int snk2) const {
     if (snk1 == snk2) return 0LL;
     return queues_[snk1][snk2].top().first;
   }
@@ -53,7 +52,7 @@ class TransportationSuccessiveShortestPath {
   /**
    * @brief Available quantity to send between two sinks
    */
-  inline long long sentQuantity(int snk1, int snk2) const {
+  inline DemandType sentQuantity(int snk1, int snk2) const {
     int src = sentSource(snk1, snk2);
     return pb_.allocation(snk1, src);
   }
@@ -83,7 +82,7 @@ class TransportationSuccessiveShortestPath {
    * @brief Send as much as possible of the source to the sink; return how much
    * was sent
    */
-  long long sendSource(int src, int sink, long long quantity);
+  DemandType sendSource(int src, int sink, DemandType quantity);
 
  private:
   /**
@@ -117,23 +116,23 @@ class TransportationSuccessiveShortestPath {
   // Queues between sinks
   std::vector<std::vector<PrioQueue> > queues_;
 
-  std::vector<long long> remainingCapa_;
-  std::vector<long long> sendingCost_;
+  std::vector<DemandType> remainingCapa_;
+  std::vector<CostType> sendingCost_;
   std::vector<int> sinkParent_;
 };
 
 TransportationProblem::TransportationProblem(
-    const std::vector<long long>& capacities,
-    const std::vector<long long>& demands,
-    const std::vector<std::vector<long long> >& costs)
+    const std::vector<DemandType>& capacities,
+    const std::vector<DemandType>& demands,
+    const std::vector<std::vector<CostType> >& costs)
     : capacities_(capacities), demands_(demands), costs_(costs) {
   resetAllocations();
   check();
 }
 
 TransportationProblem::TransportationProblem(
-    const std::vector<long long>& capacities,
-    const std::vector<long long>& demands,
+    const std::vector<DemandType>& capacities,
+    const std::vector<DemandType>& demands,
     const std::vector<std::vector<float> >& costs)
     : capacities_(capacities), demands_(demands) {
   costsFromIntegers(costs);
@@ -142,7 +141,7 @@ TransportationProblem::TransportationProblem(
 }
 
 void TransportationProblem::resetAllocations() {
-  allocations_.assign(nbSinks(), std::vector<long long>(nbSources(), 0LL));
+  allocations_.assign(nbSinks(), std::vector<DemandType>(nbSources(), 0LL));
 }
 
 void TransportationProblem::costsFromIntegers(
@@ -153,16 +152,16 @@ void TransportationProblem::costsFromIntegers(
       maxVal = std::max(d, maxVal);
     }
   }
-  double maxLong = static_cast<double>(std::numeric_limits<long long>::max());
+  double maxLong = static_cast<double>(std::numeric_limits<CostType>::max());
   conversionFactor_ = maxLong / maxVal;
-  conversionFactor_ /= 1000.0;
+  conversionFactor_ /= 4.0;
   conversionFactor_ /= costs.size();
   costs_.clear();
   costs_.resize(costs.size());
   for (int i = 0; i < costs.size(); ++i) {
     for (int j = 0; j < costs[i].size(); ++j) {
       costs_[i].push_back(
-          static_cast<long long>(std::round(costs[i][j] * conversionFactor_)));
+          static_cast<CostType>(std::round(costs[i][j] * conversionFactor_)));
     }
   }
 }
@@ -174,12 +173,12 @@ void TransportationProblem::check() const {
   if (capacities_.size() != nbSinks()) {
     throw std::runtime_error("Inconsistant capacities");
   }
-  for (long long c : demands_) {
+  for (DemandType c : demands_) {
     if (c <= 0) {
       throw std::runtime_error("Demands must be non-negative");
     }
   }
-  for (long long c : capacities_) {
+  for (DemandType c : capacities_) {
     if (c <= 0) {
       throw std::runtime_error("Capacities must be non-negative");
     }
@@ -208,15 +207,15 @@ void TransportationProblem::check() const {
   }
 }
 
-long long TransportationProblem::totalDemand() const {
+DemandType TransportationProblem::totalDemand() const {
   return std::accumulate(demands_.begin(), demands_.end(), 0LL);
 }
 
-long long TransportationProblem::totalCapacity() const {
+DemandType TransportationProblem::totalCapacity() const {
   return std::accumulate(capacities_.begin(), capacities_.end(), 0LL);
 }
 
-void TransportationProblem::addSource(long long demand) {
+void TransportationProblem::addSource(DemandType demand) {
   demands_.push_back(demand);
   for (auto& c : costs_) {
     c.push_back(0.0f);
@@ -226,22 +225,22 @@ void TransportationProblem::addSource(long long demand) {
   }
 }
 
-void TransportationProblem::addSink(long long capa) {
+void TransportationProblem::addSink(DemandType capa) {
   capacities_.push_back(capa);
   costs_.emplace_back(nbSources(), 0.0f);
   allocations_.emplace_back(nbSources(), 0LL);
 }
 
-long long TransportationProblem::allocatedCapacity(int snk) const {
-  long long tot = 0LL;
+DemandType TransportationProblem::allocatedCapacity(int snk) const {
+  DemandType tot = 0LL;
   for (int src = 0; src < nbSources(); ++src) {
     tot += allocations_[snk][src];
   }
   return tot;
 }
 
-long long TransportationProblem::allocatedDemand(int src) const {
-  long long tot = 0LL;
+DemandType TransportationProblem::allocatedDemand(int src) const {
+  DemandType tot = 0LL;
   for (int snk = 0; snk < nbSinks(); ++snk) {
     tot += allocations_[snk][src];
   }
@@ -258,7 +257,7 @@ double TransportationProblem::allocationCost() const {
   return ret / totalDemand() / conversionFactor_;
 }
 
-long long TransportationProblem::movingCost(int src, int snk1, int snk2) const {
+CostType TransportationProblem::movingCost(int src, int snk1, int snk2) const {
   return costs_[snk2][src] - costs_[snk1][src];
 }
 
@@ -281,27 +280,27 @@ bool TransportationProblem::isFeasible() const {
 }
 
 void TransportationProblem::addDummyCapacity() {
-  long long dem = totalDemand();
-  long long cap = totalCapacity();
+  DemandType dem = totalDemand();
+  DemandType cap = totalCapacity();
   if (dem > cap) {
     addSink(dem - cap);
   }
 }
 
 void TransportationProblem::addDummyDemand() {
-  long long dem = totalDemand();
-  long long cap = totalCapacity();
+  DemandType dem = totalDemand();
+  DemandType cap = totalCapacity();
   if (dem < cap) {
     addSource(cap - dem);
   }
 }
 
 void TransportationProblem::increaseCapacity() {
-  long long missing = totalDemand() - totalCapacity();
+  DemandType missing = totalDemand() - totalCapacity();
   if (missing <= 0LL) {
     return;
   }
-  long long added = missing / nbSinks();
+  DemandType added = missing / nbSinks();
   for (int i = 0; i < nbSinks(); ++i) {
     capacities_[i] += added;
   }
@@ -313,11 +312,11 @@ void TransportationProblem::increaseCapacity() {
 }
 
 void TransportationProblem::increaseDemand() {
-  long long missing = totalCapacity() - totalDemand();
+  DemandType missing = totalCapacity() - totalDemand();
   if (missing <= 0LL) {
     return;
   }
-  long long added = missing / nbSources();
+  DemandType added = missing / nbSources();
   for (int i = 0; i < nbSources(); ++i) {
     demands_[i] += added;
   }
@@ -333,13 +332,13 @@ void TransportationProblem::makeFeasible() {
     throw std::runtime_error(
         "Cannot make a problem feasible if demand is greater than capacity");
   }
-  std::vector<long long> remainingCapa = capacities_;
+  std::vector<DemandType> remainingCapa = capacities_;
   for (int src = 0; src < nbSources(); ++src) {
-    long long demand = demands_[src];
-    long long remaining = demand;
+    DemandType demand = demands_[src];
+    DemandType remaining = demand;
     // Try to follow the initial solution given
     for (int snk = 0; snk < nbSinks(); ++snk) {
-      long long alloc = allocations_[snk][src];
+      DemandType alloc = allocations_[snk][src];
       alloc = std::min(alloc, remaining);
       alloc = std::min(alloc, remainingCapa[snk]);
       allocations_[snk][src] = alloc;
@@ -348,7 +347,7 @@ void TransportationProblem::makeFeasible() {
     }
     // Allocate greedily what's left
     for (int snk = 0; snk < nbSinks(); ++snk) {
-      long long alloc = std::min(remaining, remainingCapa[snk]);
+      DemandType alloc = std::min(remaining, remainingCapa[snk]);
       allocations_[snk][src] += alloc;
       remaining -= alloc;
       remainingCapa[snk] -= alloc;
@@ -361,13 +360,13 @@ void TransportationProblem::makeFeasible() {
 }
 
 void TransportationProblem::setAllocations(
-    const std::vector<std::vector<long long> >& allocations) {
+    const std::vector<std::vector<DemandType> >& allocations) {
   allocations_ = allocations;
   check();
 }
 
 void TransportationProblem::setAssignment(const std::vector<int>& assignment) {
-  allocations_.assign(nbSinks(), std::vector<long long>(nbSources(), 0LL));
+  allocations_.assign(nbSinks(), std::vector<DemandType>(nbSources(), 0LL));
   if (assignment.size() > nbSources()) {
     throw std::runtime_error(
         "Assignment should be no larger than the number of sources");
@@ -385,7 +384,7 @@ std::vector<int> TransportationProblem::toAssignment() const {
   std::vector<int> ret(nbSources());
   for (int src = 0; src < nbSources(); ++src) {
     int bestSink = 0;
-    long long bestAlloc = -1LL;
+    DemandType bestAlloc = -1LL;
     for (int sink = 0; sink < nbSinks(); ++sink) {
       if (allocations_[sink][src] > bestAlloc) {
         bestSink = sink;
@@ -425,7 +424,7 @@ void TransportationSuccessiveShortestPath::run() {
 
 std::vector<int> TransportationSuccessiveShortestPath::sortedSourcesByDemand()
     const {
-  std::vector<std::pair<long long, int> > sources;
+  std::vector<std::pair<DemandType, int> > sources;
   for (int i = 0; i < pb_.nbSources(); ++i) {
     sources.emplace_back(-pb_.demand(i), i);
   }
@@ -439,9 +438,9 @@ std::vector<int> TransportationSuccessiveShortestPath::sortedSourcesByDemand()
 
 int TransportationSuccessiveShortestPath::bestSink(int src) const {
   int ret = 0;
-  long long bestCost = std::numeric_limits<long long>::max();
+  CostType bestCost = std::numeric_limits<CostType>::max();
   for (int i = 0; i < pb_.nbSinks(); ++i) {
-    long long cost = sendingCost_[i] + pb_.cost(i, src);
+    CostType cost = sendingCost_[i] + pb_.cost(i, src);
     if (cost < bestCost) {
       bestCost = cost;
       ret = i;
@@ -451,10 +450,10 @@ int TransportationSuccessiveShortestPath::bestSink(int src) const {
 }
 
 void TransportationSuccessiveShortestPath::sendSource(int src) {
-  long long remaining = pb_.demand(src);
+  DemandType remaining = pb_.demand(src);
   while (remaining > 0LL) {
     int sink = bestSink(src);
-    long long sent = sendSource(src, sink, remaining);
+    DemandType sent = sendSource(src, sink, remaining);
     assert(sent > 0LL);
     remaining -= sent;
   }
@@ -462,7 +461,7 @@ void TransportationSuccessiveShortestPath::sendSource(int src) {
 
 void TransportationSuccessiveShortestPath::updateTree() {
   std::vector<char> toVisit(pb_.nbSinks(), false);
-  sendingCost_.assign(pb_.nbSinks(), std::numeric_limits<long long>::max());
+  sendingCost_.assign(pb_.nbSinks(), std::numeric_limits<CostType>::max());
   for (int i = 0; i < pb_.nbSinks(); ++i) {
     if (remainingCapa_[i] > 0LL) {
       sendingCost_[i] = 0LL;
@@ -473,7 +472,7 @@ void TransportationSuccessiveShortestPath::updateTree() {
 
   while (true) {
     int bestVisit = -1;
-    long long bestCost = std::numeric_limits<long long>::max();
+    CostType bestCost = std::numeric_limits<CostType>::max();
     for (int i = 0; i < pb_.nbSinks(); ++i) {
       if (!toVisit[i]) {
         continue;
@@ -490,7 +489,7 @@ void TransportationSuccessiveShortestPath::updateTree() {
       if (remainingCapa_[i] > 0LL) {
         continue;
       }
-      long long newCost = movingCost(i, bestVisit) + sendingCost_[bestVisit];
+      CostType newCost = movingCost(i, bestVisit) + sendingCost_[bestVisit];
       if (newCost < sendingCost_[i]) {
         sinkParent_[i] = bestVisit;
         sendingCost_[i] = newCost;
@@ -501,11 +500,11 @@ void TransportationSuccessiveShortestPath::updateTree() {
   }
 }
 
-long long TransportationSuccessiveShortestPath::sendSource(int src, int sink,
-                                                           long long quantity) {
+DemandType TransportationSuccessiveShortestPath::sendSource(int src, int sink,
+                                                           DemandType quantity) {
   // How much we can send
   assert(quantity > 0LL);
-  long long maxSent = quantity;
+  DemandType maxSent = quantity;
   int snk1 = sink;
   while (sinkParent_[snk1] != -1) {
     int snk2 = sinkParent_[snk1];
@@ -523,13 +522,13 @@ long long TransportationSuccessiveShortestPath::sendSource(int src, int sink,
   while (sinkParent_[snk1] != -1) {
     assert(remainingCapa_[snk1] == 0LL);
     int snk2 = sinkParent_[snk1];
-    long long oldCost = movingCost(snk1, snk2);
+    CostType oldCost = movingCost(snk1, snk2);
     updateDestQueues(snk1, sentSrc);
     pb_.allocations_[snk1][sentSrc] += maxSent;
     sentSrc = sentSource(snk1, snk2);
     pb_.allocations_[snk1][sentSrc] -= maxSent;
     updateSinkQueues(snk1, sentSrc);
-    long long newCost = movingCost(snk1, snk2);
+    CostType newCost = movingCost(snk1, snk2);
     needUpdate |= newCost > oldCost;
     snk1 = snk2;
   }
@@ -560,7 +559,7 @@ void TransportationSuccessiveShortestPath::initQueues(int sink) {
   }
   for (int dest = 0; dest < pb_.nbSinks(); ++dest) {
     if (sink == dest) continue;
-    std::vector<std::pair<long long, int> > elements;
+    std::vector<std::pair<CostType, int> > elements;
     for (int src : sources) {
       elements.emplace_back(pb_.movingCost(src, sink, dest), src);
     }
@@ -596,7 +595,7 @@ void TransportationSuccessiveShortestPath::updateDestQueues(int sink, int src) {
   for (int dst = 0; dst < pb_.nbSinks(); ++dst) {
     if (dst == sink) continue;
     assert(!queues_[sink][dst].empty());
-    long long cost = pb_.movingCost(src, sink, dst);
+    CostType cost = pb_.movingCost(src, sink, dst);
     queues_[sink][dst].emplace(cost, src);
   }
 }
