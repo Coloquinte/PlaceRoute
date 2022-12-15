@@ -116,13 +116,15 @@ optimization_variables = [
     sp.Int("global_max_nb_steps", 30, 200, log=True),
     sp.Int("global_nb_initial_steps", 0, 2),
     sp.Real("global_gap_tolerance", 0.02, 0.2, log=True),
-    sp.Real("global_distance_tolerance", 2, 5),
+    sp.Real("global_distance_tolerance", 2, 10, log=True),
     sp.Real("global_initial_penalty", 0.02, 0.08, log=True),
     sp.Real("global_penalty_update_factor", 1.05, 1.3, log=True),
     sp.Real("global_penalty_cutoff_distance", 2.0, 50.0, log=True),
     sp.Real("global_approximation_distance", 0.1, 10.0, log=True),
     sp.Int("global_max_nb_conjugate_gradient_steps", 100, 1000, log=True),
     sp.Int("global_rough_legalization_nb_steps", 1, 3),
+    sp.Int("global_rough_legalization_reopt_square_size", 1, 3),
+    sp.Int("global_rough_legalization_reopt_length", 2, 8, log=True),
     sp.Real("global_export_weighting", 0.5, 1.0),
     sp.Int("detailed_nb_passes", 1, 5),
     sp.Int("detailed_local_search_nb_neighbours", 2, 16),
@@ -132,6 +134,12 @@ optimization_variables = [
     sp.Int("detailed_reordering_nb_rows", 1, 3),
     sp.Int("detailed_reordering_max_nb_cells", 1, 8),
 ]
+
+
+def show_variables():
+    print("Optimization variables:")
+    for v in optimization_variables:
+        print(f"\t{v.name}")
 
 
 class HPOptimizer:
@@ -224,8 +232,9 @@ class HPOptimizer:
         import pdb; pdb.set_trace()
 
 parser = argparse.ArgumentParser()
+parser.add_argument("--show-variables", action="store_true")
 parser.add_argument(
-    "benchmarks", help="Benchmark instances to optimize", nargs="+", type=str
+    "--benchmarks", help="Benchmark instances to optimize", nargs="+", type=str
 )
 parser.add_argument(
     "--ignore-macros",
@@ -247,9 +256,12 @@ parser.add_argument(
     type=str,
     nargs="+",
     choices=[v.name for v in optimization_variables],
+    metavar="VARIABLES"
 )
 
 args = parser.parse_args()
-
-optimizer = HPOptimizer(args)
-optimizer.run()
+if args.show_variables:
+    show_variables()
+else:
+    optimizer = HPOptimizer(args)
+    optimizer.run()
