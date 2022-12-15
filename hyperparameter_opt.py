@@ -115,7 +115,7 @@ class BenchmarkRun:
 optimization_variables = [
     sp.Int("global_max_nb_steps", 30, 200, log=True),
     sp.Int("global_nb_initial_steps", 0, 2),
-    sp.Real("global_gap_tolerance", 0.01, 0.2, log=True),
+    sp.Real("global_gap_tolerance", 0.02, 0.2, log=True),
     sp.Real("global_distance_tolerance", 2, 5),
     sp.Real("global_initial_penalty", 0.02, 0.08, log=True),
     sp.Real("global_penalty_update_factor", 1.05, 1.3, log=True),
@@ -177,7 +177,6 @@ class HPOptimizer:
                 params["global.seed"] = seed
                 params["detailed.seed"] = seed
                 cur = BenchmarkRun.from_dict(params).run()
-                self.save_result(params, cur)
                 for k, v in cur.items():
                     if k in metrics:
                         metrics[k].append(v)
