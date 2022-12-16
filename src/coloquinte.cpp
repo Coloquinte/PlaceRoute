@@ -95,7 +95,7 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
   roughLegalizationReoptLength = 2;
   roughLegalizationReoptSquareSize = 1;
   roughLegalizationSideMargin = 1.0;
-  roughLegalizationCoarseningLimit = std::numeric_limits<double>::infinity();
+  roughLegalizationCoarseningLimit = 100.0;
   roughLegalizationQuadraticPenalty = 0.001;
   exportWeighting = 1.0;
   check();
