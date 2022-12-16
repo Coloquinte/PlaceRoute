@@ -150,6 +150,40 @@ optimization_variables = [
     sp.Int("detailed_shift_nb_rows", 2, 8),
 ]
 
+default_vars = [
+    "global_approximation_distance",
+    #"global_conjugate_gradient_error_tolerance",
+    #"global_distance_tolerance",
+    #"global_export_weighting",
+    "global_gap_tolerance",
+    "global_initial_penalty",
+    #"global_max_nb_conjugate_gradient_steps",
+    #"global_max_nb_steps",
+    "global_nb_initial_steps",
+    #"global_nb_steps_per_legalization",
+    #"global_net_model",
+    #"global_penalty_area_exponent",
+    "global_penalty_cutoff_distance",
+    "global_penalty_update_factor",
+    "global_rough_legalization_bin_size",
+    "global_rough_legalization_coarsening_limit",
+    #"global_rough_legalization_cost_model",
+    "global_rough_legalization_nb_steps",
+    #"global_rough_legalization_quadratic_penalty",
+    "global_rough_legalization_reopt_length",
+    "global_rough_legalization_reopt_square_size",
+    #"global_rough_legalization_side_margin",
+    #"detailed_legalization_ordering_width",
+    #"detailed_legalization_ordering_y",
+    #"detailed_local_search_nb_neighbours",
+    #"detailed_local_search_nb_rows",
+    #"detailed_nb_passes",
+    #"detailed_reordering_max_nb_cells",
+    #"detailed_reordering_nb_rows",
+    #"detailed_shift_max_nb_cells",
+    #"detailed_shift_nb_rows",
+]
+
 
 def show_variables():
     print("Optimization variables:")
@@ -271,7 +305,8 @@ parser.add_argument(
     type=str,
     nargs="+",
     choices=[v.name for v in optimization_variables],
-    metavar="VARIABLES"
+    metavar="VARIABLES",
+    default=default_vars
 )
 
 args = parser.parse_args()
