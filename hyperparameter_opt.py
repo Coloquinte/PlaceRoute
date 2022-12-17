@@ -1,6 +1,8 @@
 import argparse
 import math
 import os
+import pickle
+import sys
 import time
 
 import coloquinte
@@ -64,10 +66,10 @@ class BenchmarkRun:
         detailed_duration = detailed_end_time - detailed_start_time
         hpwl = circuit.hpwl()
         metrics = {
-            "time_total": global_duration + detailed_duration,
-            "time_global": global_duration,
-            "time_detailed": detailed_duration,
-            "hpwl": hpwl,
+            "metrics.time_total": global_duration + detailed_duration,
+            "metrics.time_global": global_duration,
+            "metrics.time_detailed": detailed_duration,
+            "metrics.hpwl": hpwl,
         }
         return metrics
 
@@ -235,10 +237,23 @@ class HPOptimizer:
                 params["detailed.seed"] = seed
                 cur = BenchmarkRun.from_dict(params).run()
                 for k, v in cur.items():
+                    params[k] = v
                     if k in metrics:
                         metrics[k].append(v)
                     else:
                         metrics[k] = [v]
+                history_file = "history.pkl"
+                if os.path.exists(history_file):
+                    with open(history_file, 'rb') as f:
+                        call_history = pickle.load(f)
+                else:
+                    call_history = []
+                print(f"History length: {len(call_history)}")
+                sys.stdout.flush()
+                call_history.append(params)
+                with open(history_file, 'wb') as f:
+                    pickle.dump(call_history, f)
+
         # Geometric mean
         m = {}
         for k, v in metrics.items():
@@ -249,13 +264,15 @@ class HPOptimizer:
         print("Evaluating new incumbent:")
         for k, v in config.get_dictionary().items():
             print(f"\t{k}: {v}")
+        sys.stdout.flush()
         params_dict = HPOptimizer.default_params()
         for k, v in config.get_dictionary().items():
             params_dict[k] = v
         m = self.evaluate(params_dict)
-        t = m["time_total"]
-        q = m["hpwl"]
+        t = m["metrics.time_total"]
+        q = m["metrics.hpwl"]
         print(f"Objective:\tQuality {q:.0f}\tTime {t:.2f}")
+        sys.stdout.flush()
         return {"objs": [q, t]}
 
     def run(self):
@@ -278,7 +295,7 @@ class HPOptimizer:
             random_state=1,
         )
         history = opt.run()
-        import pdb; pdb.set_trace()
+        history.save_json("history.json")
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--show-variables", action="store_true")
