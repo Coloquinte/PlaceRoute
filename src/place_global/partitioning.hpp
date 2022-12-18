@@ -3,25 +3,19 @@
 #include "coloquinte.hpp"
 #include "place_global/density_grid.hpp"
 
+namespace coloquinte {
 class Partitioner {
  public:
-  Partitioner fromIspdCircuit(const Circuit &circuit, float sizeFactor=10.0);
+  Partitioner fromIspdCircuit(const Circuit &circuit, float sizeFactor = 10.0);
 
  private:
-  /**
-   * @brief Optimize the partitioning between two bins, vertically
-   */
-  void partitioningX(int x, int y);
-  
-  /**
-   * @brief Optimize the partitioning between two bins, horizontally
-   */
-  void partitioningY(int x, int y);
+  Partitioner(const Circuit &circuit, HierarchicalDensityPlacement leg)
+      : circuit_(circuit), placement_(leg) {}
 
   /**
-   * @brief Optimize the partitioning between four adjacent bins
+   * @brief Reoptimize the partitioning across multiple bins
    */
-  void quadripartitioning(int x, int y);
+  void reoptimize(const std::vector<std::pair<int, int> > &bins);
 
   /**
    * @brief Refine the placement grid
@@ -34,12 +28,7 @@ class Partitioner {
   void improve();
 
  private:
+  const Circuit &circuit_;
   HierarchicalDensityPlacement placement_;
-
-  // Compressed sparse representation
-  std::vector<int> netCellLimits_;
-  std::vector<int> netCells_;
-  std::vector<int> netPinLimits_;
-  std::vector<int> netPinX_;
-  std::vector<int> netPinY_;
 };
+}  // namespace coloquinte

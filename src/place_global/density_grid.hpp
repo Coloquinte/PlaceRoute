@@ -229,7 +229,7 @@ class HierarchicalDensityPlacement {
    */
   static HierarchicalDensityPlacement fromIspdCircuit(const Circuit &circuit,
                                                       float sizeFactor,
-                                                      float sideMargin);
+                                                      float sideMargin = 0.0f);
 
   /**
    * @brief Access the underlying grid
