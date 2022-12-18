@@ -222,6 +222,36 @@ class HPOptimizer:
         del data["detailed_seed"]
         return data
 
+    @staticmethod
+    def load_history():
+        history_file = "history.pkl"
+        if os.path.exists(history_file):
+            with open(history_file, 'rb') as f:
+                return pickle.load(f)
+        else:
+            return []
+
+    @staticmethod
+    def save_history(call_history):
+        with open(history_file, 'wb') as f:
+            pickle.dump(call_history, f)
+
+    @staticmethod
+    def is_old_run(params, candidate):
+        for k, v in params.items():
+            if candidate[k] != v:
+                return False
+        return True
+
+    @staticmethod
+    def find_history(params):
+        call_history = HPOptimizer.load_history()
+        for candidate in call_history:
+            if HPOptimizer.is_old_run(params, candidate):
+                print(f"Found candidate {candidate}")
+                return candidate
+        return None
+
     def evaluate(self, params_dict):
         """
         Return the geometric mean of the metrics across the benchmarks, with the given time/quality tradeoff
@@ -235,25 +265,21 @@ class HPOptimizer:
                 params["prefix"] = self.prefix
                 params["global.seed"] = seed
                 params["detailed.seed"] = seed
-                cur = BenchmarkRun.from_dict(params).run()
-                for k, v in cur.items():
-                    params[k] = v
-                    if k in metrics:
-                        metrics[k].append(v)
-                    else:
-                        metrics[k] = [v]
-                history_file = "history.pkl"
-                if os.path.exists(history_file):
-                    with open(history_file, 'rb') as f:
-                        call_history = pickle.load(f)
+                old = HPOptimizer.find_history(params)
+                if old is not None:
+                    params = old
                 else:
-                    call_history = []
-                print(f"History length: {len(call_history)}")
-                sys.stdout.flush()
-                call_history.append(params)
-                with open(history_file, 'wb') as f:
-                    pickle.dump(call_history, f)
-
+                    cur = BenchmarkRun.from_dict(params).run()
+                    for k, v in cur.items():
+                        params[k] = v
+                    call_history = HPOptimizer.load_history()
+                    call_history.append(params)
+                    HPOptimizer.save_history(call_history)
+                for k in ["metrics.time_total", "metrics.hpwl", "metrics.time_global", "metrics.time_detailed"]:
+                    if k in metrics:
+                        metrics[k].append(params[k])
+                    else:
+                        metrics[k] = [params[k]]
         # Geometric mean
         m = {}
         for k, v in metrics.items():
