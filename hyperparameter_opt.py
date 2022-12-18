@@ -9,6 +9,7 @@ import coloquinte
 
 import numpy as np
 
+import openbox
 from openbox import space as sp
 from openbox import Optimizer
 
@@ -252,6 +253,19 @@ class HPOptimizer:
                 return candidate
         return None
 
+    @staticmethod
+    def history_as_conf(config_space):
+        history = HPOptimizer.load_history()
+        confs = []
+        for h in history:
+            conf_dict = {}
+            for k, v in h.items():
+                if k in config_space:
+                    conf_dict[k] = v
+            conf = openbox.utils.config_space.Configuration(config_space, values=conf_dict)
+            confs.append(conf)
+        return confs
+
     def evaluate(self, params_dict):
         """
         Return the geometric mean of the metrics across the benchmarks, with the given time/quality tradeoff
@@ -304,6 +318,8 @@ class HPOptimizer:
     def run(self):
         space = sp.Space()
         space.add_variables(self.variables)
+        initial_configs = HPOptimizer.history_as_conf(space)
+        print(f"Found {len(initial_configs)} configurations already evaluated")
         opt = Optimizer(
             self.evaluate_openbox,
             space,
@@ -319,6 +335,7 @@ class HPOptimizer:
             task_id='coloquinte_hyperparameter',
             ref_point = [1.0e8, 600],
             random_state=1,
+            initial_configurations=initial_configs,
         )
         history = opt.run()
         history.save_json("history.json")
