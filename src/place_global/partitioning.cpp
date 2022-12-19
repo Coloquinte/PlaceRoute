@@ -1,15 +1,18 @@
 #include "place_global/partitioning.hpp"
 
-#include <ofstream>
+#include <fstream>
+#include <sstream>
 #include <unordered_set>
 
 namespace coloquinte {
 
 class PartitioningProblem {
  public:
-  PartitioningProblem(int nbNodes);
+  PartitioningProblem(int nbNodes, int nbPartitions);
 
-  int nbNodes() const { return nbPrimaryNodes_ + nbDummyNodes_; }
+  int nbNodes() const { return nbNodes_; }
+
+  int nbPartitions() const { return nbPartitions_; }
 
   int nbEdges() const { return edges_.size(); }
 
@@ -20,17 +23,55 @@ class PartitioningProblem {
   void writeFixed(const std::string &filename) const;
 
  private:
-  int nbPrimaryNodes_;
-  int nbDummyNodes_;
+  int nbNodes_;
+  int nbPartitions_;
   int nbEdges_;
 
   std::vector<std::vector<int> > edges_;
+  std::vector<long long> nodeWeights_;
   std::vector<long long> partitionWeights_;
 };
 
-void PartitioningProblem::writeHgr(const std::string &filename) const {
-    std::ofstream f(filename);
+PartitioningProblem::PartitioningProblem(int nbNodes, int nbPartitions) {
+  nbNodes_ = nbNodes;
+  nbPartitions = nbPartitions;
+  nodeWeights_.resize(nbNodes);
+  partitionWeights_.resize(nbPartitions);
+}
 
+std::vector<int> PartitioningProblem::solve() {
+  writeHgr("coloquinte_hypergraph.hgr");
+  writeFixed("coloquinte_hypergraph.fixed");
+  std::stringstream cmd;
+  cmd << "kahypar coloquinte_hypergraph.hgr" 
+}
+
+void PartitioningProblem::writeHgr(const std::string &filename) const {
+  std::ofstream f(filename);
+  f << nbEdges() << " " << nbNodes() + nbPartitions() << " 11\n";
+  for (const auto &edge : edges_) {
+    for (int i = 0; i < edge.size(); ++i) {
+      if (i != 0) f << " ";
+      f << edge[i] + 1;
+    }
+    f << "\n"
+  }
+  for (int i = 0; i < nbNodes(); ++i) {
+    f << nodeWeights[i] << "\n";
+  }
+  for (int i = 0; i < nbPartitions(); ++i) {
+    f << "0\n";
+  }
+}
+
+void PartitioningProblem::writeFixed(const std::string &filename) const {
+  std::ofstream f(filename);
+  for (int i = 0; i < nbNodes(); ++i) {
+    f << "-1\n";
+  }
+  for (int i = 0; i < nbPartitions(); ++i) {
+    f << i << "\n";
+  }
 }
 
 Partitioner Partitioner::fromIspdCircuit(const Circuit &circuit,

@@ -36,11 +36,9 @@ SET(SOURCES
 add_library(coloquinte STATIC ${SOURCES})
 set_target_properties(coloquinte PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 target_compile_features(coloquinte PRIVATE cxx_std_17)
-target_include_directories(coloquinte PRIVATE ${kahypar_INCLUDE_DIRS})
 target_link_libraries(coloquinte
   PRIVATE
   ${Boost_LIBRARIES}
-  kahypar
   lemon
   Threads::Threads
 )
