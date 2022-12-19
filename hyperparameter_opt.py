@@ -134,7 +134,7 @@ optimization_variables = [
     sp.Real("global_penalty_area_exponent", 0.5, 1.0),
     sp.Real("global_penalty_cutoff_distance", 2.0, 50.0, log=True),
     sp.Real("global_penalty_update_factor", 1.05, 1.3, log=True),
-    sp.Int("global_rough_legalization_bin_size", 2.0, 10.0),
+    sp.Real("global_rough_legalization_bin_size", 2.0, 10.0),
     sp.Real("global_rough_legalization_coarsening_limit", 0.5, 100.0, log=True),
     sp.Categorical("global_rough_legalization_cost_model", enum_values(coloquinte.LegalizationModel)),
     sp.Int("global_rough_legalization_nb_steps", 1, 5),
@@ -234,6 +234,7 @@ class HPOptimizer:
 
     @staticmethod
     def save_history(call_history):
+        history_file = "history.pkl"
         with open(history_file, 'wb') as f:
             pickle.dump(call_history, f)
 
