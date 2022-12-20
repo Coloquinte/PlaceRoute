@@ -301,7 +301,7 @@ class HPOptimizer:
             m[k] = np.exp(np.mean(np.log(v)))
         return m
 
-    def evaluate_openbox(self, config):
+    def evaluate_openbox(self, config, multiobj):
         print("Evaluating new incumbent:")
         for k, v in config.get_dictionary().items():
             print(f"\t{k}: {v}")
@@ -312,32 +312,59 @@ class HPOptimizer:
         m = self.evaluate(params_dict)
         t = m["metrics.time_total"]
         q = m["metrics.hpwl"]
-        print(f"Objective:\tQuality {q:.0f}\tTime {t:.2f}")
         sys.stdout.flush()
-        return {"objs": [q, t]}
+        if multiobj:
+            print(f"Objective:\tQuality {q:.0f}\tTime {t:.2f}")
+            return {"objs": [q, t]}
+        else:
+            factor = np.log(1 + 0.01 * self.args.percents_per_hour) / 3600
+            blended = np.exp(np.log(q) + t * factor)
+            print(f"Objective:\tQuality {q:.0f}\tTime {t:.2f}\tBlended {blended:.2f}")
+            return {"objs": [q, t]}
+
+    def evaluate_multi_objective(self, config):
+        return self.evaluate_openbox(config, True)
+
+    def evaluate_single_objective(self, config):
+        return self.evaluate_openbox(config, False)
 
     def run(self):
         space = sp.Space()
         space.add_variables(self.variables)
         initial_configs = HPOptimizer.history_as_conf(space)
         print(f"Found {len(initial_configs)} configurations already evaluated")
-        opt = Optimizer(
-            self.evaluate_openbox,
-            space,
-            num_objs=2,
-            num_constraints=0,
-            surrogate_type='prf',
-            acq_type='ehvi',
-            #acq_optimizer_type='random_scipy',
-            initial_runs=2*len(self.variables)+1,
-            max_runs=self.args.max_nb_runs,
-            runtime_limit=self.args.time_limit,
-            time_limit_per_trial=self.args.time_limit_per_trial,
-            task_id='coloquinte_hyperparameter',
-            ref_point = [1.0e8, 600],
-            random_state=1,
-            initial_configurations=initial_configs,
-        )
+        if self.args.percents_per_hour is None:
+            opt = Optimizer(
+                self.evaluate_multi_objective,
+                space,
+                num_objs=2,
+                num_constraints=0,
+                surrogate_type='prf',
+                acq_type='ehvi',
+                initial_runs=2*len(self.variables)+1,
+                max_runs=self.args.max_nb_runs,
+                runtime_limit=self.args.time_limit,
+                time_limit_per_trial=self.args.time_limit_per_trial,
+                task_id='coloquinte_hyperparameter',
+                ref_point = [1.0e8, 600],
+                random_state=1,
+                initial_configurations=initial_configs,
+            )
+        else:
+            opt = Optimizer(
+                self.evaluate_single_objective,
+                space,
+                num_objs=1,
+                num_constraints=0,
+                surrogate_type='prf',
+                initial_runs=2*len(self.variables)+1,
+                max_runs=self.args.max_nb_runs,
+                runtime_limit=self.args.time_limit,
+                time_limit_per_trial=self.args.time_limit_per_trial,
+                task_id='coloquinte_hyperparameter',
+                random_state=1,
+                initial_configurations=initial_configs,
+            )
         history = opt.run()
         history.save_json("history.json")
 
@@ -360,6 +387,7 @@ parser.add_argument(
 parser.add_argument("--max-nb-runs", help="Maximum number of runs", type=int, default=100)
 parser.add_argument("--time-limit", help="Time limit for optimization", type=int)
 parser.add_argument("--time-limit-per-trial", help="Time limit for each run", type=int, default=600)
+parser.add_argument("--percents-per-hour", help="Conversion factor to get one single objective", type=float)
 parser.add_argument(
     "--variables",
     help="Variables to optimize over",
