@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "density_legalizer.hpp"
+#include "partitioning.hpp"
 #include "net_model.hpp"
 
 namespace coloquinte {
@@ -146,6 +147,8 @@ GlobalPlacer::GlobalPlacer(Circuit &circuit,
         params.roughLegalizationQuadraticPenalty / dist;
   }
   leg_.setParams(legParams);
+  Partitioner part = Partitioner::fromIspdCircuit(circuit);
+  part.refine();
 }
 
 void GlobalPlacer::exportPlacement(Circuit &circuit) const {

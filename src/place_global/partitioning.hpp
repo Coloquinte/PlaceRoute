@@ -4,18 +4,14 @@
 #include "place_global/density_grid.hpp"
 
 namespace coloquinte {
-class Partitioner {
+class Partitioner : HierarchicalDensityPlacement {
  public:
-  Partitioner fromIspdCircuit(const Circuit &circuit, float sizeFactor = 10.0);
-
- private:
-  Partitioner(const Circuit &circuit, HierarchicalDensityPlacement leg)
-      : circuit_(circuit), placement_(leg) {}
+  static Partitioner fromIspdCircuit(const Circuit &circuit, float sizeFactor = 10.0);
 
   /**
-   * @brief Reoptimize the partitioning across multiple bins
+   * @brief Run the whole partitioning algorithm
    */
-  void reoptimize(const std::vector<std::pair<int, int> > &bins);
+  void run();
 
   /**
    * @brief Refine the placement grid
@@ -28,7 +24,25 @@ class Partitioner {
   void improve();
 
  private:
+  Partitioner(const Circuit &circuit, HierarchicalDensityPlacement leg)
+      : circuit_(circuit), HierarchicalDensityPlacement(leg) {}
+
+  /**
+   * @brief Reoptimize the partitioning across multiple bins
+   */
+  void reoptimize(const std::vector<std::pair<int, int> > &bins);
+
+  /**
+   * @brief Improve neighbouring bin pairs in the x direction
+   */
+  void improveXNeighbours(bool sameParent = true);
+
+  /**
+   * @brief Improve neighbouring bin pairs in the y direction
+   */
+  void improveYNeighbours(bool sameParent = true);
+
+ private:
   const Circuit &circuit_;
-  HierarchicalDensityPlacement placement_;
 };
 }  // namespace coloquinte
