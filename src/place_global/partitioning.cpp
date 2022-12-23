@@ -9,7 +9,7 @@ namespace coloquinte {
 
 class PartitioningProblem {
  public:
-  PartitioningProblem(int nbNodes, int nbPartitions);
+  PartitioningProblem(int nbNodes, int nbPartitions, bool weightedEdges=false);
 
   int nbNodes() const { return nodeWeights_.size(); }
 
@@ -39,13 +39,15 @@ class PartitioningProblem {
   std::vector<std::vector<int> > edges_;
   std::vector<long long> nodeWeights_;
   std::vector<long long> partitionWeights_;
+  bool weightedEdges_;
 };
 
-PartitioningProblem::PartitioningProblem(int nbNodes, int nbPartitions) {
+PartitioningProblem::PartitioningProblem(int nbNodes, int nbPartitions, bool weightedEdges) {
   nodeWeights_.resize(nbNodes);
   partitionWeights_.resize(nbPartitions);
   nodeWeights_.resize(nbNodes);
   partitionWeights_.resize(nbPartitions);
+  weightedEdges_ = weightedEdges;
 }
 
 long long PartitioningProblem::totalNodeWeight() const {
@@ -84,9 +86,9 @@ std::vector<int> PartitioningProblem::solve() {
   writeFixed("coloquinte_hypergraph.fixed");
   std::stringstream cmd;
   cmd << "kahypar -h coloquinte_hypergraph.hgr -f coloquinte_hypergraph.fixed ";
-  cmd << "-o km1 -m direct -epsilon 0.05 ";
+  cmd << "-o km1 -m direct -e 0.05 ";
   cmd << "-k " << nbPartitions() << " ";
-  cmd << "--use-individual-part-weights --part-weights ";
+  cmd << "--use-individual-part-weights on --part-weights ";
   for (auto w : partitionWeights_) {
     cmd << w << " ";
   }
@@ -96,11 +98,20 @@ std::vector<int> PartitioningProblem::solve() {
 
 void PartitioningProblem::writeHgr(const std::string &filename) const {
   std::ofstream f(filename);
-  f << nbEdges() << " " << nbNodes() + nbPartitions() << " 11\n";
+  f << nbEdges() << " " << nbNodes() + nbPartitions() << " ";
+  if (weightedEdges_) {
+    f << "11\n";
+  }
+  else {
+    f << "10\n";
+  }
   for (const auto &edge : edges_) {
-    f << "1 ";  // Weight
+    if (weightedEdges_) {
+      f << "1 ";  // Weight
+    }
     for (int i = 0; i < edge.size(); ++i) {
-      f << " " << edge[i] + 1;
+      if (i != 0) f << " ";
+      f << edge[i] + 1;
     }
     f << "\n";
   }
