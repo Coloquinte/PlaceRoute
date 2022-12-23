@@ -346,7 +346,7 @@ class HPOptimizer:
                 runtime_limit=self.args.time_limit,
                 time_limit_per_trial=self.args.time_limit_per_trial,
                 task_id='coloquinte_hyperparameter',
-                ref_point = [1.0e8, 600],
+                ref_point = [self.args.ref_hpwl, self.args.ref_time],
                 random_state=1,
                 initial_configurations=initial_configs,
             )
@@ -388,6 +388,8 @@ parser.add_argument("--max-nb-runs", help="Maximum number of runs", type=int, de
 parser.add_argument("--time-limit", help="Time limit for optimization", type=int)
 parser.add_argument("--time-limit-per-trial", help="Time limit for each run", type=int, default=600)
 parser.add_argument("--percents-per-hour", help="Conversion factor to get one single objective", type=float)
+parser.add_argument("--ref-hpwl", help="Reference value for the hpwl in multiobjective", type=float, default=1.0e8)
+parser.add_argument("--ref-time", help="Reference value for the time in multiobjective", type=float, default=5000)
 parser.add_argument(
     "--variables",
     help="Variables to optimize over",
