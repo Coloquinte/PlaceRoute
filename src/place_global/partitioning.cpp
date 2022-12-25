@@ -1,5 +1,6 @@
 #include "place_global/partitioning.hpp"
 
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -9,7 +10,8 @@ namespace coloquinte {
 
 class PartitioningProblem {
  public:
-  PartitioningProblem(int nbNodes, int nbPartitions, bool weightedEdges=false);
+  PartitioningProblem(int nbNodes, int nbPartitions, double minMargin = 0.01,
+                      double maxMargin = 0.1, bool weightedEdges = false);
 
   int nbNodes() const { return nodeWeights_.size(); }
 
@@ -20,6 +22,8 @@ class PartitioningProblem {
   long long totalNodeWeight() const;
 
   long long totalPartWeight() const;
+
+  std::vector<long long> scaledPartWeight() const;
 
   void setNodeWeight(int i, long long w) { nodeWeights_[i] = w; }
 
@@ -39,14 +43,20 @@ class PartitioningProblem {
   std::vector<std::vector<int> > edges_;
   std::vector<long long> nodeWeights_;
   std::vector<long long> partitionWeights_;
+  double minMargin_;
+  double maxMargin_;
   bool weightedEdges_;
 };
 
-PartitioningProblem::PartitioningProblem(int nbNodes, int nbPartitions, bool weightedEdges) {
+PartitioningProblem::PartitioningProblem(int nbNodes, int nbPartitions,
+                                         double minMargin, double maxMargin,
+                                         bool weightedEdges) {
   nodeWeights_.resize(nbNodes);
   partitionWeights_.resize(nbPartitions);
   nodeWeights_.resize(nbNodes);
   partitionWeights_.resize(nbPartitions);
+  minMargin_ = minMargin;
+  maxMargin_ = maxMargin;
   weightedEdges_ = weightedEdges;
 }
 
@@ -62,6 +72,20 @@ long long PartitioningProblem::totalPartWeight() const {
   long long ret = 0LL;
   for (long long w : partitionWeights_) {
     ret += w;
+  }
+  return ret;
+}
+
+std::vector<long long> PartitioningProblem::scaledPartWeight() const {
+  double totNode = totalNodeWeight();
+  double totPart = totalPartWeight();
+  double targetAmount =
+      std::clamp(totPart, totNode * (1.0 + minMargin_),
+                 totNode * (1.0 + maxMargin_));
+  double scale = targetAmount / totPart;
+  std::vector<long long> ret;
+  for (long long p : partitionWeights_) {
+    ret.push_back((long long) std::round(p * scale));
   }
   return ret;
 }
@@ -89,11 +113,14 @@ std::vector<int> PartitioningProblem::solve() {
   cmd << "-o km1 -m direct -e 0.05 ";
   cmd << "-k " << nbPartitions() << " ";
   cmd << "--use-individual-part-weights on --part-weights ";
-  for (auto w : partitionWeights_) {
+  for (auto w : scaledPartWeight()) {
     cmd << w << " ";
   }
+  std::stringstream outname;
+  outname << "coloquinte_hypergraph.hgr.part";
+  outname << nbPartitions() << ".epsilon0.05.seed-1.KaHyPar";
   std::cout << "Command: " << cmd.str() << std::endl;
-  return readSolution("coloquinte_partitioning.sol");
+  return readSolution(outname.str());
 }
 
 void PartitioningProblem::writeHgr(const std::string &filename) const {
@@ -101,8 +128,7 @@ void PartitioningProblem::writeHgr(const std::string &filename) const {
   f << nbEdges() << " " << nbNodes() + nbPartitions() << " ";
   if (weightedEdges_) {
     f << "11\n";
-  }
-  else {
+  } else {
     f << "10\n";
   }
   for (const auto &edge : edges_) {
@@ -136,8 +162,14 @@ void PartitioningProblem::writeFixed(const std::string &filename) const {
 
 std::vector<int> PartitioningProblem::readSolution(
     const std::string &filename) {
-  // TODO
-  return std::vector<int>();
+  std::vector<int> ret;
+  std::ifstream f(filename);
+  for (int i = 0; i < nbNodes(); ++i) {
+    int p;
+    f >> p;
+    ret.push_back(p);
+  }
+  return ret;
 }
 
 Partitioner Partitioner::fromIspdCircuit(const Circuit &circuit,
