@@ -427,6 +427,23 @@ void HierarchicalDensityPlacement::setBinCells(int x, int y,
   binCells_[x][y] = cells;
 }
 
+void HierarchicalDensityPlacement::setBinCells(
+    const std::vector<std::pair<int, int> > &bins,
+    const std::vector<int> &cells, const std::vector<int> &assignment) {
+  assert(cells.size() == assignment.size());
+  for (int b : assignment) {
+    assert(b < bins.size());
+  }
+  std::vector<std::vector<int> > binCells(bins.size());
+  for (int i = 0; i < cells.size(); ++i) {
+    binCells[assignment[i]].push_back(cells[i]);
+  }
+  for (int b = 0; b < bins.size(); ++b) {
+    auto [x, y] = bins[b];
+    setBinCells(x, y, binCells[b]);
+  }
+}
+
 namespace {
 bool canRefine(const std::vector<int> &limits) {
   for (int i = 0; i + 1 < limits.size(); ++i) {

@@ -419,6 +419,13 @@ class HierarchicalDensityPlacement {
   void setBinCells(int x, int y, const std::vector<int> &cells);
 
   /**
+   * @brief Update the cells in multiple bins
+   */
+  void setBinCells(const std::vector<std::pair<int, int> > &bins,
+                   const std::vector<int> &cells,
+                   const std::vector<int> &assignment);
+
+  /**
    * @brief Return the x index of the bin where the cell is located
    */
   int cellBinX(int c) const { return cellBinX_[c]; }

@@ -285,16 +285,7 @@ void DensityLegalizer::reoptimize(
   solver.makeFeasible();
   solver.solve();
   assignment = solver.toAssignment();
-
-  // Reallocate the cells
-  std::vector<std::vector<int> > binCells(bins.size());
-  for (int i = 0; i < cells.size(); ++i) {
-    binCells[assignment[i]].push_back(cells[i]);
-  }
-  for (int b = 0; b < bins.size(); ++b) {
-    auto [x, y] = bins[b];
-    setBinCells(x, y, binCells[b]);
-  }
+  setBinCells(bins, cells, assignment);
 }
 
 void DensityLegalizer::refine() {

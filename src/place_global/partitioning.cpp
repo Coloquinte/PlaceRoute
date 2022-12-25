@@ -79,13 +79,12 @@ long long PartitioningProblem::totalPartWeight() const {
 std::vector<long long> PartitioningProblem::scaledPartWeight() const {
   double totNode = totalNodeWeight();
   double totPart = totalPartWeight();
-  double targetAmount =
-      std::clamp(totPart, totNode * (1.0 + minMargin_),
-                 totNode * (1.0 + maxMargin_));
+  double targetAmount = std::clamp(totPart, totNode * (1.0 + minMargin_),
+                                   totNode * (1.0 + maxMargin_));
   double scale = targetAmount / totPart;
   std::vector<long long> ret;
   for (long long p : partitionWeights_) {
-    ret.push_back((long long) std::round(p * scale));
+    ret.push_back((long long)std::round(p * scale));
   }
   return ret;
 }
@@ -178,6 +177,26 @@ Partitioner Partitioner::fromIspdCircuit(const Circuit &circuit,
                                   circuit, sizeFactor));
 }
 
+std::vector<int> projectPins(const std::vector<std::pair<int, int> > &bins,
+                             int x, int y) {
+  int minDist = std::numeric_limits<int>::max();
+  for (auto [bx, by] : bins) {
+    int dist = std::abs(bx - x) + std::abs(by - y);
+    if (dist < minDist) {
+      minDist = dist;
+    }
+  }
+  std::vector<int> ret;
+  for (int b = 0; b < bins.size(); ++b) {
+    auto [bx, by] = bins[b];
+    int dist = std::abs(bx - x) + std::abs(by - y);
+    if (dist == minDist) {
+      ret.emplace_back(b);
+    }
+  }
+  return ret;
+}
+
 void Partitioner::reoptimize(const std::vector<std::pair<int, int> > &bins) {
   std::vector<std::pair<int, int> > actualBins;
   std::unordered_set<int> cell_set;
@@ -225,10 +244,24 @@ void Partitioner::reoptimize(const std::vector<std::pair<int, int> > &bins) {
       int c = circuit_.pinCell(n, i);
       if (cell_set.count(c)) {
         pins.insert(cellToId[c]);
-      } else if (circuit_.isFixed(c)) {
-        // Fixed pins
       } else {
-        // Cell outside of the current partition
+        int x;
+        int y;
+        if (circuit_.isFixed(c)) {
+          // Fixed pins
+          int xpos = circuit_.x(c) + circuit_.pinXOffset(n, i);
+          int ypos = circuit_.y(c) + circuit_.pinYOffset(n, i);
+          x = findBinByX(xpos);
+          y = findBinByY(ypos);
+        } else {
+          // Cell outside of the current partition
+          x = cellBinX(c);
+          y = cellBinY(c);
+        }
+        std::vector<int> newFixed = projectPins(actualBins, x, y);
+        for (int p : newFixed) {
+          fixedPins.insert(p);
+        }
       }
     }
 
@@ -237,8 +270,9 @@ void Partitioner::reoptimize(const std::vector<std::pair<int, int> > &bins) {
 
     prob.addEdge(pinsV, fixedPinsV);
   }
-  prob.solve();
+  std::vector<int> assignment = prob.solve();
   exit(0);
+  setBinCells(actualBins, cells, assignment);
 }
 
 void Partitioner::improveXNeighbours(bool sameParent) {
