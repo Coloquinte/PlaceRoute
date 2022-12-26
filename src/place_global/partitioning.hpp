@@ -4,7 +4,7 @@
 #include "place_global/density_grid.hpp"
 
 namespace coloquinte {
-class Partitioner : HierarchicalDensityPlacement {
+class Partitioner : public HierarchicalDensityPlacement {
  public:
   static Partitioner fromIspdCircuit(const Circuit &circuit, float sizeFactor = 10.0);
 

@@ -148,7 +148,8 @@ GlobalPlacer::GlobalPlacer(Circuit &circuit,
   }
   leg_.setParams(legParams);
   Partitioner part = Partitioner::fromIspdCircuit(circuit);
-  part.refine();
+  part.run();
+  exportPlacement(circuit, part.simpleCoordX(), part.simpleCoordY());
 }
 
 void GlobalPlacer::exportPlacement(Circuit &circuit) const {

@@ -108,8 +108,13 @@ std::vector<int> PartitioningProblem::solve() {
   writeHgr("coloquinte_hypergraph.hgr");
   writeFixed("coloquinte_hypergraph.fixed");
   std::stringstream cmd;
-  cmd << "kahypar -h coloquinte_hypergraph.hgr -f coloquinte_hypergraph.fixed ";
-  cmd << "-o km1 -m direct -e 0.05 ";
+  cmd << "/home/alnurn/Documents/PlaceRoute/thirdparty/kahypar/kahypar/build/"
+         "kahypar/application/KaHyPar ";
+  cmd << "-p "
+         "/home/alnurn/Documents/PlaceRoute/thirdparty/kahypar/kahypar/config/"
+         "km1_kKaHyPar_sea20.ini ";
+  cmd << "-h coloquinte_hypergraph.hgr -f coloquinte_hypergraph.fixed ";
+  cmd << "-o km1 -m direct -e 0.05 -w on ";
   cmd << "-k " << nbPartitions() << " ";
   cmd << "--use-individual-part-weights on --part-weights ";
   for (auto w : scaledPartWeight()) {
@@ -119,6 +124,10 @@ std::vector<int> PartitioningProblem::solve() {
   outname << "coloquinte_hypergraph.hgr.part";
   outname << nbPartitions() << ".epsilon0.05.seed-1.KaHyPar";
   std::cout << "Command: " << cmd.str() << std::endl;
+  int res = system(cmd.str().c_str());
+  if (res != 0) {
+    throw std::runtime_error("Command returned an error value");
+  }
   return readSolution(outname.str());
 }
 
@@ -207,6 +216,7 @@ void Partitioner::reoptimize(const std::vector<std::pair<int, int> > &bins) {
     for (int c : binCells(x, y)) {
       cell_set.insert(c);
     }
+    binCells_[x][y].clear();
   }
   std::unordered_set<int> net_set;
   // TODO: pre-build the reverse datastructure for the circuit
@@ -271,7 +281,6 @@ void Partitioner::reoptimize(const std::vector<std::pair<int, int> > &bins) {
     prob.addEdge(pinsV, fixedPinsV);
   }
   std::vector<int> assignment = prob.solve();
-  exit(0);
   setBinCells(actualBins, cells, assignment);
 }
 
@@ -297,6 +306,13 @@ void Partitioner::improveYNeighbours(bool sameParent) {
   }
 }
 
+void Partitioner::run() {
+  while (levelX() > 0 || levelY() > 0) {
+    refine();
+    improve();
+  }
+}
+
 void Partitioner::refine() {
   bool doX = levelX() >= levelY();
   bool doY = levelY() >= levelX();
@@ -311,5 +327,12 @@ void Partitioner::refine() {
     improveYNeighbours();
     improveYNeighbours(false);
   }
+}
+
+void Partitioner::improve() {
+  improveXNeighbours();
+  improveYNeighbours();
+  improveXNeighbours(false);
+  improveYNeighbours(false);
 }
 }  // namespace coloquinte
