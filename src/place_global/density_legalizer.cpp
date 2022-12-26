@@ -219,19 +219,9 @@ void DensityLegalizer::rebisect(int x1, int y1, int x2, int y2) {
 
 void DensityLegalizer::reoptimize(
     const std::vector<std::pair<int, int> > &binCandidates) {
-  std::vector<std::pair<int, int> > bins;
-  for (auto [x, y] : binCandidates) {
-    if (binCapacity(x, y) > 0) {
-      bins.emplace_back(x, y);
-    }
-  }
-  if (bins.size() <= 1) {
-    return;
-  }
-
-  if (bins.size() == 2) {
-    auto [x1, y1] = bins[0];
-    auto [x2, y2] = bins[1];
+  if (binCandidates.size() == 2) {
+    auto [x1, y1] = binCandidates[0];
+    auto [x2, y2] = binCandidates[1];
     rebisect(x1, y1, x2, y2);
     return;
   }
@@ -239,12 +229,29 @@ void DensityLegalizer::reoptimize(
   std::vector<int> cells;
   std::vector<int> assignment;
   int binCnt = 0;
-  for (auto [x, y] : bins) {
+  std::vector<std::pair<int, int> > bins;
+  for (auto [x, y] : binCandidates) {
     for (int c : binCells_[x][y]) {
       cells.push_back(c);
       assignment.push_back(binCnt);
     }
-    binCnt += 1;
+    if (binCapacity(x, y) > 0) {
+      bins.emplace_back(x, y);
+      binCnt += 1;
+    }
+  }
+  if (bins.empty()) {
+    return;
+  }
+
+  for (auto [x, y] : binCandidates) {
+    binCells_[x][y].clear();
+  }
+
+  if (bins.size() == 1) {
+    auto [x, y] = bins[0];
+    setBinCells(x, y, cells);
+    return;
   }
 
   // Build a transportation problem
