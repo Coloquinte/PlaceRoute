@@ -118,7 +118,8 @@ std::vector<int> PartitioningProblem::solve() {
   cmd << "-k " << nbPartitions() << " ";
   cmd << "--use-individual-part-weights on --part-weights ";
   for (auto w : scaledPartWeight()) {
-    cmd << w << " ";
+    // Partition weight + 1 for the fixed vertex
+    cmd << w + 1 << " ";
   }
   std::stringstream outname;
   outname << "coloquinte_hypergraph.hgr.part";
@@ -232,6 +233,19 @@ void Partitioner::reoptimize(const std::vector<std::pair<int, int> > &bins) {
   std::sort(cells.begin(), cells.end());
   std::vector<int> nets(net_set.begin(), net_set.end());
   std::sort(nets.begin(), nets.end());
+
+  if (actualBins.empty()) {
+    return;
+  }
+  if (cells.empty()) {
+    return;
+  }
+
+  if (actualBins.size() == 1) {
+    auto [x, y] = actualBins[0];
+    setBinCells(x, y, cells);
+    return;
+  }
 
   std::unordered_map<int, int> cellToId;
   for (int i = 0; i < cells.size(); ++i) {
