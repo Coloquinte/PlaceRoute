@@ -79,25 +79,30 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
   maxNbSteps = 200;
   nbInitialSteps = 0;
   nbStepsPerLegalization = 1;
-  gapTolerance = interpolateLogEffort(0.1, 0.02, effort);
+  gapTolerance = interpolateLogEffort(0.1, 0.04, effort);
   distanceTolerance = 2.0;
-  penaltyCutoffDistance = 10.0;
+  // TODO: make cutoff distance smaller at small effort
+  penaltyCutoffDistance = 40.0;
   penaltyAreaExponent = 0.5;
-  initialPenalty = 0.02;
+  // TODO: make initial penalty bigger at small effort
+  initialPenalty = 0.03;
   penaltyUpdateFactor = interpolateLogEffort(1.3, 1.05, effort);
   netModel = NetModelOption::BoundToBound;
-  approximationDistance = 1.0;
+  approximationDistance = interpolateLogEffort(1.0, 5.0, effort);
   maxNbConjugateGradientSteps = 1000;
   conjugateGradientErrorTolerance = 1.0e-6;
   roughLegalizationCostModel = LegalizationModel::L1;
   roughLegalizationNbSteps = 3;
+  // TODO: find best parameter
   roughLegalizationBinSize = 5.0;
   roughLegalizationReoptLength = 2;
   roughLegalizationReoptSquareSize = 1;
-  roughLegalizationSideMargin = 1.0;
+  // TODO: find best parameter
+  roughLegalizationSideMargin = 0.9;
   roughLegalizationCoarseningLimit = 100.0;
   roughLegalizationQuadraticPenalty = 0.001;
-  exportWeighting = 1.0;
+  // TODO: find best parameter
+  exportWeighting = 0.99;
   check();
 }
 
@@ -150,7 +155,8 @@ DetailedPlacerParameters::DetailedPlacerParameters(int effort, int seed)
   reorderingNbRows = 1;
   reorderingMaxNbCells = 1;
   legalizationCostModel = LegalizationModel::L1;
-  legalizationOrderingWidth = 0.0;
+  // TODO: find best parameter
+  legalizationOrderingWidth = 0.2;
   legalizationOrderingY = 0.0;
   check();
 }
