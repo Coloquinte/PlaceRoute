@@ -12,9 +12,15 @@
 #include <vector>
 
 namespace coloquinte {
-using CostElt = std::pair<CostType, int>;
-using PrioQueue =
-    std::priority_queue<CostElt, std::vector<CostElt>, std::greater<CostElt> >;
+struct CostElt {
+  CostElt(CostType cost, int elt) : elt(elt), cost(cost) {}
+
+  bool operator<(const CostElt o) const { return cost > o.cost; }
+
+  int elt;
+  CostType cost;
+};
+using PrioQueue = std::priority_queue<CostElt>;
 
 class TransportationSuccessiveShortestPath {
  public:
@@ -38,7 +44,7 @@ class TransportationSuccessiveShortestPath {
    */
   inline int sentSource(int snk1, int snk2) const {
     assert(snk1 != snk2);
-    return queues_[snk1][snk2].top().second;
+    return queues_[snk1][snk2].top().elt;
   }
 
   /**
@@ -46,7 +52,7 @@ class TransportationSuccessiveShortestPath {
    */
   inline CostType movingCost(int snk1, int snk2) const {
     if (snk1 == snk2) return 0LL;
-    return queues_[snk1][snk2].top().first;
+    return queues_[snk1][snk2].top().cost;
   }
 
   /**
@@ -560,7 +566,7 @@ void TransportationSuccessiveShortestPath::initQueues(int sink) {
   }
   for (int dest = 0; dest < pb_.nbSinks(); ++dest) {
     if (sink == dest) continue;
-    std::vector<std::pair<CostType, int> > elements;
+    std::vector<CostElt> elements;
     for (int src : sources) {
       elements.emplace_back(pb_.movingCost(src, sink, dest), src);
     }
