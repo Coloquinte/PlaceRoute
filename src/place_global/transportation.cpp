@@ -257,7 +257,8 @@ double TransportationProblem::allocationCost() const {
   return ret / totalDemand() / conversionFactor_;
 }
 
-CostType TransportationProblem::movingCost(int src, int snk1, int snk2) const {
+inline CostType TransportationProblem::movingCost(int src, int snk1,
+                                                  int snk2) const {
   return costs_[snk2][src] - costs_[snk1][src];
 }
 
@@ -500,8 +501,8 @@ void TransportationSuccessiveShortestPath::updateTree() {
   }
 }
 
-DemandType TransportationSuccessiveShortestPath::sendSource(int src, int sink,
-                                                           DemandType quantity) {
+DemandType TransportationSuccessiveShortestPath::sendSource(
+    int src, int sink, DemandType quantity) {
   // How much we can send
   assert(quantity > 0LL);
   DemandType maxSent = quantity;
