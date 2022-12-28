@@ -40,8 +40,14 @@ void GlobalPlacerParameters::check() const {
   if (penaltyCutoffDistance < 1.0e-6) {
     throw std::runtime_error("Too small cutoff distance may lead to issues");
   }
+  if (penaltyCutoffDistanceUpdateFactor < 0.8 ||
+      penaltyCutoffDistanceUpdateFactor > 1.2) {
+    throw std::runtime_error(
+        "Penalty cutoff update factor should be close to 1");
+  }
   if (penaltyAreaExponent < 0.49 || penaltyAreaExponent > 1.01) {
-    throw std::runtime_error("Penalty area exponent should be between 0.5 and 1");
+    throw std::runtime_error(
+        "Penalty area exponent should be between 0.5 and 1");
   }
   if (initialPenalty <= 0.0f) {
     throw std::runtime_error("Initial penalty should be positive");
@@ -53,6 +59,11 @@ void GlobalPlacerParameters::check() const {
   if (approximationDistance < 1.0e-6) {
     throw std::runtime_error(
         "Too small approximation distance may lead to issues");
+  }
+  if (approximationDistanceUpdateFactor < 0.8 ||
+      approximationDistanceUpdateFactor > 1.2) {
+    throw std::runtime_error(
+        "Approximation distance update factor should be close to 1");
   }
   if (approximationDistance > 1.0e3) {
     throw std::runtime_error(
@@ -199,6 +210,9 @@ std::vector<float> GlobalPlacer::computePerCellPenalty() const {
 void GlobalPlacer::run() {
   runInitialLB();
   penalty_ = params_.initialPenalty;
+  approximationDistance_ = initialApproximationDistance();
+  penaltyCutoffDistance_ = initialPenaltyCutoffDistance();
+
   float lb = valueLB();
   float ub = std::numeric_limits<float>::infinity();
   int firstStep = params_.nbInitialSteps + 1;
@@ -228,6 +242,8 @@ void GlobalPlacer::run() {
     std::cout << std::defaultfloat << std::setprecision(4) << "\tLB " << lb
               << std::endl;
     penalty_ *= params_.penaltyUpdateFactor;
+    penaltyCutoffDistance_ *= params_.penaltyCutoffDistanceUpdateFactor;
+    approximationDistance_ *= params_.approximationDistanceUpdateFactor;
   }
   runUB();
 }
@@ -263,8 +279,8 @@ void GlobalPlacer::runLB() {
   // Compute the parameters for the continuous model solver
   NetModel::Parameters params;
   params.netModel = params_.netModel;
-  params.approximationDistance = approximationDistance();
-  params.penaltyCutoffDistance = penaltyCutoffDistance();
+  params.approximationDistance = approximationDistance_;
+  params.penaltyCutoffDistance = penaltyCutoffDistance_;
   params.tolerance = params_.conjugateGradientErrorTolerance;
   params.maxNbIterations = params_.maxNbConjugateGradientSteps;
 

@@ -89,14 +89,14 @@ class GlobalPlacer {
   /**
    * @brief Approximation distance used by the continuous model
    */
-  float approximationDistance() const {
+  float initialApproximationDistance() const {
     return params_.approximationDistance * averageCellLength_;
   }
 
   /**
    * @brief Distance at which the full displacement penalty is obtained
    */
-  float penaltyCutoffDistance() const {
+  float initialPenaltyCutoffDistance() const {
     return params_.penaltyCutoffDistance * averageCellLength_;
   }
 
@@ -123,6 +123,8 @@ class GlobalPlacer {
   std::vector<float> perCellPenalty_;
   int step_;
   float penalty_;
+  float penaltyCutoffDistance_;
+  float approximationDistance_;
   std::mt19937 rgen_;
 
   // Only for callbacks

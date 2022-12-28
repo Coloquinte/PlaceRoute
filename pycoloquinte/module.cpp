@@ -85,6 +85,8 @@ Construct the parameters
                      &GlobalPlacerParameters::distanceTolerance)
       .def_readwrite("penalty_cutoff_distance",
                      &GlobalPlacerParameters::penaltyCutoffDistance)
+      .def_readwrite("penalty_cutoff_distance_update_factor",
+                     &GlobalPlacerParameters::penaltyCutoffDistanceUpdateFactor)
       .def_readwrite("penalty_area_exponent",
                      &GlobalPlacerParameters::penaltyAreaExponent)
       .def_readwrite("initial_penalty", &GlobalPlacerParameters::initialPenalty)
@@ -93,6 +95,8 @@ Construct the parameters
       .def_readwrite("net_model", &GlobalPlacerParameters::netModel)
       .def_readwrite("approximation_distance",
                      &GlobalPlacerParameters::approximationDistance)
+      .def_readwrite("approximation_distance_update_factor",
+                     &GlobalPlacerParameters::approximationDistanceUpdateFactor)
       .def_readwrite("max_nb_conjugate_gradient_steps",
                      &GlobalPlacerParameters::maxNbConjugateGradientSteps)
       .def_readwrite("conjugate_gradient_error_tolerance",

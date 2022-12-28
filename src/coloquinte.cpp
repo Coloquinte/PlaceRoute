@@ -83,12 +83,14 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
   distanceTolerance = 2.0;
   // TODO: make cutoff distance smaller at small effort
   penaltyCutoffDistance = 40.0;
+  penaltyCutoffDistanceUpdateFactor = 1.0;
   penaltyAreaExponent = 0.5;
   // TODO: make initial penalty bigger at small effort
   initialPenalty = 0.03;
   penaltyUpdateFactor = interpolateLogEffort(1.3, 1.05, effort);
   netModel = NetModelOption::BoundToBound;
-  approximationDistance = interpolateLogEffort(1.0, 5.0, effort);
+  approximationDistance = 2.0;
+  approximationDistanceUpdateFactor = 1.0;
   maxNbConjugateGradientSteps = 1000;
   conjugateGradientErrorTolerance = 1.0e-6;
   roughLegalizationCostModel = LegalizationModel::L1;

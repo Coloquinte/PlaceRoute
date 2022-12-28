@@ -178,6 +178,11 @@ struct GlobalPlacerParameters {
   double penaltyCutoffDistance;
 
   /**
+   * @brief Per-step update factor for the cutoff distance
+   */
+  double penaltyCutoffDistanceUpdateFactor;
+
+  /**
    * @brief Exponent applied to the cell area to compute the penalty
    */
   double penaltyAreaExponent;
@@ -203,6 +208,11 @@ struct GlobalPlacerParameters {
    * the average standard cell length
    */
   double approximationDistance;
+
+  /**
+   * @brief Per-step update factor for the approximation distance
+   */
+  double approximationDistanceUpdateFactor;
 
   /**
    * @brief Maximum number of conjugate gradient steps at each placement
