@@ -56,7 +56,7 @@ std::string Rectangle::toString() const {
 
 namespace {
 
-float interpolateEffort(double minVal, double maxVal, int effort,
+double interpolateEffort(double minVal, double maxVal, int effort,
                         int minEffort = 1, int maxEffort = 9) {
   assert(minEffort < maxEffort);
   assert(effort >= minEffort && effort <= maxEffort);
@@ -64,7 +64,7 @@ float interpolateEffort(double minVal, double maxVal, int effort,
   return maxVal * fact + minVal * (1.0 - fact);
 }
 
-float interpolateLogEffort(double minVal, double maxVal, int effort,
+double interpolateLogEffort(double minVal, double maxVal, int effort,
                            int minEffort = 1, int maxEffort = 9) {
   return std::exp(interpolateEffort(std::log(minVal), std::log(maxVal), effort,
                                     minEffort, maxEffort));
