@@ -114,6 +114,9 @@ void GlobalPlacerParameters::check() const {
     throw std::runtime_error(
         "Export weighting should generally be between 0 and 1");
   }
+  if (noise < 0.0 || noise > 2.0) {
+    throw std::runtime_error("Noise should be a very small non-negative number");
+  }
 }
 
 void GlobalPlacer::place(Circuit &circuit, const GlobalPlacerParameters &params,
@@ -289,9 +292,11 @@ void GlobalPlacer::runLB() {
   for (float &s : penalty) {
     s *= penalty_;
   }
-  float rand = std::uniform_real_distribution<float>(-1.0e-4f, 1.0e-4f)(rgen_);
-  for (float &s : penalty) {
-    s *= (1.0f + rand);
+  if (params_.noise > 0.0) {
+    std::uniform_real_distribution<float> dist(0.0f, params_.noise);
+    for (float &s : penalty) {
+      s *= (1.0f + dist(rgen_));
+    }
   }
 
   // Solve the continuous model (x and y independently)

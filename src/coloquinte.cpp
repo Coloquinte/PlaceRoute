@@ -105,6 +105,7 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
   roughLegalizationQuadraticPenalty = 0.001;
   // TODO: find best parameter
   exportWeighting = 0.99;
+  noise = 1.0e-4;
   check();
 }
 

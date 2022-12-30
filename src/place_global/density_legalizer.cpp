@@ -87,7 +87,7 @@ float DensityLegalizer::maxDistance() const {
 
 inline float DensityLegalizer::distance(float x, float y) const {
   float d = norm(x, y, params_.costModel);
-  float val = d * (1.0f + (float) params_.quadraticPenaltyFactor * d);
+  float val = d * (1.0f + (float)params_.quadraticPenaltyFactor * d);
   return val;
 }
 

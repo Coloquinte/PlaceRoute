@@ -282,6 +282,11 @@ struct GlobalPlacerParameters {
   int seed;
 
   /**
+   * @brief Noise introduced to randomize the algorithm. Note that 0 will erase any effect of the seed
+   */
+  double noise;
+
+  /**
    * @brief Initialize the parameters with sensible defaults
    *
    * @param effort Placement effort between 1 and 9

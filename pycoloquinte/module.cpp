@@ -120,6 +120,7 @@ Construct the parameters
       .def_readwrite("export_weighting",
                      &GlobalPlacerParameters::exportWeighting)
       .def_readwrite("seed", &GlobalPlacerParameters::seed)
+      .def_readwrite("noise", &GlobalPlacerParameters::noise)
       .def("check", &GlobalPlacerParameters::check)
       .def("__str__", &GlobalPlacerParameters::toString)
       .def("__repr__", &GlobalPlacerParameters::toString);
