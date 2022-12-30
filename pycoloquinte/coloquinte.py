@@ -412,6 +412,7 @@ class Circuit(coloquinte_pybind.Circuit):
 
     def write_displacement(self, filename, pl1, pl2, image_width=2048):
         from PIL import ImageDraw
+
         img = self._draw_cells(True)
         draw = ImageDraw.Draw(img)
         fixed = self.cell_is_fixed
@@ -423,12 +424,12 @@ class Circuit(coloquinte_pybind.Circuit):
                 y1 = (pl1[i].min_y + pl1[i].max_y) // 2
                 y2 = (pl2[i].min_y + pl2[i].max_y) // 2
                 draw.line([(x1, y1), (x2, y2)], fill="red", width=2)
-                draw.arc([x1 - 1, y1 - 1, x1 + 1, y1 + 1],
-                         0, 360, fill="black")
+                draw.arc([x1 - 1, y1 - 1, x1 + 1, y1 + 1], 0, 360, fill="black")
         self._save_image(img, filename, image_width)
 
     def _save_image(self, img, filename, image_width):
         from PIL import Image
+
         new_height = int(image_width * img.height / img.width)
         img = img.resize((image_width, new_height), Image.LANCZOS)
         img.save(filename)
@@ -535,11 +536,16 @@ class OptimizationCallback:
 
     def save_graph(self):
         import matplotlib.pyplot as plt
+
         filename = f"{self.prefix}_WL.{self.extension}"
         plt.title("Wirelength over time")
         plt.xlabel("Step")
         plt.ylabel("Wirelength")
-        for step_name in PlacementStep.LowerBound, PlacementStep.UpperBound, PlacementStep.Detailed:
+        for step_name in (
+            PlacementStep.LowerBound,
+            PlacementStep.UpperBound,
+            PlacementStep.Detailed,
+        ):
             steps = []
             vals = []
             for step, name, val in self.history:
@@ -561,23 +567,22 @@ def main():
 
     parser = argparse.ArgumentParser(
         description="Place a benchmark circuit from the command line",
-        usage="usage: coloquinte [-h] [--effort EFFORT] [--seed SEED] [--load-solution FILE] [--save-solution FILE] instance"
+        usage="usage: coloquinte [-h] [--effort EFFORT] [--seed SEED] [--load-solution FILE] [--save-solution FILE] instance",
     )
-    parser.add_argument("instance", help="Benchmark instance")
-    parser.add_argument("--effort", help="Placement effort",
-                        type=int, default=3)
+    parser.add_argument("instance", help="Benchmark instance", nargs="?")
+    parser.add_argument("--effort", help="Placement effort", type=int, default=3)
     parser.add_argument("--seed", help="Random seed", type=int, default=-1)
     parser.add_argument(
         "--load-solution", help="Load initial placement", metavar="FILE"
     )
-    parser.add_argument("--save-solution",
-                        help="Save final placement", metavar="FILE")
+    parser.add_argument("--save-solution", help="Save final placement", metavar="FILE")
     parser.add_argument(
-        "--show-parameters", help="Show parameter values", action="store_true"
+        "--show-parameters",
+        help="Show parameter values with the current effort",
+        action="store_true",
     )
     group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "--no-global", help="Skip global placement", action="store_true")
+    group.add_argument("--no-global", help="Skip global placement", action="store_true")
     group.add_argument(
         "--only-global",
         help="Run only global placement (no legalization)",
@@ -596,16 +601,16 @@ def main():
     # Prefix to save images
     parser.add_argument("--save-images", help=argparse.SUPPRESS, type=str)
     # Save intermediate placement images
-    parser.add_argument("--save-all-images",
-                        help=argparse.SUPPRESS, action="store_true")
-    parser.add_argument("--save-graph",
-                        help=argparse.SUPPRESS, action="store_true")
+    parser.add_argument(
+        "--save-all-images", help=argparse.SUPPRESS, action="store_true"
+    )
+    parser.add_argument("--save-graph", help=argparse.SUPPRESS, action="store_true")
+    # Save intermediate placement images
+    parser.add_argument("--image-width", help=argparse.SUPPRESS, type=int, default=1080)
     # Save intermediate placement images
     parser.add_argument(
-        "--image-width", help=argparse.SUPPRESS, type=int, default=1080)
-    # Save intermediate placement images
-    parser.add_argument("--image-extension",
-                        help=argparse.SUPPRESS, type=str, default="webp")
+        "--image-extension", help=argparse.SUPPRESS, type=str, default="webp"
+    )
 
     global_group = parser.add_argument_group("Global placement parameters")
     detailed_group = parser.add_argument_group("Detailed placement parameters")
@@ -624,6 +629,10 @@ def main():
         print("Parameter values:")
         _show_params(global_params, "global")
         _show_params(detailed_params, "detailed")
+        return
+    if args.instance is None:
+        parser.print_help()
+        return
 
     circuit = Circuit.read_ispd(args.instance, args.ignore_obstructions)
     print(circuit.report())
@@ -637,10 +646,12 @@ def main():
     callback = None
     if args.save_images is not None:
         circuit.write_image(
-            f"{args.save_images}_macros.{args.image_extension}", True, args.image_width)
+            f"{args.save_images}_macros.{args.image_extension}", True, args.image_width
+        )
         if args.save_all_images or args.save_graph:
             callback = OptimizationCallback(
-                circuit, args.save_images, args.image_width, args.image_extension)
+                circuit, args.save_images, args.image_width, args.image_extension
+            )
             callback.save_view = args.save_all_images
 
     if args.no_global:
@@ -660,7 +671,8 @@ def main():
 
     if args.save_images is not None:
         circuit.write_image(
-            f"{args.save_images}_placed.{args.image_extension}", True, args.image_width)
+            f"{args.save_images}_placed.{args.image_extension}", True, args.image_width
+        )
     if callback is not None:
         callback.save_graph()
 
