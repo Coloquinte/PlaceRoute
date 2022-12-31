@@ -165,7 +165,9 @@ void NetModel::check() const {
 std::vector<float> NetModel::pinPositions(const std::vector<float> &pl) const {
   std::vector<float> ret(netCells_.size());
   for (int i = 0; i < netCells_.size(); ++i) {
-    ret[i] = pl[netCells_[i]] + netPinOffsets_[i];
+    int c = netCells_[i];
+    float pos = c == -1 ? 0.0f : pl[c];
+    ret[i] = pos + netPinOffsets_[i];
   }
   return ret;
 }
