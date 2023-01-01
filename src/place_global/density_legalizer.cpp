@@ -228,16 +228,16 @@ void DensityLegalizer::reoptimize(
 
   std::vector<int> cells;
   std::vector<int> assignment;
-  int binCnt = 0;
   std::vector<std::pair<int, int> > bins;
   for (auto [x, y] : binCandidates) {
+    if (binCapacity(x, y) > 0) {
+      bins.emplace_back(x, y);
+    }
+    // Allocate to the last non-empty bin
+    int binCnt = bins.empty() ? 0 : bins.size() - 1;
     for (int c : binCells_[x][y]) {
       cells.push_back(c);
       assignment.push_back(binCnt);
-    }
-    if (binCapacity(x, y) > 0) {
-      bins.emplace_back(x, y);
-      binCnt += 1;
     }
   }
   if (bins.empty()) {
