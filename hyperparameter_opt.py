@@ -220,6 +220,7 @@ class HPOptimizer:
         self.args = args
         self.prefix = prefix
 
+    @staticmethod
     def default_params():
         data = BenchmarkRun("").to_dict()
         del data["benchmark"]
@@ -229,40 +230,35 @@ class HPOptimizer:
         del data["detailed_seed"]
         return data
 
-    @staticmethod
-    def load_history():
-        history_file = "history.pkl"
+    def load_history(self):
+        history_file = self.args.history_file
         if os.path.exists(history_file):
             with open(history_file, 'rb') as f:
                 return pickle.load(f)
         else:
             return []
 
-    @staticmethod
-    def save_history(call_history):
-        history_file = "history.pkl"
+    def save_history(self, call_history):
+        history_file = self.args.history_file
         with open(history_file, 'wb') as f:
             pickle.dump(call_history, f)
 
-    @staticmethod
-    def is_old_run(params, candidate):
+    def is_old_run(self, params, candidate):
         for k, v in params.items():
             if candidate[k] != v:
                 return False
         return True
 
-    @staticmethod
-    def find_history(params):
-        call_history = HPOptimizer.load_history()
+    def find_history(self, params):
+        call_history = self.load_history()
         for candidate in call_history:
-            if HPOptimizer.is_old_run(params, candidate):
+            if self.is_old_run(params, candidate):
                 print(f"Found candidate {candidate}")
                 return candidate
         return None
 
-    @staticmethod
-    def history_as_conf(config_space):
-        history = HPOptimizer.load_history()
+    def history_as_conf(self, config_space):
+        history = self.load_history()
         confs = []
         for h in history:
             conf_dict = {}
@@ -286,16 +282,16 @@ class HPOptimizer:
                 params["prefix"] = self.prefix
                 params["global.seed"] = seed
                 params["detailed.seed"] = seed
-                old = HPOptimizer.find_history(params)
+                old = self.find_history(params)
                 if old is not None:
                     params = old
                 else:
                     cur = BenchmarkRun.from_dict(params).run()
                     for k, v in cur.items():
                         params[k] = v
-                    call_history = HPOptimizer.load_history()
+                    call_history = self.load_history()
                     call_history.append(params)
-                    HPOptimizer.save_history(call_history)
+                    self.save_history(call_history)
                 for k in ["metrics.time_total", "metrics.hpwl", "metrics.time_global", "metrics.time_detailed"]:
                     if k in metrics:
                         metrics[k].append(params[k])
@@ -337,7 +333,7 @@ class HPOptimizer:
     def run(self):
         space = sp.Space()
         space.add_variables(self.variables)
-        initial_configs = HPOptimizer.history_as_conf(space)
+        initial_configs = self.history_as_conf(space)
         print(f"Found {len(initial_configs)} configurations already evaluated")
         if self.args.percents_per_hour is None:
             opt = Optimizer(
@@ -405,6 +401,7 @@ parser.add_argument(
     metavar="VARIABLES",
     default=default_vars
 )
+parser.add_argument("--history-file", help="History file to save/load", type=str, default="history.pkl")
 
 args = parser.parse_args()
 if args.show_variables:
