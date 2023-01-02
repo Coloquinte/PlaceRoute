@@ -126,6 +126,7 @@ def enum_values(enum_type):
 optimization_variables = [
     sp.Int("effort", 1, 9),
     sp.Real("global_approximation_distance", 0.5, 10.0, log=True),
+    sp.Real("global_approximation_distance_update_factor", 0.95, 1.05, log=True),
     sp.Real("global_conjugate_gradient_error_tolerance", 1.0e-8, 1.0e-4, log=True),
     sp.Real("global_distance_tolerance", 2, 10, log=True),
     sp.Real("global_export_weighting", 0.5, 1.0),
@@ -138,6 +139,7 @@ optimization_variables = [
     sp.Categorical("global_net_model", enum_values(coloquinte.NetModel)),
     sp.Real("global_penalty_area_exponent", 0.5, 1.0),
     sp.Real("global_penalty_cutoff_distance", 5.0, 100.0, log=True),
+    sp.Real("global_penalty_cutoff_distance_update_factor", 0.95, 1.05, log=True),
     sp.Real("global_penalty_update_factor", 1.04, 1.25, log=True),
     sp.Real("global_rough_legalization_bin_size", 3.0, 10.0, log=True),
     sp.Real("global_rough_legalization_coarsening_limit", 0.5, 100.0, log=True),
