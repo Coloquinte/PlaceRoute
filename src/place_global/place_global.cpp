@@ -115,7 +115,8 @@ void GlobalPlacerParameters::check() const {
         "Export weighting should generally be between 0 and 1");
   }
   if (noise < 0.0 || noise > 2.0) {
-    throw std::runtime_error("Noise should be a very small non-negative number");
+    throw std::runtime_error(
+        "Noise should be a very small non-negative number");
   }
 }
 
@@ -221,15 +222,10 @@ void GlobalPlacer::run() {
   int firstStep = params_.nbInitialSteps + 1;
   for (step_ = firstStep; step_ <= params_.maxNbSteps; ++step_) {
     std::cout << "#" << step_ << ":" << std::flush;
-    if ((step_ - firstStep) % params_.nbStepsPerLegalization == 0) {
-      runUB();
-      ub = valueUB();
-      std::cout << std::defaultfloat << std::setprecision(4) << "\tUB " << ub;
-    } else {
-      leg_.updateCellTargetX(xPlacementLB_);
-      leg_.updateCellTargetY(yPlacementLB_);
-      std::cout << "\tUB   ......";
-    }
+    runUB();
+    ub = valueUB();
+    std::cout << std::defaultfloat << std::setprecision(4) << "\tUB " << ub;
+
     float dist = leg_.meanDistance();
     std::cout << std::fixed << std::setprecision(1) << "\tDist " << dist;
     std::cout << std::flush;
@@ -240,10 +236,16 @@ void GlobalPlacer::run() {
       std::cout << std::endl;
       break;
     }
-    runLB();
-    lb = valueLB();
-    std::cout << std::defaultfloat << std::setprecision(4) << "\tLB " << lb
-              << std::endl;
+    for (int i = 0; i < params_.nbStepsPerLegalization; ++i) {
+      if (i != 0) {
+        std::cout << "#" << step_ << ":\t........\t........";
+        std::cout << std::flush;
+      }
+      runLB();
+      lb = valueLB();
+      std::cout << std::defaultfloat << std::setprecision(4) << "\tLB " << lb
+                << std::endl;
+    }
     penalty_ *= params_.penaltyUpdateFactor;
     penaltyCutoffDistance_ *= params_.penaltyCutoffDistanceUpdateFactor;
     approximationDistance_ *= params_.approximationDistanceUpdateFactor;
