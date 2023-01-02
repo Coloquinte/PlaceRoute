@@ -222,16 +222,6 @@ class HPOptimizer:
         self.args = args
         self.prefix = prefix
 
-    @staticmethod
-    def default_params():
-        data = BenchmarkRun("").to_dict()
-        del data["benchmark"]
-        del data["ignore_macros"]
-        del data["prefix"]
-        del data["global_seed"]
-        del data["detailed_seed"]
-        return data
-
     def load_history(self):
         history_file = self.args.history_file
         if os.path.exists(history_file):
@@ -310,7 +300,7 @@ class HPOptimizer:
         for k, v in config.get_dictionary().items():
             print(f"\t{k}: {v}")
         sys.stdout.flush()
-        params_dict = HPOptimizer.default_params()
+        params_dict = {}
         for k, v in config.get_dictionary().items():
             params_dict[k] = v
         m = self.evaluate(params_dict)
