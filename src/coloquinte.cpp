@@ -57,7 +57,7 @@ std::string Rectangle::toString() const {
 namespace {
 
 double interpolateEffort(double minVal, double maxVal, int effort,
-                        int minEffort = 1, int maxEffort = 9) {
+                         int minEffort = 1, int maxEffort = 9) {
   assert(minEffort < maxEffort);
   assert(effort >= minEffort && effort <= maxEffort);
   double fact = (effort - minEffort) / (float)(maxEffort - minEffort);
@@ -65,7 +65,7 @@ double interpolateEffort(double minVal, double maxVal, int effort,
 }
 
 double interpolateLogEffort(double minVal, double maxVal, int effort,
-                           int minEffort = 1, int maxEffort = 9) {
+                            int minEffort = 1, int maxEffort = 9) {
   return std::exp(interpolateEffort(std::log(minVal), std::log(maxVal), effort,
                                     minEffort, maxEffort));
 }
@@ -76,10 +76,9 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
   if (effort < 1 || effort > 9) {
     throw std::runtime_error("Placement effort must be between 1 and 9");
   }
-  maxNbSteps = 200;
+  maxNbSteps = 400;
   nbInitialSteps = 0;
   nbStepsPerLegalization = 1;
-  gapTolerance = interpolateLogEffort(0.1, 0.04, effort);
   distanceTolerance = 2.0;
   // TODO: make cutoff distance smaller at small effort
   penaltyCutoffDistance = 40.0;
@@ -87,18 +86,16 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
   penaltyAreaExponent = 0.5;
   // TODO: make initial penalty bigger at small effort
   initialPenalty = 0.03;
-  penaltyUpdateFactor = interpolateLogEffort(1.3, 1.05, effort);
   netModel = NetModelOption::BoundToBound;
   approximationDistance = 2.0;
   approximationDistanceUpdateFactor = 1.0;
   maxNbConjugateGradientSteps = 1000;
   conjugateGradientErrorTolerance = 1.0e-6;
   roughLegalizationCostModel = LegalizationModel::L1;
-  roughLegalizationNbSteps = 3;
+  roughLegalizationNbSteps = 1;
   // TODO: find best parameter
   roughLegalizationBinSize = 5.0;
   roughLegalizationReoptLength = 2;
-  roughLegalizationReoptSquareSize = 1;
   // TODO: find best parameter
   roughLegalizationSideMargin = 0.9;
   roughLegalizationCoarseningLimit = 100.0;
@@ -106,6 +103,15 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
   // TODO: find best parameter
   exportWeighting = 0.99;
   noise = 1.0e-4;
+  // Parameters that vary with effort here
+  double gapToleranceArray[9] = {0.13,  0.13,  0.058, 0.038, 0.026,
+                                 0.026, 0.026, 0.026, 0.026};
+  double penaltyUpdateFactorArray[9] = {1.23, 1.23, 1.23, 1.22, 1.22,
+                                        1.22, 1.22, 1.17, 1.07};
+  int squareSizeArray[9] = {1, 2, 3, 3, 3, 4, 4, 4, 5};
+  gapTolerance = gapToleranceArray[effort - 1];
+  penaltyUpdateFactor = penaltyUpdateFactorArray[effort - 1];
+  roughLegalizationReoptSquareSize = squareSizeArray[effort - 1];
   check();
 }
 

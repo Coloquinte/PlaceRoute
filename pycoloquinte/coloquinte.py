@@ -618,6 +618,7 @@ def main():
     _add_arguments(detailed_group, DetailedPlacerParameters(), "detailed")
     args = parser.parse_args()
 
+    print(f"Placement effort {args.effort}, seed {args.seed}")
     global_params = GlobalPlacerParameters(args.effort, args.seed)
     _parse_arguments(args, global_params, "global")
     global_params.check()
