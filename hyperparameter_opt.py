@@ -86,8 +86,12 @@ class BenchmarkRun:
 
     @staticmethod
     def from_dict(d):
-        gp = coloquinte.GlobalPlacerParameters()
-        dp = coloquinte.DetailedPlacerParameters()
+        if "effort" in d:
+            effort = d["effort"]
+        else:
+            effort = 3
+        gp = coloquinte.GlobalPlacerParameters(effort)
+        dp = coloquinte.DetailedPlacerParameters(effort)
         for k, v in d.items():
             if k.startswith("global_"):
                 k = k[7:]
@@ -120,6 +124,7 @@ def enum_values(enum_type):
 
 
 optimization_variables = [
+    sp.Int("effort", 1, 9),
     sp.Real("global_approximation_distance", 0.5, 10.0, log=True),
     sp.Real("global_conjugate_gradient_error_tolerance", 1.0e-8, 1.0e-4, log=True),
     sp.Real("global_distance_tolerance", 2, 10, log=True),
