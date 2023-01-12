@@ -18,6 +18,20 @@ BOOST_AUTO_TEST_CASE(TestConstruction) {
   pb.checkDualSolution(pb.initialDualSolution(1.0e2));
 }
 
+BOOST_AUTO_TEST_CASE(TestManhattan) {
+  InteriorPointTransportation<double> pb =
+      InteriorPointTransportation<double>::makeRandomFromDistance<2, 1>(100,
+                                                                        10);
+  pb.check();
+}
+
+BOOST_AUTO_TEST_CASE(TestEuclidean) {
+  InteriorPointTransportation<double> pb =
+      InteriorPointTransportation<double>::makeRandomFromDistance<2, 1>(100,
+                                                                        10);
+  pb.check();
+}
+
 BOOST_AUTO_TEST_CASE(TestApplyA) {
   InteriorPointTransportation<double> pb =
       InteriorPointTransportation<double>::makeRandom(20, 7);
@@ -59,4 +73,18 @@ BOOST_AUTO_TEST_CASE(TestApplyAGAtInv) {
   Eigen::VectorXd expected = mat.lu().solve(x);
   Eigen::VectorXd agatInvx = pb.applyAGAtInv(g, x);
   BOOST_CHECK(agatInvx.isApprox(expected));
+}
+
+BOOST_AUTO_TEST_CASE(TestSolve) {
+  Eigen::VectorXd dem = Eigen::VectorXd::LinSpaced(20, 0.1, 1.0);
+  Eigen::VectorXd cap = Eigen::VectorXd::LinSpaced(7, 0.1, 1.0);
+  cap = cap / cap.sum();
+  cap = cap * dem.sum();
+  Eigen::MatrixXd costs = Eigen::VectorXd::LinSpaced(20, 0.1, 1.0) *
+                          Eigen::VectorXd::LinSpaced(7, 0.1, 1.0).transpose();
+
+  InteriorPointTransportation<double> pb(dem, cap, costs);
+  pb.check();
+  Eigen::VectorXd x = pb.solve();
+  pb.checkPrimalSolution(x);
 }
