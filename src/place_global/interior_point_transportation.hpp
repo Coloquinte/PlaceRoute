@@ -261,26 +261,25 @@ InteriorPointTransportation<T>::applyAGAtInv(const Vector &g,
   assert(g.rows() == nbVariables());
   assert(x.rows() == nbConstraints());
   auto view = g.reshaped(nbSinks(), nbSources());
-  Vector gt = view.topRows(nbSinks() - 1).rowwise().sum();
+  Matrix G = view.topRows(nbSinks() - 1);
+  Vector gt = G.rowwise().sum();
   Vector gs = view.colwise().sum();
-  auto G = view.topRows(nbSinks() - 1);
 
-  Matrix L = G * gs.cwiseInverse().asDiagonal();
-  auto Ds = gs.asDiagonal();
-  Matrix Dt = gt.asDiagonal().toDenseMatrix() - (L * Ds * L.transpose()).eval();
+  auto GsI = gs.cwiseInverse().asDiagonal();
+  Matrix Dt = gt.asDiagonal().toDenseMatrix() - (G * GsI * G.transpose()).eval();
 
   Vector xs = x.segment(0, nbSources());
   Vector xt = x.segment(nbSources(), nbSinks() - 1);
 
   // First triangular solve
-  xt = xt - L * xs;
+  xt -= G * GsI * xs;
 
   // Diagonal solve
-  xs = xs.cwiseProduct(gs.cwiseInverse());
-  xt = Dt.lu().solve(xt);
+  xs = GsI * xs;
+  xt = Dt.ldlt().solve(xt);
 
   // Second triangular solve
-  xs = xs - L.transpose() * xt;
+  xs -= GsI * G.transpose() * xt;
 
   Vector ret(nbConstraints());
   ret.segment(0, nbSources()) = xs;
@@ -385,22 +384,25 @@ void InteriorPointTransportation<T>::newtonDirection(
     const Vector &r_b, const Vector &r_c, const Vector &r_x_s, const Vector &x,
     const Vector &s, Vector &dx, Vector &dy, Vector &ds) const {
   // Block cholesky solve for D dx + A dy = u, At dx = v
-  Vector u = -r_c + r_x_s.cwiseProduct(x.cwiseInverse());
+  Vector xi = x.cwiseInverse();
+
+  Vector u = -r_c + r_x_s.cwiseProduct(xi);
   Vector v = -r_b;
-  Vector D = -s.cwiseProduct(x.cwiseInverse());
+  Vector D = -s.cwiseProduct(xi);
+  Vector Di = D.cwiseInverse();
 
   // First triangular solve
-  v = v - applyA(u.cwiseProduct(D.cwiseInverse()));
+  v = v - applyA(u.cwiseProduct(Di));
 
   // Diagonal solve
-  u = u.cwiseProduct(D.cwiseInverse());
-  dy = -applyAGAtInv(D.cwiseInverse(), v);
+  u = u.cwiseProduct(Di);
+  dy = -applyAGAtInv(Di, v);
 
   // Second triangular solve
-  dx = u - applyAt(dy).cwiseProduct(D.cwiseInverse());
+  dx = u - applyAt(dy).cwiseProduct(Di);
 
   // Final step
-  ds = -(r_x_s + s.cwiseProduct(dx)).cwiseProduct(x.cwiseInverse());
+  ds = -(r_x_s + s.cwiseProduct(dx)).cwiseProduct(xi);
 }
 
 template <class T>
