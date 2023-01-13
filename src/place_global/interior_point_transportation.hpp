@@ -68,7 +68,8 @@ class InteriorPointTransportation {
   Matrix makeDenseA() const;
   Matrix makeDenseAGAt(Vector g) const;
 
-  Vector solve(int maxIter = 100, T eps = 1.0e-9, T theta = 0.9995) const;
+  Vector solve(int maxIter = -1, T eps = 1.0e-9, T theta = 0.9995,
+               bool verbose = false) const;
 
   void check() const;
 
@@ -313,7 +314,7 @@ InteriorPointTransportation<T>::makeDenseAGAt(Vector g) const {
 
 template <class T>
 Eigen::Matrix<T, Eigen::Dynamic, 1> InteriorPointTransportation<T>::solve(
-    int maxIter, T eps, T theta) const {
+    int maxIter, T eps, T theta, bool verbose) const {
   Vector c = costVector();
   Vector b = constraintVector();
 
@@ -322,8 +323,16 @@ Eigen::Matrix<T, Eigen::Dynamic, 1> InteriorPointTransportation<T>::solve(
   Vector s = c - applyAt(y);
 
   T bc = 1 + std::max(b.norm(), c.norm());
+  T alpha_x = 0.0;
+  T alpha_s = 0.0;
+  T sigma = 0.0;
 
-  for (int niter = 0; niter < maxIter; ++niter) {
+  if (verbose) {
+    std::cout << "ITER\tCOST\tMU\tSIGMA\tRESIDUAL\tALPHAX\tALPHAS\tMAXVIOL"
+              << std::endl;
+  }
+
+  for (int niter = 0; maxIter == -1 || niter < maxIter; ++niter) {
     // Compute residuals and update mu
     Vector r_b = applyA(x) - b;
     Vector r_c = applyAt(y) + s - c;
@@ -333,6 +342,14 @@ Eigen::Matrix<T, Eigen::Dynamic, 1> InteriorPointTransportation<T>::solve(
     // Check relative decrease in residual, for purposes of convergence test
     T sqResidual = r_b.squaredNorm() + r_c.squaredNorm() + r_x_s.squaredNorm();
     T residual = std::sqrt(sqResidual) / bc;
+
+    if (verbose) {
+      T cost = c.dot(x);
+      T maxviol = std::max(r_b.cwiseAbs().maxCoeff(), (-x).maxCoeff());
+      std::cout << niter << "\t" << cost << "\t" << mu << "\t" << sigma << "\t"
+                << residual << "\t" << alpha_x << "\t" << alpha_s << "\t"
+                << maxviol << std::endl;
+    }
     if (residual < eps) {
       break;
     }
@@ -350,7 +367,7 @@ Eigen::Matrix<T, Eigen::Dynamic, 1> InteriorPointTransportation<T>::solve(
                nbVariables();
 
     // Set central parameter
-    T sigma = std::pow(mu_aff / mu, 3);
+    sigma = std::pow(mu_aff / mu, 3);
 
     // ----- Corrector step -----
 
@@ -367,7 +384,6 @@ Eigen::Matrix<T, Eigen::Dynamic, 1> InteriorPointTransportation<T>::solve(
     Vector dy = dy_aff + dy_cc;
     Vector ds = ds_aff + ds_cc;
 
-    T alpha_x, alpha_s;
     stepSize(x, s, dx, ds, theta, alpha_x, alpha_s);
 
     // Update iterates
