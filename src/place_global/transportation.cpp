@@ -163,11 +163,12 @@ void TransportationProblem::costsFromIntegers(
   conversionFactor_ /= 4.0;
   conversionFactor_ /= costs.size();
   costs_.clear();
-  costs_.resize(costs.size());
+  assert (!costs.empty());
+  assert (!costs.front().empty());
+  costs_.resize(costs.size(), std::vector<CostType>(costs[0].size()));
   for (int i = 0; i < costs.size(); ++i) {
     for (int j = 0; j < costs[i].size(); ++j) {
-      costs_[i].push_back(
-          static_cast<CostType>(std::round(costs[i][j] * conversionFactor_)));
+      costs_[i][j] = std::round(costs[i][j] * conversionFactor_);
     }
   }
 }
@@ -432,11 +433,13 @@ void TransportationSuccessiveShortestPath::run() {
 std::vector<int> TransportationSuccessiveShortestPath::sortedSourcesByDemand()
     const {
   std::vector<std::pair<DemandType, int> > sources;
+  sources.reserve(pb_.nbSources());
   for (int i = 0; i < pb_.nbSources(); ++i) {
     sources.emplace_back(-pb_.demand(i), i);
   }
   std::sort(sources.begin(), sources.end());
   std::vector<int> ret;
+  ret.reserve(pb_.nbSources());
   for (auto [d, i] : sources) {
     ret.push_back(i);
   }
@@ -567,10 +570,11 @@ void TransportationSuccessiveShortestPath::initQueues(int sink) {
   for (int dest = 0; dest < pb_.nbSinks(); ++dest) {
     if (sink == dest) continue;
     std::vector<CostElt> elements;
+    elements.reserve(2 * sources.size());
     for (int src : sources) {
       elements.emplace_back(pb_.movingCost(src, sink, dest), src);
     }
-    queues_[sink][dest] = PrioQueue(elements.begin(), elements.end());
+    queues_[sink][dest] = PrioQueue(PrioQueue::value_compare(), std::move(elements));
   }
 }
 

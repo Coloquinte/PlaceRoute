@@ -281,8 +281,6 @@ void DensityLegalizer::reoptimize(
 
   TransportationProblem solver(capacities, demands, costs);
   solver.increaseCapacity();
-  solver.setAssignment(assignment);
-  solver.makeFeasible();
   solver.solve();
   assignment = solver.toAssignment();
 

@@ -89,7 +89,13 @@ void NetModel::exportPlacementY(Circuit &circuit,
   }
 }
 
-NetModel::NetModel(int nbCells) : nbCells_(nbCells) { netLimits_.push_back(0); }
+NetModel::NetModel(int nbCells) : nbCells_(nbCells) {
+  netLimits_.reserve(nbCells);
+  netWeight_.reserve(nbCells);
+  netCells_.reserve(2 * nbCells);
+  netPinOffsets_.reserve(2 * nbCells);
+  netLimits_.push_back(0);
+}
 
 void NetModel::addNet(const std::vector<int> &cells) {
   std::vector<float> offsets(cells.size(), 0.0f);
@@ -236,7 +242,9 @@ class MatrixCreator {
         nbSupps_(0),
         rhs_(topo.nbCells()),
         initial_(topo.nbCells()),
-        hasNonZero_(topo.nbCells()) {}
+        hasNonZero_(topo.nbCells()) {
+    mat_.reserve(2 * topo_.nbPins());
+  }
 
   int nbCells() const { return nbCells_; }
   int matSize() const { return nbCells_ + nbSupps_; }

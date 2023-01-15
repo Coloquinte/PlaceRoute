@@ -57,6 +57,11 @@ class NetModel {
   int nbNets() const { return netLimits_.size() - 1; }
 
   /**
+   * @brief Return the total number of pins
+   */
+  int nbPins() const { return netLimits_.back(); }
+
+  /**
    * @brief Return the number of pins for a given net
    */
   int nbPins(int net) const {
