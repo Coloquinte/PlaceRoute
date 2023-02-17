@@ -53,3 +53,14 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     enable_testing()
     add_subdirectory(test)
 endif()
+
+INSTALL(
+  TARGETS coloquinte
+  LIBRARY DESTINATION lib
+  COMPONENT library
+)
+INSTALL(
+  FILES ${COLOQUINTE_SOURCE_DIR}/src/coloquinte.hpp
+  DESTINATION include/coloquinte
+  COMPONENT headers
+)
