@@ -3,9 +3,12 @@ cmake_minimum_required(VERSION 3.10)
 PROJECT(COLOQUINTE)
 SET(CMAKE_CXX_STANDARD 17)
 
-add_subdirectory(thirdparty/pybind11)
+OPTION(BUILD_PYCOLOQUINTE "Build Coloquinte Python package")
 
-SET(Boost_USE_STATIC_LIBS ON)
+IF(BUILD_PYCOLOQUINTE)
+    SET(Boost_USE_STATIC_LIBS ON)
+ENDIF(BUILD_PYCOLOQUINTE)
+
 FIND_PACKAGE(Boost REQUIRED COMPONENTS system filesystem iostreams program_options unit_test_framework)
 FIND_PACKAGE(LEMON NAMES LEMON lemon REQUIRED)
 FIND_PACKAGE(Eigen3 3.3 REQUIRED NO_MODULE)
@@ -40,7 +43,11 @@ target_link_libraries(coloquinte
   ${Boost_LIBRARIES}
   Threads::Threads
 )
-add_subdirectory(pycoloquinte)
+
+IF(BUILD_PYCOLOQUINTE)
+	add_subdirectory(thirdparty/pybind11)
+	add_subdirectory(pycoloquinte)
+ENDIF(BUILD_PYCOLOQUINTE)
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     enable_testing()
