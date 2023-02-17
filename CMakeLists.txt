@@ -3,17 +3,17 @@ cmake_minimum_required(VERSION 3.10)
 PROJECT(COLOQUINTE)
 SET(CMAKE_CXX_STANDARD 17)
 
-add_subdirectory(thirdparty/lemon)
 add_subdirectory(thirdparty/pybind11)
 
 SET(Boost_USE_STATIC_LIBS ON)
 FIND_PACKAGE(Boost REQUIRED COMPONENTS system filesystem iostreams program_options unit_test_framework)
+FIND_PACKAGE(LEMON NAMES LEMON lemon REQUIRED)
 FIND_PACKAGE(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(Threads REQUIRED)
 
 INCLUDE_DIRECTORIES(
     ${COLOQUINTE_SOURCE_DIR}/src
-    ${COLOQUINTE_SOURCE_DIR}/thirdparty/lemon/lemon
+    ${LEMON_INCLUDE_DIRS}
     ${COLOQUINTE_SOURCE_DIR}/thirdparty/pybind11
 )
 
@@ -38,7 +38,6 @@ target_compile_features(coloquinte PRIVATE cxx_std_17)
 target_link_libraries(coloquinte
   PRIVATE
   ${Boost_LIBRARIES}
-  lemon
   Threads::Threads
 )
 add_subdirectory(pycoloquinte)
