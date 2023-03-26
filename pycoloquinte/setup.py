@@ -70,9 +70,12 @@ class CMakeBuild(build_ext):
         if not extdir.endswith(os.path.sep):
             extdir += os.path.sep
 
-        debug = int(os.environ.get("DEBUG", 0)
-                    ) if self.debug is None else self.debug
-        cfg = "Debug" if debug else "Release"
+        if self.debug or bool(os.environ.get("DEBUG", 0)):
+            cfg = "Debug"
+        elif bool(os.environ.get("DEBUG_INFO", 0)):
+            cfg = "RelWithDebInfo"
+        else:
+            cfg = "Release"
 
         # CMake lets you override the generator - we need to check this.
         # Can be set with Conda-Build, for example.
