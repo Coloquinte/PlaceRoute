@@ -253,6 +253,11 @@ struct GlobalPlacerParameters {
   int roughLegalizationReoptSquareSize;
 
   /**
+   * @brief Use unidimensional transportation to reoptimize many bins at once
+   */
+  bool roughLegalizationUnidimensionalTransport;
+
+  /**
    * @brief Small quadratic penalty to ensure that closer cells are selected
    * despite the L1 distance, normalized by the placement area
    */

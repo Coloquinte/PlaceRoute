@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "place_global/transportation.hpp"
+#include "place_global/transportation_1d.hpp"
 #include "utils/norm.hpp"
 
 namespace coloquinte {
@@ -19,6 +20,7 @@ DensityLegalizer::Parameters::Parameters() {
   reoptimizationSquareSize = 1;
   quadraticPenaltyFactor = 0.0;
   coarseningLimit = 1.0;
+  unidimensionalTransport = false;
 }
 
 DensityLegalizer::DensityLegalizer(DensityGrid grid,
@@ -365,20 +367,85 @@ void DensityLegalizer::improveSquareNeighbours(bool sameParent) {
 }
 
 void DensityLegalizer::improveXY() {
-  int nb = params_.reoptimizationLength;
-  if (nb == 1) return;
+  if (params_.unidimensionalTransport) {
+    improveX();
+    improveY();
+  } else {
+    int nb = params_.reoptimizationLength;
+    if (nb == 1) return;
 
-  int mid = (nb + 1) / 2;
-  int stride = 2 * mid;
+    int mid = (nb + 1) / 2;
+    int stride = 2 * mid;
 
-  // X (first)
-  improveRectangles(nb, 1, stride, 1, 0, 0);
-  // Y (first)
-  improveRectangles(1, nb, 1, stride, 0, 0);
-  // X (second, overlapping)
-  improveRectangles(nb, 1, stride, 1, mid, 0);
-  // Y (second, overlapping)
-  improveRectangles(1, nb, 1, stride, 0, mid);
+    // X (first)
+    improveRectangles(nb, 1, stride, 1, 0, 0);
+    // Y (first)
+    improveRectangles(1, nb, 1, stride, 0, 0);
+    // X (second, overlapping)
+    improveRectangles(nb, 1, stride, 1, mid, 0);
+    // Y (second, overlapping)
+    improveRectangles(1, nb, 1, stride, 0, mid);
+  }
+}
+
+void DensityLegalizer::improveX() {
+  for (int j = 0; j < nbBinsY(); ++j) {
+    std::vector<int> cells;
+    std::vector<long long> u;
+    std::vector<long long> v;
+    std::vector<long long> s;
+    std::vector<long long> d;
+    for (int i = 0; i < nbBinsX(); ++i) {
+      v.push_back(binX(i, j));
+      d.push_back(binCapacity(i, j));
+      for (int c : binCells(i, j)) {
+        cells.push_back(c);
+        u.push_back(cellTargetX(c));
+        s.push_back(cellDemand(c));
+      }
+    }
+    Transportation1d pb(u, v, s, d);
+    pb.balanceDemand();
+    std::vector<int> assignment = pb.assign();
+    std::vector<std::vector<int> > binCells(nbBinsX());
+    for (int i = 0; i < cells.size(); ++i) {
+      binCells[assignment[i]].push_back(cells[i]);
+    }
+    for (int i = 0; i < nbBinsX(); ++i) {
+      setBinCells(i, j, binCells[i]);
+    }
+  }
+  check();
+}
+
+void DensityLegalizer::improveY() {
+  for (int i = 0; i < nbBinsX(); ++i) {
+    std::vector<int> cells;
+    std::vector<long long> u;
+    std::vector<long long> v;
+    std::vector<long long> s;
+    std::vector<long long> d;
+    for (int j = 0; j < nbBinsY(); ++j) {
+      v.push_back(binY(i, j));
+      d.push_back(binCapacity(i, j));
+      for (int c : binCells(i, j)) {
+        cells.push_back(c);
+        u.push_back(cellTargetY(c));
+        s.push_back(cellDemand(c));
+      }
+    }
+    Transportation1d pb(u, v, s, d);
+    pb.balanceDemand();
+    std::vector<int> assignment = pb.assign();
+    std::vector<std::vector<int> > binCells(nbBinsY());
+    for (int i = 0; i < cells.size(); ++i) {
+      binCells[assignment[i]].push_back(cells[i]);
+    }
+    for (int j = 0; j < nbBinsY(); ++j) {
+      setBinCells(i, j, binCells[j]);
+    }
+  }
+  check();
 }
 
 void DensityLegalizer::improveDiagonals() {

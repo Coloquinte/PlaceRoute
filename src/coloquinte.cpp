@@ -96,6 +96,7 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
   // TODO: find best parameter
   roughLegalizationBinSize = 5.0;
   roughLegalizationReoptLength = 2;
+  roughLegalizationUnidimensionalTransport = false;
   // TODO: find best parameter
   roughLegalizationSideMargin = 0.9;
   roughLegalizationCoarseningLimit = 100.0;
@@ -138,6 +139,8 @@ std::string GlobalPlacerParameters::toString() const {
      << "\n\tRough legalization reopt length: " << roughLegalizationReoptLength
      << "\n\tRough legalization reopt square size: "
      << roughLegalizationReoptSquareSize
+     << "\n\tRough legalization 1D transport: "
+     << roughLegalizationUnidimensionalTransport
      << "\n\tRough legalization coarsening limit: "
      << roughLegalizationCoarseningLimit
      << "\n\tRough legalization quadratic penalty: "

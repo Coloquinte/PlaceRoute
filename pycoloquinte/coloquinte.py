@@ -287,6 +287,22 @@ def _read_rows(filename):
         return rows
 
 
+def _str2bool(v):
+    """
+    Parse boolean arguments with argparse, from
+    https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
+    """
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        import argparse
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
 class Circuit(coloquinte_pybind.Circuit):
     def __init__(self, nb_cells):
         super(Circuit, self).__init__(nb_cells)
@@ -474,6 +490,12 @@ def _add_arguments(parser, obj, prefix):
                 type=arg_type,
                 metavar=name.upper(),
             )
+        elif arg_type is bool:
+            parser.add_argument(
+                "--" + prefix + "." + name,
+                type=_str2bool,
+                metavar=name.upper(),
+            )
         else:
             parser.add_argument(
                 "--" + prefix + "." + name,
@@ -493,7 +515,7 @@ def _parse_arguments(args, obj, prefix):
             new_val = val
             old_val = getattr(obj, name)
             arg_type = type(old_val)
-            if arg_type not in (int, float):
+            if arg_type not in (int, float, bool):
                 val = arg_type.__members__[val]
                 old_val = old_val.name
             print(
@@ -511,7 +533,7 @@ def _show_params(obj, prefix):
             continue
         default_val = getattr(obj, name)
         arg_type = type(default_val)
-        if arg_type not in (int, float):
+        if arg_type not in (int, float, bool):
             default_val = default_val.name
         print(f"\t--{prefix}.{name}: {default_val}")
 

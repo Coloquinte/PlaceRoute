@@ -21,6 +21,7 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
     int reoptimizationSquareSize;
     double quadraticPenaltyFactor;
     double coarseningLimit;
+    bool unidimensionalTransport;
 
     Parameters();
   };
@@ -157,6 +158,16 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
    * @brief Improve groups of side-adjacent bins
    */
   void improveXY();
+
+  /**
+   * @brief Improve all bins in x direction
+   */
+  void improveX();
+
+  /**
+   * @brief Improve all bins in x direction
+   */
+  void improveY();
 
   /**
    * @brief Improve groups of diagonally adjacent bins
