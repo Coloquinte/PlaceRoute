@@ -107,6 +107,11 @@ class GlobalPlacer {
     return params_.distanceTolerance * averageCellLength_;
   }
 
+  /**
+   * @brief Compute the penalty forces for this iteration
+   */
+  std::vector<float> computeIterationPerCellPenalty();
+
  private:
   DensityLegalizer leg_;
   NetModel xtopo_;

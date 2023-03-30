@@ -86,6 +86,8 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
   penaltyAreaExponent = 0.5;
   // TODO: make initial penalty bigger at small effort
   initialPenalty = 0.03;
+  // TODO: find best parameter
+  penaltyTargetBlending = 1.0;
   netModel = NetModelOption::BoundToBound;
   approximationDistance = 2.0;
   approximationDistanceUpdateFactor = 1.0;
@@ -102,7 +104,9 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
   roughLegalizationCoarseningLimit = 100.0;
   roughLegalizationQuadraticPenalty = 0.001;
   // TODO: find best parameter
-  exportWeighting = 0.99;
+  roughLegalizationTargetBlending = 0.0;
+  // TODO: find best parameter
+  exportBlending = 0.99;
   noise = 1.0e-4;
   // Parameters that vary with effort here
   double gapToleranceArray[9] = {0.13,  0.13,  0.058, 0.038, 0.026,
@@ -128,6 +132,7 @@ std::string GlobalPlacerParameters::toString() const {
      << "\n\tPenalty area exponent: " << penaltyAreaExponent
      << "\n\tInitial penalty: " << initialPenalty
      << "\n\tPenalty update factor: " << penaltyUpdateFactor
+     << "\n\tPenalty target blending: " << penaltyTargetBlending
      << "\n\tNet model: " << coloquinte::toString(netModel)
      << "\n\tApproximation distance: " << approximationDistance
      << "\n\tMax nb CG steps: " << maxNbConjugateGradientSteps
@@ -146,7 +151,9 @@ std::string GlobalPlacerParameters::toString() const {
      << "\n\tRough legalization quadratic penalty: "
      << roughLegalizationQuadraticPenalty
      << "\n\tRough legalization side margin: " << roughLegalizationSideMargin
-     << "\n\tExport weighting: " << exportWeighting;
+     << "\n\tRough legalization target blending: "
+     << roughLegalizationTargetBlending
+     << "\n\tExport blending: " << exportBlending;
   if (seed != -1) {
     ss << "\n\tSeed: " << seed;
   }

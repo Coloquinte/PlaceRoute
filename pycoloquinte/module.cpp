@@ -92,6 +92,8 @@ Construct the parameters
       .def_readwrite("initial_penalty", &GlobalPlacerParameters::initialPenalty)
       .def_readwrite("penalty_update_factor",
                      &GlobalPlacerParameters::penaltyUpdateFactor)
+      .def_readwrite("penalty_target_blending",
+                     &GlobalPlacerParameters::penaltyTargetBlending)
       .def_readwrite("net_model", &GlobalPlacerParameters::netModel)
       .def_readwrite("approximation_distance",
                      &GlobalPlacerParameters::approximationDistance)
@@ -111,6 +113,8 @@ Construct the parameters
                      &GlobalPlacerParameters::roughLegalizationReoptLength)
       .def_readwrite("rough_legalization_reopt_square_size",
                      &GlobalPlacerParameters::roughLegalizationReoptSquareSize)
+      .def_readwrite("rough_legalization_target_blending",
+                     &GlobalPlacerParameters::roughLegalizationTargetBlending)
       .def_readwrite(
           "rough_legalization_unidimensional_transport",
           &GlobalPlacerParameters::roughLegalizationUnidimensionalTransport)
@@ -120,8 +124,7 @@ Construct the parameters
                      &GlobalPlacerParameters::roughLegalizationSideMargin)
       .def_readwrite("rough_legalization_coarsening_limit",
                      &GlobalPlacerParameters::roughLegalizationCoarseningLimit)
-      .def_readwrite("export_weighting",
-                     &GlobalPlacerParameters::exportWeighting)
+      .def_readwrite("export_blending", &GlobalPlacerParameters::exportBlending)
       .def_readwrite("seed", &GlobalPlacerParameters::seed)
       .def_readwrite("noise", &GlobalPlacerParameters::noise)
       .def("check", &GlobalPlacerParameters::check)

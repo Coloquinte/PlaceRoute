@@ -14,6 +14,29 @@
 
 namespace coloquinte {
 
+namespace {
+/**
+ * Mix two placements with a weight: 0 for the first, 1 for the second, or
+ * in-between
+ */
+std::vector<float> blendPlacement(const std::vector<float> &v1,
+                                  const std::vector<float> &v2, float blending) {
+  if (blending == 0.0f) {
+    return v1;
+  }
+  if (blending == 1.0f) {
+    return v2;
+  }
+  std::vector<float> ret;
+  assert(v1.size() == v2.size());
+  ret.reserve(v1.size());
+  for (int i = 0; i < v1.size(); ++i) {
+    ret.push_back((1.0f - blending) * v1[i] + blending * v2[i]);
+  }
+  return ret;
+}
+}  // namespace
+
 void GlobalPlacerParameters::check() const {
   if (maxNbSteps < 0) {
     throw std::runtime_error("Invalid number of steps");
@@ -55,6 +78,10 @@ void GlobalPlacerParameters::check() const {
   if (penaltyUpdateFactor <= 1.0f || penaltyUpdateFactor >= 2.0f) {
     throw std::runtime_error(
         "Penalty update factor should be between one and two");
+  }
+  if (penaltyTargetBlending < 0.1f || penaltyTargetBlending > 1.1f) {
+    throw std::runtime_error(
+        "Penalty target blending should generally be between 0.5 and 1");
   }
   if (approximationDistance < 1.0e-6) {
     throw std::runtime_error(
@@ -110,9 +137,15 @@ void GlobalPlacerParameters::check() const {
         "Rough legalization quadratic penalty should be non-negative and small "
         "(< 1.0)");
   }
-  if (exportWeighting < -0.5f || exportWeighting > 1.5f) {
+  if (roughLegalizationTargetBlending < -0.1 ||
+      roughLegalizationTargetBlending > 0.9f) {
     throw std::runtime_error(
-        "Export weighting should generally be between 0 and 1");
+        "Rough legalization target blending should generally be between 0 and "
+        "0.5");
+  }
+  if (exportBlending < -0.5f || exportBlending > 1.5f) {
+    throw std::runtime_error(
+        "Export blending should generally be between 0 and 1");
   }
   if (noise < 0.0 || noise > 2.0) {
     throw std::runtime_error(
@@ -152,7 +185,8 @@ GlobalPlacer::GlobalPlacer(Circuit &circuit,
   legParams.costModel = params.roughLegalizationCostModel;
   legParams.reoptimizationLength = params.roughLegalizationReoptLength;
   legParams.reoptimizationSquareSize = params.roughLegalizationReoptSquareSize;
-  legParams.unidimensionalTransport = params.roughLegalizationUnidimensionalTransport;
+  legParams.unidimensionalTransport =
+      params.roughLegalizationUnidimensionalTransport;
   legParams.coarseningLimit = params.roughLegalizationCoarseningLimit;
   LegalizationModel m = params.roughLegalizationCostModel;
   if (m == LegalizationModel::L1 || m == LegalizationModel::L2 ||
@@ -168,13 +202,9 @@ void GlobalPlacer::exportPlacement(Circuit &circuit) const {
   assert(xtopo_.nbCells() == circuit.nbCells());
   assert(ytopo_.nbCells() == circuit.nbCells());
   assert(leg_.nbCells() == circuit.nbCells());
-  float w = params_.exportWeighting;
-  std::vector<float> xplace;
-  std::vector<float> yplace;
-  for (int i = 0; i < circuit.nbCells(); ++i) {
-    xplace.push_back(((1.0f - w) * xPlacementLB_[i] + w * xPlacementUB_[i]));
-    yplace.push_back(((1.0f - w) * yPlacementLB_[i] + w * yPlacementUB_[i]));
-  }
+  float w = params_.exportBlending;
+  std::vector<float> xplace = blendPlacement(xPlacementLB_, xPlacementUB_, w);
+  std::vector<float> yplace = blendPlacement(yPlacementLB_, yPlacementUB_, w);
   exportPlacement(circuit, xplace, yplace);
 }
 
@@ -210,6 +240,20 @@ std::vector<float> GlobalPlacer::computePerCellPenalty() const {
         std::pow(leg_.cellDemand(i) / meanArea, params_.penaltyAreaExponent));
   }
   return ret;
+}
+
+std::vector<float> GlobalPlacer::computeIterationPerCellPenalty() {
+  std::vector<float> penalty = perCellPenalty_;
+  for (float &s : penalty) {
+    s *= penalty_;
+  }
+  if (params_.noise > 0.0) {
+    std::uniform_real_distribution<float> dist(0.0f, params_.noise);
+    for (float &s : penalty) {
+      s *= (1.0f + dist(rgen_));
+    }
+  }
+  return penalty;
 }
 
 void GlobalPlacer::run() {
@@ -279,6 +323,9 @@ void GlobalPlacer::runInitialLB() {
               << ":\tLB " << valueLB() << std::endl;
     callback(PlacementStep::LowerBound, xPlacementLB_, yPlacementLB_);
   }
+  // Simplify blending solutions by having a UB immediately
+  xPlacementUB_ = xPlacementLB_;
+  yPlacementUB_ = yPlacementLB_;
 }
 
 void GlobalPlacer::runLB() {
@@ -291,35 +338,33 @@ void GlobalPlacer::runLB() {
   params.maxNbIterations = params_.maxNbConjugateGradientSteps;
 
   // Compute the per-cell penalty with randomization
-  std::vector<float> penalty = perCellPenalty_;
-  for (float &s : penalty) {
-    s *= penalty_;
-  }
-  if (params_.noise > 0.0) {
-    std::uniform_real_distribution<float> dist(0.0f, params_.noise);
-    for (float &s : penalty) {
-      s *= (1.0f + dist(rgen_));
-    }
-  }
+  std::vector<float> penalty = computeIterationPerCellPenalty();
+
+  float w = params_.penaltyTargetBlending;
+  std::vector<float> xTarget = blendPlacement(xPlacementLB_, xPlacementUB_, w);
+  std::vector<float> yTarget = blendPlacement(yPlacementLB_, yPlacementUB_, w);
 
   // Solve the continuous model (x and y independently)
   std::future<std::vector<float> > x =
       std::async(std::launch::async, &NetModel::solveWithPenalty, &xtopo_,
-                 xPlacementLB_, xPlacementUB_, penalty, params);
+                 xPlacementLB_, xTarget, penalty, params);
   std::future<std::vector<float> > y =
       std::async(std::launch::async, &NetModel::solveWithPenalty, &ytopo_,
-                 yPlacementLB_, yPlacementUB_, penalty, params);
+                 yPlacementLB_, yTarget, penalty, params);
   xPlacementLB_ = x.get();
   yPlacementLB_ = y.get();
   callback(PlacementStep::LowerBound, xPlacementLB_, yPlacementLB_);
 }
 
 void GlobalPlacer::runUB() {
-  leg_.updateCellTargetX(xPlacementLB_);
-  leg_.updateCellTargetY(yPlacementLB_);
+  float w = params_.roughLegalizationTargetBlending;
+  std::vector<float> xTarget = blendPlacement(xPlacementLB_, xPlacementUB_, w);
+  std::vector<float> yTarget = blendPlacement(yPlacementLB_, yPlacementUB_, w);
+  leg_.updateCellTargetX(xTarget);
+  leg_.updateCellTargetY(yTarget);
   leg_.run();
-  xPlacementUB_ = leg_.spreadCoordX(xPlacementLB_);
-  yPlacementUB_ = leg_.spreadCoordY(yPlacementLB_);
+  xPlacementUB_ = leg_.spreadCoordX(xTarget);
+  yPlacementUB_ = leg_.spreadCoordY(yTarget);
   callback(PlacementStep::UpperBound, xPlacementUB_, yPlacementUB_);
 }
 

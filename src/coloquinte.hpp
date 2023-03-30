@@ -199,6 +199,12 @@ struct GlobalPlacerParameters {
   double penaltyUpdateFactor;
 
   /**
+   * @brief Blending between lower-bound and upper-bound placement to decide the
+   * target for penalty; 0 to use lower bound, 1 to use upper bound
+   */
+  double penaltyTargetBlending;
+
+  /**
    * @brief Cost model for the continuous optimization
    */
   NetModelOption netModel;
@@ -276,10 +282,16 @@ struct GlobalPlacerParameters {
   double roughLegalizationCoarseningLimit;
 
   /**
-   * @brief Export a weighted sum of lower-bound and upper-bound placement;
-   * 0 to use lower bound, 1 to use upper bound
+   * @brief Blending between lower-bound and upper-bound placement to decide the
+   * target for rough legalization; 0 to use lower bound, 1 to use upper bound
    */
-  double exportWeighting;
+  double roughLegalizationTargetBlending;
+
+  /**
+   * @brief Blending between lower-bound and upper-bound placement at export
+   * time; 0 to use lower bound, 1 to use upper bound
+   */
+  double exportBlending;
 
   /**
    * @brief Random seed
@@ -287,7 +299,8 @@ struct GlobalPlacerParameters {
   int seed;
 
   /**
-   * @brief Noise introduced to randomize the algorithm. Note that 0 will erase any effect of the seed
+   * @brief Noise introduced to randomize the algorithm. Note that 0 will erase
+   * any effect of the seed
    */
   double noise;
 
