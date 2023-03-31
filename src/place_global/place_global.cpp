@@ -20,7 +20,8 @@ namespace {
  * in-between
  */
 std::vector<float> blendPlacement(const std::vector<float> &v1,
-                                  const std::vector<float> &v2, float blending) {
+                                  const std::vector<float> &v2,
+                                  float blending) {
   if (blending == 0.0f) {
     return v1;
   }
@@ -150,6 +151,11 @@ void GlobalPlacerParameters::check() const {
   if (noise < 0.0 || noise > 2.0) {
     throw std::runtime_error(
         "Noise should be a very small non-negative number");
+  }
+  if (roughLegalizationCostModel != LegalizationModel::L1 &&
+      roughLegalizationUnidimensionalTransport) {
+    throw std::runtime_error(
+        "Unidimensional transport can only be used with L1 cost model");
   }
 }
 
