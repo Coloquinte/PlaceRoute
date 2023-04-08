@@ -351,12 +351,30 @@ class HierarchicalDensityPlacement {
   /**
    * @brief Get the x center of a given bin in the current view
    */
-  float binX(int x, int y) const { return grid_.groupCenterX(getGroup(x, y)); }
+  float binX(int x, int y) const {
+    return 0.5 * (binLimitX(x + 1) + binLimitX(x));
+  }
 
   /**
-   * @brief Get the x center of a given bin in the current view
+   * @brief Get the y center of a given bin in the current view
    */
-  float binY(int x, int y) const { return grid_.groupCenterY(getGroup(x, y)); }
+  float binY(int x, int y) const {
+    return 0.5 * (binLimitY(y + 1) + binLimitY(y));
+  }
+
+  /**
+   * @brief Get the x mass center of a given bin in the current view
+   */
+  float binAverageX(int x, int y) const {
+    return grid_.groupCenterX(getGroup(x, y));
+  }
+
+  /**
+   * @brief Get the y mass center of a given bin in the current view
+   */
+  float binAverageY(int x, int y) const {
+    return grid_.groupCenterY(getGroup(x, y));
+  }
 
   /**
    * @brief Get the usage of a given bin in the current view
