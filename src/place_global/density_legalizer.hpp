@@ -152,7 +152,7 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
   /**
    * @brief Improve neighbouring bin squares
    */
-  void improveSquareNeighbours(bool sameParent = true);
+  void improveSquareNeighbours(bool sameParentX = true, bool sameParentY = true);
 
   /**
    * @brief Improve groups of side-adjacent bins

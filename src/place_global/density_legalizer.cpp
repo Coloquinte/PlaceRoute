@@ -307,7 +307,7 @@ void DensityLegalizer::refine() {
     refineX();
     refineY();
     improveSquareNeighbours();
-    improveSquareNeighbours(false);
+    improveSquareNeighbours(false, false);
   } else {
     if (doX) {
       refineX();
@@ -352,13 +352,14 @@ void DensityLegalizer::improveYNeighbours(bool sameParent) {
   }
 }
 
-void DensityLegalizer::improveSquareNeighbours(bool sameParent) {
+void DensityLegalizer::improveSquareNeighbours(bool sameParentX,
+                                               bool sameParentY) {
   for (int i = 0; i < nbBinsX(); ++i) {
-    if (i + 1 < nbBinsX() && (parentX(i) == parentX(i + 1)) != sameParent) {
+    if (i + 1 < nbBinsX() && (parentX(i) == parentX(i + 1)) != sameParentX) {
       continue;
     }
     for (int j = 0; j < nbBinsY(); ++j) {
-      if (j + 1 < nbBinsY() && (parentY(j) == parentY(j + 1)) != sameParent) {
+      if (j + 1 < nbBinsY() && (parentY(j) == parentY(j + 1)) != sameParentY) {
         continue;
       }
       improveRectangle(i, j, 2, 2);
