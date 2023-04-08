@@ -119,18 +119,44 @@ void GlobalPlacerParameters::check() const {
     throw std::runtime_error(
         "Bin size should not be too large (10 should be enough)");
   }
-  if (roughLegalizationReoptLength < 1 ||
-      roughLegalizationReoptSquareSize < 1) {
-    throw std::runtime_error("Rough legalization reopt should be at least 1");
+  if (roughLegalizationLineReoptSize < 1 ||
+      roughLegalizationDiagReoptSize < 1 ||
+      roughLegalizationSquareReoptSize < 1) {
+    throw std::runtime_error(
+        "Rough legalization reopt size should be at least 1");
   }
-  if (roughLegalizationReoptLength > 64 ||
-      roughLegalizationReoptSquareSize > 8) {
+  if (roughLegalizationLineReoptOverlap < 1 ||
+      roughLegalizationDiagReoptOverlap < 1 ||
+      roughLegalizationSquareReoptOverlap < 1) {
+    throw std::runtime_error(
+        "Rough legalization reopt overlap should be at least 1");
+  }
+  if (roughLegalizationLineReoptSize > 64 ||
+      roughLegalizationDiagReoptSize > 64 ||
+      roughLegalizationSquareReoptSize > 8) {
     throw std::runtime_error("Rough legalization reopt should be small");
   }
-  if (roughLegalizationReoptLength < 2 &&
-      roughLegalizationReoptSquareSize < 2) {
+  if (roughLegalizationLineReoptSize < 2 &&
+      roughLegalizationDiagReoptSize < 2 &&
+      roughLegalizationSquareReoptSize < 2 &&
+      !roughLegalizationUnidimensionalTransport) {
     throw std::runtime_error(
         "At least one rough legalization reopt value should be 2 or more");
+  }
+  if (roughLegalizationLineReoptSize > 1 &&
+      roughLegalizationLineReoptOverlap >= roughLegalizationLineReoptSize) {
+    throw std::runtime_error(
+        "Rough legalization reopt overlap should be smaller than reopt size");
+  }
+  if (roughLegalizationDiagReoptSize > 1 &&
+      roughLegalizationDiagReoptOverlap >= roughLegalizationDiagReoptSize) {
+    throw std::runtime_error(
+        "Rough legalization reopt overlap should be smaller than reopt size");
+  }
+  if (roughLegalizationSquareReoptSize > 1 &&
+      roughLegalizationSquareReoptOverlap >= roughLegalizationSquareReoptSize) {
+    throw std::runtime_error(
+        "Rough legalization reopt overlap should be smaller than reopt size");
   }
   if (roughLegalizationQuadraticPenalty < 0.0 ||
       roughLegalizationQuadraticPenalty > 1.0) {
@@ -189,8 +215,12 @@ GlobalPlacer::GlobalPlacer(Circuit &circuit,
   DensityLegalizer::Parameters legParams;
   legParams.nbSteps = params.roughLegalizationNbSteps;
   legParams.costModel = params.roughLegalizationCostModel;
-  legParams.reoptimizationLength = params.roughLegalizationReoptLength;
-  legParams.reoptimizationSquareSize = params.roughLegalizationReoptSquareSize;
+  legParams.lineReoptSize = params.roughLegalizationLineReoptSize;
+  legParams.lineReoptOverlap = params.roughLegalizationLineReoptOverlap;
+  legParams.diagReoptSize = params.roughLegalizationDiagReoptSize;
+  legParams.diagReoptOverlap = params.roughLegalizationDiagReoptOverlap;
+  legParams.squareReoptSize = params.roughLegalizationSquareReoptSize;
+  legParams.squareReoptOverlap = params.roughLegalizationSquareReoptOverlap;
   legParams.unidimensionalTransport =
       params.roughLegalizationUnidimensionalTransport;
   legParams.coarseningLimit = params.roughLegalizationCoarseningLimit;

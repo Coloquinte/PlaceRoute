@@ -17,8 +17,12 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
     // Number of improvement steps at each grid coarsening level
     int nbSteps;
     LegalizationModel costModel;
-    int reoptimizationLength;
-    int reoptimizationSquareSize;
+    int lineReoptSize;
+    int lineReoptOverlap;
+    int diagReoptSize;
+    int diagReoptOverlap;
+    int squareReoptSize;
+    int squareReoptOverlap;
     double quadraticPenaltyFactor;
     double coarseningLimit;
     bool unidimensionalTransport;
@@ -160,14 +164,19 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
   void improveXY();
 
   /**
-   * @brief Improve all bins in x direction
+   * @brief Improve all bins in x or y direction at once
    */
-  void improveX();
+  void improveUnidimensionalTransport();
 
   /**
    * @brief Improve all bins in x direction
    */
-  void improveY();
+  void improveXTransport();
+
+  /**
+   * @brief Improve all bins in x direction
+   */
+  void improveYTransport();
 
   /**
    * @brief Improve groups of diagonally adjacent bins

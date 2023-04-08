@@ -109,10 +109,19 @@ Construct the parameters
                      &GlobalPlacerParameters::roughLegalizationNbSteps)
       .def_readwrite("rough_legalization_bin_size",
                      &GlobalPlacerParameters::roughLegalizationBinSize)
-      .def_readwrite("rough_legalization_reopt_length",
-                     &GlobalPlacerParameters::roughLegalizationReoptLength)
-      .def_readwrite("rough_legalization_reopt_square_size",
-                     &GlobalPlacerParameters::roughLegalizationReoptSquareSize)
+      .def_readwrite("rough_legalization_line_reopt_size",
+                     &GlobalPlacerParameters::roughLegalizationLineReoptSize)
+      .def_readwrite("rough_legalization_line_reopt_overlap",
+                     &GlobalPlacerParameters::roughLegalizationLineReoptOverlap)
+      .def_readwrite("rough_legalization_diag_reopt_size",
+                     &GlobalPlacerParameters::roughLegalizationDiagReoptSize)
+      .def_readwrite("rough_legalization_diag_reopt_overlap",
+                     &GlobalPlacerParameters::roughLegalizationDiagReoptOverlap)
+      .def_readwrite("rough_legalization_square_reopt_size",
+                     &GlobalPlacerParameters::roughLegalizationSquareReoptSize)
+      .def_readwrite(
+          "rough_legalization_square_reopt_overlap",
+          &GlobalPlacerParameters::roughLegalizationSquareReoptOverlap)
       .def_readwrite("rough_legalization_target_blending",
                      &GlobalPlacerParameters::roughLegalizationTargetBlending)
       .def_readwrite(

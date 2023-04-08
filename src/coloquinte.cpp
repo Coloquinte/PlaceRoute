@@ -97,7 +97,10 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
   roughLegalizationNbSteps = 1;
   // TODO: find best parameter
   roughLegalizationBinSize = 5.0;
-  roughLegalizationReoptLength = 2;
+  roughLegalizationLineReoptSize = 2;
+  roughLegalizationLineReoptOverlap = 1;
+  roughLegalizationDiagReoptSize = 2;
+  roughLegalizationDiagReoptOverlap = 1;
   roughLegalizationUnidimensionalTransport = false;
   // TODO: find best parameter
   roughLegalizationSideMargin = 0.9;
@@ -116,7 +119,8 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
   int squareSizeArray[9] = {1, 2, 3, 3, 3, 4, 4, 4, 5};
   gapTolerance = gapToleranceArray[effort - 1];
   penaltyUpdateFactor = penaltyUpdateFactorArray[effort - 1];
-  roughLegalizationReoptSquareSize = squareSizeArray[effort - 1];
+  roughLegalizationSquareReoptSize = squareSizeArray[effort - 1];
+  roughLegalizationSquareReoptOverlap = 1;
   check();
 }
 
@@ -141,9 +145,9 @@ std::string GlobalPlacerParameters::toString() const {
      << coloquinte::toString(roughLegalizationCostModel)
      << "\n\tNb rough legalization steps: " << roughLegalizationNbSteps
      << "\n\tRough legalization bin size: " << roughLegalizationBinSize
-     << "\n\tRough legalization reopt length: " << roughLegalizationReoptLength
+     << "\n\tRough legalization reopt length: " << roughLegalizationLineReoptSize
      << "\n\tRough legalization reopt square size: "
-     << roughLegalizationReoptSquareSize
+     << roughLegalizationSquareReoptSize
      << "\n\tRough legalization 1D transport: "
      << roughLegalizationUnidimensionalTransport
      << "\n\tRough legalization coarsening limit: "

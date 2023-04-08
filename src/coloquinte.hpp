@@ -249,14 +249,34 @@ struct GlobalPlacerParameters {
   double roughLegalizationBinSize;
 
   /**
-   * @brief Number of aligned bins reoptimized together
+   * @brief Number of x- or y- aligned bins reoptimized together
    */
-  int roughLegalizationReoptLength;
+  int roughLegalizationLineReoptSize;
+
+  /**
+   * @brief Overlap between two sets of x- or y- reoptimized bins
+   */
+  int roughLegalizationLineReoptOverlap;
+
+  /**
+   * @brief Number of diag-aligned bins reoptimized together
+   */
+  int roughLegalizationDiagReoptSize;
+
+  /**
+   * @brief Overlap between two sets of diag-reoptimized bins
+   */
+  int roughLegalizationDiagReoptOverlap;
 
   /**
    * @brief Size ot the square of bins reoptimized together
    */
-  int roughLegalizationReoptSquareSize;
+  int roughLegalizationSquareReoptSize;
+
+  /**
+   * @brief Overlap between two reoptimized squares bins
+   */
+  int roughLegalizationSquareReoptOverlap;
 
   /**
    * @brief Use unidimensional transportation to reoptimize many bins at once

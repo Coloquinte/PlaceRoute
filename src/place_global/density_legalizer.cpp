@@ -16,8 +16,12 @@ namespace coloquinte {
 DensityLegalizer::Parameters::Parameters() {
   costModel = LegalizationModel::L1;
   nbSteps = 1;
-  reoptimizationLength = 2;
-  reoptimizationSquareSize = 1;
+  lineReoptSize = 2;
+  lineReoptOverlap = 1;
+  diagReoptSize = 2;
+  diagReoptOverlap = 2;
+  squareReoptSize = 1;
+  squareReoptOverlap = 1;
   quadraticPenaltyFactor = 0.0;
   coarseningLimit = 1.0;
   unidimensionalTransport = false;
@@ -303,7 +307,7 @@ void DensityLegalizer::refine() {
   bool doX = levelX() >= levelY();
   bool doY = levelY() >= levelX();
 
-  if (doX && doY && params_.reoptimizationSquareSize >= 2) {
+  if (doX && doY && params_.squareReoptSize >= 2) {
     refineX();
     refineY();
     improveSquareNeighbours();
@@ -326,6 +330,7 @@ void DensityLegalizer::improve() {
   for (int i = 0; i < params_.nbSteps; ++i) {
     improveSquare();
     improveXY();
+    improveUnidimensionalTransport();
     improveDiagonals();
   }
 }
@@ -368,28 +373,31 @@ void DensityLegalizer::improveSquareNeighbours(bool sameParentX,
 }
 
 void DensityLegalizer::improveXY() {
+  int nb = params_.lineReoptSize;
+  int o = params_.lineReoptOverlap;
+  if (nb == 1) return;
+
+  int mid = nb - o;
+  int stride = 2 * mid;
+
+  // X (first)
+  improveRectangles(nb, 1, stride, 1, 0, 0);
+  // Y (first)
+  improveRectangles(1, nb, 1, stride, 0, 0);
+  // X (second, overlapping)
+  improveRectangles(nb, 1, stride, 1, mid, 0);
+  // Y (second, overlapping)
+  improveRectangles(1, nb, 1, stride, 0, mid);
+}
+
+void DensityLegalizer::improveUnidimensionalTransport() {
   if (params_.unidimensionalTransport) {
-    improveX();
-    improveY();
-  } else {
-    int nb = params_.reoptimizationLength;
-    if (nb == 1) return;
-
-    int mid = (nb + 1) / 2;
-    int stride = 2 * mid;
-
-    // X (first)
-    improveRectangles(nb, 1, stride, 1, 0, 0);
-    // Y (first)
-    improveRectangles(1, nb, 1, stride, 0, 0);
-    // X (second, overlapping)
-    improveRectangles(nb, 1, stride, 1, mid, 0);
-    // Y (second, overlapping)
-    improveRectangles(1, nb, 1, stride, 0, mid);
+    improveXTransport();
+    improveYTransport();
   }
 }
 
-void DensityLegalizer::improveX() {
+void DensityLegalizer::improveXTransport() {
   for (int j = 0; j < nbBinsY(); ++j) {
     std::vector<int> cells;
     std::vector<long long> u;
@@ -419,7 +427,7 @@ void DensityLegalizer::improveX() {
   check();
 }
 
-void DensityLegalizer::improveY() {
+void DensityLegalizer::improveYTransport() {
   for (int i = 0; i < nbBinsX(); ++i) {
     std::vector<int> cells;
     std::vector<long long> u;
@@ -450,10 +458,11 @@ void DensityLegalizer::improveY() {
 }
 
 void DensityLegalizer::improveDiagonals() {
-  int nb = params_.reoptimizationLength;
+  int nb = params_.diagReoptSize;
+  int o = params_.diagReoptOverlap;
   if (nb == 1) return;
 
-  int mid = (nb + 1) / 2;
+  int mid = nb - o;
   int stride = 2 * mid;
 
   // X + Y direction (first)
@@ -467,7 +476,7 @@ void DensityLegalizer::improveDiagonals() {
 }
 
 void DensityLegalizer::improveSquare() {
-  int nb = params_.reoptimizationSquareSize;
+  int nb = params_.squareReoptSize;
   if (nb == 1) return;
 
   int mid = (nb + 1) / 2;
