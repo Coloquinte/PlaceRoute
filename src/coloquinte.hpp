@@ -140,70 +140,151 @@ std::string toString(NetModelOption model);
 using PlacementCallback = std::function<void(PlacementStep)>;
 
 /**
- * @brief Parameters for the global placer
+ * @brief Parameters for the rough legalization step
  */
-struct GlobalPlacerParameters {
+struct RoughLegalizationParameters {
   /**
-   * @brief Maximum number of global placement steps
+   * @brief Cost model used for rough legalization
    */
-  int maxNbSteps;
+  LegalizationModel costModel;
 
   /**
-   * @brief Number of initial placement steps, without penalization
+   * @brief Number of rough legalization steps at each placement iteration
    */
-  int nbInitialSteps;
+  int nbSteps;
 
   /**
-   * @brief Number of rough legalization steps for one placement optimization
-   * step
+   * @brief Size of the rough legalization bin relative to the standard cell
+   * height
    */
-  int nbStepsPerLegalization;
+  double binSize;
 
   /**
-   * @brief Gap between lower and upper bound placement at which to stop
-   * global placement early
+   * @brief Number of x- or y- aligned bins reoptimized together
    */
-  double gapTolerance;
+  int lineReoptSize;
 
   /**
-   * @brief Distance between lower and upper bound placement at which to stop
-   * global placement early
+   * @brief Overlap between two sets of x- or y- reoptimized bins
    */
-  double distanceTolerance;
+  int lineReoptOverlap;
 
+  /**
+   * @brief Number of diag-aligned bins reoptimized together
+   */
+  int diagReoptSize;
+
+  /**
+   * @brief Overlap between two sets of diag-reoptimized bins
+   */
+  int diagReoptOverlap;
+
+  /**
+   * @brief Size ot the square of bins reoptimized together
+   */
+  int squareReoptSize;
+
+  /**
+   * @brief Overlap between two reoptimized squares bins
+   */
+  int squareReoptOverlap;
+
+  /**
+   * @brief Use unidimensional transportation to reoptimize many bins at once
+   */
+  bool unidimensionalTransport;
+
+  /**
+   * @brief Small quadratic penalty to ensure that closer cells are selected
+   * despite the L1 distance, normalized by the placement area
+   */
+  double quadraticPenalty;
+
+  /**
+   * @brief Margin to use on the sides of each row to account for lost space,
+   * relative to the standard cell height
+   */
+  double sideMargin;
+
+  /**
+   * @brief Decide how much to coarsen compared based on the current distance to
+   * legal
+   */
+  double coarseningLimit;
+
+  /**
+   * @brief Blending between lower-bound and upper-bound placement to decide the
+   * target for rough legalization; 0 to use lower bound, 1 to use upper bound
+   */
+  double targetBlending;
+
+  /**
+   * @brief Initialize the parameters
+   */
+  explicit RoughLegalizationParameters(int effort);
+
+  /**
+   * @brief Obtain a string representation
+   */
+  std::string toString() const;
+
+  /**
+   * @brief Check that the parameters make sense
+   */
+  void check() const;
+};
+
+struct PenaltyParameters {
   /**
    * @brief Distance at which the full displacement penalty is obtained,
    * relative to the average standard cell length
    */
-  double penaltyCutoffDistance;
+  double cutoffDistance;
 
   /**
    * @brief Per-step update factor for the cutoff distance
    */
-  double penaltyCutoffDistanceUpdateFactor;
+  double cutoffDistanceUpdateFactor;
 
   /**
    * @brief Exponent applied to the cell area to compute the penalty
    */
-  double penaltyAreaExponent;
+  double areaExponent;
 
   /**
    * @brief Initial average strength for the displacement penalty
    */
-  double initialPenalty;
+  double initialValue;
 
   /**
    * @brief Multiplicative factor for the displacement penalty at each
    * iteration
    */
-  double penaltyUpdateFactor;
+  double updateFactor;
 
   /**
    * @brief Blending between lower-bound and upper-bound placement to decide the
    * target for penalty; 0 to use lower bound, 1 to use upper bound
    */
-  double penaltyTargetBlending;
+  double targetBlending;
 
+  /**
+   * @brief Initialize the parameters
+   */
+  explicit PenaltyParameters(int effort);
+
+  /**
+   * @brief Obtain a string representation
+   */
+  std::string toString() const;
+
+  /**
+   * @brief Check that the parameters make sense
+   */
+  void check() const;
+};
+
+struct ContinuousModelParameters {
   /**
    * @brief Cost model for the continuous optimization
    */
@@ -233,79 +314,51 @@ struct GlobalPlacerParameters {
   double conjugateGradientErrorTolerance;
 
   /**
-   * @brief Cost model used for rough legalization
+   * @brief Initialize the parameters
    */
-  LegalizationModel roughLegalizationCostModel;
+  explicit ContinuousModelParameters(int effort);
 
   /**
-   * @brief Number of rough legalization steps at each placement iteration
+   * @brief Obtain a string representation
    */
-  int roughLegalizationNbSteps;
+  std::string toString() const;
 
   /**
-   * @brief Size of the rough legalization bin relative to the standard cell
-   * height
+   * @brief Check that the parameters make sense
    */
-  double roughLegalizationBinSize;
+  void check() const;
+};
+
+/**
+ * @brief Parameters for the global placer
+ */
+struct GlobalPlacerParameters {
+  /**
+   * @brief Maximum number of global placement steps
+   */
+  int maxNbSteps;
 
   /**
-   * @brief Number of x- or y- aligned bins reoptimized together
+   * @brief Number of initial placement steps, without penalization
    */
-  int roughLegalizationLineReoptSize;
+  int nbInitialSteps;
 
   /**
-   * @brief Overlap between two sets of x- or y- reoptimized bins
+   * @brief Number of steps before one rough legalization step
    */
-  int roughLegalizationLineReoptOverlap;
+  int nbStepsBeforeRoughLegalization;
 
   /**
-   * @brief Number of diag-aligned bins reoptimized together
+   * @brief Gap between lower and upper bound placement at which to stop
+   * global placement early
    */
-  int roughLegalizationDiagReoptSize;
+  double gapTolerance;
 
   /**
-   * @brief Overlap between two sets of diag-reoptimized bins
+   * @brief Distance between lower and upper bound placement at which to stop
+   * global placement early
    */
-  int roughLegalizationDiagReoptOverlap;
-
-  /**
-   * @brief Size ot the square of bins reoptimized together
-   */
-  int roughLegalizationSquareReoptSize;
-
-  /**
-   * @brief Overlap between two reoptimized squares bins
-   */
-  int roughLegalizationSquareReoptOverlap;
-
-  /**
-   * @brief Use unidimensional transportation to reoptimize many bins at once
-   */
-  bool roughLegalizationUnidimensionalTransport;
-
-  /**
-   * @brief Small quadratic penalty to ensure that closer cells are selected
-   * despite the L1 distance, normalized by the placement area
-   */
-  double roughLegalizationQuadraticPenalty;
-
-  /**
-   * @brief Margin to use on the sides of each row to account for lost space,
-   * relative to the standard cell height
-   */
-  double roughLegalizationSideMargin;
-
-  /**
-   * @brief Decide how much to coarsen compared based on the current distance to
-   * legal
-   */
-  double roughLegalizationCoarseningLimit;
-
-  /**
-   * @brief Blending between lower-bound and upper-bound placement to decide the
-   * target for rough legalization; 0 to use lower bound, 1 to use upper bound
-   */
-  double roughLegalizationTargetBlending;
+  double distanceTolerance;
 
   /**
    * @brief Blending between lower-bound and upper-bound placement at export
@@ -314,9 +367,19 @@ struct GlobalPlacerParameters {
   double exportBlending;
 
   /**
-   * @brief Random seed
+   * @brief Parameters for the continuous model
    */
-  int seed;
+  ContinuousModelParameters continuousModel;
+
+  /**
+   * @brief Parameters for the rough legalization
+   */
+  RoughLegalizationParameters roughLegalization;
+
+  /**
+   * @brief Parameters for the legalization penalty
+   */
+  PenaltyParameters penalty;
 
   /**
    * @brief Noise introduced to randomize the algorithm. Note that 0 will erase
@@ -326,11 +389,52 @@ struct GlobalPlacerParameters {
 
   /**
    * @brief Initialize the parameters with sensible defaults
-   *
-   * @param effort Placement effort between 1 and 9
-   * @param seed Random seed
    */
-  explicit GlobalPlacerParameters(int effort = 3, int seed = -1);
+  explicit GlobalPlacerParameters(int effort);
+
+  /**
+   * @brief Obtain a string representation
+   */
+  std::string toString() const;
+
+  /**
+   * @brief Check that the parameters make sense
+   */
+  void check() const;
+};
+
+/**
+ * @brief Parameters for the legalization
+ */
+struct LegalizationParameters {
+  /**
+   * @brief Cost model used for legalization
+   */
+  LegalizationModel costModel;
+
+  /**
+   * @brief Weight placed on the width when ordering of the legalization
+   * heuristic
+   *
+   * @details This weight decides which cells are legalized first; 0.0 orders
+   * by left side, 1.0 by right side, 0.5 by middle
+   */
+  double orderingWidth;
+
+  /**
+   * @brief Weight placed on the y position when ordering of the legalization
+   * heuristic
+   *
+   * @details This weight decides which cells are legalized first, and tends to
+   * start to legalize up (-1.0) or down (1.0). It should be small in absolute
+   * value, as x ordering is preferred
+   */
+  double orderingY;
+
+  /**
+   * @brief Initialize the parameters with sensible defaults
+   */
+  explicit LegalizationParameters(int effort);
 
   /**
    * @brief Obtain a string representation
@@ -385,28 +489,30 @@ struct DetailedPlacerParameters {
   int reorderingMaxNbCells;
 
   /**
-   * @brief Cost model used for legalization
+   * @brief Initialize the parameters with sensible defaults
    */
-  LegalizationModel legalizationCostModel;
+  explicit DetailedPlacerParameters(int effort);
 
   /**
-   * @brief Weight placed on the width when ordering of the legalization
-   * heuristic
-   *
-   * @details This weight decides which cells are legalized first; 0.0 orders
-   * by left side, 1.0 by right side, 0.5 by middle
+   * @brief Obtain a string representation
    */
-  double legalizationOrderingWidth;
+  std::string toString() const;
 
   /**
-   * @brief Weight placed on the y position when ordering of the legalization
-   * heuristic
-   *
-   * @details This weight decides which cells are legalized first, and tends to
-   * start to legalize up (-1.0) or down (1.0). It should be small in absolute
-   * value, as x ordering is preferred
+   * @brief Check that the parameters make sense
    */
-  double legalizationOrderingY;
+  void check() const;
+};
+
+/**
+ * @brief Parameters for the full placer
+ */
+struct ColoquinteParameters {
+  GlobalPlacerParameters global;
+
+  LegalizationParameters legalization;
+
+  DetailedPlacerParameters detailed;
 
   /**
    * @brief Random seed
@@ -419,7 +525,7 @@ struct DetailedPlacerParameters {
    * @param effort Placement effort between 1 and 9
    * @param seed Random seed
    */
-  explicit DetailedPlacerParameters(int effort = 3, int seed = -1);
+  explicit ColoquinteParameters(int effort = 3, int seed = -1);
 
   /**
    * @brief Obtain a string representation
@@ -694,36 +800,36 @@ class Circuit {
   /**
    * @brief Run the global placement algorithm
    */
-  void placeGlobal(int effort) { placeGlobal(GlobalPlacerParameters(effort)); }
+  void placeGlobal(int effort) { placeGlobal(ColoquinteParameters(effort)); }
 
   /**
    * @brief Run the global placement algorithm
    */
-  void placeGlobal(const GlobalPlacerParameters &params,
+  void placeGlobal(const ColoquinteParameters &params,
                    const std::optional<PlacementCallback> &callback = {});
 
   /**
    * @brief Run the legalization algorithm
    */
-  void legalize(int effort) { legalize(DetailedPlacerParameters(effort)); }
+  void legalize(int effort) { legalize(ColoquinteParameters(effort)); }
 
   /**
    * @brief Run the legalization algorithm
    */
-  void legalize(const DetailedPlacerParameters &params,
+  void legalize(const ColoquinteParameters &params,
                 const std::optional<PlacementCallback> &callback = {});
 
   /**
    * @brief Run the detailed placement algorithm
    */
   void placeDetailed(int effort) {
-    placeDetailed(DetailedPlacerParameters(effort));
+    placeDetailed(ColoquinteParameters(effort));
   }
 
   /**
    * @brief Run the detailed placement algorithm
    */
-  void placeDetailed(const DetailedPlacerParameters &params,
+  void placeDetailed(const ColoquinteParameters &params,
                      const std::optional<PlacementCallback> &callback = {});
 
   /**

@@ -11,8 +11,7 @@ import sys
 import coloquinte_pybind
 from coloquinte_pybind import (
     CellOrientation,
-    DetailedPlacerParameters,
-    GlobalPlacerParameters,
+    ColoquinteParameters,
     LegalizationModel,
     NetModel,
     PlacementStep,
@@ -361,30 +360,30 @@ class Circuit(coloquinte_pybind.Circuit):
         """
         Run the global placement
         """
-        if not isinstance(params, GlobalPlacerParameters):
+        if not isinstance(params, ColoquinteParameters):
             if not isinstance(params, int):
                 raise TypeError("Argument should be an integer effort")
-            params = GlobalPlacerParameters(params)
+            params = ColoquinteParameters(params)
         super().place_global(params, callback)
 
     def legalize(self, params, callback=None):
         """
         Run the legalization
         """
-        if not isinstance(params, DetailedPlacerParameters):
+        if not isinstance(params, ColoquinteParameters):
             if not isinstance(params, int):
                 raise TypeError("Argument should be an integer effort")
-            params = DetailedPlacerParameters(params)
+            params = ColoquinteParameters(params)
         super().legalize(params, callback)
 
     def place_detailed(self, params, callback=None):
         """
         Run the detailed placement
         """
-        if not isinstance(params, DetailedPlacerParameters):
+        if not isinstance(params, ColoquinteParameters):
             if not isinstance(params, int):
                 raise TypeError("Argument should be an integer effort")
-            params = DetailedPlacerParameters(params)
+            params = ColoquinteParameters(params)
         super().place_detailed(params, callback)
 
     def load_placement(self, filename):
@@ -440,7 +439,8 @@ class Circuit(coloquinte_pybind.Circuit):
                 y1 = (pl1[i].min_y + pl1[i].max_y) // 2
                 y2 = (pl2[i].min_y + pl2[i].max_y) // 2
                 draw.line([(x1, y1), (x2, y2)], fill="red", width=2)
-                draw.arc([x1 - 1, y1 - 1, x1 + 1, y1 + 1], 0, 360, fill="black")
+                draw.arc([x1 - 1, y1 - 1, x1 + 1, y1 + 1],
+                         0, 360, fill="black")
         self._save_image(img, filename, image_width)
 
     def _save_image(self, img, filename, image_width):
@@ -478,30 +478,37 @@ class Circuit(coloquinte_pybind.Circuit):
 
 
 def _add_arguments(parser, obj, prefix):
+    import argparse
     for name in obj.__dir__():
         if name.startswith("_"):
             continue
         if name in ["check", "seed"]:
             continue
-        arg_type = type(getattr(obj, name))
+        child = getattr(obj, name)
+        arg_type = type(child)
         if arg_type in (int, float):
             parser.add_argument(
-                "--" + prefix + "." + name,
+                "--" + ".".join(prefix + [name, ]),
                 type=arg_type,
                 metavar=name.upper(),
+                help=argparse.SUPPRESS
             )
         elif arg_type is bool:
             parser.add_argument(
-                "--" + prefix + "." + name,
+                "--" + ".".join(prefix + [name, ]),
                 type=_str2bool,
                 metavar=name.upper(),
+                help=argparse.SUPPRESS
             )
-        else:
+        elif '__members__' in child.__dir__():
             parser.add_argument(
-                "--" + prefix + "." + name,
+                "--" + ".".join(prefix + [name, ]),
                 choices=list(arg_type.__members__.keys()),
                 metavar=name.upper(),
+                help=argparse.SUPPRESS
             )
+        else:
+            _add_arguments(parser, child, prefix + [name,])
 
 
 def _parse_arguments(args, obj, prefix):
@@ -510,32 +517,51 @@ def _parse_arguments(args, obj, prefix):
             continue
         if name in ["check", "seed"]:
             continue
-        val = getattr(args, prefix + "." + name)
-        if val is not None:
-            new_val = val
-            old_val = getattr(obj, name)
-            arg_type = type(old_val)
-            if arg_type not in (int, float, bool):
-                val = arg_type.__members__[val]
-                old_val = old_val.name
-            print(
-                f"Overloading {prefix} placement parameter {name} "
-                f"({old_val} -> {new_val})"
-            )
-            setattr(obj, name, val)
+        argname = ".".join(prefix + [name, ])
+        child = getattr(obj, name)
+        arg_type = type(child)
+        if arg_type in (int, float, bool) or "__members__" in child.__dir__():
+            val = getattr(args, argname)
+            if val is not None:
+                new_val = val
+                old_val = getattr(obj, name)
+                if arg_type not in (int, float, bool):
+                    val = arg_type.__members__[val]
+                    old_val = old_val.name
+                print(
+                    f"Overloading {argname} placement parameter "
+                    f"({old_val} -> {new_val})"
+                )
+                setattr(obj, name, val)
+        else:
+            _parse_arguments(args, child, prefix + [name, ])
 
 
-def _show_params(obj, prefix):
+def _show_params(obj, tabs):
     for name in obj.__dir__():
         if name.startswith("_"):
             continue
         if name in ["check", "seed"]:
             continue
-        default_val = getattr(obj, name)
-        arg_type = type(default_val)
-        if arg_type not in (int, float, bool):
-            default_val = default_val.name
-        print(f"\t--{prefix}.{name}: {default_val}")
+        child = getattr(obj, name)
+        arg_type = type(child)
+        if arg_type in (int, float, bool) or "__members__" in child.__dir__():
+            if arg_type not in (int, float, bool):
+                child = child.name
+            p = "\t" * tabs
+            print(f"{p}{name}: {child}")
+    for name in obj.__dir__():
+        if name.startswith("_"):
+            continue
+        if name in ["check", "seed"]:
+            continue
+        child = getattr(obj, name)
+        arg_type = type(child)
+        if arg_type in (int, float, bool) or "__members__" in child.__dir__():
+            continue
+        p = "\t" * tabs
+        print(f"{p}{name}: ")
+        _show_params(child, tabs + 1)
 
 
 class OptimizationCallback:
@@ -592,19 +618,22 @@ def main():
         usage="usage: coloquinte [-h] [--effort EFFORT] [--seed SEED] [--load-solution FILE] [--save-solution FILE] instance",
     )
     parser.add_argument("instance", help="Benchmark instance", nargs="?")
-    parser.add_argument("--effort", help="Placement effort", type=int, default=3)
+    parser.add_argument("--effort", help="Placement effort",
+                        type=int, default=3)
     parser.add_argument("--seed", help="Random seed", type=int, default=-1)
     parser.add_argument(
         "--load-solution", help="Load initial placement", metavar="FILE"
     )
-    parser.add_argument("--save-solution", help="Save final placement", metavar="FILE")
+    parser.add_argument("--save-solution",
+                        help="Save final placement", metavar="FILE")
     parser.add_argument(
         "--show-parameters",
-        help="Show parameter values with the current effort",
+        help="Show available tuning parameters and their current value",
         action="store_true",
     )
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("--no-global", help="Skip global placement", action="store_true")
+    group.add_argument(
+        "--no-global", help="Skip global placement", action="store_true")
     group.add_argument(
         "--only-global",
         help="Run only global placement (no legalization)",
@@ -626,32 +655,29 @@ def main():
     parser.add_argument(
         "--save-all-images", help=argparse.SUPPRESS, action="store_true"
     )
-    parser.add_argument("--save-graph", help=argparse.SUPPRESS, action="store_true")
+    parser.add_argument(
+        "--save-graph", help=argparse.SUPPRESS, action="store_true")
     # Save intermediate placement images
-    parser.add_argument("--image-width", help=argparse.SUPPRESS, type=int, default=1080)
+    parser.add_argument(
+        "--image-width", help=argparse.SUPPRESS, type=int, default=1080)
     # Save intermediate placement images
     parser.add_argument(
         "--image-extension", help=argparse.SUPPRESS, type=str, default="webp"
     )
 
-    global_group = parser.add_argument_group("Global placement parameters")
-    detailed_group = parser.add_argument_group("Detailed placement parameters")
-    _add_arguments(global_group, GlobalPlacerParameters(), "global")
-    _add_arguments(detailed_group, DetailedPlacerParameters(), "detailed")
+    tuning_options = parser.add_argument_group("tuning options")
+    _add_arguments(tuning_options, ColoquinteParameters(), [])
     args = parser.parse_args()
 
     print(f"Placement effort {args.effort}, seed {args.seed}")
-    global_params = GlobalPlacerParameters(args.effort, args.seed)
-    _parse_arguments(args, global_params, "global")
-    global_params.check()
-    detailed_params = DetailedPlacerParameters(args.effort, args.seed)
-    _parse_arguments(args, detailed_params, "detailed")
-    detailed_params.check()
+    params = ColoquinteParameters(args.effort, args.seed)
+    _parse_arguments(args, params, [])
+    params.check()
 
     if args.show_parameters:
-        print("Parameter values:")
-        _show_params(global_params, "global")
-        _show_params(detailed_params, "detailed")
+        print("Parameters can be set using command line options. For example, --detailed.nb_passes 2")
+        print("Current parameter values:")
+        _show_params(params, 1)
         return
     if args.instance is None:
         parser.print_help()
@@ -680,16 +706,16 @@ def main():
     if args.no_global:
         print("Global placement skipped at user's request")
     else:
-        circuit.place_global(global_params, callback)
+        circuit.place_global(params, callback)
 
     sys.stdout.flush()
     if args.only_global:
         print("Legalization and detailed placement skipped at user's request")
     elif args.no_detailed:
-        circuit.legalize(detailed_params, callback)
+        circuit.legalize(params, callback)
         print("Detailed placement skipped at user's request")
     else:
-        circuit.place_detailed(detailed_params, callback)
+        circuit.place_detailed(params, callback)
     circuit.write_placement(args.save_solution)
 
     if args.save_images is not None:

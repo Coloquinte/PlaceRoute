@@ -67,87 +67,143 @@ PYBIND11_MODULE(coloquinte_pybind, m) {
       .value("Detailed", PlacementStep::Detailed)
       .export_values();
 
-  py::class_<GlobalPlacerParameters>(m, "GlobalPlacerParameters")
+  py::class_<ColoquinteParameters>(m, "ColoquinteParameters")
       .def(py::init<int, int>(), R"pbdoc(
 Construct the parameters
 
 :param int effort: Effort level
-:param int seed: Random seed
 )pbdoc",
            py::arg("effort") = 3, py::arg("seed") = -1)
+
+      .def_readwrite("global", &ColoquinteParameters::global)
+      .def_readwrite("legalization", &ColoquinteParameters::legalization)
+      .def_readwrite("detailed", &ColoquinteParameters::detailed)
+      .def("check", &ColoquinteParameters::check)
+      .def("__str__", &ColoquinteParameters::toString)
+      .def("__repr__", &ColoquinteParameters::toString);
+
+  py::class_<ContinuousModelParameters>(m, "ContinuousModelParameters")
+      .def(py::init<int>(), R"pbdoc(
+Construct the parameters
+
+:param int effort: Effort level
+)pbdoc",
+           py::arg("effort") = 3)
+      .def_readwrite("net_model", &ContinuousModelParameters::netModel)
+      .def_readwrite("approximation_distance",
+                     &ContinuousModelParameters::approximationDistance)
+      .def_readwrite(
+          "approximation_distance_update_factor",
+          &ContinuousModelParameters::approximationDistanceUpdateFactor)
+      .def_readwrite("max_nb_conjugate_gradient_steps",
+                     &ContinuousModelParameters::maxNbConjugateGradientSteps)
+      .def_readwrite(
+          "conjugate_gradient_error_tolerance",
+          &ContinuousModelParameters::conjugateGradientErrorTolerance)
+      .def("check", &ContinuousModelParameters::check)
+      .def("__str__", &ContinuousModelParameters::toString)
+      .def("__repr__", &ContinuousModelParameters::toString);
+
+  py::class_<RoughLegalizationParameters>(m, "RoughLegalizationParameters")
+      .def(py::init<int>(), R"pbdoc(
+Construct the parameters
+
+:param int effort: Effort level
+)pbdoc",
+           py::arg("effort") = 3)
+      .def_readwrite("cost_model", &RoughLegalizationParameters::costModel)
+      .def_readwrite("nb_steps", &RoughLegalizationParameters::nbSteps)
+      .def_readwrite("bin_size", &RoughLegalizationParameters::binSize)
+      .def_readwrite("line_reopt_size",
+                     &RoughLegalizationParameters::lineReoptSize)
+      .def_readwrite("line_reopt_overlap",
+                     &RoughLegalizationParameters::lineReoptOverlap)
+      .def_readwrite("diag_reopt_size",
+                     &RoughLegalizationParameters::diagReoptSize)
+      .def_readwrite("diag_reopt_overlap",
+                     &RoughLegalizationParameters::diagReoptOverlap)
+      .def_readwrite("square_reopt_size",
+                     &RoughLegalizationParameters::squareReoptSize)
+      .def_readwrite("square_reopt_overlap",
+                     &RoughLegalizationParameters::squareReoptOverlap)
+      .def_readwrite("target_blending",
+                     &RoughLegalizationParameters::targetBlending)
+      .def_readwrite("unidimensional_transport",
+                     &RoughLegalizationParameters::unidimensionalTransport)
+      .def_readwrite("quadratic_penalty",
+                     &RoughLegalizationParameters::quadraticPenalty)
+      .def_readwrite("side_margin", &RoughLegalizationParameters::sideMargin)
+      .def_readwrite("coarsening_limit",
+                     &RoughLegalizationParameters::coarseningLimit)
+      .def("check", &RoughLegalizationParameters::check)
+      .def("__str__", &RoughLegalizationParameters::toString)
+      .def("__repr__", &RoughLegalizationParameters::toString);
+
+  py::class_<PenaltyParameters>(m, "PenaltyParameters")
+      .def(py::init<int>(), R"pbdoc(
+Construct the parameters
+
+:param int effort: Effort level
+)pbdoc",
+           py::arg("effort") = 3)
+      .def_readwrite("cutoff_distance", &PenaltyParameters::cutoffDistance)
+      .def_readwrite("cutoff_distance_update_factor",
+                     &PenaltyParameters::cutoffDistanceUpdateFactor)
+      .def_readwrite("area_exponent", &PenaltyParameters::areaExponent)
+      .def_readwrite("initial_value", &PenaltyParameters::initialValue)
+      .def_readwrite("update_factor", &PenaltyParameters::updateFactor)
+      .def_readwrite("target_blending", &PenaltyParameters::targetBlending)
+      .def("check", &PenaltyParameters::check)
+      .def("__str__", &PenaltyParameters::toString)
+      .def("__repr__", &PenaltyParameters::toString);
+
+  py::class_<GlobalPlacerParameters>(m, "GlobalPlacerParameters")
+      .def(py::init<int>(), R"pbdoc(
+Construct the parameters
+
+:param int effort: Effort level
+)pbdoc",
+           py::arg("effort") = 3)
+      .def_readwrite("rough_legalization",
+                     &GlobalPlacerParameters::roughLegalization)
+      .def_readwrite("continuous_model",
+                     &GlobalPlacerParameters::continuousModel)
+      .def_readwrite("penalty", &GlobalPlacerParameters::penalty)
       .def_readwrite("max_nb_steps", &GlobalPlacerParameters::maxNbSteps)
       .def_readwrite("nb_initial_steps",
                      &GlobalPlacerParameters::nbInitialSteps)
-      .def_readwrite("nb_steps_per_legalization",
-                     &GlobalPlacerParameters::nbStepsPerLegalization)
+      .def_readwrite("nb_steps_before_rough_legalization",
+                     &GlobalPlacerParameters::nbStepsBeforeRoughLegalization)
       .def_readwrite("gap_tolerance", &GlobalPlacerParameters::gapTolerance)
       .def_readwrite("distance_tolerance",
                      &GlobalPlacerParameters::distanceTolerance)
-      .def_readwrite("penalty_cutoff_distance",
-                     &GlobalPlacerParameters::penaltyCutoffDistance)
-      .def_readwrite("penalty_cutoff_distance_update_factor",
-                     &GlobalPlacerParameters::penaltyCutoffDistanceUpdateFactor)
-      .def_readwrite("penalty_area_exponent",
-                     &GlobalPlacerParameters::penaltyAreaExponent)
-      .def_readwrite("initial_penalty", &GlobalPlacerParameters::initialPenalty)
-      .def_readwrite("penalty_update_factor",
-                     &GlobalPlacerParameters::penaltyUpdateFactor)
-      .def_readwrite("penalty_target_blending",
-                     &GlobalPlacerParameters::penaltyTargetBlending)
-      .def_readwrite("net_model", &GlobalPlacerParameters::netModel)
-      .def_readwrite("approximation_distance",
-                     &GlobalPlacerParameters::approximationDistance)
-      .def_readwrite("approximation_distance_update_factor",
-                     &GlobalPlacerParameters::approximationDistanceUpdateFactor)
-      .def_readwrite("max_nb_conjugate_gradient_steps",
-                     &GlobalPlacerParameters::maxNbConjugateGradientSteps)
-      .def_readwrite("conjugate_gradient_error_tolerance",
-                     &GlobalPlacerParameters::conjugateGradientErrorTolerance)
-      .def_readwrite("rough_legalization_cost_model",
-                     &GlobalPlacerParameters::roughLegalizationCostModel)
-      .def_readwrite("rough_legalization_nb_steps",
-                     &GlobalPlacerParameters::roughLegalizationNbSteps)
-      .def_readwrite("rough_legalization_bin_size",
-                     &GlobalPlacerParameters::roughLegalizationBinSize)
-      .def_readwrite("rough_legalization_line_reopt_size",
-                     &GlobalPlacerParameters::roughLegalizationLineReoptSize)
-      .def_readwrite("rough_legalization_line_reopt_overlap",
-                     &GlobalPlacerParameters::roughLegalizationLineReoptOverlap)
-      .def_readwrite("rough_legalization_diag_reopt_size",
-                     &GlobalPlacerParameters::roughLegalizationDiagReoptSize)
-      .def_readwrite("rough_legalization_diag_reopt_overlap",
-                     &GlobalPlacerParameters::roughLegalizationDiagReoptOverlap)
-      .def_readwrite("rough_legalization_square_reopt_size",
-                     &GlobalPlacerParameters::roughLegalizationSquareReoptSize)
-      .def_readwrite(
-          "rough_legalization_square_reopt_overlap",
-          &GlobalPlacerParameters::roughLegalizationSquareReoptOverlap)
-      .def_readwrite("rough_legalization_target_blending",
-                     &GlobalPlacerParameters::roughLegalizationTargetBlending)
-      .def_readwrite(
-          "rough_legalization_unidimensional_transport",
-          &GlobalPlacerParameters::roughLegalizationUnidimensionalTransport)
-      .def_readwrite("rough_legalization_quadratic_penalty",
-                     &GlobalPlacerParameters::roughLegalizationQuadraticPenalty)
-      .def_readwrite("rough_legalization_side_margin",
-                     &GlobalPlacerParameters::roughLegalizationSideMargin)
-      .def_readwrite("rough_legalization_coarsening_limit",
-                     &GlobalPlacerParameters::roughLegalizationCoarseningLimit)
       .def_readwrite("export_blending", &GlobalPlacerParameters::exportBlending)
-      .def_readwrite("seed", &GlobalPlacerParameters::seed)
       .def_readwrite("noise", &GlobalPlacerParameters::noise)
       .def("check", &GlobalPlacerParameters::check)
       .def("__str__", &GlobalPlacerParameters::toString)
       .def("__repr__", &GlobalPlacerParameters::toString);
 
-  py::class_<DetailedPlacerParameters>(m, "DetailedPlacerParameters")
-      .def(py::init<int, int>(), R"pbdoc(
+  py::class_<LegalizationParameters>(m, "LegalizationParameters")
+      .def(py::init<int>(), R"pbdoc(
 Construct the parameters
 
 :param int effort: Effort level
-:param int seed: Random seed
 )pbdoc",
-           py::arg("effort") = 3, py::arg("seed") = -1)
+           py::arg("effort") = 3)
+      .def_readwrite("cost_model", &LegalizationParameters::costModel)
+      .def_readwrite("ordering_width", &LegalizationParameters::orderingWidth)
+      .def_readwrite("ordering_y", &LegalizationParameters::orderingY)
+      .def("check", &LegalizationParameters::check)
+      .def("__str__", &LegalizationParameters::toString)
+      .def("__repr__", &LegalizationParameters::toString);
+
+  py::class_<DetailedPlacerParameters>(m, "DetailedPlacerParameters")
+      .def(py::init<int>(), R"pbdoc(
+Construct the parameters
+
+:param int effort: Effort level
+)pbdoc",
+           py::arg("effort") = 3)
       .def_readwrite("nb_passes", &DetailedPlacerParameters::nbPasses)
       .def_readwrite("local_search_nb_neighbours",
                      &DetailedPlacerParameters::localSearchNbNeighbours)
@@ -160,13 +216,6 @@ Construct the parameters
       .def_readwrite("shift_nb_rows", &DetailedPlacerParameters::shiftNbRows)
       .def_readwrite("shift_max_nb_cells",
                      &DetailedPlacerParameters::shiftMaxNbCells)
-      .def_readwrite("legalization_cost_model",
-                     &DetailedPlacerParameters::legalizationCostModel)
-      .def_readwrite("legalization_ordering_width",
-                     &DetailedPlacerParameters::legalizationOrderingWidth)
-      .def_readwrite("legalization_ordering_y",
-                     &DetailedPlacerParameters::legalizationOrderingY)
-      .def_readwrite("seed", &DetailedPlacerParameters::seed)
       .def("check", &DetailedPlacerParameters::check)
       .def("__str__", &DetailedPlacerParameters::toString)
       .def("__repr__", &DetailedPlacerParameters::toString);
@@ -213,7 +262,7 @@ Construct a circuit.
            "Run the whole placement algorithm (global and detailed)")
       .def(
           "place_global",
-          [](Circuit &circuit, const GlobalPlacerParameters &params,
+          [](Circuit &circuit, const ColoquinteParameters &params,
              std::optional<PlacementCallback> callback) {
             py::gil_scoped_release release;
             circuit.placeGlobal(params, std::move(callback));
@@ -221,7 +270,7 @@ Construct a circuit.
           "Run the global placement algorithm")
       .def(
           "legalize",
-          [](Circuit &circuit, const DetailedPlacerParameters &params,
+          [](Circuit &circuit, const ColoquinteParameters &params,
              std::optional<PlacementCallback> callback) {
             py::gil_scoped_release release;
             circuit.legalize(params, std::move(callback));
@@ -229,7 +278,7 @@ Construct a circuit.
           "Run the detailed placement algorithm")
       .def(
           "place_detailed",
-          [](Circuit &circuit, const DetailedPlacerParameters &params,
+          [](Circuit &circuit, const ColoquinteParameters &params,
              std::optional<PlacementCallback> callback) {
             py::gil_scoped_release release;
             circuit.placeDetailed(params, std::move(callback));

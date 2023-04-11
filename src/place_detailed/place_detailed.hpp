@@ -16,7 +16,7 @@ class DetailedPlacer {
    * @param circuit The circuit to be modified
    * @param params Placement parameters
    */
-  static void place(Circuit &circuit, const DetailedPlacerParameters &params,
+  static void place(Circuit &circuit, const ColoquinteParameters &params,
                     const std::optional<PlacementCallback> &callback = {});
 
   /**
@@ -25,14 +25,14 @@ class DetailedPlacer {
    * @param circuit The circuit to be modified
    * @param params Placement parameters
    */
-  static void legalize(Circuit &circuit, const DetailedPlacerParameters &params,
+  static void legalize(Circuit &circuit, const ColoquinteParameters &params,
                        const std::optional<PlacementCallback> &callback = {});
 
   /**
    * @brief Initialize the datastructure
    */
   explicit DetailedPlacer(Circuit &circuit,
-                          const DetailedPlacerParameters &params);
+                          const ColoquinteParameters &params);
 
   /**
    * @brief Run the whole detailed placement algorithm
@@ -251,7 +251,7 @@ class DetailedPlacer {
   IncrNetModel xtopo_;
   IncrNetModel ytopo_;
 
-  DetailedPlacerParameters params_;
+  ColoquinteParameters params_;
 
   // Only for callbacks
   Circuit &circuit_;

@@ -20,14 +20,14 @@ class GlobalPlacer {
    * @param circuit The circuit to be modified
    * @param params Placement parameters
    */
-  static void place(Circuit &circuit, const GlobalPlacerParameters &params,
+  static void place(Circuit &circuit, const ColoquinteParameters &params,
                     const std::optional<PlacementCallback> &callback = {});
 
  private:
   /**
    * @brief Initialize the datastructure
    */
-  explicit GlobalPlacer(Circuit &circuit, const GlobalPlacerParameters &params);
+  explicit GlobalPlacer(Circuit &circuit, const ColoquinteParameters &params);
 
   /**
    * @brief Run the whole global placement algorithm
@@ -90,21 +90,21 @@ class GlobalPlacer {
    * @brief Approximation distance used by the continuous model
    */
   float initialApproximationDistance() const {
-    return params_.approximationDistance * averageCellLength_;
+    return params_.global.continuousModel.approximationDistance * averageCellLength_;
   }
 
   /**
    * @brief Distance at which the full displacement penalty is obtained
    */
   float initialPenaltyCutoffDistance() const {
-    return params_.penaltyCutoffDistance * averageCellLength_;
+    return params_.global.penalty.cutoffDistance * averageCellLength_;
   }
 
   /**
    * @brief Distance between upper and lower bound at which we stop placement
    */
   float distanceTolerance() const {
-    return params_.distanceTolerance * averageCellLength_;
+    return params_.global.distanceTolerance * averageCellLength_;
   }
 
   /**
@@ -122,7 +122,7 @@ class GlobalPlacer {
   std::vector<float> xPlacementUB_;
   std::vector<float> yPlacementUB_;
 
-  GlobalPlacerParameters params_;
+  ColoquinteParameters params_;
 
   float averageCellLength_;
   std::vector<float> perCellPenalty_;

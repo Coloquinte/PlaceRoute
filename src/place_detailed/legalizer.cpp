@@ -49,12 +49,12 @@ Legalizer::Legalizer(const std::vector<Rectangle> &rows,
   cellToRow_.assign(width.size(), -1);
 }
 
-void Legalizer::run(const DetailedPlacerParameters &params) {
+void Legalizer::run(const ColoquinteParameters &params) {
   std::vector<int> cellOrder = computeCellOrder(
-      1.0, params.legalizationOrderingWidth, params.legalizationOrderingY);
+      1.0, params.legalization.orderingWidth, params.legalization.orderingY);
 
   for (int c : cellOrder) {
-    placeCellOptimally(c, params.legalizationCostModel);
+    placeCellOptimally(c, params.legalization.costModel);
   }
   for (int i = 0; i < nbRows(); ++i) {
     std::vector<int> pl = rowLegalizers_[i].getPlacement();

@@ -13,50 +13,8 @@
 
 namespace coloquinte {
 
-void DetailedPlacerParameters::check() const {
-  if (nbPasses < 0) {
-    throw std::runtime_error(
-        "Number of detailed placement passes must be non-negative");
-  }
-  if (localSearchNbNeighbours < 0) {
-    throw std::runtime_error(
-        "Number of detailed placement neighbour cells must be non-negative");
-  }
-  if (localSearchNbRows < 0) {
-    throw std::runtime_error(
-        "Number of detailed placement rows must be non-negative");
-  }
-  if (shiftNbRows <= 0) {
-    throw std::runtime_error(
-        "Number of detailed placement shift rows must be positive");
-  }
-  if (shiftMaxNbCells < 0) {
-    throw std::runtime_error(
-        "Number of detailed placement shift cells must be non-negative");
-  }
-  if (reorderingNbRows <= 0) {
-    throw std::runtime_error(
-        "Number of detailed placement reordering rows must be positive");
-  }
-  if (reorderingMaxNbCells < 0) {
-    throw std::runtime_error(
-        "Number of detailed placement reordering cells must be non-negative");
-  }
-  if (legalizationCostModel != LegalizationModel::L1) {
-    throw std::runtime_error("Only L1 legalization model is supported");
-  }
-  if (legalizationOrderingWidth > 2.0 || legalizationOrderingWidth < -1.0) {
-    throw std::runtime_error(
-        "Legalization ordering width should be small (0 < ... < 1)");
-  }
-  if (legalizationOrderingY > 0.2 || legalizationOrderingY < -0.2) {
-    throw std::runtime_error(
-        "Legalization ordering y should be small (-0.1 < ... < 0.1)");
-  }
-}
-
 void DetailedPlacer::legalize(
-    Circuit &circuit, const DetailedPlacerParameters &params,
+    Circuit &circuit, const ColoquinteParameters &params,
     const std::optional<PlacementCallback> &callback) {
   params.check();
   std::cout << "Legalization starting (WL " << circuit.hpwl() << ")"
@@ -66,7 +24,7 @@ void DetailedPlacer::legalize(
   leg.run(params);
   auto endTime = std::chrono::steady_clock::now();
   std::chrono::duration<float> duration = endTime - startTime;
-  float distance = leg.meanDistance(params.legalizationCostModel);
+  float distance = leg.meanDistance(params.legalization.costModel);
   leg.exportPlacement(circuit);
   std::cout << "Legalization done (WL " << circuit.hpwl();
   std::cout << std::fixed << std::setprecision(1) << ", dist " << distance;
@@ -77,8 +35,7 @@ void DetailedPlacer::legalize(
   }
 }
 
-void DetailedPlacer::place(Circuit &circuit,
-                           const DetailedPlacerParameters &params,
+void DetailedPlacer::place(Circuit &circuit, const ColoquinteParameters &params,
                            const std::optional<PlacementCallback> &callback) {
   legalize(circuit, params, callback);
   params.check();
@@ -98,7 +55,7 @@ void DetailedPlacer::place(Circuit &circuit,
 }
 
 DetailedPlacer::DetailedPlacer(Circuit &circuit,
-                               const DetailedPlacerParameters &params)
+                               const ColoquinteParameters &params)
     : placement_(DetailedPlacement::fromIspdCircuit(circuit)),
       xtopo_(IncrNetModel::xTopology(circuit)),
       ytopo_(IncrNetModel::yTopology(circuit)),
@@ -106,20 +63,22 @@ DetailedPlacer::DetailedPlacer(Circuit &circuit,
       circuit_(circuit) {}
 
 void DetailedPlacer::run() {
-  for (int i = 1; i <= params_.nbPasses; ++i) {
+  for (int i = 1; i <= params_.detailed.nbPasses; ++i) {
     std::cout << "#" << i << ":" << std::flush;
-    runSwaps(params_.localSearchNbNeighbours, params_.localSearchNbRows);
+    runSwaps(params_.detailed.localSearchNbNeighbours,
+             params_.detailed.localSearchNbRows);
     auto swapValue = value();
     std::cout << "\tSwaps " << value() << std::flush;
     callback();
-    if (params_.shiftMaxNbCells >= 2) {
-      runShifts(params_.shiftNbRows, params_.shiftMaxNbCells);
+    if (params_.detailed.shiftMaxNbCells >= 2) {
+      runShifts(params_.detailed.shiftNbRows, params_.detailed.shiftMaxNbCells);
       auto shiftValue = value();
       std::cout << "\tShifts " << shiftValue << std::flush;
       callback();
     }
-    if (params_.reorderingMaxNbCells >= 2) {
-      runReordering(params_.reorderingNbRows, params_.reorderingMaxNbCells);
+    if (params_.detailed.reorderingMaxNbCells >= 2) {
+      runReordering(params_.detailed.reorderingNbRows,
+                    params_.detailed.reorderingMaxNbCells);
       auto reordValue = value();
       std::cout << "\tReordering " << reordValue << std::flush;
       callback();

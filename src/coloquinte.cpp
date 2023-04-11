@@ -9,7 +9,6 @@
 #include <unordered_set>
 #include <utility>
 
-#include "coloquinte.hpp"
 #include "place_detailed/place_detailed.hpp"
 #include "place_global/density_legalizer.hpp"
 #include "place_global/net_model.hpp"
@@ -17,193 +16,6 @@
 
 namespace bpl = boost::polygon;
 namespace coloquinte {
-
-std::string toString(LegalizationModel model) {
-  switch (model) {
-    case LegalizationModel::L1:
-      return "L1";
-    case LegalizationModel::L2:
-      return "L2";
-    case LegalizationModel::LInf:
-      return "LInf";
-    case LegalizationModel::L1Squared:
-      return "L1Squared";
-    case LegalizationModel::L2Squared:
-      return "L2Squared";
-    case LegalizationModel::LInfSquared:
-      return "LInfSquared";
-    default:
-      return "UnknownLegalizationModel";
-  }
-}
-
-std::string toString(NetModelOption model) {
-  switch (model) {
-    case NetModelOption::BoundToBound:
-      return "BoundToBound";
-    case NetModelOption::Star:
-      return "Star";
-    default:
-      return "UnknownNetModel";
-  }
-}
-
-std::string Rectangle::toString() const {
-  std::stringstream ss;
-  ss << "Rectangle " << minX << ".." << maxX << " x " << minY << ".." << maxY;
-  return ss.str();
-}
-
-namespace {
-
-double interpolateEffort(double minVal, double maxVal, int effort,
-                         int minEffort = 1, int maxEffort = 9) {
-  assert(minEffort < maxEffort);
-  assert(effort >= minEffort && effort <= maxEffort);
-  double fact = (effort - minEffort) / (float)(maxEffort - minEffort);
-  return maxVal * fact + minVal * (1.0 - fact);
-}
-
-double interpolateLogEffort(double minVal, double maxVal, int effort,
-                            int minEffort = 1, int maxEffort = 9) {
-  return std::exp(interpolateEffort(std::log(minVal), std::log(maxVal), effort,
-                                    minEffort, maxEffort));
-}
-}  // namespace
-
-GlobalPlacerParameters::GlobalPlacerParameters(int effort, int seed)
-    : seed(seed) {
-  if (effort < 1 || effort > 9) {
-    throw std::runtime_error("Placement effort must be between 1 and 9");
-  }
-  maxNbSteps = 400;
-  nbInitialSteps = 0;
-  nbStepsPerLegalization = 1;
-  distanceTolerance = 2.0;
-  // TODO: make cutoff distance smaller at small effort
-  penaltyCutoffDistance = 40.0;
-  penaltyCutoffDistanceUpdateFactor = 1.0;
-  penaltyAreaExponent = 0.5;
-  // TODO: make initial penalty bigger at small effort
-  initialPenalty = 0.03;
-  // TODO: find best parameter
-  penaltyTargetBlending = 1.0;
-  netModel = NetModelOption::BoundToBound;
-  approximationDistance = 2.0;
-  approximationDistanceUpdateFactor = 1.0;
-  maxNbConjugateGradientSteps = 1000;
-  conjugateGradientErrorTolerance = 1.0e-6;
-  roughLegalizationCostModel = LegalizationModel::L1;
-  roughLegalizationNbSteps = 1;
-  // TODO: find best parameter
-  roughLegalizationBinSize = 5.0;
-  roughLegalizationLineReoptSize = 2;
-  roughLegalizationLineReoptOverlap = 1;
-  roughLegalizationDiagReoptSize = 2;
-  roughLegalizationDiagReoptOverlap = 1;
-  roughLegalizationUnidimensionalTransport = false;
-  // TODO: find best parameter
-  roughLegalizationSideMargin = 0.9;
-  roughLegalizationCoarseningLimit = 100.0;
-  roughLegalizationQuadraticPenalty = 0.001;
-  // TODO: find best parameter
-  roughLegalizationTargetBlending = 0.0;
-  // TODO: find best parameter
-  exportBlending = 0.99;
-  noise = 1.0e-4;
-  // Parameters that vary with effort here
-  double gapToleranceArray[9] = {0.13,  0.13,  0.058, 0.038, 0.026,
-                                 0.026, 0.026, 0.026, 0.026};
-  double penaltyUpdateFactorArray[9] = {1.23, 1.23, 1.23, 1.22, 1.22,
-                                        1.22, 1.22, 1.17, 1.07};
-  int squareSizeArray[9] = {1, 2, 3, 3, 3, 4, 4, 4, 5};
-  gapTolerance = gapToleranceArray[effort - 1];
-  penaltyUpdateFactor = penaltyUpdateFactorArray[effort - 1];
-  roughLegalizationSquareReoptSize = squareSizeArray[effort - 1];
-  roughLegalizationSquareReoptOverlap = 1;
-  check();
-}
-
-std::string GlobalPlacerParameters::toString() const {
-  std::stringstream ss;
-  ss << "Global placer params:"
-     << "\n\tGap tolerance: " << gapTolerance
-     << "\n\tDistance tolerance: " << distanceTolerance
-     << "\n\tMax nb steps: " << maxNbSteps
-     << "\n\tInitial placement steps: " << nbInitialSteps
-     << "\n\tPlacement steps per legalization: " << nbStepsPerLegalization
-     << "\n\tPenalty cutoff distance: " << penaltyCutoffDistance
-     << "\n\tPenalty area exponent: " << penaltyAreaExponent
-     << "\n\tInitial penalty: " << initialPenalty
-     << "\n\tPenalty update factor: " << penaltyUpdateFactor
-     << "\n\tPenalty target blending: " << penaltyTargetBlending
-     << "\n\tNet model: " << coloquinte::toString(netModel)
-     << "\n\tApproximation distance: " << approximationDistance
-     << "\n\tMax nb CG steps: " << maxNbConjugateGradientSteps
-     << "\n\tCG error tolerance: " << conjugateGradientErrorTolerance
-     << "\n\tRough legalization cost model: "
-     << coloquinte::toString(roughLegalizationCostModel)
-     << "\n\tNb rough legalization steps: " << roughLegalizationNbSteps
-     << "\n\tRough legalization bin size: " << roughLegalizationBinSize
-     << "\n\tRough legalization reopt length: " << roughLegalizationLineReoptSize
-     << "\n\tRough legalization reopt square size: "
-     << roughLegalizationSquareReoptSize
-     << "\n\tRough legalization 1D transport: "
-     << roughLegalizationUnidimensionalTransport
-     << "\n\tRough legalization coarsening limit: "
-     << roughLegalizationCoarseningLimit
-     << "\n\tRough legalization quadratic penalty: "
-     << roughLegalizationQuadraticPenalty
-     << "\n\tRough legalization side margin: " << roughLegalizationSideMargin
-     << "\n\tRough legalization target blending: "
-     << roughLegalizationTargetBlending
-     << "\n\tExport blending: " << exportBlending;
-  if (seed != -1) {
-    ss << "\n\tSeed: " << seed;
-  }
-  ss << std::endl;
-  return ss.str();
-}
-
-DetailedPlacerParameters::DetailedPlacerParameters(int effort, int seed)
-    : seed(seed) {
-  if (effort < 1 || effort > 9) {
-    throw std::runtime_error("Placement effort must be between 1 and 9");
-  }
-  nbPasses = std::round(interpolateLogEffort(2.0, 8.0, effort));
-  localSearchNbNeighbours = std::round(interpolateLogEffort(2.0, 16.0, effort));
-  localSearchNbRows = std::round(interpolateEffort(1.0, 4.0, effort));
-  shiftNbRows = 3;
-  shiftMaxNbCells = std::round(interpolateLogEffort(50, 120.0, effort));
-  reorderingNbRows = 1;
-  reorderingMaxNbCells = 1;
-  legalizationCostModel = LegalizationModel::L1;
-  // TODO: find best parameter
-  legalizationOrderingWidth = 0.2;
-  legalizationOrderingY = 0.0;
-  check();
-}
-
-std::string DetailedPlacerParameters::toString() const {
-  std::stringstream ss;
-  ss << "Detailed placer params:"
-     << "\n\tNb passes: " << nbPasses
-     << "\n\tLocal search nb neighbours: " << localSearchNbNeighbours
-     << "\n\tLocal search nb rows: " << localSearchNbRows
-     << "\n\tReordering max nb rows: " << reorderingNbRows
-     << "\n\tReordering max nb cells: " << reorderingMaxNbCells
-     << "\n\tShift nb rows: " << shiftNbRows
-     << "\n\tShift max nb cells: " << shiftMaxNbCells
-     << "\n\tLegalization cost model: "
-     << coloquinte::toString(legalizationCostModel)
-     << "\n\tLegalization ordering width: " << legalizationOrderingWidth
-     << "\n\tLegalization ordering y: " << legalizationOrderingY;
-  if (seed != -1) {
-    ss << "\n\tSeed: " << seed;
-  }
-  ss << std::endl;
-  return ss.str();
-}
 
 Circuit::Circuit(int nbCells) {
   cellWidth_.resize(nbCells);
@@ -576,17 +388,17 @@ std::string Circuit::report() const {
   return ss.str();
 }
 
-void Circuit::placeGlobal(const GlobalPlacerParameters &params,
+void Circuit::placeGlobal(const ColoquinteParameters &params,
                           const std::optional<PlacementCallback> &callback) {
   GlobalPlacer::place(*this, params, callback);
 }
 
-void Circuit::legalize(const DetailedPlacerParameters &params,
+void Circuit::legalize(const ColoquinteParameters &params,
                        const std::optional<PlacementCallback> &callback) {
   DetailedPlacer::legalize(*this, params, callback);
 }
 
-void Circuit::placeDetailed(const DetailedPlacerParameters &params,
+void Circuit::placeDetailed(const ColoquinteParameters &params,
                             const std::optional<PlacementCallback> &callback) {
   DetailedPlacer::place(*this, params, callback);
 }

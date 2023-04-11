@@ -38,154 +38,7 @@ std::vector<float> blendPlacement(const std::vector<float> &v1,
 }
 }  // namespace
 
-void GlobalPlacerParameters::check() const {
-  if (maxNbSteps < 0) {
-    throw std::runtime_error("Invalid number of steps");
-  }
-  if (nbInitialSteps < 0) {
-    throw std::runtime_error("Invalid number of initial steps");
-  }
-  if (nbInitialSteps >= maxNbSteps) {
-    throw std::runtime_error(
-        "Number of initial steps should be lower than max number");
-  }
-  if (nbStepsPerLegalization < 1) {
-    throw std::runtime_error(
-        "Number of steps per legalization should be positive");
-  }
-  if (gapTolerance < 0.0f || gapTolerance > 1.0f) {
-    throw std::runtime_error(
-        "Invalid gap tolerance (should be between 0 and 1)");
-  }
-  if (distanceTolerance < 0.0f) {
-    throw std::runtime_error(
-        "Invalid distance tolerance (should be non-negative");
-  }
-  if (penaltyCutoffDistance < 1.0e-6) {
-    throw std::runtime_error("Too small cutoff distance may lead to issues");
-  }
-  if (penaltyCutoffDistanceUpdateFactor < 0.8 ||
-      penaltyCutoffDistanceUpdateFactor > 1.2) {
-    throw std::runtime_error(
-        "Penalty cutoff update factor should be close to 1");
-  }
-  if (penaltyAreaExponent < 0.49 || penaltyAreaExponent > 1.01) {
-    throw std::runtime_error(
-        "Penalty area exponent should be between 0.5 and 1");
-  }
-  if (initialPenalty <= 0.0f) {
-    throw std::runtime_error("Initial penalty should be positive");
-  }
-  if (penaltyUpdateFactor <= 1.0f || penaltyUpdateFactor >= 2.0f) {
-    throw std::runtime_error(
-        "Penalty update factor should be between one and two");
-  }
-  if (penaltyTargetBlending < 0.1f || penaltyTargetBlending > 1.1f) {
-    throw std::runtime_error(
-        "Penalty target blending should generally be between 0.5 and 1");
-  }
-  if (approximationDistance < 1.0e-6) {
-    throw std::runtime_error(
-        "Too small approximation distance may lead to issues");
-  }
-  if (approximationDistanceUpdateFactor < 0.8 ||
-      approximationDistanceUpdateFactor > 1.2) {
-    throw std::runtime_error(
-        "Approximation distance update factor should be close to 1");
-  }
-  if (approximationDistance > 1.0e3) {
-    throw std::runtime_error(
-        "Too large approximation distance is highly imprecise");
-  }
-  if (maxNbConjugateGradientSteps <= 0) {
-    throw std::runtime_error(
-        "Must have positive number of steps during conjugate gradients");
-  }
-  if (conjugateGradientErrorTolerance < 1.0e-8) {
-    throw std::runtime_error("Too small error tolerance may lead to issues");
-  }
-  if (conjugateGradientErrorTolerance > 1.0) {
-    throw std::runtime_error("Too large error tolerance is highly imprecise");
-  }
-  if (roughLegalizationNbSteps < 0) {
-    throw std::runtime_error(
-        "Must have non-negative number of steps for rough legalization");
-  }
-  if (roughLegalizationBinSize < 1.0f) {
-    throw std::runtime_error(
-        "Bin size should generally be larger than 1 (one standard cell)");
-  }
-  if (roughLegalizationBinSize > 25.0f) {
-    throw std::runtime_error(
-        "Bin size should not be too large (10 should be enough)");
-  }
-  if (roughLegalizationLineReoptSize < 1 ||
-      roughLegalizationDiagReoptSize < 1 ||
-      roughLegalizationSquareReoptSize < 1) {
-    throw std::runtime_error(
-        "Rough legalization reopt size should be at least 1");
-  }
-  if (roughLegalizationLineReoptOverlap < 1 ||
-      roughLegalizationDiagReoptOverlap < 1 ||
-      roughLegalizationSquareReoptOverlap < 1) {
-    throw std::runtime_error(
-        "Rough legalization reopt overlap should be at least 1");
-  }
-  if (roughLegalizationLineReoptSize > 64 ||
-      roughLegalizationDiagReoptSize > 64 ||
-      roughLegalizationSquareReoptSize > 8) {
-    throw std::runtime_error("Rough legalization reopt should be small");
-  }
-  if (roughLegalizationLineReoptSize < 2 &&
-      roughLegalizationDiagReoptSize < 2 &&
-      roughLegalizationSquareReoptSize < 2 &&
-      !roughLegalizationUnidimensionalTransport) {
-    throw std::runtime_error(
-        "At least one rough legalization reopt value should be 2 or more");
-  }
-  if (roughLegalizationLineReoptSize > 1 &&
-      roughLegalizationLineReoptOverlap >= roughLegalizationLineReoptSize) {
-    throw std::runtime_error(
-        "Rough legalization reopt overlap should be smaller than reopt size");
-  }
-  if (roughLegalizationDiagReoptSize > 1 &&
-      roughLegalizationDiagReoptOverlap >= roughLegalizationDiagReoptSize) {
-    throw std::runtime_error(
-        "Rough legalization reopt overlap should be smaller than reopt size");
-  }
-  if (roughLegalizationSquareReoptSize > 1 &&
-      roughLegalizationSquareReoptOverlap >= roughLegalizationSquareReoptSize) {
-    throw std::runtime_error(
-        "Rough legalization reopt overlap should be smaller than reopt size");
-  }
-  if (roughLegalizationQuadraticPenalty < 0.0 ||
-      roughLegalizationQuadraticPenalty > 1.0) {
-    throw std::runtime_error(
-        "Rough legalization quadratic penalty should be non-negative and small "
-        "(< 1.0)");
-  }
-  if (roughLegalizationTargetBlending < -0.1 ||
-      roughLegalizationTargetBlending > 0.9f) {
-    throw std::runtime_error(
-        "Rough legalization target blending should generally be between 0 and "
-        "0.5");
-  }
-  if (exportBlending < -0.5f || exportBlending > 1.5f) {
-    throw std::runtime_error(
-        "Export blending should generally be between 0 and 1");
-  }
-  if (noise < 0.0 || noise > 2.0) {
-    throw std::runtime_error(
-        "Noise should be a very small non-negative number");
-  }
-  if (roughLegalizationCostModel != LegalizationModel::L1 &&
-      roughLegalizationUnidimensionalTransport) {
-    throw std::runtime_error(
-        "Unidimensional transport can only be used with L1 cost model");
-  }
-}
-
-void GlobalPlacer::place(Circuit &circuit, const GlobalPlacerParameters &params,
+void GlobalPlacer::place(Circuit &circuit, const ColoquinteParameters &params,
                          const std::optional<PlacementCallback> &callback) {
   params.check();
   std::cout << "Global placement starting" << std::endl;
@@ -200,11 +53,10 @@ void GlobalPlacer::place(Circuit &circuit, const GlobalPlacerParameters &params,
   pl.exportPlacement(circuit);
 }
 
-GlobalPlacer::GlobalPlacer(Circuit &circuit,
-                           const GlobalPlacerParameters &params)
+GlobalPlacer::GlobalPlacer(Circuit &circuit, const ColoquinteParameters &params)
     : leg_(DensityLegalizer::fromIspdCircuit(
-          circuit, params.roughLegalizationBinSize,
-          params.roughLegalizationSideMargin)),
+          circuit, params.global.roughLegalization.binSize,
+          params.global.roughLegalization.sideMargin)),
       xtopo_(NetModel::xTopology(circuit)),
       ytopo_(NetModel::yTopology(circuit)),
       params_(params),
@@ -212,24 +64,23 @@ GlobalPlacer::GlobalPlacer(Circuit &circuit,
   rgen_.seed(params_.seed);
   averageCellLength_ = computeAverageCellSize();
   perCellPenalty_ = computePerCellPenalty();
+  auto rlp = params.global.roughLegalization;
   DensityLegalizer::Parameters legParams;
-  legParams.nbSteps = params.roughLegalizationNbSteps;
-  legParams.costModel = params.roughLegalizationCostModel;
-  legParams.lineReoptSize = params.roughLegalizationLineReoptSize;
-  legParams.lineReoptOverlap = params.roughLegalizationLineReoptOverlap;
-  legParams.diagReoptSize = params.roughLegalizationDiagReoptSize;
-  legParams.diagReoptOverlap = params.roughLegalizationDiagReoptOverlap;
-  legParams.squareReoptSize = params.roughLegalizationSquareReoptSize;
-  legParams.squareReoptOverlap = params.roughLegalizationSquareReoptOverlap;
-  legParams.unidimensionalTransport =
-      params.roughLegalizationUnidimensionalTransport;
-  legParams.coarseningLimit = params.roughLegalizationCoarseningLimit;
-  LegalizationModel m = params.roughLegalizationCostModel;
+  legParams.nbSteps = rlp.nbSteps;
+  legParams.costModel = rlp.costModel;
+  legParams.lineReoptSize = rlp.lineReoptSize;
+  legParams.lineReoptOverlap = rlp.lineReoptOverlap;
+  legParams.diagReoptSize = rlp.diagReoptSize;
+  legParams.diagReoptOverlap = rlp.diagReoptOverlap;
+  legParams.squareReoptSize = rlp.squareReoptSize;
+  legParams.squareReoptOverlap = rlp.squareReoptOverlap;
+  legParams.unidimensionalTransport = rlp.unidimensionalTransport;
+  legParams.coarseningLimit = rlp.coarseningLimit;
+  LegalizationModel m = rlp.costModel;
   if (m == LegalizationModel::L1 || m == LegalizationModel::L2 ||
       m == LegalizationModel::LInf) {
     float dist = leg_.placementArea().width() + leg_.placementArea().height();
-    legParams.quadraticPenaltyFactor =
-        params.roughLegalizationQuadraticPenalty / dist;
+    legParams.quadraticPenaltyFactor = rlp.quadraticPenalty / dist;
   }
   leg_.setParams(legParams);
 }
@@ -238,7 +89,7 @@ void GlobalPlacer::exportPlacement(Circuit &circuit) const {
   assert(xtopo_.nbCells() == circuit.nbCells());
   assert(ytopo_.nbCells() == circuit.nbCells());
   assert(leg_.nbCells() == circuit.nbCells());
-  float w = params_.exportBlending;
+  float w = params_.global.exportBlending;
   std::vector<float> xplace = blendPlacement(xPlacementLB_, xPlacementUB_, w);
   std::vector<float> yplace = blendPlacement(yPlacementLB_, yPlacementUB_, w);
   exportPlacement(circuit, xplace, yplace);
@@ -273,7 +124,7 @@ std::vector<float> GlobalPlacer::computePerCellPenalty() const {
 
   for (int i = 0; i < leg_.nbCells(); ++i) {
     ret.push_back(
-        std::pow(leg_.cellDemand(i) / meanArea, params_.penaltyAreaExponent));
+        std::pow(leg_.cellDemand(i) / meanArea, params_.global.penalty.areaExponent));
   }
   return ret;
 }
@@ -283,8 +134,8 @@ std::vector<float> GlobalPlacer::computeIterationPerCellPenalty() {
   for (float &s : penalty) {
     s *= penalty_;
   }
-  if (params_.noise > 0.0) {
-    std::uniform_real_distribution<float> dist(0.0f, params_.noise);
+  if (params_.global.noise > 0.0) {
+    std::uniform_real_distribution<float> dist(0.0f, params_.global.noise);
     for (float &s : penalty) {
       s *= (1.0f + dist(rgen_));
     }
@@ -294,14 +145,14 @@ std::vector<float> GlobalPlacer::computeIterationPerCellPenalty() {
 
 void GlobalPlacer::run() {
   runInitialLB();
-  penalty_ = params_.initialPenalty;
+  penalty_ = params_.global.penalty.initialValue;
   approximationDistance_ = initialApproximationDistance();
   penaltyCutoffDistance_ = initialPenaltyCutoffDistance();
 
   float lb = valueLB();
   float ub = std::numeric_limits<float>::infinity();
-  int firstStep = params_.nbInitialSteps + 1;
-  for (step_ = firstStep; step_ <= params_.maxNbSteps; ++step_) {
+  int firstStep = params_.global.nbInitialSteps + 1;
+  for (step_ = firstStep; step_ <= params_.global.maxNbSteps; ++step_) {
     std::cout << "#" << step_ << ":" << std::flush;
     runUB();
     ub = valueUB();
@@ -313,11 +164,11 @@ void GlobalPlacer::run() {
 
     float gap = (ub - lb) / ub;
     // Stop if distance or the difference between LB and UB is small enough
-    if (gap < params_.gapTolerance || dist < distanceTolerance()) {
+    if (gap < params_.global.gapTolerance || dist < distanceTolerance()) {
       std::cout << std::endl;
       break;
     }
-    for (int i = 0; i < params_.nbStepsPerLegalization; ++i) {
+    for (int i = 0; i < params_.global.nbStepsBeforeRoughLegalization; ++i) {
       if (i != 0) {
         std::cout << "#" << step_ << ":\t........\t........";
         std::cout << std::flush;
@@ -327,9 +178,9 @@ void GlobalPlacer::run() {
       std::cout << std::defaultfloat << std::setprecision(4) << "\tLB " << lb
                 << std::endl;
     }
-    penalty_ *= params_.penaltyUpdateFactor;
-    penaltyCutoffDistance_ *= params_.penaltyCutoffDistanceUpdateFactor;
-    approximationDistance_ *= params_.approximationDistanceUpdateFactor;
+    penalty_ *= params_.global.penalty.updateFactor;
+    penaltyCutoffDistance_ *= params_.global.penalty.cutoffDistanceUpdateFactor;
+    approximationDistance_ *= params_.global.continuousModel.approximationDistanceUpdateFactor;
   }
   runUB();
 }
@@ -344,15 +195,15 @@ float GlobalPlacer::valueUB() const {
 
 void GlobalPlacer::runInitialLB() {
   NetModel::Parameters params;
-  params.netModel = params_.netModel;
-  params.tolerance = params_.conjugateGradientErrorTolerance;
-  params.maxNbIterations = params_.maxNbConjugateGradientSteps;
+  params.netModel = params_.global.continuousModel.netModel;
+  params.tolerance = params_.global.continuousModel.conjugateGradientErrorTolerance;
+  params.maxNbIterations = params_.global.continuousModel.maxNbConjugateGradientSteps;
   xPlacementLB_ = xtopo_.solveStar(params);
   yPlacementLB_ = ytopo_.solveStar(params);
   std::cout << std::defaultfloat << std::setprecision(4) << "#0:\tLB "
             << valueLB() << std::endl;
   callback(PlacementStep::LowerBound, xPlacementLB_, yPlacementLB_);
-  for (step_ = 1; step_ <= params_.nbInitialSteps; ++step_) {
+  for (step_ = 1; step_ <= params_.global.nbInitialSteps; ++step_) {
     xPlacementLB_ = xtopo_.solve(xPlacementLB_, params);
     yPlacementLB_ = ytopo_.solve(yPlacementLB_, params);
     std::cout << std::defaultfloat << std::setprecision(4) << "#" << step_
@@ -367,16 +218,16 @@ void GlobalPlacer::runInitialLB() {
 void GlobalPlacer::runLB() {
   // Compute the parameters for the continuous model solver
   NetModel::Parameters params;
-  params.netModel = params_.netModel;
+  params.netModel = params_.global.continuousModel.netModel;
   params.approximationDistance = approximationDistance_;
   params.penaltyCutoffDistance = penaltyCutoffDistance_;
-  params.tolerance = params_.conjugateGradientErrorTolerance;
-  params.maxNbIterations = params_.maxNbConjugateGradientSteps;
+  params.tolerance = params_.global.continuousModel.conjugateGradientErrorTolerance;
+  params.maxNbIterations = params_.global.continuousModel.maxNbConjugateGradientSteps;
 
   // Compute the per-cell penalty with randomization
   std::vector<float> penalty = computeIterationPerCellPenalty();
 
-  float w = params_.penaltyTargetBlending;
+  float w = params_.global.penalty.targetBlending;
   std::vector<float> xTarget = blendPlacement(xPlacementLB_, xPlacementUB_, w);
   std::vector<float> yTarget = blendPlacement(yPlacementLB_, yPlacementUB_, w);
 
@@ -393,7 +244,7 @@ void GlobalPlacer::runLB() {
 }
 
 void GlobalPlacer::runUB() {
-  float w = params_.roughLegalizationTargetBlending;
+  float w = params_.global.roughLegalization.targetBlending;
   std::vector<float> xTarget = blendPlacement(xPlacementLB_, xPlacementUB_, w);
   std::vector<float> yTarget = blendPlacement(yPlacementLB_, yPlacementUB_, w);
   leg_.updateCellTargetX(xTarget);

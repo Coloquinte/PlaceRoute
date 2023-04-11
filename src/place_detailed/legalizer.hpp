@@ -83,7 +83,7 @@ class Legalizer {
   /**
    * @brief Run the algorithm
    */
-  void run(const DetailedPlacerParameters &parameters);
+  void run(const ColoquinteParameters &parameters);
 
   /**
    * @brief Compute the x coordinates after legalization
