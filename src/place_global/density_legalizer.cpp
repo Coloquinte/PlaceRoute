@@ -406,7 +406,10 @@ void DensityLegalizer::improveXTransport() {
     std::vector<long long> d;
     for (int i = 0; i < nbBinsX(); ++i) {
       v.push_back(binX(i, j));
-      d.push_back(binCapacity(i, j));
+      // Recursive bisection tends to have slightly higher usage than capacity
+      // Keep the previous usage in order not to break the quality
+      long long capa = std::max(binCapacity(i, j), binUsage(i, j));
+      d.push_back(capa);
       for (int c : binCells(i, j)) {
         cells.push_back(c);
         u.push_back(cellTargetX(c));
@@ -436,7 +439,10 @@ void DensityLegalizer::improveYTransport() {
     std::vector<long long> d;
     for (int j = 0; j < nbBinsY(); ++j) {
       v.push_back(binY(i, j));
-      d.push_back(binCapacity(i, j));
+      // Recursive bisection tends to have slightly higher usage than capacity
+      // Keep the previous usage in order not to break the quality
+      long long capa = std::max(binCapacity(i, j), binUsage(i, j));
+      d.push_back(capa);
       for (int c : binCells(i, j)) {
         cells.push_back(c);
         u.push_back(cellTargetY(c));
