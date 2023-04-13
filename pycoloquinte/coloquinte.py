@@ -16,6 +16,7 @@ from coloquinte_pybind import (
     NetModel,
     PlacementStep,
     Rectangle,
+    Row,
 )
 
 
@@ -282,7 +283,8 @@ def _read_rows(filename):
             assert min_y is not None
             assert width is not None
             assert height is not None
-            rows.append((min_x, min_x + width, min_y, min_y + height))
+            r = Rectangle(min_x, min_x + width, min_y, min_y + height)
+            rows.append(Row(r, CellOrientation.N))
         return rows
 
 
@@ -352,7 +354,7 @@ class Circuit(coloquinte_pybind.Circuit):
         ret.cell_orientation = cell_orient
 
         # Setup rows
-        ret.rows = [coloquinte_pybind.Rectangle(*row) for row in rows]
+        ret.rows = rows
         ret.check()
         return ret
 

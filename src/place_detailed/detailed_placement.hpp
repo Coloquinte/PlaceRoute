@@ -36,9 +36,8 @@ class DetailedPlacement {
    *      @param targetX: X coordinate (must be legal)
    *      @param targetY: Y coordinate (must be legal)
    */
-  DetailedPlacement(const std::vector<Rectangle> &rows,
-                    const std::vector<int> &width, const std::vector<int> &posX,
-                    const std::vector<int> &posY,
+  DetailedPlacement(const std::vector<Row> &rows, const std::vector<int> &width,
+                    const std::vector<int> &posX, const std::vector<int> &posY,
                     const std::vector<int> &cellIndex);
 
   /**
@@ -54,7 +53,7 @@ class DetailedPlacement {
   /**
    * @brief Return all row geometries
    */
-  const std::vector<Rectangle> &rows() const { return rows_; }
+  const std::vector<Row> &rows() const { return rows_; }
 
   /**
    * @brief Returns true if the cell is to be ignored by the detailed placement
@@ -266,7 +265,7 @@ class DetailedPlacement {
   void check() const;
 
  private:
-  std::vector<Rectangle> rows_;
+  std::vector<Row> rows_;
   std::vector<int> rowFirstCell_;
   std::vector<int> rowLastCell_;
   std::vector<int> cellWidth_;

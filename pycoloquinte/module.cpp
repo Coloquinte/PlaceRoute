@@ -45,6 +45,13 @@ PYBIND11_MODULE(coloquinte_pybind, m) {
       .def("__str__", &Rectangle::toString)
       .def("__repr__", &Rectangle::toString);
 
+  py::class_<Row, Rectangle>(m, "Row")
+      .def(py::init<Rectangle, CellOrientation>(), R"pbdoc(
+        Construct a row
+)pbdoc",
+           py::arg("area"), py::arg("orientation"))
+      .def_readwrite("orientation", &Row::orientation);
+
   py::enum_<LegalizationModel>(m, "LegalizationModel")
       .value("L1", LegalizationModel::L1)
       .value("L2", LegalizationModel::L2)

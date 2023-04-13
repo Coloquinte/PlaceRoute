@@ -43,8 +43,8 @@ DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit,
   }
 
   // Compute the rows in the placement region
-  std::vector<Rectangle> rows;
-  for (Rectangle row : circuit.computeRows(obstacles)) {
+  std::vector<Row> rows;
+  for (Row row : circuit.computeRows(obstacles)) {
     // Height must be completely contained in the region
     if (row.minY < region.minY) {
       continue;
@@ -59,9 +59,9 @@ DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit,
     if (row.maxX <= region.minX) {
       continue;
     }
-    Rectangle actual(std::max(row.minX, region.minX),
-                     std::min(row.maxX, region.maxX), row.minY, row.maxY);
-    rows.push_back(actual);
+    Rectangle a(std::max(row.minX, region.minX),
+                std::min(row.maxX, region.maxX), row.minY, row.maxY);
+    rows.emplace_back(a, row.orientation);
   }
 
   // Setup the widths and positions
@@ -97,7 +97,7 @@ void DetailedPlacement::exportPlacement(Circuit &circuit) {
   }
 }
 
-DetailedPlacement::DetailedPlacement(const std::vector<Rectangle> &rows,
+DetailedPlacement::DetailedPlacement(const std::vector<Row> &rows,
                                      const std::vector<int> &width,
                                      const std::vector<int> &posX,
                                      const std::vector<int> &posY,
@@ -105,6 +105,7 @@ DetailedPlacement::DetailedPlacement(const std::vector<Rectangle> &rows,
   assert(posX.size() == width.size());
   assert(posY.size() == width.size());
   assert(cellIndex.size() == width.size());
+
   rows_ = rows;
   cellX_ = posX;
   cellY_ = posY;

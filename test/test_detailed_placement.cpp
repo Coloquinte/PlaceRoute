@@ -6,6 +6,14 @@
 
 using namespace coloquinte;
 
+std::vector<Row> toRows(const std::vector<Rectangle> &recs) {
+  std::vector<Row> rows;
+  for (Rectangle r : recs) {
+    rows.emplace_back(r, CellOrientation::N);
+  }
+  return rows;
+}
+
 BOOST_AUTO_TEST_CASE(TestConstruction) {
   // 3 cells in two rows:
   // Row 0, x from 2 to 12, y 10, with cell 1 from 2 to 8 and cell 0 from 8 to
@@ -15,7 +23,7 @@ BOOST_AUTO_TEST_CASE(TestConstruction) {
   std::vector<int> cellY = {10, 10, 20};
   std::vector<int> cellIndex = {0, 1, 2};
   std::vector<Rectangle> rows = {{2, 12, 10, 20}, {2, 12, 20, 30}};
-  DetailedPlacement pl(rows, widths, cellX, cellY, cellIndex);
+  DetailedPlacement pl(toRows(rows), widths, cellX, cellY, cellIndex);
   pl.check();
 }
 
@@ -25,8 +33,9 @@ BOOST_AUTO_TEST_CASE(TestBeforeRow) {
   std::vector<int> cellY = {10};
   std::vector<int> cellIndex = {0};
   std::vector<Rectangle> rows = {{6, 12, 10, 20}};
-  BOOST_CHECK_THROW(DetailedPlacement(rows, widths, cellX, cellY, cellIndex),
-                    std::runtime_error);
+  BOOST_CHECK_THROW(
+      DetailedPlacement(toRows(rows), widths, cellX, cellY, cellIndex),
+      std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(TestAfterRow) {
@@ -35,8 +44,9 @@ BOOST_AUTO_TEST_CASE(TestAfterRow) {
   std::vector<int> cellY = {10};
   std::vector<int> cellIndex = {0};
   std::vector<Rectangle> rows = {{-10, 6, 10, 20}};
-  BOOST_CHECK_THROW(DetailedPlacement(rows, widths, cellX, cellY, cellIndex),
-                    std::runtime_error);
+  BOOST_CHECK_THROW(
+      DetailedPlacement(toRows(rows), widths, cellX, cellY, cellIndex),
+      std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(TestBadY) {
@@ -45,8 +55,9 @@ BOOST_AUTO_TEST_CASE(TestBadY) {
   std::vector<int> cellY = {11};
   std::vector<int> cellIndex = {0};
   std::vector<Rectangle> rows = {{-20, 20, 10, 20}};
-  BOOST_CHECK_THROW(DetailedPlacement(rows, widths, cellX, cellY, cellIndex),
-                    std::runtime_error);
+  BOOST_CHECK_THROW(
+      DetailedPlacement(toRows(rows), widths, cellX, cellY, cellIndex),
+      std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(TestOverlap) {
@@ -55,8 +66,9 @@ BOOST_AUTO_TEST_CASE(TestOverlap) {
   std::vector<int> cellY = {10, 10};
   std::vector<int> cellIndex = {0, 1};
   std::vector<Rectangle> rows = {{-20, 20, 10, 20}};
-  BOOST_CHECK_THROW(DetailedPlacement(rows, widths, cellX, cellY, cellIndex),
-                    std::runtime_error);
+  BOOST_CHECK_THROW(
+      DetailedPlacement(toRows(rows), widths, cellX, cellY, cellIndex),
+      std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(TestChanges) {
@@ -65,7 +77,7 @@ BOOST_AUTO_TEST_CASE(TestChanges) {
   std::vector<int> cellY = {10, 10, 10};
   std::vector<int> cellIndex = {0, 1, 2};
   std::vector<Rectangle> rows = {{0, 32, 10, 20}, {0, 32, 20, 30}};
-  DetailedPlacement pl(rows, widths, cellX, cellY, cellIndex);
+  DetailedPlacement pl(toRows(rows), widths, cellX, cellY, cellIndex);
   pl.check();
   pl.unplace(0);
   pl.check();
@@ -87,7 +99,7 @@ BOOST_AUTO_TEST_CASE(TestSwap) {
   std::vector<int> cellY = {10, 10, 10, 20, 20};
   std::vector<int> cellIndex = {0, 1, 2, 3, 4};
   std::vector<Rectangle> rows = {{0, 32, 10, 20}, {0, 32, 20, 30}};
-  DetailedPlacement pl(rows, widths, cellX, cellY, cellIndex);
+  DetailedPlacement pl(toRows(rows), widths, cellX, cellY, cellIndex);
   pl.check();
   BOOST_CHECK(pl.canSwap(0, 1));
   BOOST_CHECK(pl.canSwap(1, 2));
@@ -109,7 +121,7 @@ BOOST_AUTO_TEST_CASE(TestInsert) {
   std::vector<int> cellY = {10, 10, 10, 20, 20};
   std::vector<int> cellIndex = {0, 1, 2, 3, 4};
   std::vector<Rectangle> rows = {{0, 32, 10, 20}, {0, 32, 20, 30}};
-  DetailedPlacement pl(rows, widths, cellX, cellY, cellIndex);
+  DetailedPlacement pl(toRows(rows), widths, cellX, cellY, cellIndex);
   pl.check();
   BOOST_CHECK(pl.canInsert(0, 0, 1));
   BOOST_CHECK(pl.canInsert(0, 0, 2));
@@ -131,7 +143,7 @@ BOOST_AUTO_TEST_CASE(TestNoSwap) {
   std::vector<int> cellY = {10, 10, 10, 20, 20};
   std::vector<int> cellIndex = {0, 1, 2, 3, 4};
   std::vector<Rectangle> rows = {{0, 15, 10, 20}, {0, 15, 20, 30}};
-  DetailedPlacement pl(rows, widths, cellX, cellY, cellIndex);
+  DetailedPlacement pl(toRows(rows), widths, cellX, cellY, cellIndex);
   pl.check();
   BOOST_CHECK(pl.canSwap(0, 1));
   BOOST_CHECK(!pl.canSwap(0, 2));

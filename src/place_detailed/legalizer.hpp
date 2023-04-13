@@ -32,7 +32,7 @@ class Legalizer {
    *      @param targetX: Target x coordinate for legalization
    *      @param targetY: Target y coordinate for legalization
    */
-  Legalizer(const std::vector<Rectangle> &rows, const std::vector<int> &width,
+  Legalizer(const std::vector<Row> &rows, const std::vector<int> &width,
             const std::vector<int> &targetX, const std::vector<int> &targetY);
 
   /**
@@ -155,7 +155,7 @@ class Legalizer {
 
  private:
   // Placement data
-  std::vector<Rectangle> rows_;
+  std::vector<Row> rows_;
   std::vector<int> cellWidth_;
   std::vector<int> cellTargetX_;
   std::vector<int> cellTargetY_;

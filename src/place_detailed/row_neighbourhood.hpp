@@ -15,6 +15,12 @@ class RowNeighbourhood {
                             int nbNeighbourRows = 1);
 
   /**
+   * @brief Initialize the datastructure
+   */
+  explicit RowNeighbourhood(const std::vector<Row> &rows,
+                            int nbNeighbourRows = 1);
+
+  /**
    * @brief Return the number of rows
    */
   int nbRows() const { return rowsBelow_.size(); }

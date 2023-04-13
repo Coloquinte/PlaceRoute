@@ -31,11 +31,11 @@ DensityGrid DensityGrid::fromIspdCircuit(const Circuit &circuit,
       minCellHeight = std::min(height, minCellHeight);
     }
   }
-  std::vector<Rectangle> rows = circuit.computeRows();
+  std::vector<Row> rows = circuit.computeRows();
   // Add a small margin on each side of each row so we leave some empty area
   int margin = sideMargin * minCellHeight;
   std::vector<Rectangle> clippedRows;
-  for (Rectangle row : rows) {
+  for (Row row : rows) {
     if (row.width() <= 2 * margin) {
       continue;
     }

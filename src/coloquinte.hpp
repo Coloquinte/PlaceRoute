@@ -539,6 +539,22 @@ struct ColoquinteParameters {
 };
 
 /**
+ * @brief Representation of a placement row in a circuit
+ */
+struct Row : public Rectangle {
+  /**
+   * @brief Placement area for the rows
+   */
+  CellOrientation orientation;
+
+  /**
+   * @brief Construct a row from its area and orientation
+   */
+  Row(Rectangle a, CellOrientation orient)
+      : Rectangle(a), orientation(orient) {}
+};
+
+/**
  * @brief Flat representation of a circuit
  */
 class Circuit {
@@ -569,7 +585,7 @@ class Circuit {
   int nbPins() const { return netLimits_.back(); }
 
   /**
-   * @brief Set the x position for all cells
+   * @brief Get the x position for all cells
    */
   const std::vector<int> &cellX() const { return cellX_; }
 
@@ -606,7 +622,7 @@ class Circuit {
   }
 
   /**
-   * @brief Set the fixed status for all cells
+   * @brief Set the obstruction status for all cells
    */
   void setCellIsObstruction(const std::vector<bool> &f);
 
@@ -645,12 +661,12 @@ class Circuit {
   /**
    * @brief Get all rows
    */
-  const std::vector<Rectangle> &rows() const { return rows_; }
+  const std::vector<Row> &rows() const { return rows_; }
 
   /**
    * @brief Set all rows
    */
-  void setRows(const std::vector<Rectangle> &r) { rows_ = r; }
+  void setRows(const std::vector<Row> &r) { rows_ = r; }
 
   /**
    * @brief Add a single net
@@ -678,7 +694,7 @@ class Circuit {
   /**
    * @brief Return the rows after removing the obstacles
    */
-  std::vector<Rectangle> computeRows(
+  std::vector<Row> computeRows(
       const std::vector<Rectangle> &additionalObstacles =
           std::vector<Rectangle>()) const;
 

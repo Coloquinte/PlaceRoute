@@ -9,6 +9,16 @@ RowNeighbourhood::RowNeighbourhood(const std::vector<Rectangle> &rows,
   simpleSetup(rows, nbNeighbourRows);
 }
 
+RowNeighbourhood::RowNeighbourhood(const std::vector<Row> &rows,
+                                   int nbNeighbourRows) {
+  std::vector<Rectangle> r;
+  r.reserve(rows.size());
+  for (Rectangle row : rows) {
+    r.push_back(row);
+  }
+  simpleSetup(r, nbNeighbourRows);
+}
+
 void RowNeighbourhood::check() const {
   if (rowsBelow_.size() != nbRows()) {
     throw std::runtime_error("Inconsistent number of rows in neighbourhood");

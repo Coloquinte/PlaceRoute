@@ -202,7 +202,7 @@ Rectangle Circuit::computePlacementArea() const {
   return Rectangle(minX, maxX, minY, maxY);
 }
 
-std::vector<Rectangle> Circuit::computeRows(
+std::vector<Row> Circuit::computeRows(
     const std::vector<Rectangle> &additionalObstacles) const {
   std::vector<Rectangle> obstacles = additionalObstacles;
   for (int i = 0; i < nbCells(); ++i) {
@@ -215,8 +215,8 @@ std::vector<Rectangle> Circuit::computeRows(
     obstacles.emplace_back(placement(i));
   }
   // Use boost::polygon ro compute the difference of each row to every other
-  std::vector<Rectangle> ret;
-  for (Rectangle row : rows_) {
+  std::vector<Row> ret;
+  for (Row row : rows_) {
     bpl::polygon_90_set_data<int> row_set;
     row_set.insert(
         bpl::rectangle_data<int>(row.minX, row.minY, row.maxX, row.maxY));
@@ -231,7 +231,7 @@ std::vector<Rectangle> Circuit::computeRows(
       Rectangle newRow(bpl::xl(r), bpl::xh(r), bpl::yl(r), bpl::yh(r));
       // Filter out partially covered rows
       if (newRow.height() == row.height()) {
-        ret.push_back(newRow);
+        ret.emplace_back(newRow, row.orientation);
       }
     }
   }
