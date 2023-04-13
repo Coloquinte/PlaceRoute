@@ -19,7 +19,7 @@ DensityLegalizer::Parameters::Parameters() {
   lineReoptSize = 2;
   lineReoptOverlap = 1;
   diagReoptSize = 2;
-  diagReoptOverlap = 2;
+  diagReoptOverlap = 1;
   squareReoptSize = 1;
   squareReoptOverlap = 1;
   quadraticPenaltyFactor = 0.0;
