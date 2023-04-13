@@ -12,6 +12,9 @@ DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit) {
     if (circuit.cellIsFixed_[i]) {
       widths[i] = -1;
     }
+    if (circuit.cellHeight_[i] != circuit.rowHeight()) {
+      widths[i] = -1;
+    }
   }
   std::vector<int> cellIndex;
   cellIndex.reserve(circuit.nbCells());
@@ -31,6 +34,9 @@ DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit,
   std::vector<Rectangle> obstacles;
   for (int c = 0; c < circuit.nbCells(); ++c) {
     if (circuit.isFixed(c)) {
+      continue;
+    }
+    if (circuit.cellHeight_[c] != circuit.rowHeight()) {
       continue;
     }
     Rectangle pl = circuit.placement(c);

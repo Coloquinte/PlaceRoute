@@ -635,6 +635,8 @@ def main():
     )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
+        "--report-only", help="Load the circuit and return", action="store_true")
+    group.add_argument(
         "--no-global", help="Skip global placement", action="store_true")
     group.add_argument(
         "--only-global",
@@ -704,6 +706,8 @@ def main():
                 circuit, args.save_images, args.image_width, args.image_extension
             )
             callback.save_view = args.save_all_images
+    if args.report_only:
+        return
 
     if args.no_global:
         print("Global placement skipped at user's request")

@@ -305,29 +305,35 @@ std::string Circuit::report() const {
   int nbMacros = 0;
   int nbSingleRowCells = 0;
   int nbMultiRowCells = 0;
+  int nbUnalignedCells = 0;
   int nbPlaceableMacros = 0;
   long long singleRowCellArea = 0;
   long long multiRowCellArea = 0;
+  long long unalignedCellArea = 0;
   long long placeableMacroArea = 0;
   for (int i = 0; i < nbCells(); ++i) {
     if (isFixed(i)) {
       if (isObstruction(i)) {
         ++nbMacros;
       }
-    } else if (cellHeight_[i] <= stdCellHeight) {
-      ++nbSingleRowCells;
-      singleRowCellArea += area(i);
-    } else if (cellHeight_[i] <= 4 * stdCellHeight) {
-      ++nbMultiRowCells;
-      multiRowCellArea += area(i);
-    } else {
+    } else if (cellHeight_[i] > 4 * stdCellHeight) {
       ++nbPlaceableMacros;
       placeableMacroArea += area(i);
+    } else if (cellHeight_[i] % stdCellHeight != 0) {
+      ++nbUnalignedCells;
+      unalignedCellArea += area(i);
+    } else if (cellHeight_[i] == stdCellHeight) {
+      ++nbSingleRowCells;
+      singleRowCellArea += area(i);
+    } else {
+      ++nbMultiRowCells;
+      multiRowCellArea += area(i);
     }
   }
-  int nbPlaceableCells = nbSingleRowCells + nbMultiRowCells + nbPlaceableMacros;
-  long long placeableCellArea =
-      singleRowCellArea + multiRowCellArea + placeableMacroArea;
+  int nbPlaceableCells =
+      nbSingleRowCells + nbMultiRowCells + nbUnalignedCells + nbPlaceableMacros;
+  long long placeableCellArea = singleRowCellArea + multiRowCellArea +
+                                unalignedCellArea + placeableMacroArea;
   int nbFixedPins = 0;
   for (int i = 0; i < nbNets(); ++i) {
     for (int j = 0; j < nbPinsNet(i); ++j) {
@@ -354,6 +360,9 @@ std::string Circuit::report() const {
   if (nbMultiRowCells > 0) {
     ss << ", " << nbMultiRowCells << " multi-row cells";
   }
+  if (nbUnalignedCells > 0) {
+    ss << ", " << nbUnalignedCells << " unaligned cells";
+  }
   if (nbPlaceableMacros > 0) {
     ss << ", " << nbPlaceableMacros << " placeable macro blocks";
   } else {
@@ -378,6 +387,10 @@ std::string Circuit::report() const {
       ss << ", " << 100.0 * multiRowCellArea / availableArea
          << "% multi-row cells";
     }
+    if (unalignedCellArea > 0) {
+      ss << ", " << 100.0 * unalignedCellArea / availableArea
+         << "% unaligned cells";
+    }
     if (placeableMacroArea > 0) {
       ss << ", " << 100.0 * placeableMacroArea / availableArea
          << "% placeable macro blocks";
@@ -385,6 +398,17 @@ std::string Circuit::report() const {
     ss << ")";
   }
   ss << "\n";
+
+  if (nbUnalignedCells > 0) {
+    ss << "WARNING: some cells are not aligned on a standard cell heights "
+       << "and cannot be placed.\n";
+  }
+  if (nbMultiRowCells > 0) {
+    ss << "WARNING: multi-row cells are present and cannot be placed.\n";
+  }
+  if (nbPlaceableMacros > 0) {
+    ss << "WARNING: placeable macros are present and cannot be placed.\n";
+  }
   return ss.str();
 }
 
