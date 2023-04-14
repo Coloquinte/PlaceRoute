@@ -355,6 +355,10 @@ std::string Circuit::report() const {
   std::stringstream ss;
   ss << std::fixed << std::setprecision(1);
   ss << "Circuit report:\n";
+
+  /**
+   * Report cells
+   */
   ss << "\t" << nbPlaceableCells << " cells (" << nbSingleRowCells
      << " single-row cells";
   if (nbMultiRowCells > 0) {
@@ -370,10 +374,30 @@ std::string Circuit::report() const {
   }
   ss << ")\n";
 
+  /**
+   * Report nets
+   */
   ss << "\t" << nbNets() << " nets, " << nbMoveablePins << " pins + "
      << nbFixedPins << " fixed"
      << ", " << (float)nbPins() / nbNets() << " pins/net\n";
 
+  /**
+   * Report rows
+   */
+  std::unordered_set<CellOrientation> orients;
+  for (Row r : rows_) {
+    orients.insert(r.orientation);
+  }
+  ss << "\t" << nbRows() << " rows ";
+  if (orients.size() <= 1) {
+    ss << "(single orientation)\n";
+  } else {
+    ss << "(" << orients.size() << " orientations)\n";
+  }
+
+  /**
+   * Report area breakdown
+   */
   ss << "\t";
   if (totalArea != availableArea) {
     ss << 100.0 * (totalArea - availableArea) / totalArea
@@ -404,10 +428,12 @@ std::string Circuit::report() const {
        << "and cannot be placed.\n";
   }
   if (nbMultiRowCells > 0) {
+    ss << std::endl;
     ss << "WARNING: multi-row cells are present and cannot be placed.\n";
   }
   if (nbPlaceableMacros > 0) {
-    ss << "WARNING: placeable macros are present and cannot be placed.\n";
+    ss << std::endl;
+    ss << "WARNING: movable macros are present and cannot be placed.\n";
   }
   return ss.str();
 }
