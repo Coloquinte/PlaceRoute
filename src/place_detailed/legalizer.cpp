@@ -248,15 +248,27 @@ std::vector<int> Legalizer::cellLegalY() const {
   return ret;
 }
 
+std::vector<CellOrientation> Legalizer::cellLegalOrientation() const {
+  std::vector<CellOrientation> ret(nbCells());
+  for (int r = 0; r < nbRows(); ++r) {
+    for (int c : rowToCells_[r]) {
+      ret[c] = rows_[r].orientation;
+    }
+  }
+  return ret;
+}
+
 void Legalizer::exportPlacement(Circuit &circuit) {
   std::vector<int> cellX = cellLegalX();
   std::vector<int> cellY = cellLegalY();
+  std::vector<CellOrientation> cellOrient = cellLegalOrientation();
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (isIgnored(i)) {
       continue;
     }
     circuit.cellX_[i] = cellX[i];
     circuit.cellY_[i] = cellY[i];
+    circuit.cellOrientation_[i] = cellOrient[i];
   }
 }
 

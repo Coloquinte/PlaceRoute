@@ -269,6 +269,7 @@ def _read_rows(filename):
             min_y = None
             width = None
             height = None
+            orient = CellOrientation.N
             for i in range(1, len(desc)):
                 if desc[i - 1].lower() == "coordinate":
                     min_y = int(desc[i])
@@ -278,13 +279,16 @@ def _read_rows(filename):
                     width = int(desc[i])
                 if desc[i - 1].lower() == "height":
                     height = int(desc[i])
+                if desc[i - 1].lower() == "siteorient":
+                    if desc[i] in CellOrientation.__members__:
+                        orient = CellOrientation.__members__[desc[i]]
 
             assert min_x is not None
             assert min_y is not None
             assert width is not None
             assert height is not None
             r = Rectangle(min_x, min_x + width, min_y, min_y + height)
-            rows.append(Row(r, CellOrientation.N))
+            rows.append(Row(r, orient))
         return rows
 
 

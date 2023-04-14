@@ -96,6 +96,11 @@ class Legalizer {
   std::vector<int> cellLegalY() const;
 
   /**
+   * @brief Compute the cell orientation after legalization
+   */
+  std::vector<CellOrientation> cellLegalOrientation() const;
+
+  /**
    * @brief Check consistency of the datastructure
    */
   void check() const;
