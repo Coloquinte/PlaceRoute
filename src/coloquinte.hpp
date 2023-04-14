@@ -627,16 +627,20 @@ class Circuit {
   void setCellIsObstruction(const std::vector<bool> &f);
 
   /**
-   * @brief Get the orientation for all cells
+   * @brief Get the row orientation for all cells
+   *
+   * This is the orientation that the row at the bottom of the cell should have;
+   * for single-row cells, this is always N (north), but multi-row cells may
+   * require row with a specific orientation.
    */
-  const std::vector<CellOrientation> &cellOrientation() const {
-    return cellOrientation_;
+  const std::vector<CellOrientation> &cellRowOrientation() const {
+    return cellRowOrientation_;
   }
 
   /**
-   * @brief Set the orientation for all cells
+   * @brief Set the row orientation for all cells
    */
-  void setCellOrientation(const std::vector<CellOrientation> &orient);
+  void setCellRowOrientation(const std::vector<CellOrientation> &f);
 
   /**
    * @brief Get the width for all cells
@@ -657,6 +661,18 @@ class Circuit {
    * @brief Set the height for all cells
    */
   void setCellHeight(const std::vector<int> &heights);
+
+  /**
+   * @brief Get the orientation for all cells
+   */
+  const std::vector<CellOrientation> &cellOrientation() const {
+    return cellOrientation_;
+  }
+
+  /**
+   * @brief Set the orientation for all cells
+   */
+  void setCellOrientation(const std::vector<CellOrientation> &orient);
 
   /**
    * @brief Get all rows
@@ -872,6 +888,7 @@ class Circuit {
   std::vector<int> cellHeight_;
   std::vector<bool> cellIsFixed_;
   std::vector<bool> cellIsObstruction_;
+  std::vector<CellOrientation> cellRowOrientation_;
   std::vector<int> cellX_;
   std::vector<int> cellY_;
   std::vector<CellOrientation> cellOrientation_;

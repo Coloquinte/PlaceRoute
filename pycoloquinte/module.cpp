@@ -240,10 +240,7 @@ Construct a circuit.
                              "Number of standard cell rows")
       .def_property_readonly("nb_pins", &Circuit::nbPins,
                              "Total number of pins")
-      .def_property("cell_x", &Circuit::cellX, &Circuit::setCellX,
-                    "X position of the cells")
-      .def_property("cell_y", &Circuit::cellY, &Circuit::setCellY,
-                    "Y position of the cells")
+
       .def_property("cell_width", &Circuit::cellWidth, &Circuit::setCellWidth,
                     "Width of the cells")
       .def_property("cell_height", &Circuit::cellHeight,
@@ -253,6 +250,14 @@ Construct a circuit.
       .def_property("cell_is_obstruction", &Circuit::cellIsObstruction,
                     &Circuit::setCellIsObstruction,
                     "Obstruction status flag of the cells")
+      .def_property("cell_row_orientation", &Circuit::cellRowOrientation,
+                    &Circuit::setCellRowOrientation,
+                    "Orientation required for the standard cell row at the "
+                    "bottom of the cell")
+      .def_property("cell_x", &Circuit::cellX, &Circuit::setCellX,
+                    "X position of the cells")
+      .def_property("cell_y", &Circuit::cellY, &Circuit::setCellY,
+                    "Y position of the cells")
       .def_property("cell_orientation", &Circuit::cellOrientation,
                     &Circuit::setCellOrientation, "Orientation of the cells")
       .def_property_readonly("cell_placement", &Circuit::cellPlacement,
