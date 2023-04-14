@@ -116,14 +116,17 @@ def _read_nodes(filename):
                 nb_terminals = _parse_num_line(line)
                 continue
             vals = line.split()
-            assert 3 <= len(vals) <= 4
-            name, width, height = vals[:3]
-            width = int(width)
-            height = int(height)
             fixed = False
-            if len(vals) == 4:
-                assert vals[3] == "terminal"
+            if "terminal" in vals[1:]:
                 fixed = True
+            name = vals[0]
+            if len(vals) >= 3:
+                width, height = vals[1:3]
+                width = int(width)
+                height = int(height)
+            else:
+                width = 0
+                height = 0
             nodes.append((name, width, height, fixed))
     if nb_nodes is not None:
         assert len(nodes) == nb_nodes
@@ -269,6 +272,7 @@ def _read_rows(filename):
             min_y = None
             width = None
             height = None
+            site_width = 1
             orient = CellOrientation.N
             for i in range(1, len(desc)):
                 if desc[i - 1].lower() == "coordinate":
@@ -279,10 +283,13 @@ def _read_rows(filename):
                     width = int(desc[i])
                 if desc[i - 1].lower() == "height":
                     height = int(desc[i])
+                if desc[i - 1].lower() == "sitewidth":
+                    site_width = int(desc[i])
                 if desc[i - 1].lower() == "siteorient":
                     if desc[i] in CellOrientation.__members__:
                         orient = CellOrientation.__members__[desc[i]]
 
+            width *= site_width
             assert min_x is not None
             assert min_y is not None
             assert width is not None
