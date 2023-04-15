@@ -435,17 +435,26 @@ class Circuit(coloquinte_pybind.Circuit):
                 print(f"{name}\t{x}\t{y}\t: {orient}", file=f)
 
     def write_image(self, filename, macros_only=False, image_width=2048):
-        img = self._draw_cells(macros_only)
+        img = self._make_image()
+        self._draw_rows(img)
+        self._draw_cells(img, True)
+        if not macros_only:
+            self._draw_cells(img, False)
         self._save_image(img, filename, image_width)
 
     def write_displacement(self, filename, pl1, pl2, image_width=2048):
-        from PIL import ImageDraw
+        img = self._make_image()
+        self._draw_rows(img)
+        self._draw_cells(img, True)
+        self._draw_displacement(img, pl1, pl2)
+        self._save_image(img, filename, image_width)
 
+    def _draw_displacement(self, img, pl1, pl2):
+        from PIL import ImageDraw
         draw_area = self._draw_area()
         min_x, min_y, max_x, max_y = draw_area
         fact = self._draw_factor(draw_area)
 
-        img = self._draw_cells(True)
         draw = ImageDraw.Draw(img)
         fixed = self.cell_is_fixed
         assert len(pl1) == len(pl2)
@@ -462,11 +471,9 @@ class Circuit(coloquinte_pybind.Circuit):
                 draw.line([(x1, y1), (x2, y2)], fill="red", width=2)
                 draw.arc([x1 - 1, y1 - 1, x1 + 1, y1 + 1],
                          0, 360, fill="black")
-        self._save_image(img, filename, image_width)
 
     def _save_image(self, img, filename, image_width):
         from PIL import Image
-
         new_height = int(image_width * img.height / img.width)
         img = img.resize((image_width, new_height), Image.LANCZOS)
         img.save(filename)
@@ -493,38 +500,56 @@ class Circuit(coloquinte_pybind.Circuit):
         return max(1.0, (max_x - min_x) / max_allowed_dim,
                    (max_y - min_y) / max_allowed_dim)
 
-    def _draw_cells(self, macros_only):
-        from PIL import Image, ImageDraw
-
-        placement = self.cell_placement
-        fixed = self.cell_is_fixed
-
+    def _make_image(self):
+        from PIL import Image
         draw_area = self._draw_area()
         min_x, min_y, max_x, max_y = draw_area
         fact = self._draw_factor(draw_area)
 
         img_width = round((max_x - min_x) / fact)
         img_height = round((max_y - min_y) / fact)
-        img = Image.new("RGB", (img_width, img_height), (255, 255, 255))
+        img = Image.new("RGB", (img_width, img_height), "lightgray")
+        return img
+
+    def _draw_rows(self, img):
+        from PIL import ImageDraw
+        draw_area = self._draw_area()
+        min_x, min_y, max_x, max_y = draw_area
+        fact = self._draw_factor(draw_area)
         draw = ImageDraw.Draw(img)
 
+        rows = self.rows
+        for r in rows:
+            xmn = round((r.min_x - min_x) / fact)
+            xmx = round((r.max_x - min_x) / fact)
+            ymn = round((r.min_y - min_y) / fact)
+            ymx = round((r.max_y - min_y) / fact)
+            rect = [(xmn, ymn), (xmx, ymx)]
+            draw.rectangle(rect, fill="white")
+
+    def _draw_cells(self, img, macros):
+        from PIL import ImageDraw
+        draw_area = self._draw_area()
+        min_x, min_y, max_x, max_y = draw_area
+        fact = self._draw_factor(draw_area)
+        draw = ImageDraw.Draw(img)
+
+        placement = self.cell_placement
+        fixed = self.cell_is_fixed
         for i, pl in enumerate(placement):
+            if fixed[i] != macros:
+                continue
             xmn = round((pl.min_x - min_x) / fact)
             xmx = round((pl.max_x - min_x) / fact)
             ymn = round((pl.min_y - min_y) / fact)
             ymx = round((pl.max_y - min_y) / fact)
             rect = [(xmn, ymn), (xmx, ymx)]
+            if xmn == xmx or ymn == ymx:
+                continue
             if fixed[i]:
-                draw.rectangle(
-                    rect,
-                    fill="gray",
-                    outline="black",
-                    width=8,
-                )
-            elif not macros_only:
-                draw.rectangle(
-                    rect, fill="blue"
-                )
+                draw.rectangle(rect, fill="gray", outline="black", width=8)
+            else:
+                draw.rectangle(rect, fill="blue")
         return img
 
 
