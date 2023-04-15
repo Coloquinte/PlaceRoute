@@ -117,6 +117,7 @@ def _read_nodes(filename):
                 continue
             vals = line.split()
             fixed = False
+            obstruction = True
             if "terminal" in vals[1:]:
                 fixed = True
             name = vals[0]
@@ -125,9 +126,11 @@ def _read_nodes(filename):
                 width = int(width)
                 height = int(height)
             else:
+                # Dummy placed cell
                 width = 0
                 height = 0
-            nodes.append((name, width, height, fixed))
+                obstruction = False
+            nodes.append((name, width, height, fixed, obstruction))
     if nb_nodes is not None:
         assert len(nodes) == nb_nodes
     if nb_terminals is not None:
@@ -136,7 +139,8 @@ def _read_nodes(filename):
     widths = [n[1] for n in nodes]
     heights = [n[2] for n in nodes]
     fixed = [n[3] for n in nodes]
-    return names, widths, heights, fixed
+    obstruction = [n[4] for n in nodes]
+    return names, widths, heights, fixed, obstruction
 
 
 def _read_nets(filename, cell_names, cell_widths, cell_heights, sort_entries=False):
@@ -334,7 +338,7 @@ class Circuit(coloquinte_pybind.Circuit):
             pl_filename,
             scl_filename,
         ) = _read_aux(filename)
-        cell_names, cell_widths, cell_heights, cell_is_fixed = _read_nodes(
+        cell_names, cell_widths, cell_heights, cell_fixed, cell_obstruction = _read_nodes(
             node_filename
         )
         nets = _read_nets(net_filename, cell_names, cell_widths, cell_heights)
@@ -348,10 +352,11 @@ class Circuit(coloquinte_pybind.Circuit):
         ret._cell_name = cell_names
         ret.cell_width = cell_widths
         ret.cell_height = cell_heights
-        ret.cell_is_fixed = cell_is_fixed
+        ret.cell_is_fixed = cell_fixed
+        ret.cell_is_obstruction = cell_obstruction
         if ignore_obstructions:
             # All fixed cells marked as not obstructions
-            ret.cell_is_obstruction = [not f for f in cell_is_fixed]
+            ret.cell_is_obstruction = [not f for f in cell_fixed]
 
         # Setup nets and pins
         ret._net_name = []
@@ -800,7 +805,7 @@ def main():
 
     if args.save_images is not None:
         circuit.write_image(
-            f"{args.save_images}_placed.{args.image_extension}", True, args.image_width
+            f"{args.save_images}_placed.{args.image_extension}", False, args.image_width
         )
     if callback is not None:
         callback.save_graph()
