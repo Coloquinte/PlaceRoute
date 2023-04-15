@@ -38,12 +38,12 @@ class RowLegalizer {
    * @brief Return the cost of pushing a new cell, without updating the
    * datastructure
    */
-  int getCost(int width, int targetPos);
+  long long getCost(int width, int targetPos);
 
   /**
    * @brief Update the datastructure with a new cell and return the cost
    */
-  int push(int width, int targetPos);
+  long long push(int width, int targetPos);
 
   /**
    * @brief Return the placement of each cell in the datastructure
@@ -88,7 +88,7 @@ class RowLegalizer {
   int width(int ind) const { return cumWidth_[ind + 1] - cumWidth_[ind]; }
 
   /// Get the cost of pushing a cell on the row
-  int getDisplacement(int width, int targetPos, bool update);
+  long long getDisplacement(int width, int targetPos, bool update);
 
   /// Leftmost coordinate of the region
   int begin_;

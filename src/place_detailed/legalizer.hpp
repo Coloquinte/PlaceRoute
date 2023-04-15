@@ -126,7 +126,7 @@ class Legalizer {
    * @brief Simulate placing a single cell in a given row, pushing other cells
    * as needed Return a pair: true if successful and the added distance
    */
-  std::pair<bool, int> placeCellOptimally(int cell, int row);
+  std::pair<bool, long long> placeCellOptimally(int cell, int row);
 
   /**
    * @brief Compute the ordering of the cells

@@ -7,13 +7,13 @@
 #include <utility>
 
 namespace coloquinte {
-inline int RowLegalizer::getDisplacement(int width, int targetPos,
+inline long long RowLegalizer::getDisplacement(int width, int targetPos,
                                          bool update) {
   int targetAbsPos = targetPos - usedSpace();
   int slope = -width;
 
   int cur_pos = end_;
-  int cur_cost = 0;
+  long long cur_cost = 0;
 
   std::vector<Bound> passed_bounds;
 
@@ -23,7 +23,7 @@ inline int RowLegalizer::getDisplacement(int width, int targetPos,
           bounds.top().absolutePos > end_ - usedSpace() - width)) {
     int old_pos = cur_pos;
     cur_pos = bounds.top().absolutePos;
-    cur_cost += (old_pos - cur_pos) * (slope + width);
+    cur_cost += static_cast<long long>(old_pos - cur_pos) * (slope + width);
     slope += bounds.top().weight;
 
     // Remember which bounds we encountered in order to reset the object to its
@@ -67,11 +67,11 @@ inline int RowLegalizer::getDisplacement(int width, int targetPos,
                           targetAbsPos);  // Add the cost of the new cell
 }
 
-int RowLegalizer::getCost(int width, int targetPos) {
+long long RowLegalizer::getCost(int width, int targetPos) {
   return getDisplacement(width, targetPos, false);
 }
 
-int RowLegalizer::push(int width, int targetPos) {
+long long RowLegalizer::push(int width, int targetPos) {
   return getDisplacement(width, targetPos, true);
 }
 

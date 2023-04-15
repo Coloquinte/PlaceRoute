@@ -36,10 +36,9 @@ Legalizer::Legalizer(const std::vector<Row> &rows,
   assert(width.size() == targetY.size());
   // Sort the rows
   rows_ = rows;
-  std::stable_sort(
-      rows_.begin(), rows_.end(), [](Row a, Row b) -> bool {
-        return a.minY < b.minY || (a.minY == b.minY && a.minX < b.minX);
-      });
+  std::stable_sort(rows_.begin(), rows_.end(), [](Row a, Row b) -> bool {
+    return a.minY < b.minY || (a.minY == b.minY && a.minX < b.minX);
+  });
   for (const Row &row : rows_) {
     rowLegalizers_.emplace_back(row.minX, row.maxX);
   }
@@ -137,15 +136,16 @@ bool Legalizer::placeCellOptimally(int cell, LegalizationModel costModel) {
   long long bestDist = std::numeric_limits<long long>::max();
 
   auto tryPlace = [&](int row) {
-    int yDist = norm(0, rows_[row].minY - targetY, costModel);
+    long long yDist =
+        cellWidth_[cell] * norm(0, rows_[row].minY - targetY, costModel);
     if (bestRow != -1 && yDist > bestDist) {
       // Not possible to do better since the rows are sorted
       return true;
     }
     // Find the best position for the cell
-    auto [ok, dist] = placeCellOptimally(cell, row);
+    auto [ok, xDist] = placeCellOptimally(cell, row);
     // TODO: extend this to non-L1 cases
-    dist += cellWidth_[cell] * yDist;
+    long long dist = xDist + yDist;
     if (!ok) {
       // Not possible to place in this row, but cannot stop yet
       return false;
@@ -183,7 +183,7 @@ bool Legalizer::placeCellOptimally(int cell, LegalizationModel costModel) {
   return true;
 }
 
-std::pair<bool, int> Legalizer::placeCellOptimally(int cell, int row) {
+std::pair<bool, long long> Legalizer::placeCellOptimally(int cell, int row) {
   if (rowLegalizers_[row].remainingSpace() < cellWidth_[cell]) {
     return std::make_pair(false, 0);
   }
