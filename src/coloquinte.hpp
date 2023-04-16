@@ -130,8 +130,26 @@ enum class CellOrientation {
   FE
 };
 
+/**
+ * @brief Polarity of a cell with respect to standard cell rows
+ *
+ * A cell with a polarity can only be placed in rows matching this polarity.
+ * If the cell has an even number of rows, it can only be placed in every other
+ * row (those with the same polarity). If it has an odd number of rows, it can
+ * be placed in any row, but requires a vertical flip for half of them.
+ */
+enum class CellRowPolarity {
+  /// Must be in the same orientation as the row at the bottom
+  SAME,
+  /// Must be in the opposite orientation as the row at the bottom
+  OPPOSITE,
+  /// Any row orientation allowed
+  ANY
+};
+
 std::string toString(LegalizationModel model);
 std::string toString(NetModelOption model);
+std::string toString(CellRowPolarity pol);
 
 /**
  * @brief Placement callbacks are called with the current step.
@@ -633,14 +651,14 @@ class Circuit {
    * for single-row cells, this is always N (north), but multi-row cells may
    * require row with a specific orientation.
    */
-  const std::vector<CellOrientation> &cellRowOrientation() const {
-    return cellRowOrientation_;
+  const std::vector<CellRowPolarity> &cellRowPolarity() const {
+    return cellRowPolarity_;
   }
 
   /**
    * @brief Set the row orientation for all cells
    */
-  void setCellRowOrientation(const std::vector<CellOrientation> &f);
+  void setCellRowPolarity(const std::vector<CellRowPolarity> &f);
 
   /**
    * @brief Get the width for all cells
@@ -888,7 +906,7 @@ class Circuit {
   std::vector<int> cellHeight_;
   std::vector<bool> cellIsFixed_;
   std::vector<bool> cellIsObstruction_;
-  std::vector<CellOrientation> cellRowOrientation_;
+  std::vector<CellRowPolarity> cellRowPolarity_;
   std::vector<int> cellX_;
   std::vector<int> cellY_;
   std::vector<CellOrientation> cellOrientation_;

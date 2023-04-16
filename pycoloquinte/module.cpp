@@ -32,6 +32,12 @@ PYBIND11_MODULE(coloquinte_pybind, m) {
       .value("FE", CellOrientation::FE, "Flipped + East")
       .export_values();
 
+  py::enum_<CellRowPolarity>(m, "CellRowPolarity")
+      .value("SAME", CellRowPolarity::SAME, "Same")
+      .value("OPPOSITE", CellRowPolarity::OPPOSITE, "Opposite")
+      .value("ANY", CellRowPolarity::ANY, "Any")
+      .export_values();
+
   py::class_<Rectangle>(m, "Rectangle")
       .def(py::init<int, int, int, int>(), R"pbdoc(
         Construct a rectangle
@@ -250,10 +256,10 @@ Construct a circuit.
       .def_property("cell_is_obstruction", &Circuit::cellIsObstruction,
                     &Circuit::setCellIsObstruction,
                     "Obstruction status flag of the cells")
-      .def_property("cell_row_orientation", &Circuit::cellRowOrientation,
-                    &Circuit::setCellRowOrientation,
-                    "Orientation required for the standard cell row at the "
-                    "bottom of the cell")
+      .def_property(
+          "cell_row_polarity", &Circuit::cellRowPolarity,
+          &Circuit::setCellRowPolarity,
+          "Polarity of the cell with respect to the standard cell rows")
       .def_property("cell_x", &Circuit::cellX, &Circuit::setCellX,
                     "X position of the cells")
       .def_property("cell_y", &Circuit::cellY, &Circuit::setCellY,

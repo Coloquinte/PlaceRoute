@@ -22,7 +22,7 @@ Circuit::Circuit(int nbCells) {
   cellHeight_.resize(nbCells);
   cellIsFixed_.resize(nbCells, false);
   cellIsObstruction_.resize(nbCells, true);
-  cellRowOrientation_.resize(nbCells, CellOrientation::N);
+  cellRowPolarity_.resize(nbCells, CellRowPolarity::SAME);
   cellX_.resize(nbCells);
   cellY_.resize(nbCells);
   cellOrientation_.resize(nbCells);
@@ -105,14 +105,14 @@ void Circuit::setCellOrientation(const std::vector<CellOrientation> &orient) {
   cellOrientation_ = orient;
 }
 
-void Circuit::setCellRowOrientation(
-    const std::vector<CellOrientation> &orient) {
+void Circuit::setCellRowPolarity(
+    const std::vector<CellRowPolarity> &orient) {
   if (orient.size() != nbCells()) {
     throw std::runtime_error(
         "Number of elements is not the same as the number of cells of the "
         "circuit");
   }
-  cellRowOrientation_ = orient;
+  cellRowPolarity_ = orient;
 }
 
 void Circuit::setCellWidth(const std::vector<int> &widths) {

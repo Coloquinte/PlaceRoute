@@ -36,6 +36,19 @@ std::string toString(NetModelOption model) {
   }
 }
 
+std::string toString(CellRowPolarity pol) {
+  switch (pol) {
+    case CellRowPolarity::SAME:
+      return "SAME";
+    case CellRowPolarity::OPPOSITE:
+      return "OPPOSITE";
+    case CellRowPolarity::ANY:
+      return "ANY";
+    default:
+      return "UnknownCellRowPolarity";
+  }
+}
+
 std::string Rectangle::toString() const {
   std::stringstream ss;
   ss << "Rectangle " << minX << ".." << maxX << " x " << minY << ".." << maxY;
