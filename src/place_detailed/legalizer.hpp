@@ -28,11 +28,15 @@ class Legalizer {
    * @brief Initialize the datastructure
    *      @param rows: Available rows for placement; must all be the right
    * height for the cells
-   *      @param width: Width of the cells when placed in a row
+   *      @param width: Width of the cells
+   *      @param height: Height of the cells
+   *      @param polarity: Polarity of the cells with respect to rows
    *      @param targetX: Target x coordinate for legalization
    *      @param targetY: Target y coordinate for legalization
    */
   Legalizer(const std::vector<Row> &rows, const std::vector<int> &width,
+            const std::vector<int> &height,
+            const std::vector<CellRowPolarity> &polarity,
             const std::vector<int> &targetX, const std::vector<int> &targetY);
 
   /**
@@ -78,7 +82,7 @@ class Legalizer {
   /**
    * @brief Return the sum of the widths of the cells
    */
-  int totalCellWidth() const;
+  long long totalCellWidth() const;
 
   /**
    * @brief Run the algorithm
@@ -144,11 +148,6 @@ class Legalizer {
                                     float weightY) const;
 
   /**
-   * @brief Returns true if the cell is to be ignored by legalization
-   */
-  bool isIgnored(int cell) const { return cellWidth_[cell] == -1; }
-
-  /**
    * @brief Returns true if the cell is already placed by the algorithm
    */
   bool isPlaced(int cell) const { return cellToRow_[cell] != -1; }
@@ -162,6 +161,8 @@ class Legalizer {
   // Placement data
   std::vector<Row> rows_;
   std::vector<int> cellWidth_;
+  std::vector<int> cellHeight_;
+  std::vector<CellRowPolarity> cellRowPolarity_;
   std::vector<int> cellTargetX_;
   std::vector<int> cellTargetY_;
 
@@ -172,4 +173,4 @@ class Legalizer {
   std::vector<int> cellToX_;
   std::vector<int> cellToY_;
 };
-}
+}  // namespace coloquinte

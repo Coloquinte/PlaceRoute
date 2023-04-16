@@ -13,25 +13,42 @@ namespace coloquinte {
 Legalizer Legalizer::fromIspdCircuit(const Circuit &circuit) {
   // Represent fixed cells with -1 width so they are not considered
   int rowHeight = circuit.rowHeight();
-  std::vector<int> widths = circuit.cellWidth_;
+  std::vector<int> widths;
+  std::vector<int> heights;
+  std::vector<int> x;
+  std::vector<int> y;
+  std::vector<CellRowPolarity> polarities;
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (circuit.cellIsFixed_[i]) {
-      widths[i] = -1;
-    } else if (circuit.cellHeight_[i] != rowHeight) {
+      continue;
+    }
+    if (circuit.cellHeight_[i] != rowHeight) {
       throw std::runtime_error(
           "Some placeable cells have a height that is different from the row "
           "height");
     }
+    widths.push_back(circuit.cellWidth_[i]);
+    heights.push_back(circuit.cellHeight_[i]);
+    polarities.push_back(circuit.cellRowPolarity_[i]);
+    x.push_back(circuit.cellX_[i]);
+    y.push_back(circuit.cellY_[i]);
   }
-  return Legalizer(circuit.computeRows(), widths, circuit.cellX_,
-                   circuit.cellY_);
+  return Legalizer(circuit.computeRows(), widths, heights, polarities, x, y);
 }
 
 Legalizer::Legalizer(const std::vector<Row> &rows,
                      const std::vector<int> &width,
+                     const std::vector<int> &height,
+                     const std::vector<CellRowPolarity> &polarities,
                      const std::vector<int> &targetX,
                      const std::vector<int> &targetY)
-    : cellWidth_(width), cellTargetX_(targetX), cellTargetY_(targetY) {
+    : cellWidth_(width),
+      cellHeight_(height),
+      cellRowPolarity_(polarities),
+      cellTargetX_(targetX),
+      cellTargetY_(targetY) {
+  assert(width.size() == height.size());
+  assert(width.size() == polarities.size());
   assert(width.size() == targetX.size());
   assert(width.size() == targetY.size());
   // Sort the rows
@@ -126,9 +143,6 @@ bool Legalizer::placeCellOptimally(int cell, LegalizationModel costModel) {
    * Simple algorithm that tries close row first and stops early if no
    * improvement can be found
    */
-  if (isIgnored(cell)) {
-    return true;
-  }
   int targetX = cellTargetX_[cell];
   int targetY = cellTargetY_[cell];
   int bestX = 0;
@@ -262,13 +276,18 @@ void Legalizer::exportPlacement(Circuit &circuit) {
   std::vector<int> cellX = cellLegalX();
   std::vector<int> cellY = cellLegalY();
   std::vector<CellOrientation> cellOrient = cellLegalOrientation();
+  int j = 0;
   for (int i = 0; i < circuit.nbCells(); ++i) {
-    if (isIgnored(i)) {
+    if (circuit.cellIsFixed_[i]) {
       continue;
     }
-    circuit.cellX_[i] = cellX[i];
-    circuit.cellY_[i] = cellY[i];
-    circuit.cellOrientation_[i] = cellOrient[i];
+    if (j >= nbCells()) {
+      throw std::runtime_error("Circuit does not match legalizer for export");
+    }
+    circuit.cellX_[i] = cellX[j];
+    circuit.cellY_[i] = cellY[j];
+    circuit.cellOrientation_[i] = cellOrient[j];
+    ++j;
   }
 }
 
@@ -280,13 +299,9 @@ std::vector<float> Legalizer::allDistances(LegalizationModel model) const {
   std::vector<float> distances;
   distances.reserve(nbCells());
   for (int i = 0; i < nbCells(); ++i) {
-    if (isIgnored(i)) {
-      distances.push_back(0.0f);
-    } else {
-      float dx = targetX[i] - cellX[i];
-      float dy = targetY[i] - cellY[i];
-      distances.push_back(norm(dx, dy, model));
-    }
+    float dx = targetX[i] - cellX[i];
+    float dy = targetY[i] - cellY[i];
+    distances.push_back(norm(dx, dy, model));
   }
   return distances;
 }
@@ -314,12 +329,9 @@ float Legalizer::maxDistance(LegalizationModel model) const {
   return *std::max_element(dist.begin(), dist.end());
 }
 
-int Legalizer::totalCellWidth() const {
-  int ret = 0;
+long long Legalizer::totalCellWidth() const {
+  long long ret = 0;
   for (int c = 0; c < nbCells(); ++c) {
-    if (isIgnored(c)) {
-      continue;
-    }
     ret += cellWidth_[c];
   }
   return ret;
