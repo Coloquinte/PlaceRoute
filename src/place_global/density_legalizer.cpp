@@ -83,7 +83,13 @@ float DensityLegalizer::rmsDistance() const {
   for (int i = 0; i < nbCells(); ++i) {
     disp += cellDemand(i) * dist[i] * dist[i];
   }
-  return std::sqrt(disp / totalDemand());
+  disp = std::sqrt(disp / totalDemand());
+  if (params_.costModel == LegalizationModel::L1Squared ||
+      params_.costModel == LegalizationModel::L2Squared ||
+      params_.costModel == LegalizationModel::LInfSquared) {
+    disp = std::sqrt(disp);
+  }
+  return disp;
 }
 
 float DensityLegalizer::maxDistance() const {

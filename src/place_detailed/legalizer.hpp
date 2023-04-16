@@ -7,10 +7,9 @@ namespace coloquinte {
 /**
  * @brief Algorithms to obtain a legal placement for standard cells
  *
- * TODO: Create a separate template class to handle more cost models with
- * Abacus-like legalization
- * TODO: Create a separate class to handle backtracking during legalization for
- * hard cases
+ * TODO: handle multi-row cells and macros
+ * TODO: Handle more cost models with Abacus-like legalization
+ * TODO: Handle backtracking during legalization for hard cases
  */
 class Legalizer {
  public:
@@ -55,6 +54,18 @@ class Legalizer {
   const std::vector<int> &cellWidth() const { return cellWidth_; }
 
   /**
+   * @brief Return the height of the cells
+   */
+  const std::vector<int> &cellHeight() const { return cellHeight_; }
+
+  /**
+   * @brief Return the polarity of the cells
+   */
+  const std::vector<CellRowPolarity> &cellRowPolarity() const {
+    return cellRowPolarity_;
+  }
+
+  /**
    * @brief Return the target x coordinates for legalization
    */
   const std::vector<int> &cellTargetX() const { return cellTargetX_; }
@@ -82,12 +93,25 @@ class Legalizer {
   /**
    * @brief Return the sum of the widths of the cells
    */
-  long long totalCellWidth() const;
+  long long totalCellArea() const;
 
   /**
    * @brief Run the algorithm
    */
   void run(const ColoquinteParameters &parameters);
+
+  /**
+   * @brief Run the Tetris algorithm: allocate the given cells in order
+   */
+  void runTetris(const std::vector<int> &cells);
+
+  /**
+   * @brief Run the Abacus algorithm: allocate the given cells in order and push
+   * previous cells to minimize displacement
+   *
+   * This requires all cells to have the same height
+   */
+  void runAbacus(const std::vector<int> &cells);
 
   /**
    * @brief Compute the x coordinates after legalization
@@ -167,10 +191,16 @@ class Legalizer {
   std::vector<int> cellTargetY_;
 
   // Placement status
+  /// All cells present in the row
   std::vector<std::vector<int> > rowToCells_;
-  std::vector<RowLegalizer> rowLegalizers_;
+  /// Bottom row for the cell
   std::vector<int> cellToRow_;
+  // X position of the cell
   std::vector<int> cellToX_;
+  // Y position of the cell
   std::vector<int> cellToY_;
+
+  // Algorithm state; TODO: move out of the class
+  std::vector<RowLegalizer> rowLegalizers_;
 };
 }  // namespace coloquinte

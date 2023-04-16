@@ -312,18 +312,30 @@ float Legalizer::meanDistance(LegalizationModel model) const {
   std::vector<float> dist = allDistances(model);
   float disp = 0.0f;
   for (int i = 0; i < nbCells(); ++i) {
-    disp += cellWidth_[i] * dist[i];
+    disp += dist[i] * cellWidth_[i] * cellHeight_[i];
   }
-  return disp / totalCellWidth();
+  disp /= totalCellArea();
+  if (model == LegalizationModel::L1Squared ||
+      model == LegalizationModel::L2Squared ||
+      model == LegalizationModel::LInfSquared) {
+    disp = std::sqrt(disp);
+  }
+  return disp;
 }
 
 float Legalizer::rmsDistance(LegalizationModel model) const {
   std::vector<float> dist = allDistances(model);
   float disp = 0.0f;
   for (int i = 0; i < nbCells(); ++i) {
-    disp += cellWidth_[i] * dist[i] * dist[i];
+    disp += dist[i] * dist[i] * cellWidth_[i] * cellHeight_[i];
   }
-  return std::sqrt(disp / totalCellWidth());
+  disp = std::sqrt(disp / totalCellArea());
+  if (model == LegalizationModel::L1Squared ||
+      model == LegalizationModel::L2Squared ||
+      model == LegalizationModel::LInfSquared) {
+    disp = std::sqrt(disp);
+  }
+  return disp;
 }
 
 float Legalizer::maxDistance(LegalizationModel model) const {
@@ -331,11 +343,14 @@ float Legalizer::maxDistance(LegalizationModel model) const {
   return *std::max_element(dist.begin(), dist.end());
 }
 
-long long Legalizer::totalCellWidth() const {
+long long Legalizer::totalCellArea() const {
   long long ret = 0;
   for (int c = 0; c < nbCells(); ++c) {
-    ret += cellWidth_[c];
+    ret += static_cast<long long>(cellWidth_[c]) *
+           static_cast<long long>(cellHeight_[c]);
   }
   return ret;
 }
+
+void Legalizer::runTetris(const std::vector<int> &cells) {}
 }  // namespace coloquinte
