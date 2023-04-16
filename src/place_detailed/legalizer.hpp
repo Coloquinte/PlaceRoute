@@ -145,7 +145,7 @@ class Legalizer {
    * @return An ordering of the cell indices
    */
   std::vector<int> computeCellOrder(float weightX, float weightWidth,
-                                    float weightY) const;
+                                    float weightY, float weightHeight) const;
 
   /**
    * @brief Returns true if the cell is already placed by the algorithm

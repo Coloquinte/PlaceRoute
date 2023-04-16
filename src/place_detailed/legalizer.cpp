@@ -67,7 +67,8 @@ Legalizer::Legalizer(const std::vector<Row> &rows,
 
 void Legalizer::run(const ColoquinteParameters &params) {
   std::vector<int> cellOrder = computeCellOrder(
-      1.0, params.legalization.orderingWidth, params.legalization.orderingY);
+      1.0, params.legalization.orderingWidth, params.legalization.orderingY,
+      params.legalization.orderingHeight);
 
   for (int c : cellOrder) {
     placeCellOptimally(c, params.legalization.costModel);
@@ -206,12 +207,13 @@ std::pair<bool, long long> Legalizer::placeCellOptimally(int cell, int row) {
 }
 
 std::vector<int> Legalizer::computeCellOrder(float weightX, float weightWidth,
-                                             float weightY) const {
+                                             float weightY,
+                                             float weightHeight) const {
   // Sort the cells by target X coordinate
   std::vector<std::pair<float, int> > sortedCells;
   for (int i = 0; i < nbCells(); ++i) {
     float val = weightX * cellTargetX_[i] + weightWidth * cellWidth_[i] +
-                weightY * cellTargetY_[i];
+                weightY * cellTargetY_[i] + weightHeight * cellHeight_[i];
     sortedCells.emplace_back(val, i);
   }
   std::stable_sort(sortedCells.begin(), sortedCells.end());

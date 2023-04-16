@@ -435,9 +435,18 @@ struct LegalizationParameters {
    * heuristic
    *
    * @details This weight decides which cells are legalized first; 0.0 orders
-   * by left side, 1.0 by right side, 0.5 by middle
+   * the cells by their left side, 1.0 by their right side, 0.5 by their middle.
    */
   double orderingWidth;
+
+  /**
+   * @brief Weight placed on the height when ordering of the legalization
+   * heuristic
+   *
+   * @details This weight decides which cells are legalized first; 0.0
+   * ignores the height, negative values will legalize high cells first.
+   */
+  double orderingHeight;
 
   /**
    * @brief Weight placed on the y position when ordering of the legalization
@@ -445,7 +454,7 @@ struct LegalizationParameters {
    *
    * @details This weight decides which cells are legalized first, and tends to
    * start to legalize up (-1.0) or down (1.0). It should be small in absolute
-   * value, as x ordering is preferred
+   * value, as x ordering is preferred.
    */
   double orderingY;
 

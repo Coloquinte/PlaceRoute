@@ -204,6 +204,7 @@ Construct the parameters
 )pbdoc",
            py::arg("effort") = 3)
       .def_readwrite("cost_model", &LegalizationParameters::costModel)
+      .def_readwrite("ordering_height", &LegalizationParameters::orderingHeight)
       .def_readwrite("ordering_width", &LegalizationParameters::orderingWidth)
       .def_readwrite("ordering_y", &LegalizationParameters::orderingY)
       .def("check", &LegalizationParameters::check)

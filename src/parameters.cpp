@@ -169,6 +169,7 @@ DetailedPlacerParameters::DetailedPlacerParameters(int effort) {
 
 LegalizationParameters::LegalizationParameters(int effort) {
   costModel = LegalizationModel::L1;
+  orderingHeight = -1.0;
   // TODO: find best parameter
   orderingWidth = 0.2;
   orderingY = 0.0;
