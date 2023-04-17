@@ -7,6 +7,7 @@
 #include <iostream>
 #include <limits>
 
+#include "place_detailed/abacus_legalizer.hpp"
 #include "utils/norm.hpp"
 
 namespace coloquinte {
@@ -56,34 +57,10 @@ LegalizerBase::LegalizerBase(const std::vector<Row> &rows,
   std::stable_sort(rows_.begin(), rows_.end(), [](Row a, Row b) -> bool {
     return a.minY < b.minY || (a.minY == b.minY && a.minX < b.minX);
   });
-  rowToCells_.resize(rows_.size());
   cellToX_ = cellTargetX_;
   cellToY_ = cellTargetY_;
-  cellToRow_.assign(width.size(), -1);
-}
-
-void Legalizer::run(const ColoquinteParameters &params) {
-  std::vector<int> cellOrder = computeCellOrder(
-      1.0, params.legalization.orderingWidth, params.legalization.orderingY,
-      params.legalization.orderingHeight);
-
-  for (int c : cellOrder) {
-    placeCellOptimally(c, params.legalization.costModel);
-  }
-  for (int i = 0; i < nbRows(); ++i) {
-    std::vector<int> pl = rowLegalizers_[i].getPlacement();
-    assert(pl.size() == rowToCells_[i].size());
-    for (int j = 0; j < pl.size(); ++j) {
-      int cell = rowToCells_[i][j];
-      cellToX_[cell] = pl[j];
-      cellToY_[cell] = rows_[i].minY;
-      cellToRow_[cell] = i;
-    }
-  }
-  for (RowLegalizer &leg : rowLegalizers_) {
-    leg.clear();
-  }
-  check();
+  cellToOrientation_.assign(width.size(), CellOrientation::N);
+  cellIsPlaced_.assign(width.size(), false);
 }
 
 void LegalizerBase::check() const {
@@ -102,102 +79,29 @@ void LegalizerBase::check() const {
   if (cellToY_.size() != nbCells()) {
     throw std::runtime_error("Number of cell y positions does not match");
   }
-  if (cellToRow_.size() != nbCells()) {
-    throw std::runtime_error("Number of cell row positions does not match");
-  }
-  if (rowToCells_.size() != nbRows()) {
-    throw std::runtime_error("Number of row cells does not match");
-  }
-  for (int i = 0; i < nbRows(); ++i) {
-    for (int c : rowToCells_[i]) {
-      if (cellToRow_[c] != i) {
-        throw std::runtime_error(
-            "Cell allocation does not match row allocation");
-      }
-      if (cellToX_[c] < rows_[i].minX) {
-        throw std::runtime_error("Cell placed before the row");
-      }
-      if (cellToX_[c] + cellWidth_[c] > rows_[i].maxX) {
-        throw std::runtime_error("Cell placed after the row");
-      }
-    }
-  }
-  for (int i = 0; i < nbRows(); ++i) {
-    for (int j = 0; j + 1 < rowToCells_[i].size(); ++j) {
-      int c1 = rowToCells_[i][j];
-      int c2 = rowToCells_[i][j + 1];
-      if (cellToX_[c1] + cellWidth_[c1] > cellToX_[c2]) {
-        throw std::runtime_error("Cell overlap detected");
-      }
+}
+
+void LegalizerBase::checkAllPlaced() const {
+  for (int i = 0; i < nbCells(); ++i) {
+    if (!isPlaced(i)) {
+      throw std::runtime_error("Not all cells have been placed");
     }
   }
 }
 
-bool Legalizer::placeCellOptimally(int cell, LegalizationModel costModel) {
-  /**
-   * Simple algorithm that tries close row first and stops early if no
-   * improvement can be found
-   */
-  int targetX = cellTargetX_[cell];
-  int targetY = cellTargetY_[cell];
-  int bestX = 0;
-  int bestRow = -1;
-  long long bestDist = std::numeric_limits<long long>::max();
-
-  auto tryPlace = [&](int row) {
-    long long yDist =
-        cellWidth_[cell] * norm(0, rows_[row].minY - targetY, costModel);
-    if (bestRow != -1 && yDist > bestDist) {
-      // Not possible to do better since the rows are sorted
-      return true;
-    }
-    // Find the best position for the cell
-    auto [ok, xDist] = placeCellOptimally(cell, row);
-    // TODO: extend this to non-L1 cases
-    long long dist = xDist + yDist;
-    if (!ok) {
-      // Not possible to place in this row, but cannot stop yet
-      return false;
-    }
-    if (bestRow == -1 || dist < bestDist) {
-      bestRow = row;
-      bestDist = dist;
-    }
-    // Cannot stop yet
-    return false;
-  };
-
-  // Try promising candidates first
-  int initialRow = closestRow(targetY);
-  for (int row = initialRow; row < nbRows(); ++row) {
-    bool canStop = tryPlace(row);
-    if (canStop) {
-      break;
-    }
+void LegalizerBase::importLegalization(const LegalizerBase &leg,
+                                       const std::vector<int> &cells) {
+  std::vector<int> x = leg.cellLegalX();
+  std::vector<int> y = leg.cellLegalY();
+  std::vector<CellOrientation> o = leg.cellLegalOrientation();
+  assert(cells.size() == leg.nbCells());
+  for (int i = 0; i < cells.size(); ++i) {
+    int c = cells[i];
+    cellToX_[c] = x[i];
+    cellToY_[c] = y[i];
+    cellToOrientation_[c] = o[i];
+    cellIsPlaced_[c] = true;
   }
-  for (int row = initialRow - 1; row >= 0; --row) {
-    bool canStop = tryPlace(row);
-    if (canStop) {
-      break;
-    }
-  }
-
-  if (bestRow == -1) {
-    throw std::runtime_error(
-        "Unable to place a cell with the greedy legalization algorithm");
-  }
-  rowLegalizers_[bestRow].push(cellWidth_[cell], targetX);
-  rowToCells_[bestRow].push_back(cell);
-  cellToRow_[cell] = bestRow;
-  return true;
-}
-
-std::pair<bool, long long> Legalizer::placeCellOptimally(int cell, int row) {
-  if (rowLegalizers_[row].remainingSpace() < cellWidth_[cell]) {
-    return std::make_pair(false, 0);
-  }
-  int dist = rowLegalizers_[row].getCost(cellWidth_[cell], cellTargetX_[cell]);
-  return std::make_pair(true, dist);
 }
 
 std::vector<int> LegalizerBase::computeCellOrder(float weightX,
@@ -254,35 +158,13 @@ std::vector<Row> LegalizerBase::remainingRows() const {
   return ret;
 }
 
-std::vector<int> LegalizerBase::cellLegalX() const {
-  std::vector<int> ret(nbCells());
-  for (int r = 0; r < nbRows(); ++r) {
-    for (int c : rowToCells_[r]) {
-      ret[c] = cellToX_[c];
-    }
-  }
-  return ret;
-}
+const std::vector<int> &LegalizerBase::cellLegalX() const { return cellToX_; }
 
-std::vector<int> LegalizerBase::cellLegalY() const {
-  std::vector<int> ret(nbCells());
-  for (int r = 0; r < nbRows(); ++r) {
-    for (int i = 0; i < rowToCells_[r].size(); ++i) {
-      int c = rowToCells_[r][i];
-      ret[c] = rows_[r].minY;
-    }
-  }
-  return ret;
-}
+const std::vector<int> &LegalizerBase::cellLegalY() const { return cellToY_; }
 
-std::vector<CellOrientation> LegalizerBase::cellLegalOrientation() const {
-  std::vector<CellOrientation> ret(nbCells());
-  for (int r = 0; r < nbRows(); ++r) {
-    for (int c : rowToCells_[r]) {
-      ret[c] = rows_[r].orientation;
-    }
-  }
-  return ret;
+const std::vector<CellOrientation> &LegalizerBase::cellLegalOrientation()
+    const {
+  return cellToOrientation_;
 }
 
 void Legalizer::exportPlacement(Circuit &circuit) {
@@ -297,9 +179,11 @@ void Legalizer::exportPlacement(Circuit &circuit) {
     if (j >= nbCells()) {
       throw std::runtime_error("Circuit does not match legalizer for export");
     }
-    circuit.cellX_[i] = cellX[j];
-    circuit.cellY_[i] = cellY[j];
-    circuit.cellOrientation_[i] = cellOrient[j];
+    if (isPlaced(j)) {
+      circuit.cellX_[i] = cellX[j];
+      circuit.cellY_[i] = cellY[j];
+      circuit.cellOrientation_[i] = cellOrient[j];
+    }
     ++j;
   }
 }
@@ -369,9 +253,42 @@ Legalizer::Legalizer(const std::vector<Row> &rows,
                      const std::vector<CellRowPolarity> &polarities,
                      const std::vector<int> &targetX,
                      const std::vector<int> &targetY)
-    : LegalizerBase(rows, width, height, polarities, targetX, targetY) {
-  for (const Row &row : rows_) {
-    rowLegalizers_.emplace_back(row.minX, row.maxX);
+    : LegalizerBase(rows, width, height, polarities, targetX, targetY) {}
+
+void Legalizer::run(const ColoquinteParameters &params) {
+  std::vector<int> cellOrder = computeCellOrder(
+      1.0, params.legalization.orderingWidth, params.legalization.orderingY,
+      params.legalization.orderingHeight);
+  // Run the Tetris legalizer on the macros and large cells
+  runTetris(cellOrder);
+  // Run the Abacus legalizer on the remaining cells
+  runAbacus(cellOrder);
+  // Check that everything is legalized
+  checkAllPlaced();
+}
+
+void Legalizer::runTetris(const std::vector<int> &cells) {
+  // TODO
+}
+
+void Legalizer::runAbacus(const std::vector<int> &cells) {
+  std::vector<Row> r = remainingRows();
+  std::vector<int> w, h, x, y, remainingCells;
+  std::vector<CellRowPolarity> p;
+  for (int c : cells) {
+    if (isPlaced(c)) {
+      continue;
+    }
+    remainingCells.push_back(c);
+    w.push_back(cellWidth_[c]);
+    h.push_back(cellHeight_[c]);
+    x.push_back(cellTargetX_[c]);
+    y.push_back(cellTargetY_[c]);
   }
+
+  // Run the legalizer
+  AbacusLegalizer leg(r, w, h, p, x, y);
+  leg.run();
+  importLegalization(leg, remainingCells);
 }
 }  // namespace coloquinte

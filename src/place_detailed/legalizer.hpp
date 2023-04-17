@@ -97,19 +97,25 @@ class LegalizerBase {
   std::vector<Row> remainingRows() const;
 
   /**
+   * @brief Import the result of an auxiliary legalizer
+   */
+  void importLegalization(const LegalizerBase &leg,
+                          const std::vector<int> &cells);
+
+  /**
    * @brief Compute the x coordinates after legalization
    */
-  std::vector<int> cellLegalX() const;
+  const std::vector<int> &cellLegalX() const;
 
   /**
    * @brief Compute the y coordinates after legalization
    */
-  std::vector<int> cellLegalY() const;
+  const std::vector<int> &cellLegalY() const;
 
   /**
    * @brief Compute the cell orientation after legalization
    */
-  std::vector<CellOrientation> cellLegalOrientation() const;
+  const std::vector<CellOrientation> &cellLegalOrientation() const;
 
   /**
    * @brief Check consistency of the datastructure
@@ -117,9 +123,9 @@ class LegalizerBase {
   void check() const;
 
   /**
-   * @brief Report on the datastructure on stdout
+   * @brief Check that the legalization is done
    */
-  void report(bool verbose = false) const;
+  void checkAllPlaced() const;
 
  protected:
   /**
@@ -145,7 +151,7 @@ class LegalizerBase {
   /**
    * @brief Returns true if the cell is already placed by the algorithm
    */
-  bool isPlaced(int cell) const { return cellToRow_[cell] != -1; }
+  bool isPlaced(int cell) const { return cellIsPlaced_[cell]; }
 
   /**
    * @brief Find the row that is closest to the target position
@@ -162,14 +168,14 @@ class LegalizerBase {
   std::vector<int> cellTargetY_;
 
   // Placement status
-  /// All cells present in the row
-  std::vector<std::vector<int> > rowToCells_;
-  /// Bottom row for the cell
-  std::vector<int> cellToRow_;
   // X position of the cell
   std::vector<int> cellToX_;
   // Y position of the cell
   std::vector<int> cellToY_;
+  // Y position of the cell
+  std::vector<CellOrientation> cellToOrientation_;
+  // Is the cell placed already
+  std::vector<bool> cellIsPlaced_;
 };
 
 class Legalizer : public LegalizerBase {
@@ -207,20 +213,6 @@ class Legalizer : public LegalizerBase {
             const std::vector<int> &height,
             const std::vector<CellRowPolarity> &polarities,
             const std::vector<int> &targetX, const std::vector<int> &targetY);
-  /**
-   * @brief Place a single cell optimally
-   * Return true if successful
-   */
-  bool placeCellOptimally(int cell, LegalizationModel costModel);
-
-  /**
-   * @brief Simulate placing a single cell in a given row, pushing other cells
-   * as needed Return a pair: true if successful and the added distance
-   */
-  std::pair<bool, long long> placeCellOptimally(int cell, int row);
-
-  // Algorithm state; TODO: move out of the class
-  std::vector<RowLegalizer> rowLegalizers_;
 };
 
 }  // namespace coloquinte
