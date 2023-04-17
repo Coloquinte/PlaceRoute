@@ -29,6 +29,7 @@ SET(SOURCES
   src/place_global/place_global.cpp
   src/place_detailed/legalizer.cpp
   src/place_detailed/abacus_legalizer.cpp
+  src/place_detailed/tetris_legalizer.cpp
   src/place_detailed/row_legalizer.cpp
   src/place_detailed/place_detailed.cpp
   src/place_detailed/detailed_placement.cpp
