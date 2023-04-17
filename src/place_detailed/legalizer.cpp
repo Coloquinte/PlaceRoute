@@ -236,8 +236,7 @@ int Legalizer::closestRow(int y) const {
     return 0;
   }
   int row = it - rows_.begin();
-  assert(row >= 1);
-  if (rows_[row].minY - y > y - rows_[row - 1].minY) {
+  if (row > 0 && rows_[row].minY - y > y - rows_[row - 1].minY) {
     return row - 1;
   }
   return row;
