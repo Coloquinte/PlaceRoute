@@ -11,18 +11,8 @@ namespace coloquinte {
  * TODO: Handle more cost models with Abacus-like legalization
  * TODO: Handle backtracking during legalization for hard cases
  */
-class Legalizer {
+class LegalizerBase {
  public:
-  /**
-   * @brief Initialize the datastructure from a circuit
-   */
-  static Legalizer fromIspdCircuit(const Circuit &circuit);
-
-  /**
-   * @brief Export the placement obtained to the circuit datastructure
-   */
-  void exportPlacement(Circuit &circuit);
-
   /**
    * @brief Initialize the datastructure
    *      @param rows: Available rows for placement; must all be the right
@@ -33,10 +23,11 @@ class Legalizer {
    *      @param targetX: Target x coordinate for legalization
    *      @param targetY: Target y coordinate for legalization
    */
-  Legalizer(const std::vector<Row> &rows, const std::vector<int> &width,
-            const std::vector<int> &height,
-            const std::vector<CellRowPolarity> &polarity,
-            const std::vector<int> &targetX, const std::vector<int> &targetY);
+  LegalizerBase(const std::vector<Row> &rows, const std::vector<int> &width,
+                const std::vector<int> &height,
+                const std::vector<CellRowPolarity> &polarity,
+                const std::vector<int> &targetX,
+                const std::vector<int> &targetY);
 
   /**
    * @brief Return the number of rows
@@ -102,26 +93,8 @@ class Legalizer {
 
   /**
    * @brief Return the remaining rows (placed cells removed)
-  */
+   */
   std::vector<Row> remainingRows() const;
-
-  /**
-   * @brief Run the algorithm
-   */
-  void run(const ColoquinteParameters &parameters);
-
-  /**
-   * @brief Run the Tetris algorithm: allocate the given cells in order
-   */
-  void runTetris(const std::vector<int> &cells);
-
-  /**
-   * @brief Run the Abacus algorithm: allocate the given cells in order and push
-   * previous cells to minimize displacement
-   *
-   * This requires all cells to have the same height
-   */
-  void runAbacus(const std::vector<int> &cells);
 
   /**
    * @brief Compute the x coordinates after legalization
@@ -148,23 +121,11 @@ class Legalizer {
    */
   void report(bool verbose = false) const;
 
- private:
+ protected:
   /**
    * @brief Return all distances with a given cost model
    */
   std::vector<float> allDistances(LegalizationModel model) const;
-
-  /**
-   * @brief Place a single cell optimally
-   * Return true if successful
-   */
-  bool placeCellOptimally(int cell, LegalizationModel costModel);
-
-  /**
-   * @brief Simulate placing a single cell in a given row, pushing other cells
-   * as needed Return a pair: true if successful and the added distance
-   */
-  std::pair<bool, long long> placeCellOptimally(int cell, int row);
 
   /**
    * @brief Compute the ordering of the cells
@@ -191,7 +152,7 @@ class Legalizer {
    */
   int closestRow(int y) const;
 
- private:
+ protected:
   // Placement data
   std::vector<Row> rows_;
   std::vector<int> cellWidth_;
@@ -209,8 +170,57 @@ class Legalizer {
   std::vector<int> cellToX_;
   // Y position of the cell
   std::vector<int> cellToY_;
+};
+
+class Legalizer : public LegalizerBase {
+ public:
+  /**
+   * @brief Initialize the datastructure from a circuit
+   */
+  static Legalizer fromIspdCircuit(const Circuit &circuit);
+
+  /**
+   * @brief Export the placement obtained to the circuit datastructure
+   */
+  void exportPlacement(Circuit &circuit);
+
+  /**
+   * @brief Run the algorithm
+   */
+  void run(const ColoquinteParameters &parameters);
+
+  /**
+   * @brief Run the Tetris algorithm: allocate the given cells in order
+   */
+  void runTetris(const std::vector<int> &cells);
+
+  /**
+   * @brief Run the Abacus algorithm: allocate the given cells in order and push
+   * previous cells to minimize displacement
+   *
+   * This requires all cells to have the same height
+   */
+  void runAbacus(const std::vector<int> &cells);
+
+ private:
+  Legalizer(const std::vector<Row> &rows, const std::vector<int> &width,
+            const std::vector<int> &height,
+            const std::vector<CellRowPolarity> &polarities,
+            const std::vector<int> &targetX, const std::vector<int> &targetY);
+  /**
+   * @brief Place a single cell optimally
+   * Return true if successful
+   */
+  bool placeCellOptimally(int cell, LegalizationModel costModel);
+
+  /**
+   * @brief Simulate placing a single cell in a given row, pushing other cells
+   * as needed Return a pair: true if successful and the added distance
+   */
+  std::pair<bool, long long> placeCellOptimally(int cell, int row);
 
   // Algorithm state; TODO: move out of the class
   std::vector<RowLegalizer> rowLegalizers_;
 };
+
 }  // namespace coloquinte

@@ -36,12 +36,12 @@ Legalizer Legalizer::fromIspdCircuit(const Circuit &circuit) {
   return Legalizer(circuit.computeRows(), widths, heights, polarities, x, y);
 }
 
-Legalizer::Legalizer(const std::vector<Row> &rows,
-                     const std::vector<int> &width,
-                     const std::vector<int> &height,
-                     const std::vector<CellRowPolarity> &polarities,
-                     const std::vector<int> &targetX,
-                     const std::vector<int> &targetY)
+LegalizerBase::LegalizerBase(const std::vector<Row> &rows,
+                             const std::vector<int> &width,
+                             const std::vector<int> &height,
+                             const std::vector<CellRowPolarity> &polarities,
+                             const std::vector<int> &targetX,
+                             const std::vector<int> &targetY)
     : cellWidth_(width),
       cellHeight_(height),
       cellRowPolarity_(polarities),
@@ -56,9 +56,6 @@ Legalizer::Legalizer(const std::vector<Row> &rows,
   std::stable_sort(rows_.begin(), rows_.end(), [](Row a, Row b) -> bool {
     return a.minY < b.minY || (a.minY == b.minY && a.minX < b.minX);
   });
-  for (const Row &row : rows_) {
-    rowLegalizers_.emplace_back(row.minX, row.maxX);
-  }
   rowToCells_.resize(rows_.size());
   cellToX_ = cellTargetX_;
   cellToY_ = cellTargetY_;
@@ -89,7 +86,7 @@ void Legalizer::run(const ColoquinteParameters &params) {
   check();
 }
 
-void Legalizer::check() const {
+void LegalizerBase::check() const {
   if (cellWidth_.size() != nbCells()) {
     throw std::runtime_error("Number of cell widths does not match");
   }
@@ -110,9 +107,6 @@ void Legalizer::check() const {
   }
   if (rowToCells_.size() != nbRows()) {
     throw std::runtime_error("Number of row cells does not match");
-  }
-  if (rowLegalizers_.size() != nbRows()) {
-    throw std::runtime_error("Number of row legalizers does not match");
   }
   for (int i = 0; i < nbRows(); ++i) {
     for (int c : rowToCells_[i]) {
@@ -206,9 +200,10 @@ std::pair<bool, long long> Legalizer::placeCellOptimally(int cell, int row) {
   return std::make_pair(true, dist);
 }
 
-std::vector<int> Legalizer::computeCellOrder(float weightX, float weightWidth,
-                                             float weightY,
-                                             float weightHeight) const {
+std::vector<int> LegalizerBase::computeCellOrder(float weightX,
+                                                 float weightWidth,
+                                                 float weightY,
+                                                 float weightHeight) const {
   // Sort the cells by target X coordinate
   std::vector<std::pair<float, int> > sortedCells;
   for (int i = 0; i < nbCells(); ++i) {
@@ -226,7 +221,7 @@ std::vector<int> Legalizer::computeCellOrder(float weightX, float weightWidth,
   return cells;
 }
 
-int Legalizer::closestRow(int y) const {
+int LegalizerBase::closestRow(int y) const {
   auto it = std::lower_bound(rows_.begin(), rows_.end(), y,
                              [](Rectangle r, int v) { return r.minY < v; });
   if (it == rows_.end()) {
@@ -242,7 +237,7 @@ int Legalizer::closestRow(int y) const {
   return row;
 }
 
-std::vector<Row> Legalizer::remainingRows() const {
+std::vector<Row> LegalizerBase::remainingRows() const {
   std::vector<Rectangle> obstacles;
   for (int i = 0; i < nbCells(); ++i) {
     if (!isPlaced(i)) {
@@ -259,7 +254,7 @@ std::vector<Row> Legalizer::remainingRows() const {
   return ret;
 }
 
-std::vector<int> Legalizer::cellLegalX() const {
+std::vector<int> LegalizerBase::cellLegalX() const {
   std::vector<int> ret(nbCells());
   for (int r = 0; r < nbRows(); ++r) {
     for (int c : rowToCells_[r]) {
@@ -269,7 +264,7 @@ std::vector<int> Legalizer::cellLegalX() const {
   return ret;
 }
 
-std::vector<int> Legalizer::cellLegalY() const {
+std::vector<int> LegalizerBase::cellLegalY() const {
   std::vector<int> ret(nbCells());
   for (int r = 0; r < nbRows(); ++r) {
     for (int i = 0; i < rowToCells_[r].size(); ++i) {
@@ -280,7 +275,7 @@ std::vector<int> Legalizer::cellLegalY() const {
   return ret;
 }
 
-std::vector<CellOrientation> Legalizer::cellLegalOrientation() const {
+std::vector<CellOrientation> LegalizerBase::cellLegalOrientation() const {
   std::vector<CellOrientation> ret(nbCells());
   for (int r = 0; r < nbRows(); ++r) {
     for (int c : rowToCells_[r]) {
@@ -309,7 +304,7 @@ void Legalizer::exportPlacement(Circuit &circuit) {
   }
 }
 
-std::vector<float> Legalizer::allDistances(LegalizationModel model) const {
+std::vector<float> LegalizerBase::allDistances(LegalizationModel model) const {
   std::vector<int> cellX = cellLegalX();
   std::vector<int> cellY = cellLegalY();
   std::vector<int> targetX = cellTargetX_;
@@ -324,7 +319,7 @@ std::vector<float> Legalizer::allDistances(LegalizationModel model) const {
   return distances;
 }
 
-float Legalizer::meanDistance(LegalizationModel model) const {
+float LegalizerBase::meanDistance(LegalizationModel model) const {
   std::vector<float> dist = allDistances(model);
   float disp = 0.0f;
   for (int i = 0; i < nbCells(); ++i) {
@@ -339,7 +334,7 @@ float Legalizer::meanDistance(LegalizationModel model) const {
   return disp;
 }
 
-float Legalizer::rmsDistance(LegalizationModel model) const {
+float LegalizerBase::rmsDistance(LegalizationModel model) const {
   std::vector<float> dist = allDistances(model);
   float disp = 0.0f;
   for (int i = 0; i < nbCells(); ++i) {
@@ -354,12 +349,12 @@ float Legalizer::rmsDistance(LegalizationModel model) const {
   return disp;
 }
 
-float Legalizer::maxDistance(LegalizationModel model) const {
+float LegalizerBase::maxDistance(LegalizationModel model) const {
   std::vector<float> dist = allDistances(model);
   return *std::max_element(dist.begin(), dist.end());
 }
 
-long long Legalizer::totalCellArea() const {
+long long LegalizerBase::totalCellArea() const {
   long long ret = 0;
   for (int c = 0; c < nbCells(); ++c) {
     ret += static_cast<long long>(cellWidth_[c]) *
@@ -368,5 +363,15 @@ long long Legalizer::totalCellArea() const {
   return ret;
 }
 
-void Legalizer::runTetris(const std::vector<int> &cells) {}
+Legalizer::Legalizer(const std::vector<Row> &rows,
+                     const std::vector<int> &width,
+                     const std::vector<int> &height,
+                     const std::vector<CellRowPolarity> &polarities,
+                     const std::vector<int> &targetX,
+                     const std::vector<int> &targetY)
+    : LegalizerBase(rows, width, height, polarities, targetX, targetY) {
+  for (const Row &row : rows_) {
+    rowLegalizers_.emplace_back(row.minX, row.maxX);
+  }
+}
 }  // namespace coloquinte
