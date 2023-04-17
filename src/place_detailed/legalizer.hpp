@@ -49,6 +49,11 @@ class Legalizer {
   int nbCells() const { return cellWidth_.size(); }
 
   /**
+   * @brief Return the standard cell rows
+   */
+  const std::vector<Row> &rows() const { return rows_; }
+
+  /**
    * @brief Return the width of the cells
    */
   const std::vector<int> &cellWidth() const { return cellWidth_; }
@@ -94,6 +99,11 @@ class Legalizer {
    * @brief Return the sum of the widths of the cells
    */
   long long totalCellArea() const;
+
+  /**
+   * @brief Return the remaining rows (placed cells removed)
+  */
+  std::vector<Row> remainingRows() const;
 
   /**
    * @brief Run the algorithm

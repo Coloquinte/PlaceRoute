@@ -242,6 +242,23 @@ int Legalizer::closestRow(int y) const {
   return row;
 }
 
+std::vector<Row> Legalizer::remainingRows() const {
+  std::vector<Rectangle> obstacles;
+  for (int i = 0; i < nbCells(); ++i) {
+    if (!isPlaced(i)) {
+      continue;
+    }
+    obstacles.emplace_back(cellToX_[i], cellToX_[i] + cellWidth_[i],
+                           cellToY_[i], cellToY_[i] + cellHeight_[i]);
+  }
+  std::vector<Row> ret;
+  for (Row r : rows_) {
+    auto o = r.freespace(obstacles);
+    ret.insert(ret.end(), o.begin(), o.end());
+  }
+  return ret;
+}
+
 std::vector<int> Legalizer::cellLegalX() const {
   std::vector<int> ret(nbCells());
   for (int r = 0; r < nbRows(); ++r) {

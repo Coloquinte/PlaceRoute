@@ -579,6 +579,11 @@ struct Row : public Rectangle {
    */
   Row(Rectangle a, CellOrientation orient)
       : Rectangle(a), orientation(orient) {}
+
+  /**
+   * @brief Obtain free placement space after removing the obstacles
+  */
+ std::vector<Row> freespace(const std::vector<Rectangle> &obstacles) const;
 };
 
 /**

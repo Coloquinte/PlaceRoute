@@ -105,8 +105,7 @@ void Circuit::setCellOrientation(const std::vector<CellOrientation> &orient) {
   cellOrientation_ = orient;
 }
 
-void Circuit::setCellRowPolarity(
-    const std::vector<CellRowPolarity> &orient) {
+void Circuit::setCellRowPolarity(const std::vector<CellRowPolarity> &orient) {
   if (orient.size() != nbCells()) {
     throw std::runtime_error(
         "Number of elements is not the same as the number of cells of the "
@@ -228,25 +227,30 @@ std::vector<Row> Circuit::computeRows(
   // Use boost::polygon ro compute the difference of each row to every other
   std::vector<Row> ret;
   for (Row row : rows_) {
-    bpl::polygon_90_set_data<int> row_set;
-    row_set.insert(
-        bpl::rectangle_data<int>(row.minX, row.minY, row.maxX, row.maxY));
-    for (Rectangle r : obstacles) {
-      row_set.insert(bpl::rectangle_data<int>(r.minX, r.minY, r.maxX, r.maxY),
-                     true);
-    }
+    auto o = row.freespace(obstacles);
+    ret.insert(ret.end(), o.begin(), o.end());
+  }
+  return ret;
+}
 
-    std::vector<bpl::rectangle_data<int> > diff;
-    bpl::get_rectangles(diff, row_set);
-    for (const auto &r : diff) {
-      Rectangle newRow(bpl::xl(r), bpl::xh(r), bpl::yl(r), bpl::yh(r));
-      // Filter out partially covered rows
-      if (newRow.height() == row.height()) {
-        ret.emplace_back(newRow, row.orientation);
-      }
-    }
+std::vector<Row> Row::freespace(const std::vector<Rectangle> &obstacles) const {
+  std::vector<Row> ret;
+  bpl::polygon_90_set_data<int> row_set;
+  row_set.insert(bpl::rectangle_data<int>(minX, minY, maxX, maxY));
+  for (Rectangle r : obstacles) {
+    row_set.insert(bpl::rectangle_data<int>(r.minX, r.minY, r.maxX, r.maxY),
+                   true);
   }
 
+  std::vector<bpl::rectangle_data<int> > diff;
+  bpl::get_rectangles(diff, row_set);
+  for (const auto &r : diff) {
+    Rectangle newRow(bpl::xl(r), bpl::xh(r), bpl::yl(r), bpl::yh(r));
+    // Filter out partially covered rows
+    if (newRow.height() == height()) {
+      ret.emplace_back(newRow, orientation);
+    }
+  }
   return ret;
 }
 
