@@ -5,6 +5,7 @@ Coloquinte VLSI placer
 
 import gzip
 import lzma
+import math
 import os
 import sys
 
@@ -440,48 +441,22 @@ class Circuit(coloquinte_pybind.Circuit):
                 print(f"{name}\t{x}\t{y}\t: {orient}", file=f)
 
     def write_image(self, filename, macros_only=False, image_width=2048):
-        img = self._make_image()
-        self._draw_rows(img)
-        self._draw_cells(img, True)
+        img, scale_factor = self._make_image(image_width)
+        self._draw_rows(img, scale_factor)
+        self._draw_cells(img, True, scale_factor)
         if not macros_only:
-            self._draw_cells(img, False)
-        self._save_image(img, filename, image_width)
+            self._draw_cells(img, False, scale_factor)
+        self._save_image(img, filename)
 
     def write_displacement(self, filename, pl1, pl2, image_width=2048):
-        img = self._make_image()
-        self._draw_rows(img)
-        self._draw_cells(img, True)
-        self._draw_displacement(img, pl1, pl2)
-        self._save_image(img, filename, image_width)
+        img, scale_factor = self._make_image(image_width)
+        self._draw_rows(img, scale_factor)
+        self._draw_cells(img, True, scale_factor)
+        self._draw_displacement(img, pl1, pl2, scale_factor)
+        self._save_image(img, filename)
 
-    def _draw_displacement(self, img, pl1, pl2):
-        from PIL import ImageDraw
-        draw_area = self._draw_area()
-        min_x, min_y, max_x, max_y = draw_area
-        fact = self._draw_factor(draw_area)
-
-        draw = ImageDraw.Draw(img)
-        fixed = self.cell_is_fixed
-        assert len(pl1) == len(pl2)
-        for i in range(self.nb_cells):
-            if not fixed[i]:
-                x1 = (pl1[i].min_x + pl1[i].max_x) / 2
-                x2 = (pl2[i].min_x + pl2[i].max_x) / 2
-                y1 = (pl1[i].min_y + pl1[i].max_y) / 2
-                y2 = (pl2[i].min_y + pl2[i].max_y) / 2
-                x1 = round((x1 - min_x) / fact)
-                x2 = round((x2 - min_x) / fact)
-                y1 = round((y1 - min_y) / fact)
-                y2 = round((y2 - min_y) / fact)
-                draw.line([(x1, y1), (x2, y2)], fill="red", width=2)
-                draw.arc([x1 - 1, y1 - 1, x1 + 1, y1 + 1],
-                         0, 360, fill="black")
-
-    def _save_image(self, img, filename, image_width):
-        from PIL import Image
-        new_height = int(image_width * img.height / img.width)
-        img = img.resize((image_width, new_height), Image.LANCZOS)
-        img.save(filename)
+    def _save_image(self, img, filename):
+        img.save(filename, lossless=True)
 
     def _draw_area(self):
         placement = self.cell_placement
@@ -499,44 +474,36 @@ class Circuit(coloquinte_pybind.Circuit):
 
         return (min(min_x_c, min_x_r), min(min_y_c, min_y_r), max(max_x_c, max_x_r), max(max_y_c, max_y_r))
 
-    def _draw_factor(self, draw_area):
-        min_x, min_y, max_x, max_y = draw_area
-        max_allowed_dim = 16000
-        return max(1.0, (max_x - min_x) / max_allowed_dim,
-                   (max_y - min_y) / max_allowed_dim)
+    def _scale_factor(self, image_width):
+        min_x, min_y, max_x, max_y = self._draw_area()
+        max_allowed_ratio = 8
+        fact = max(1.0, (max_x - min_x) / image_width,
+                   (max_y - min_y) / (max_allowed_ratio * image_width))
+        return fact, math.ceil((max_y - min_y) / fact)
 
-    def _make_image(self):
+    def _make_image(self, image_width):
         from PIL import Image
-        draw_area = self._draw_area()
-        min_x, min_y, max_x, max_y = draw_area
-        fact = self._draw_factor(draw_area)
+        scale_factor, image_height = self._scale_factor(image_width)
+        img = Image.new("RGB", (image_width, image_height), "lightgray")
+        return img, scale_factor
 
-        img_width = round((max_x - min_x) / fact)
-        img_height = round((max_y - min_y) / fact)
-        img = Image.new("RGB", (img_width, img_height), "lightgray")
-        return img
-
-    def _draw_rows(self, img):
+    def _draw_rows(self, img, scale_factor):
         from PIL import ImageDraw
-        draw_area = self._draw_area()
-        min_x, min_y, max_x, max_y = draw_area
-        fact = self._draw_factor(draw_area)
+        min_x, min_y, max_x, max_y = self._draw_area()
         draw = ImageDraw.Draw(img)
 
         rows = self.rows
         for r in rows:
-            xmn = round((r.min_x - min_x) / fact)
-            xmx = round((r.max_x - min_x) / fact)
-            ymn = round((r.min_y - min_y) / fact)
-            ymx = round((r.max_y - min_y) / fact)
+            xmn = round((r.min_x - min_x) / scale_factor)
+            xmx = round((r.max_x - min_x) / scale_factor)
+            ymn = round((r.min_y - min_y) / scale_factor)
+            ymx = round((r.max_y - min_y) / scale_factor)
             rect = [(xmn, ymn), (xmx, ymx)]
             draw.rectangle(rect, fill="white")
 
-    def _draw_cells(self, img, macros):
+    def _draw_cells(self, img, macros, scale_factor):
         from PIL import ImageDraw
-        draw_area = self._draw_area()
-        min_x, min_y, max_x, max_y = draw_area
-        fact = self._draw_factor(draw_area)
+        min_x, min_y, max_x, max_y = self._draw_area()
         draw = ImageDraw.Draw(img)
 
         placement = self.cell_placement
@@ -545,26 +512,44 @@ class Circuit(coloquinte_pybind.Circuit):
         for i, pl in enumerate(placement):
             if fixed[i] != macros:
                 continue
-            xmn = round((pl.min_x - min_x) / fact)
-            xmx = round((pl.max_x - min_x) / fact)
-            ymn = round((pl.min_y - min_y) / fact)
-            ymx = round((pl.max_y - min_y) / fact)
+            xmn = round((pl.min_x - min_x) / scale_factor)
+            xmx = round((pl.max_x - min_x) / scale_factor)
+            ymn = round((pl.min_y - min_y) / scale_factor)
+            ymx = round((pl.max_y - min_y) / scale_factor)
             rect = [(xmn, ymn), (xmx, ymx)]
             if xmn == xmx or ymn == ymx:
                 continue
             if fixed[i]:
                 # Fixed cells and macros
-                draw.rectangle(rect, fill="gray", outline="black", width=8)
+                draw.rectangle(rect, fill="gray", outline="black", width=1)
             elif pl.height > 4 * row_height:
                 # Movable macros
-                draw.rectangle(rect, fill="aqua", outline="black", width=4)
-            elif pl.height > row_height:
-                # Multi-row cells
-                draw.rectangle(rect, fill="mediumblue")
+                draw.rectangle(rect, fill="aqua", outline="mediumblue", width=1)
             else:
-                # Nice standard cells
-                draw.rectangle(rect, fill="blue")
+                # Nice standard cells (or close enough)
+                draw.rectangle(rect, fill="blue", outline="mediumblue", width=1)
         return img
+
+    def _draw_displacement(self, img, pl1, pl2, scale_factor):
+        from PIL import ImageDraw
+        min_x, min_y, max_x, max_y = self._draw_area()
+
+        draw = ImageDraw.Draw(img)
+        fixed = self.cell_is_fixed
+        assert len(pl1) == len(pl2)
+        for i in range(self.nb_cells):
+            if not fixed[i]:
+                x1 = (pl1[i].min_x + pl1[i].max_x) / 2
+                x2 = (pl2[i].min_x + pl2[i].max_x) / 2
+                y1 = (pl1[i].min_y + pl1[i].max_y) / 2
+                y2 = (pl2[i].min_y + pl2[i].max_y) / 2
+                x1 = round((x1 - min_x) / scale_factor)
+                x2 = round((x2 - min_x) / scale_factor)
+                y1 = round((y1 - min_y) / scale_factor)
+                y2 = round((y2 - min_y) / scale_factor)
+                draw.line([(x1, y1), (x2, y2)], fill="red", width=1)
+                draw.arc([x1 - 1, y1 - 1, x1 + 1, y1 + 1],
+                         0, 360, fill="black")
 
 
 def _add_arguments(parser, obj, prefix):
