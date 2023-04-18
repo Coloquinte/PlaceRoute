@@ -541,6 +541,7 @@ class Circuit(coloquinte_pybind.Circuit):
 
         placement = self.cell_placement
         fixed = self.cell_is_fixed
+        row_height = self.row_height
         for i, pl in enumerate(placement):
             if fixed[i] != macros:
                 continue
@@ -552,8 +553,16 @@ class Circuit(coloquinte_pybind.Circuit):
             if xmn == xmx or ymn == ymx:
                 continue
             if fixed[i]:
+                # Fixed cells and macros
                 draw.rectangle(rect, fill="gray", outline="black", width=8)
+            elif pl.height > 4 * row_height:
+                # Movable macros
+                draw.rectangle(rect, fill="aqua", outline="black", width=4)
+            elif pl.height > row_height:
+                # Multi-row cells
+                draw.rectangle(rect, fill="mediumblue")
             else:
+                # Nice standard cells
                 draw.rectangle(rect, fill="blue")
         return img
 

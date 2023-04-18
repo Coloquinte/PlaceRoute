@@ -48,6 +48,8 @@ PYBIND11_MODULE(coloquinte_pybind, m) {
       .def_readwrite("max_x", &Rectangle::maxX)
       .def_readwrite("min_y", &Rectangle::minY)
       .def_readwrite("max_y", &Rectangle::maxY)
+      .def_property_readonly("height", &Rectangle::height, "Height")
+      .def_property_readonly("width", &Rectangle::width, "Width")
       .def("__str__", &Rectangle::toString)
       .def("__repr__", &Rectangle::toString);
 
