@@ -113,21 +113,21 @@ enum class NetModelOption {
  */
 enum class CellOrientation {
   /// North (default orientation)
-  N,
+  N = 0, R0 = 0,
   /// South
-  S,
+  S = 1, R180 = 1,
   /// West
-  W,
+  W = 2, R90 = 2,
   /// East
-  E,
-  /// Flip + North
-  FN,
-  /// Flip + South
-  FS,
-  /// Flip + West
-  FW,
-  /// Flip + East
-  FE
+  E = 3, R270 = 3,
+  /// Flip + North (vertical mirror, y unchanged)
+  FN = 4, MY = 4,
+  /// Flip + South (horizontal mirror, x unchanged)
+  FS = 5, MX = 5,
+  /// Flip + West (MX then W)
+  FW = 6, MX90 = 6,
+  /// Flip + East (MY then W)
+  FE = 7, MY90 = 7
 };
 
 /**
