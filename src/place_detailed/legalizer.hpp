@@ -87,9 +87,14 @@ class LegalizerBase {
   float maxDistance(LegalizationModel model) const;
 
   /**
-   * @brief Return the sum of the widths of the cells
+   * @brief Return the sum of the areas of the cells
    */
   long long totalCellArea() const;
+
+  /**
+   * @brief Return the row height
+   */
+  int rowHeight() const;
 
   /**
    * @brief Return the remaining rows (placed cells removed)

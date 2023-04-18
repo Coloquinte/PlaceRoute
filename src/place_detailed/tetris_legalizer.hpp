@@ -4,6 +4,7 @@
 
 namespace coloquinte {
 class TetrisLegalizer : public LegalizerBase {
+  public:
   /**
    * @brief Initialization of the datastructure
    */
@@ -24,10 +25,20 @@ class TetrisLegalizer : public LegalizerBase {
   void placeCell(int c);
 
   /**
+   * @brief Place a single cell
+   */
+  std::pair<bool, int> attemptPlacement(int c, int y) const;
+
+  /**
    * @brief Return possible placement intervals for a given width, height and y
    */
   std::vector<std::pair<int, int> > getPossibleIntervals(int w, int h,
                                                          int y) const;
+
+  /**
+   * @brief Instanciate the placement of a cell
+   */
+  void instanciateCell(int x, int y, int w, int h);
 
   /// @brief First free position in the row
   std::vector<int> rowFreePos_;

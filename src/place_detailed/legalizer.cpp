@@ -4,10 +4,10 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <iostream>
 #include <limits>
 
 #include "place_detailed/abacus_legalizer.hpp"
+#include "place_detailed/tetris_legalizer.hpp"
 #include "utils/norm.hpp"
 
 namespace coloquinte {
@@ -22,11 +22,6 @@ Legalizer Legalizer::fromIspdCircuit(const Circuit &circuit) {
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (circuit.cellIsFixed_[i]) {
       continue;
-    }
-    if (circuit.cellHeight_[i] != rowHeight) {
-      throw std::runtime_error(
-          "Some placeable cells have a height that is different from the row "
-          "height");
     }
     widths.push_back(circuit.cellWidth_[i]);
     heights.push_back(circuit.cellHeight_[i]);
@@ -79,6 +74,11 @@ void LegalizerBase::check() const {
   if (cellToY_.size() != nbCells()) {
     throw std::runtime_error("Number of cell y positions does not match");
   }
+  for (Row r : rows_) {
+    if (r.height() != rowHeight()) {
+      throw std::runtime_error("Rows have different heights");
+    }
+  }
 }
 
 void LegalizerBase::checkAllPlaced() const {
@@ -97,10 +97,12 @@ void LegalizerBase::importLegalization(const LegalizerBase &leg,
   assert(cells.size() == leg.nbCells());
   for (int i = 0; i < cells.size(); ++i) {
     int c = cells[i];
-    cellToX_[c] = x[i];
-    cellToY_[c] = y[i];
-    cellToOrientation_[c] = o[i];
-    cellIsPlaced_[c] = true;
+    if (leg.cellIsPlaced_[i]) {
+      cellToX_[c] = x[i];
+      cellToY_[c] = y[i];
+      cellToOrientation_[c] = o[i];
+      cellIsPlaced_[c] = true;
+    }
   }
 }
 
@@ -247,6 +249,13 @@ long long LegalizerBase::totalCellArea() const {
   return ret;
 }
 
+int LegalizerBase::rowHeight() const {
+  if (rows_.empty()) {
+    throw std::runtime_error("No row present");
+  }
+  return rows_.front().height();
+}
+
 Legalizer::Legalizer(const std::vector<Row> &rows,
                      const std::vector<int> &width,
                      const std::vector<int> &height,
@@ -268,7 +277,27 @@ void Legalizer::run(const ColoquinteParameters &params) {
 }
 
 void Legalizer::runTetris(const std::vector<int> &cells) {
-  // TODO
+  std::vector<Row> r = remainingRows();
+  std::vector<int> w, h, x, y, remainingCells;
+  std::vector<CellRowPolarity> p;
+  for (int c : cells) {
+    if (isPlaced(c)) {
+      continue;
+    }
+    if (cellHeight_[c] <= rowHeight()) {
+      continue;
+    }
+    remainingCells.push_back(c);
+    w.push_back(cellWidth_[c]);
+    h.push_back(cellHeight_[c]);
+    x.push_back(cellTargetX_[c]);
+    y.push_back(cellTargetY_[c]);
+    p.push_back(cellRowPolarity_[c]);
+  }
+
+  TetrisLegalizer leg(r, w, h, p, x, y);
+  leg.run();
+  importLegalization(leg, remainingCells);
 }
 
 void Legalizer::runAbacus(const std::vector<int> &cells) {
@@ -279,14 +308,17 @@ void Legalizer::runAbacus(const std::vector<int> &cells) {
     if (isPlaced(c)) {
       continue;
     }
+    if (cellHeight_[c] != rowHeight()) {
+      continue;
+    }
     remainingCells.push_back(c);
     w.push_back(cellWidth_[c]);
     h.push_back(cellHeight_[c]);
     x.push_back(cellTargetX_[c]);
     y.push_back(cellTargetY_[c]);
+    p.push_back(cellRowPolarity_[c]);
   }
 
-  // Run the legalizer
   AbacusLegalizer leg(r, w, h, p, x, y);
   leg.run();
   importLegalization(leg, remainingCells);

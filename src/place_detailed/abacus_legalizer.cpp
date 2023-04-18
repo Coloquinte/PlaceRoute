@@ -21,7 +21,7 @@ AbacusLegalizer::AbacusLegalizer(const std::vector<Row> &rows,
 
 void AbacusLegalizer::run() {
   for (int c = 0; c < nbCells(); ++c) {
-    placeCellOptimally(c);
+    placeCell(c);
   }
   for (int i = 0; i < nbRows(); ++i) {
     std::vector<int> pl = rowLegalizers_[i].getPlacement();
@@ -36,7 +36,7 @@ void AbacusLegalizer::run() {
   check();
 }
 
-std::pair<bool, long long> AbacusLegalizer::placeCellOptimally(int cell,
+std::pair<bool, long long> AbacusLegalizer::evaluatePlacement(int cell,
                                                                int row) {
   if (rowLegalizers_[row].remainingSpace() < cellWidth_[cell]) {
     return std::make_pair(false, 0);
@@ -45,7 +45,7 @@ std::pair<bool, long long> AbacusLegalizer::placeCellOptimally(int cell,
   return std::make_pair(true, dist);
 }
 
-bool AbacusLegalizer::placeCellOptimally(int cell) {
+void AbacusLegalizer::placeCell(int cell) {
   /**
    * Simple algorithm that tries close row first and stops early if no
    * improvement can be found
@@ -58,6 +58,7 @@ bool AbacusLegalizer::placeCellOptimally(int cell) {
 
   auto tryPlace = [&](int row) {
     if (rows_[row].height() != cellHeight_[cell]) {
+      // Forbidden to place a row in a different-height cell
       return false;
     }
     long long yDist = cellWidth_[cell] *
@@ -67,7 +68,7 @@ bool AbacusLegalizer::placeCellOptimally(int cell) {
       return true;
     }
     // Find the best position for the cell
-    auto [ok, xDist] = placeCellOptimally(cell, row);
+    auto [ok, xDist] = evaluatePlacement(cell, row);
     // TODO: extend this to non-L1 cases
     long long dist = xDist + yDist;
     if (!ok) {
@@ -98,11 +99,11 @@ bool AbacusLegalizer::placeCellOptimally(int cell) {
   }
 
   if (bestRow == -1) {
-    return false;
+    return;
   }
   rowLegalizers_[bestRow].push(cellWidth_[cell], targetX);
   rowToCells_[bestRow].push_back(cell);
-  return true;
+  cellIsPlaced_[cell] = true;
 }
 
 void AbacusLegalizer::check() const {

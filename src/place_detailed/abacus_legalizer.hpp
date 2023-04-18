@@ -22,13 +22,14 @@ class AbacusLegalizer : public LegalizerBase {
    * @brief Place a single cell optimally
    * Return true if successful
    */
-  bool placeCellOptimally(int cell);
+  void placeCell(int cell);
 
   /**
-   * @brief Simulate placing a single cell in a given row, pushing other cells
-   * as needed Return a pair: true if successful and the added distance
+   * @brief Find the optimal placement in the row
+   *
+   * Return a pair: true if successful, and the distance with this placement
    */
-  std::pair<bool, long long> placeCellOptimally(int cell, int row);
+  std::pair<bool, long long> evaluatePlacement(int cell, int row);
 
   /**
    * @brief Check consistency
