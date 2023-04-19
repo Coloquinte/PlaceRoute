@@ -7,13 +7,17 @@ namespace coloquinte {
 
 DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit) {
   // Represent fixed cells with -1 width so they are not considered
+  int rowHeight = circuit.rowHeight();
   std::vector<int> widths = circuit.cellWidth_;
-  for (int i = 0; i < circuit.nbCells(); ++i) {
-    if (circuit.cellIsFixed_[i]) {
-      widths[i] = -1;
+  std::vector<Rectangle> obstacles;
+  for (int c = 0; c < circuit.nbCells(); ++c) {
+    if (circuit.cellIsFixed_[c]) {
+      widths[c] = -1;
     }
-    if (circuit.cellHeight_[i] != circuit.rowHeight()) {
-      widths[i] = -1;
+    if (circuit.cellHeight_[c] != rowHeight) {
+      widths[c] = -1;
+      Rectangle pl = circuit.placement(c);
+      obstacles.push_back(pl);
     }
   }
   std::vector<int> cellIndex;
@@ -23,8 +27,8 @@ DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit) {
     cellIndex.push_back(i);
   }
   // TODO: check that the orientations of the cells are compatible with the rows
-  return DetailedPlacement(circuit.computeRows(), widths, circuit.cellX_,
-                           circuit.cellY_, cellIndex);
+  return DetailedPlacement(circuit.computeRows(obstacles), widths,
+                           circuit.cellX_, circuit.cellY_, cellIndex);
 }
 
 DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit,
@@ -32,15 +36,15 @@ DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit,
   // Compute the cells in the placement region
   std::vector<int> cellIndex;
   std::vector<Rectangle> obstacles;
+  int rowHeight = circuit.rowHeight();
   for (int c = 0; c < circuit.nbCells(); ++c) {
     if (circuit.isFixed(c)) {
       continue;
     }
-    if (circuit.cellHeight_[c] != circuit.rowHeight()) {
-      continue;
-    }
     Rectangle pl = circuit.placement(c);
-    if (region.contains(pl)) {
+    if (circuit.cellHeight_[c] != rowHeight) {
+      obstacles.push_back(pl);
+    } else if (region.contains(pl)) {
       cellIndex.push_back(c);
     } else if (region.intersects(pl)) {
       // This will cover some of the rows: we need to reduce their size
