@@ -524,10 +524,12 @@ class Circuit(coloquinte_pybind.Circuit):
                 draw.rectangle(rect, fill="gray", outline="black", width=1)
             elif pl.height > 4 * row_height:
                 # Movable macros
-                draw.rectangle(rect, fill="aqua", outline="mediumblue", width=1)
+                draw.rectangle(rect, fill="aqua",
+                               outline="mediumblue", width=1)
             else:
                 # Nice standard cells (or close enough)
-                draw.rectangle(rect, fill="blue", outline="mediumblue", width=1)
+                draw.rectangle(rect, fill="blue",
+                               outline="mediumblue", width=1)
         return img
 
     def _draw_displacement(self, img, pl1, pl2, scale_factor):
@@ -659,7 +661,8 @@ class OptimizationCallback:
         if self.save_displacement:
             if self.prev_placement is not None:
                 filename = f"{self.prefix}_{self.step:04d}_{step_name.name.lower()}_disp.{self.extension}"
-                self.circuit.write_displacement(filename, self.prev_placement, self.circuit.cell_placement, image_width=self.image_width)
+                self.circuit.write_displacement(
+                    filename, self.prev_placement, self.circuit.cell_placement, image_width=self.image_width)
             self.prev_placement = self.circuit.cell_placement
 
         self.history.append((self.step, step_name, self.circuit.hpwl()))
@@ -785,6 +788,10 @@ def main():
         circuit.write_image(
             f"{args.save_images}_macros.{args.image_extension}", True, args.image_width
         )
+        if args.load_solution is not None:
+            circuit.write_image(
+                f"{args.save_images}_initial.{args.image_extension}", False, args.image_width
+            )
         if args.save_all_images or args.save_graph:
             callback = OptimizationCallback(
                 circuit, args.save_images, args.image_width, args.image_extension
