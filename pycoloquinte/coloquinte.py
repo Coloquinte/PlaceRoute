@@ -647,6 +647,8 @@ class OptimizationCallback:
         self.image_width = image_width
         self.extension = extension
         self.save_view = True
+        self.save_displacement = True
+        self.prev_placement = None
         self.history = []
 
     def __call__(self, step_name):
@@ -654,6 +656,12 @@ class OptimizationCallback:
             filename = f"{self.prefix}_{self.step:04d}_{step_name.name.lower()}.{self.extension}"
             self.circuit.write_image(filename, image_width=self.image_width)
             self.save_graph()
+        if self.save_displacement:
+            if self.prev_placement is not None:
+                filename = f"{self.prefix}_{self.step:04d}_{step_name.name.lower()}_disp.{self.extension}"
+                self.circuit.write_displacement(filename, self.prev_placement, self.circuit.cell_placement, image_width=self.image_width)
+            self.prev_placement = self.circuit.cell_placement
+
         self.history.append((self.step, step_name, self.circuit.hpwl()))
         self.step += 1
 
@@ -733,6 +741,9 @@ def main():
         "--save-all-images", help=argparse.SUPPRESS, action="store_true"
     )
     parser.add_argument(
+        "--save-displacement", help=argparse.SUPPRESS, action="store_true"
+    )
+    parser.add_argument(
         "--save-graph", help=argparse.SUPPRESS, action="store_true")
     # Save intermediate placement images
     parser.add_argument(
@@ -779,6 +790,9 @@ def main():
                 circuit, args.save_images, args.image_width, args.image_extension
             )
             callback.save_view = args.save_all_images
+            callback.save_displacement = args.save_displacement
+            if args.load_solution is not None:
+                callback.prev_placement = circuit.cell_placement
     if args.report_only:
         return
 
