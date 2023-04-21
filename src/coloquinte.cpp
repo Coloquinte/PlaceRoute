@@ -134,24 +134,18 @@ void Circuit::setCellHeight(const std::vector<int> &heights) {
 
 int Circuit::placedWidth(int cell) const {
   CellOrientation orient = orientation(cell);
-  bool turned = orient == CellOrientation::E || orient == CellOrientation::W ||
-                orient == CellOrientation::FW || orient == CellOrientation::FE;
-  return turned ? cellHeight_[cell] : cellWidth_[cell];
+  return isTurn(orient) ? cellHeight_[cell] : cellWidth_[cell];
 }
 
 int Circuit::placedHeight(int cell) const {
   CellOrientation orient = orientation(cell);
-  bool turned = orient == CellOrientation::E || orient == CellOrientation::W ||
-                orient == CellOrientation::FW || orient == CellOrientation::FE;
-  return turned ? cellWidth_[cell] : cellHeight_[cell];
+  return isTurn(orient) ? cellWidth_[cell] : cellHeight_[cell];
 }
 
 int Circuit::pinXOffset(int net, int i) const {
   int cell = pinCell(net, i);
   CellOrientation orient = orientation(cell);
-  bool turned = orient == CellOrientation::E || orient == CellOrientation::W ||
-                orient == CellOrientation::FW || orient == CellOrientation::FE;
-  int offs = turned ? pinYOffsets_[netLimits_[net] + i]
+  int offs = isTurn(orient) ? pinYOffsets_[netLimits_[net] + i]
                     : pinXOffsets_[netLimits_[net] + i];
   bool flipped = orient == CellOrientation::S || orient == CellOrientation::W ||
                  orient == CellOrientation::FN || orient == CellOrientation::FE;
@@ -161,9 +155,7 @@ int Circuit::pinXOffset(int net, int i) const {
 int Circuit::pinYOffset(int net, int i) const {
   int cell = pinCell(net, i);
   CellOrientation orient = orientation(cell);
-  bool turned = orient == CellOrientation::E || orient == CellOrientation::W ||
-                orient == CellOrientation::FW || orient == CellOrientation::FE;
-  int offs = turned ? pinXOffsets_[netLimits_[net] + i]
+  int offs = isTurn(orient) ? pinXOffsets_[netLimits_[net] + i]
                     : pinYOffsets_[netLimits_[net] + i];
   bool flipped = orient == CellOrientation::S || orient == CellOrientation::E ||
                  orient == CellOrientation::FS || orient == CellOrientation::FE;
@@ -438,17 +430,46 @@ std::string Circuit::report() const {
   }
   ss << "\n";
 
+  // Analyze and report possible issues
   if (nbUnalignedCells > 0) {
-    ss << "WARNING: some cells are not aligned on a standard cell heights "
-       << "and cannot be placed.\n";
-  }
-  if (nbMultiRowCells > 0) {
-    ss << std::endl;
-    ss << "WARNING: multi-row cells are present and cannot be placed.\n";
+    ss << "WARNING: some cells are not aligned on a standard cell heights, "
+       << "which is not supported.\n";
   }
   if (nbPlaceableMacros > 0) {
     ss << std::endl;
-    ss << "WARNING: movable macros are present and cannot be placed.\n";
+    ss << "WARNING: movable macros are present; this is supported but would "
+          "benefit from quality improvements.\n";
+  }
+
+  bool badRows = false;
+  for (CellOrientation o : {CellOrientation::E, CellOrientation::W,
+                            CellOrientation::FE, CellOrientation::FW}) {
+    if (orients.count(o)) {
+      badRows = true;
+    }
+  }
+  if (badRows) {
+    ss << "WARNING: some rows have orientations other than N/S. This is not "
+          "supported.\n";
+  }
+
+  bool badRowHeight = false;
+  bool badRowOrient = false;
+  for (int i = 0; i + 1 < rows_.size(); ++i) {
+    if (rows_[i].height() != rows_[i + 1].height()) {
+      badRowHeight = true;
+    }
+    if (rows_[i].minY == rows_[i + 1].minY &&
+        rows_[i].orientation != rows_[i + 1].orientation) {
+      badRowOrient = true;
+    }
+  }
+  if (badRowHeight) {
+    ss << "WARNING: some rows have different heights. This is not supported.\n";
+  }
+  if (badRowOrient) {
+    ss << "WARNING: some rows at the same y have different orientations. This "
+          "is not supported.\n";
   }
   return ss.str();
 }

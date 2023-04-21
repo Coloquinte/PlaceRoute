@@ -4,13 +4,14 @@
 #include <limits>
 
 namespace coloquinte {
-TetrisLegalizer::TetrisLegalizer(const std::vector<Row> &rows,
-                                 const std::vector<int> &width,
-                                 const std::vector<int> &height,
-                                 const std::vector<CellRowPolarity> &polarities,
-                                 const std::vector<int> &targetX,
-                                 const std::vector<int> &targetY)
-    : LegalizerBase(rows, width, height, polarities, targetX, targetY) {
+TetrisLegalizer::TetrisLegalizer(
+    const std::vector<Row> &rows, const std::vector<int> &width,
+    const std::vector<int> &height,
+    const std::vector<CellRowPolarity> &polarities,
+    const std::vector<int> &targetX, const std::vector<int> &targetY,
+    const std::vector<CellOrientation> &targetOrientation)
+    : LegalizerBase(rows, width, height, polarities, targetX, targetY,
+                    targetOrientation) {
   for (Row r : rows_) {
     rowFreePos_.push_back(r.minX);
   }
@@ -23,10 +24,23 @@ void TetrisLegalizer::run() {
 }
 
 std::pair<bool, int> TetrisLegalizer::attemptPlacement(int cell, int y) const {
-  auto p = getPossibleIntervals(cellWidth_[cell], cellHeight_[cell], y);
-  if (p.empty()) {
+  CellOrientation orient = getOrientation(cell, closestRow(y));
+  if (orient == CellOrientation::INVALID) {
+    // Incompatible due to row orientation
     return std::make_pair(false, 0);
   }
+  // Need to handle non-classical orientation
+  int width = cellWidth_[cell];
+  int height = cellHeight_[cell];
+  if (isTurn(orient)) {
+    std::swap(width, height);
+  }
+  auto p = getPossibleIntervals(width, height, y);
+  if (p.empty()) {
+    // Incompatible due to obstructions or placed cells
+    return std::make_pair(false, 0);
+  }
+  // Find the closest available interval
   int x = cellTargetX_[cell];
   int dest = 0;
   bool found = false;
@@ -34,6 +48,7 @@ std::pair<bool, int> TetrisLegalizer::attemptPlacement(int cell, int y) const {
     int pos = std::clamp(x, b, e);
     if (!found || std::abs(pos - x) < std::abs(dest - x)) {
       dest = pos;
+      found = true;
     }
   }
   return std::make_pair(true, dest);
@@ -87,8 +102,15 @@ void TetrisLegalizer::placeCell(int cell) {
   }
   cellToX_[cell] = bestX;
   cellToY_[cell] = bestY;
+  cellToOrientation_[cell] = getOrientation(cell, closestRow(bestY));
   cellIsPlaced_[cell] = true;
-  instanciateCell(bestX, bestY, cellWidth_[cell], cellHeight_[cell]);
+  // Need to handle non-classical orientation
+  int width = cellWidth_[cell];
+  int height = cellHeight_[cell];
+  if (isTurn(cellToOrientation_[cell])) {
+    std::swap(width, height);
+  }
+  instanciateCell(bestX, bestY, width, height);
 }
 
 void TetrisLegalizer::instanciateCell(int x, int y, int w, int h) {

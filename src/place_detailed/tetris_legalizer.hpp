@@ -3,8 +3,15 @@
 #include "place_detailed/legalizer.hpp"
 
 namespace coloquinte {
+/**
+ * Very simple legalization following the "Tetris" algorithm.
+ *
+ * Cells are placed one after the other, as close as possible to their target.
+ * This legalizer handles macros too, and keeps their target orientation unless
+ * a row polarity has been specified.
+ */
 class TetrisLegalizer : public LegalizerBase {
-  public:
+ public:
   /**
    * @brief Initialization of the datastructure
    */
@@ -12,7 +19,8 @@ class TetrisLegalizer : public LegalizerBase {
                   const std::vector<int> &height,
                   const std::vector<CellRowPolarity> &polarities,
                   const std::vector<int> &targetX,
-                  const std::vector<int> &targetY);
+                  const std::vector<int> &targetY,
+                  const std::vector<CellOrientation> &targetOrientation);
 
   /**
    * @brief Run the algorithm

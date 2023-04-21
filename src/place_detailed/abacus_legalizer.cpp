@@ -6,13 +6,14 @@
 
 namespace coloquinte {
 
-AbacusLegalizer::AbacusLegalizer(const std::vector<Row> &rows,
-                                 const std::vector<int> &width,
-                                 const std::vector<int> &height,
-                                 const std::vector<CellRowPolarity> &polarities,
-                                 const std::vector<int> &targetX,
-                                 const std::vector<int> &targetY)
-    : LegalizerBase(rows, width, height, polarities, targetX, targetY) {
+AbacusLegalizer::AbacusLegalizer(
+    const std::vector<Row> &rows, const std::vector<int> &width,
+    const std::vector<int> &height,
+    const std::vector<CellRowPolarity> &polarities,
+    const std::vector<int> &targetX, const std::vector<int> &targetY,
+    const std::vector<CellOrientation> &targetOrientation)
+    : LegalizerBase(rows, width, height, polarities, targetX, targetY,
+                    targetOrientation) {
   rowToCells_.resize(rows_.size());
   for (const Row &row : rows_) {
     rowLegalizers_.emplace_back(row.minX, row.maxX);
@@ -30,14 +31,14 @@ void AbacusLegalizer::run() {
       int cell = rowToCells_[i][j];
       cellToX_[cell] = pl[j];
       cellToY_[cell] = rows_[i].minY;
-      cellToOrientation_[cell] = rows_[i].orientation;
+      cellToOrientation_[cell] = getOrientation(cell, i);
     }
   }
   check();
 }
 
 std::pair<bool, long long> AbacusLegalizer::evaluatePlacement(int cell,
-                                                               int row) {
+                                                              int row) {
   if (rowLegalizers_[row].remainingSpace() < cellWidth_[cell]) {
     return std::make_pair(false, 0);
   }

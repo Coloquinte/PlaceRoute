@@ -112,22 +112,24 @@ enum class NetModelOption {
  * @brief Orientation of a cell
  */
 enum class CellOrientation {
-  /// North (default orientation)
+  /// @brief North (default orientation)
   N = 0, R0 = 0,
-  /// South
+  /// @brief South
   S = 1, R180 = 1,
-  /// West
+  /// @brief West
   W = 2, R90 = 2,
-  /// East
+  /// @brief East
   E = 3, R270 = 3,
-  /// Flip + North (vertical mirror, y unchanged)
+  /// @brief Flip + North (vertical mirror, y unchanged)
   FN = 4, MY = 4,
-  /// Flip + South (horizontal mirror, x unchanged)
+  /// @brief Flip + South (horizontal mirror, x unchanged)
   FS = 5, MX = 5,
-  /// Flip + West (MX then W)
+  /// @brief Flip + West (MX then W)
   FW = 6, MX90 = 6,
-  /// Flip + East (MY then W)
-  FE = 7, MY90 = 7
+  /// @brief Flip + East (MY then W)
+  FE = 7, MY90 = 7,
+  /// @brief Special value for invalid/forbidden/whatever
+  INVALID = 8
 };
 
 /**
@@ -147,9 +149,20 @@ enum class CellRowPolarity {
   ANY
 };
 
+std::string toString(CellOrientation o);
 std::string toString(LegalizationModel model);
 std::string toString(NetModelOption model);
 std::string toString(CellRowPolarity pol);
+
+/**
+ * Return the "opposite" row orientation (N <--> FS)
+*/
+CellOrientation oppositeRowOrientation(CellOrientation o);
+
+/**
+ * Return whether the cell view is turned (exchange width and height)
+*/
+bool isTurn(CellOrientation o);
 
 /**
  * @brief Placement callbacks are called with the current step.

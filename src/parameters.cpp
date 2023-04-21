@@ -25,6 +25,57 @@ std::string toString(LegalizationModel model) {
   }
 }
 
+std::string toString(CellOrientation o) {
+  switch (o) {
+    case CellOrientation::N:
+      return "N";
+    case CellOrientation::S:
+      return "S";
+    case CellOrientation::E:
+      return "E";
+    case CellOrientation::W:
+      return "W";
+    case CellOrientation::FN:
+      return "FN";
+    case CellOrientation::FS:
+      return "FS";
+    case CellOrientation::FE:
+      return "FE";
+    case CellOrientation::FW:
+      return "FW";
+    default:
+      return "UnknownCellOrientation";
+  }
+}
+
+CellOrientation oppositeRowOrientation(CellOrientation o) {
+  switch (o) {
+    case CellOrientation::N:
+      return CellOrientation::FS;
+    case CellOrientation::S:
+      return CellOrientation::FN;
+    case CellOrientation::E:
+      return CellOrientation::FW;
+    case CellOrientation::W:
+      return CellOrientation::FE;
+    case CellOrientation::FN:
+      return CellOrientation::S;
+    case CellOrientation::FS:
+      return CellOrientation::N;
+    case CellOrientation::FE:
+      return CellOrientation::W;
+    case CellOrientation::FW:
+      return CellOrientation::E;
+    default:
+      return CellOrientation::INVALID;
+  }
+}
+
+bool isTurn(CellOrientation orient) {
+  return orient == CellOrientation::E || orient == CellOrientation::W ||
+         orient == CellOrientation::FW || orient == CellOrientation::FE;
+}
+
 std::string toString(NetModelOption model) {
   switch (model) {
     case NetModelOption::BoundToBound:

@@ -2,6 +2,12 @@
 #include "place_detailed/legalizer.hpp"
 
 namespace coloquinte {
+/**
+ * Legalization following the "Abacus" algorithm with L1 cost
+ *
+ * Cells are placed in rows, and are allowed to push other cells to get to a
+ * better overall solution.
+ */
 class AbacusLegalizer : public LegalizerBase {
  public:
   /**
@@ -11,7 +17,8 @@ class AbacusLegalizer : public LegalizerBase {
                   const std::vector<int> &height,
                   const std::vector<CellRowPolarity> &polarities,
                   const std::vector<int> &targetX,
-                  const std::vector<int> &targetY);
+                  const std::vector<int> &targetY,
+                  const std::vector<CellOrientation> &targetOrientation);
 
   /**
    * @brief Run the algorithm

@@ -19,34 +19,39 @@ Legalizer Legalizer::fromIspdCircuit(const Circuit &circuit) {
   std::vector<int> x;
   std::vector<int> y;
   std::vector<CellRowPolarity> polarities;
+  std::vector<CellOrientation> orient;
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (circuit.cellIsFixed_[i]) {
       continue;
     }
-    widths.push_back(circuit.cellWidth_[i]);
-    heights.push_back(circuit.cellHeight_[i]);
+    widths.push_back(circuit.placedWidth(i));
+    heights.push_back(circuit.placedHeight(i));
     polarities.push_back(circuit.cellRowPolarity_[i]);
     x.push_back(circuit.cellX_[i]);
     y.push_back(circuit.cellY_[i]);
+    orient.push_back(circuit.cellOrientation_[i]);
   }
-  return Legalizer(circuit.computeRows(), widths, heights, polarities, x, y);
+  return Legalizer(circuit.computeRows(), widths, heights, polarities, x, y,
+                   orient);
 }
 
-LegalizerBase::LegalizerBase(const std::vector<Row> &rows,
-                             const std::vector<int> &width,
-                             const std::vector<int> &height,
-                             const std::vector<CellRowPolarity> &polarities,
-                             const std::vector<int> &targetX,
-                             const std::vector<int> &targetY)
+LegalizerBase::LegalizerBase(
+    const std::vector<Row> &rows, const std::vector<int> &width,
+    const std::vector<int> &height,
+    const std::vector<CellRowPolarity> &polarities,
+    const std::vector<int> &targetX, const std::vector<int> &targetY,
+    const std::vector<CellOrientation> &targetOrientation)
     : cellWidth_(width),
       cellHeight_(height),
       cellRowPolarity_(polarities),
       cellTargetX_(targetX),
-      cellTargetY_(targetY) {
+      cellTargetY_(targetY),
+      cellTargetOrientation_(targetOrientation) {
   assert(width.size() == height.size());
   assert(width.size() == polarities.size());
   assert(width.size() == targetX.size());
   assert(width.size() == targetY.size());
+  assert(width.size() == targetOrientation.size());
   // Sort the rows
   rows_ = rows;
   std::stable_sort(rows_.begin(), rows_.end(), [](Row a, Row b) -> bool {
@@ -54,7 +59,7 @@ LegalizerBase::LegalizerBase(const std::vector<Row> &rows,
   });
   cellToX_ = cellTargetX_;
   cellToY_ = cellTargetY_;
-  cellToOrientation_.assign(width.size(), CellOrientation::N);
+  cellToOrientation_ = cellTargetOrientation_;
   cellIsPlaced_.assign(width.size(), false);
 }
 
@@ -62,17 +67,27 @@ void LegalizerBase::check() const {
   if (cellWidth_.size() != nbCells()) {
     throw std::runtime_error("Number of cell widths does not match");
   }
+  if (cellHeight_.size() != nbCells()) {
+    throw std::runtime_error("Number of cell heights does not match");
+  }
   if (cellTargetX_.size() != nbCells()) {
     throw std::runtime_error("Number of cell x targets does not match");
   }
   if (cellTargetY_.size() != nbCells()) {
     throw std::runtime_error("Number of cell y targets does not match");
   }
+  if (cellTargetOrientation_.size() != nbCells()) {
+    throw std::runtime_error(
+        "Number of cell orientation targets does not match");
+  }
   if (cellToX_.size() != nbCells()) {
     throw std::runtime_error("Number of cell x positions does not match");
   }
   if (cellToY_.size() != nbCells()) {
     throw std::runtime_error("Number of cell y positions does not match");
+  }
+  if (cellToOrientation_.size() != nbCells()) {
+    throw std::runtime_error("Number of cell orientations does not match");
   }
   for (Row r : rows_) {
     if (r.height() != rowHeight()) {
@@ -249,6 +264,39 @@ long long LegalizerBase::totalCellArea() const {
   return ret;
 }
 
+CellOrientation LegalizerBase::getOrientation(int cell, int row) const {
+  CellRowPolarity pol = cellRowPolarity_[cell];
+  if (pol == CellRowPolarity::ANY) {
+    // Keep the same orientation
+    return cellTargetOrientation_[cell];
+  }
+  CellOrientation rowOrientation = rows_[row].orientation;
+  int nbRows = cellHeight_[cell] / rows_[row].height();
+  if (nbRows % 2 == 0) {
+    // Number of rows is even: north row or south row depending on the polarity
+    if (pol == CellRowPolarity::OPPOSITE) {
+      if (rowOrientation == CellOrientation::FS ||
+          rowOrientation == CellOrientation::S) {
+        return rowOrientation;
+      }
+      return CellOrientation::INVALID;
+    } else {
+      if (rowOrientation == CellOrientation::FN ||
+          rowOrientation == CellOrientation::N) {
+        return rowOrientation;
+      }
+      return CellOrientation::INVALID;
+    }
+  } else {
+    // Number of rows is odd: flip depending on the position
+    if (pol == CellRowPolarity::OPPOSITE) {
+      return oppositeRowOrientation(rowOrientation);
+    } else {
+      return rowOrientation;
+    }
+  }
+}
+
 int LegalizerBase::rowHeight() const {
   if (rows_.empty()) {
     throw std::runtime_error("No row present");
@@ -261,8 +309,10 @@ Legalizer::Legalizer(const std::vector<Row> &rows,
                      const std::vector<int> &height,
                      const std::vector<CellRowPolarity> &polarities,
                      const std::vector<int> &targetX,
-                     const std::vector<int> &targetY)
-    : LegalizerBase(rows, width, height, polarities, targetX, targetY) {}
+                     const std::vector<int> &targetY,
+                     const std::vector<CellOrientation> &targetOrientation)
+    : LegalizerBase(rows, width, height, polarities, targetX, targetY,
+                    targetOrientation) {}
 
 void Legalizer::run(const ColoquinteParameters &params) {
   std::vector<int> cellOrder = computeCellOrder(
@@ -280,6 +330,7 @@ void Legalizer::runTetris(const std::vector<int> &cells) {
   std::vector<Row> r = remainingRows();
   std::vector<int> w, h, x, y, remainingCells;
   std::vector<CellRowPolarity> p;
+  std::vector<CellOrientation> o;
   for (int c : cells) {
     if (isPlaced(c)) {
       continue;
@@ -290,12 +341,13 @@ void Legalizer::runTetris(const std::vector<int> &cells) {
     remainingCells.push_back(c);
     w.push_back(cellWidth_[c]);
     h.push_back(cellHeight_[c]);
+    p.push_back(cellRowPolarity_[c]);
     x.push_back(cellTargetX_[c]);
     y.push_back(cellTargetY_[c]);
-    p.push_back(cellRowPolarity_[c]);
+    o.push_back(cellTargetOrientation_[c]);
   }
 
-  TetrisLegalizer leg(r, w, h, p, x, y);
+  TetrisLegalizer leg(r, w, h, p, x, y, o);
   leg.run();
   importLegalization(leg, remainingCells);
 }
@@ -304,6 +356,7 @@ void Legalizer::runAbacus(const std::vector<int> &cells) {
   std::vector<Row> r = remainingRows();
   std::vector<int> w, h, x, y, remainingCells;
   std::vector<CellRowPolarity> p;
+  std::vector<CellOrientation> o;
   for (int c : cells) {
     if (isPlaced(c)) {
       continue;
@@ -314,12 +367,13 @@ void Legalizer::runAbacus(const std::vector<int> &cells) {
     remainingCells.push_back(c);
     w.push_back(cellWidth_[c]);
     h.push_back(cellHeight_[c]);
+    p.push_back(cellRowPolarity_[c]);
     x.push_back(cellTargetX_[c]);
     y.push_back(cellTargetY_[c]);
-    p.push_back(cellRowPolarity_[c]);
+    o.push_back(cellTargetOrientation_[c]);
   }
 
-  AbacusLegalizer leg(r, w, h, p, x, y);
+  AbacusLegalizer leg(r, w, h, p, x, y, o);
   leg.run();
   importLegalization(leg, remainingCells);
 }

@@ -27,7 +27,8 @@ class LegalizerBase {
                 const std::vector<int> &height,
                 const std::vector<CellRowPolarity> &polarity,
                 const std::vector<int> &targetX,
-                const std::vector<int> &targetY);
+                const std::vector<int> &targetY,
+                const std::vector<CellOrientation> &targetOrientation);
 
   /**
    * @brief Return the number of rows
@@ -95,6 +96,12 @@ class LegalizerBase {
    * @brief Return the row height
    */
   int rowHeight() const;
+
+  /**
+   * @brief Obtain the orientation of the cell from the row orientation and
+   * cell polarity
+   */
+  CellOrientation getOrientation(int cell, int row) const;
 
   /**
    * @brief Return the remaining rows (placed cells removed)
@@ -171,6 +178,7 @@ class LegalizerBase {
   std::vector<CellRowPolarity> cellRowPolarity_;
   std::vector<int> cellTargetX_;
   std::vector<int> cellTargetY_;
+  std::vector<CellOrientation> cellTargetOrientation_;
 
   // Placement status
   // X position of the cell
@@ -217,7 +225,8 @@ class Legalizer : public LegalizerBase {
   Legalizer(const std::vector<Row> &rows, const std::vector<int> &width,
             const std::vector<int> &height,
             const std::vector<CellRowPolarity> &polarities,
-            const std::vector<int> &targetX, const std::vector<int> &targetY);
+            const std::vector<int> &targetX, const std::vector<int> &targetY,
+            const std::vector<CellOrientation> &targetOrientation);
 };
 
 }  // namespace coloquinte

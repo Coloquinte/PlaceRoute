@@ -12,6 +12,7 @@ import sys
 import coloquinte_pybind
 from coloquinte_pybind import (
     CellOrientation,
+    CellRowPolarity,
     ColoquinteParameters,
     LegalizationModel,
     NetModel,
@@ -372,6 +373,15 @@ class Circuit(coloquinte_pybind.Circuit):
 
         # Setup rows
         ret.rows = rows
+
+        # Allow macros to have any orientation
+        row_height = ret.row_height
+        polarities = ret.cell_row_polarity
+        for i in range(ret.nb_cells):
+            if cell_heights[i] > 2 * row_height:
+                polarities[i] = CellRowPolarity.ANY
+        ret.cell_row_polarity = polarities
+
         ret.check()
         return ret
 
