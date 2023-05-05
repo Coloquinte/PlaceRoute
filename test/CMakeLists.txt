@@ -6,6 +6,7 @@ SET(TESTS
     test_density_legalizer
     test_density_grid
     test_row_legalizer
+    test_legalizer
     test_incr_net_model
     test_detailed_placement
     test_row_neighbourhood

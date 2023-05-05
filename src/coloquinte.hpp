@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <functional>
+#include <iosfwd>
 #include <optional>
 #include <string>
 #include <vector>
@@ -153,6 +154,11 @@ std::string toString(CellOrientation o);
 std::string toString(LegalizationModel model);
 std::string toString(NetModelOption model);
 std::string toString(CellRowPolarity pol);
+
+std::ostream &operator<<(std::ostream &, CellOrientation);
+std::ostream &operator<<(std::ostream &, LegalizationModel);
+std::ostream &operator<<(std::ostream &, NetModelOption);
+std::ostream &operator<<(std::ostream &, CellRowPolarity);
 
 /**
  * Return the "opposite" row orientation (N <--> FS)
@@ -593,6 +599,11 @@ struct Row : public Rectangle {
   Row(Rectangle a, CellOrientation orient)
       : Rectangle(a), orientation(orient) {}
 
+  /**
+   * @brief Construct a row from its coordinates and orientation
+   */
+  Row(int minX, int maxX, int minY, int maxY, CellOrientation orient)
+      : Rectangle(minX, maxX, minY, maxY), orientation(orient) {}
   /**
    * @brief Obtain free placement space after removing the obstacles
   */

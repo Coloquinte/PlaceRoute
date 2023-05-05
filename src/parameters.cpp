@@ -106,6 +106,23 @@ std::string Rectangle::toString() const {
   return ss.str();
 }
 
+std::ostream &operator<<(std::ostream &os, CellOrientation o) {
+  os << toString(o);
+  return os;
+}
+std::ostream &operator<<(std::ostream &os, LegalizationModel o) {
+  os << toString(o);
+  return os;
+}
+std::ostream &operator<<(std::ostream &os, NetModelOption o) {
+  os << toString(o);
+  return os;
+}
+std::ostream &operator<<(std::ostream &os, CellRowPolarity o) {
+  os << toString(o);
+  return os;
+}
+
 namespace {
 
 double interpolateEffort(double minVal, double maxVal, int effort,

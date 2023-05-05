@@ -221,7 +221,6 @@ class Legalizer : public LegalizerBase {
    */
   void runAbacus(const std::vector<int> &cells);
 
- private:
   Legalizer(const std::vector<Row> &rows, const std::vector<int> &width,
             const std::vector<int> &height,
             const std::vector<CellRowPolarity> &polarities,
