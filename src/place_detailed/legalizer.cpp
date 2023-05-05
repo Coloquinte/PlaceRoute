@@ -272,28 +272,31 @@ CellOrientation LegalizerBase::getOrientation(int cell, int row) const {
   }
   CellOrientation rowOrientation = rows_[row].orientation;
   int nbRows = cellHeight_[cell] / rows_[row].height();
-  if (nbRows % 2 == 0) {
-    // Number of rows is even: north row or south row depending on the polarity
-    if (pol == CellRowPolarity::OPPOSITE) {
-      if (rowOrientation == CellOrientation::FS ||
-          rowOrientation == CellOrientation::S) {
-        return rowOrientation;
-      }
-      return CellOrientation::INVALID;
-    } else {
-      if (rowOrientation == CellOrientation::FN ||
-          rowOrientation == CellOrientation::N) {
-        return rowOrientation;
-      }
-      return CellOrientation::INVALID;
-    }
-  } else {
-    // Number of rows is odd: flip depending on the position
-    if (pol == CellRowPolarity::OPPOSITE) {
-      return oppositeRowOrientation(rowOrientation);
-    } else {
+  if (pol == CellRowPolarity::OPPOSITE) {
+    return oppositeRowOrientation(rowOrientation);
+  } else if (pol == CellRowPolarity::SAME) {
+    return rowOrientation;
+  } else if (pol == CellRowPolarity::NW) {
+    if (rowOrientation == CellOrientation::FN ||
+        rowOrientation == CellOrientation::N ||
+        rowOrientation == CellOrientation::FW ||
+        rowOrientation == CellOrientation::W) {
+      // TODO: Could be the opposite too
       return rowOrientation;
     }
+    return CellOrientation::INVALID;
+  } else if (pol == CellRowPolarity::SE) {
+    if (rowOrientation == CellOrientation::FS ||
+        rowOrientation == CellOrientation::S ||
+        rowOrientation == CellOrientation::FE ||
+        rowOrientation == CellOrientation::E) {
+      // TODO: Could be the opposite too
+      return rowOrientation;
+    }
+    return CellOrientation::INVALID;
+  } else {
+    // Shouldn't happen
+    abort();
   }
 }
 

@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(TestTwoRowCell1) {
   leg.run(params);
   BOOST_CHECK_EQUAL(leg.cellLegalX()[0], 0);
   BOOST_CHECK_EQUAL(leg.cellLegalY()[0], 10);
-  // Any orientation is fine
+  BOOST_CHECK_EQUAL(leg.cellLegalOrientation()[0], CellOrientation::N);
 }
 
 BOOST_AUTO_TEST_CASE(TestTwoRowCell2) {
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(TestTwoRowCell2) {
   leg.run(params);
   BOOST_CHECK_EQUAL(leg.cellLegalX()[0], 0);
   BOOST_CHECK_EQUAL(leg.cellLegalY()[0], 10);
-  // Any orientation is fine
+  BOOST_CHECK_EQUAL(leg.cellLegalOrientation()[0], CellOrientation::N);
 }
 
 BOOST_AUTO_TEST_CASE(TestTwoRowCell3) {
@@ -143,7 +143,6 @@ BOOST_AUTO_TEST_CASE(TestTwoRowCell3) {
   std::vector<int> heights = {20};
   std::vector<int> cellX = {0};
   std::vector<int> cellY = {20};
-  std::vector<int> cellIndex = {0, 1, 2, 3, 4};
   std::vector<CellRowPolarity> polarities = {CellRowPolarity::SAME};
   std::vector<CellOrientation> orientations = {CellOrientation::N};
   std::vector<Row> rows = {Row(0, 15, 10, 20, CellOrientation::N),
@@ -154,8 +153,8 @@ BOOST_AUTO_TEST_CASE(TestTwoRowCell3) {
   Legalizer leg(rows, widths, heights, polarities, cellX, cellY, orientations);
   leg.run(params);
   BOOST_CHECK_EQUAL(leg.cellLegalX()[0], 0);
-  BOOST_CHECK_EQUAL(leg.cellLegalY()[0], 10);
-  // Any orientation is fine
+  BOOST_CHECK_EQUAL(leg.cellLegalY()[0], 20);
+  BOOST_CHECK_EQUAL(leg.cellLegalOrientation()[0], CellOrientation::S);
 }
 
 BOOST_AUTO_TEST_CASE(TestTwoRowCell4) {
@@ -175,8 +174,45 @@ BOOST_AUTO_TEST_CASE(TestTwoRowCell4) {
   leg.run(params);
   BOOST_CHECK_EQUAL(leg.cellLegalX()[0], 0);
   BOOST_CHECK_EQUAL(leg.cellLegalY()[0], 20);
+  BOOST_CHECK_EQUAL(leg.cellLegalOrientation()[0], CellOrientation::FN);
+}
+
+BOOST_AUTO_TEST_CASE(TestTwoRowCell5) {
+  std::vector<int> widths = {5};
+  std::vector<int> heights = {20};
+  std::vector<int> cellX = {0};
+  std::vector<int> cellY = {20};
+  std::vector<CellRowPolarity> polarities = {CellRowPolarity::NW};
+  std::vector<CellOrientation> orientations = {CellOrientation::N};
+  std::vector<Row> rows = {Row(0, 15, 10, 20, CellOrientation::N),
+                           Row(0, 15, 20, 30, CellOrientation::S),
+                           Row(0, 15, 30, 40, CellOrientation::N)};
+
+  ColoquinteParameters params;
+  Legalizer leg(rows, widths, heights, polarities, cellX, cellY, orientations);
+  leg.run(params);
+  BOOST_CHECK_EQUAL(leg.cellLegalX()[0], 0);
+  BOOST_CHECK_EQUAL(leg.cellLegalY()[0], 10);
+  BOOST_CHECK_EQUAL(leg.cellLegalOrientation()[0], CellOrientation::N);
+}
+
+BOOST_AUTO_TEST_CASE(TestTwoRowCell6) {
+  std::vector<int> widths = {5};
+  std::vector<int> heights = {20};
+  std::vector<int> cellX = {0};
+  std::vector<int> cellY = {20};
+  std::vector<CellRowPolarity> polarities = {CellRowPolarity::SE};
+  std::vector<CellOrientation> orientations = {CellOrientation::N};
+  std::vector<Row> rows = {Row(0, 15, 10, 20, CellOrientation::N),
+                           Row(0, 15, 20, 30, CellOrientation::S),
+                           Row(0, 15, 30, 40, CellOrientation::N)};
+
+  ColoquinteParameters params;
+  Legalizer leg(rows, widths, heights, polarities, cellX, cellY, orientations);
+  leg.run(params);
+  BOOST_CHECK_EQUAL(leg.cellLegalX()[0], 0);
+  BOOST_CHECK_EQUAL(leg.cellLegalY()[0], 20);
   BOOST_CHECK_EQUAL(leg.cellLegalOrientation()[0], CellOrientation::S);
-  // Any orientation is fine
 }
 
 BOOST_AUTO_TEST_CASE(TestThreeRowCell1) {

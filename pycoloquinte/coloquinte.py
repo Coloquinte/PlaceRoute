@@ -378,8 +378,12 @@ class Circuit(coloquinte_pybind.Circuit):
         row_height = ret.row_height
         polarities = ret.cell_row_polarity
         for i in range(ret.nb_cells):
-            if cell_heights[i] > 2 * row_height:
+            if cell_heights[i] > 4 * row_height:
                 polarities[i] = CellRowPolarity.ANY
+            elif cell_heights[i] % row_height != 0:
+                polarities[i] = CellRowPolarity.NW
+            elif cell_heights[i] % row_height == 0:
+                polarities[i] = CellRowPolarity.SAME
         ret.cell_row_polarity = polarities
 
         ret.check()

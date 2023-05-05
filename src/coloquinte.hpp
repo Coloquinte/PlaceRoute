@@ -114,21 +114,29 @@ enum class NetModelOption {
  */
 enum class CellOrientation {
   /// @brief North (default orientation)
-  N = 0, R0 = 0,
+  N = 0,
+  R0 = 0,
   /// @brief South
-  S = 1, R180 = 1,
+  S = 1,
+  R180 = 1,
   /// @brief West
-  W = 2, R90 = 2,
+  W = 2,
+  R90 = 2,
   /// @brief East
-  E = 3, R270 = 3,
+  E = 3,
+  R270 = 3,
   /// @brief Flip + North (vertical mirror, y unchanged)
-  FN = 4, MY = 4,
+  FN = 4,
+  MY = 4,
   /// @brief Flip + South (horizontal mirror, x unchanged)
-  FS = 5, MX = 5,
+  FS = 5,
+  MX = 5,
   /// @brief Flip + West (MX then W)
-  FW = 6, MX90 = 6,
+  FW = 6,
+  MX90 = 6,
   /// @brief Flip + East (MY then W)
-  FE = 7, MY90 = 7,
+  FE = 7,
+  MY90 = 7,
   /// @brief Special value for invalid/forbidden/whatever
   INVALID = 8
 };
@@ -142,12 +150,22 @@ enum class CellOrientation {
  * be placed in any row, but requires a vertical flip for half of them.
  */
 enum class CellRowPolarity {
-  /// Must be in the same orientation as the row at the bottom
+  /// Any row orientation allowed.
+  ANY,
+  /// Must be in the same orientation as the row at the bottom.
+  /// Meaningful for standard cells with odd number of rows.
   SAME,
-  /// Must be in the opposite orientation as the row at the bottom
+  /// Must be in the opposite orientation as the row at the bottom.
+  /// Meaningful for standard cells with odd number of rows.
   OPPOSITE,
-  /// Any row orientation allowed
-  ANY
+  /// Must be a series of row with alternating orientation starting with N or W.
+  /// Flipping is allowed.
+  /// Meaningful for standard cells with even number of rows.
+  NW,
+  /// Must be a series of row with alternating orientation starting with S or E.
+  /// Flipping is allowed.
+  /// Meaningful for standard cells with even number of rows.
+  SE,
 };
 
 std::string toString(CellOrientation o);
@@ -162,12 +180,12 @@ std::ostream &operator<<(std::ostream &, CellRowPolarity);
 
 /**
  * Return the "opposite" row orientation (N <--> FS)
-*/
+ */
 CellOrientation oppositeRowOrientation(CellOrientation o);
 
 /**
  * Return whether the cell view is turned (exchange width and height)
-*/
+ */
 bool isTurn(CellOrientation o);
 
 /**
@@ -606,8 +624,8 @@ struct Row : public Rectangle {
       : Rectangle(minX, maxX, minY, maxY), orientation(orient) {}
   /**
    * @brief Obtain free placement space after removing the obstacles
-  */
- std::vector<Row> freespace(const std::vector<Rectangle> &obstacles) const;
+   */
+  std::vector<Row> freespace(const std::vector<Rectangle> &obstacles) const;
 };
 
 /**

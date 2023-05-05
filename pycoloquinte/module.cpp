@@ -36,6 +36,8 @@ PYBIND11_MODULE(coloquinte_pybind, m) {
       .value("SAME", CellRowPolarity::SAME, "Same")
       .value("OPPOSITE", CellRowPolarity::OPPOSITE, "Opposite")
       .value("ANY", CellRowPolarity::ANY, "Any")
+      .value("NW", CellRowPolarity::ANY, "North or West")
+      .value("SE", CellRowPolarity::ANY, "South or East")
       .export_values();
 
   py::class_<Rectangle>(m, "Rectangle")

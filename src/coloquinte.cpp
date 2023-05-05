@@ -22,7 +22,7 @@ Circuit::Circuit(int nbCells) {
   cellHeight_.resize(nbCells);
   cellIsFixed_.resize(nbCells, false);
   cellIsObstruction_.resize(nbCells, true);
-  cellRowPolarity_.resize(nbCells, CellRowPolarity::SAME);
+  cellRowPolarity_.resize(nbCells, CellRowPolarity::ANY);
   cellX_.resize(nbCells);
   cellY_.resize(nbCells);
   cellOrientation_.resize(nbCells);
@@ -146,7 +146,7 @@ int Circuit::pinXOffset(int net, int i) const {
   int cell = pinCell(net, i);
   CellOrientation orient = orientation(cell);
   int offs = isTurn(orient) ? pinYOffsets_[netLimits_[net] + i]
-                    : pinXOffsets_[netLimits_[net] + i];
+                            : pinXOffsets_[netLimits_[net] + i];
   bool flipped = orient == CellOrientation::S || orient == CellOrientation::W ||
                  orient == CellOrientation::FN || orient == CellOrientation::FE;
   return flipped ? placedWidth(cell) - offs : offs;
@@ -156,7 +156,7 @@ int Circuit::pinYOffset(int net, int i) const {
   int cell = pinCell(net, i);
   CellOrientation orient = orientation(cell);
   int offs = isTurn(orient) ? pinXOffsets_[netLimits_[net] + i]
-                    : pinYOffsets_[netLimits_[net] + i];
+                            : pinYOffsets_[netLimits_[net] + i];
   bool flipped = orient == CellOrientation::S || orient == CellOrientation::E ||
                  orient == CellOrientation::FS || orient == CellOrientation::FE;
   return flipped ? placedHeight(cell) - offs : offs;
@@ -471,6 +471,49 @@ std::string Circuit::report() const {
     ss << "WARNING: some rows at the same y have different orientations. This "
           "is not supported.\n";
   }
+
+  int oddRowWithBadPolarity = 0;
+  int evenRowWithBadPolarity = 0;
+  int standardCellWithBadPolarity = 0;
+  for (int i = 0; i < nbCells(); ++i) {
+    if (isFixed(i)) {
+      continue;
+    }
+    if (cellHeight_[i] > 4 * stdCellHeight) {
+      continue;
+    }
+    CellRowPolarity pol = cellRowPolarity_[i];
+    if (pol == CellRowPolarity::ANY) {
+      ++standardCellWithBadPolarity;
+      continue;
+    }
+    int nbRows = cellHeight_[i] / stdCellHeight;
+    if (nbRows % 2 != 0) {
+      if (pol != CellRowPolarity::OPPOSITE && pol != CellRowPolarity::SAME) {
+        ++oddRowWithBadPolarity;
+      }
+    } else {
+      if (pol != CellRowPolarity::NW && pol != CellRowPolarity::SE) {
+        ++evenRowWithBadPolarity;
+      }
+    }
+  }
+
+  if (standardCellWithBadPolarity) {
+    ss << "WARNING: " << standardCellWithBadPolarity
+       << " small cells have no polarity specified with respect to rows.\n";
+  }
+  if (oddRowWithBadPolarity) {
+    ss << "WARNING: " << oddRowWithBadPolarity
+       << " cells occupy an odd number of rows but are only allowed some rows "
+          "(NW or SE polarity).\n";
+  }
+  if (evenRowWithBadPolarity) {
+    ss << "WARNING: " << evenRowWithBadPolarity
+       << " cells occupy an eveb number of rows but are allowed to go to any "
+          "row (SAME or OPPOSITE polarity).\n";
+  }
+
   return ss.str();
 }
 
