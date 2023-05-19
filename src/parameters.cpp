@@ -156,7 +156,7 @@ RoughLegalizationParameters::RoughLegalizationParameters(int effort) {
   lineReoptOverlap = 1;
   diagReoptSize = 2;
   diagReoptOverlap = 1;
-  unidimensionalTransport = false;
+  unidimensionalTransport = true;
   // TODO: find best parameter
   sideMargin = 0.9;
   coarseningLimit = 100.0;
