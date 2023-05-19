@@ -168,6 +168,16 @@ enum class CellRowPolarity {
   SE,
 };
 
+struct CellPlacement {
+  Point position;
+  CellOrientation orientation;
+
+  CellPlacement() {}
+  CellPlacement(int x, int y, CellOrientation o) : position(x, y), orientation(o) {}
+};
+
+using PlacementSolution = std::vector<CellPlacement>;
+
 std::string toString(CellOrientation o);
 std::string toString(LegalizationModel model);
 std::string toString(NetModelOption model);
@@ -701,6 +711,11 @@ class Circuit {
   void setCellIsObstruction(const std::vector<bool> &f);
 
   /**
+   * @brief Set the whole placement solution
+   */
+  void setSolution(const PlacementSolution &sol);
+
+  /**
    * @brief Get the row orientation for all cells
    *
    * This is the orientation that the row at the bottom of the cell should have;
@@ -826,6 +841,14 @@ class Circuit {
     std::vector<Rectangle> ret;
     for (int i = 0; i < nbCells(); ++i) {
       ret.push_back(placement(i));
+    }
+    return ret;
+  }
+
+  PlacementSolution solution() const {
+    PlacementSolution ret;
+    for (int i = 0; i < nbCells(); ++i) {
+      ret.emplace_back(x(i), y(i), orientation(i));
     }
     return ret;
   }

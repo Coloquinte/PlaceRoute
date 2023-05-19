@@ -132,6 +132,22 @@ void Circuit::setCellHeight(const std::vector<int> &heights) {
   cellHeight_ = heights;
 }
 
+void Circuit::setSolution(const PlacementSolution &sol) {
+  if (sol.size() != nbCells()) {
+    throw std::runtime_error(
+        "Number of elements is not the same as the number of cells of the "
+        "circuit");
+  }
+  cellX_.clear();
+  cellY_.clear();
+  cellOrientation_.clear();
+  for (auto [p, o] : sol) {
+    cellX_.push_back(p.x);
+    cellY_.push_back(p.y);
+    cellOrientation_.push_back(o);
+  }
+}
+
 int Circuit::placedWidth(int cell) const {
   CellOrientation orient = orientation(cell);
   return isTurn(orient) ? cellHeight_[cell] : cellWidth_[cell];
