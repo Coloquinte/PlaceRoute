@@ -320,7 +320,7 @@ void RoughLegalizationParameters::check() const {
     throw std::runtime_error("Rough legalization reopt should be small");
   }
   if (lineReoptSize < 2 && diagReoptSize < 2 && squareReoptSize < 2 &&
-      !unidimensionalTransport) {
+      (!unidimensionalTransport || costModel != LegalizationModel::L1)) {
     throw std::runtime_error(
         "At least one rough legalization reopt value should be 2 or more");
   }
@@ -345,11 +345,6 @@ void RoughLegalizationParameters::check() const {
     throw std::runtime_error(
         "Rough legalization target blending should generally be between 0 and "
         "0.5");
-  }
-
-  if (costModel != LegalizationModel::L1 && unidimensionalTransport) {
-    throw std::runtime_error(
-        "Unidimensional transport can only be used with L1 cost model");
   }
 }
 

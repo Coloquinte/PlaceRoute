@@ -65,6 +65,7 @@ GlobalPlacer::GlobalPlacer(Circuit &circuit, const ColoquinteParameters &params)
   averageCellLength_ = computeAverageCellSize();
   perCellPenalty_ = computePerCellPenalty();
   auto rlp = params.global.roughLegalization;
+  LegalizationModel m = rlp.costModel;
   DensityLegalizer::Parameters legParams;
   legParams.nbSteps = rlp.nbSteps;
   legParams.costModel = rlp.costModel;
@@ -74,9 +75,9 @@ GlobalPlacer::GlobalPlacer(Circuit &circuit, const ColoquinteParameters &params)
   legParams.diagReoptOverlap = rlp.diagReoptOverlap;
   legParams.squareReoptSize = rlp.squareReoptSize;
   legParams.squareReoptOverlap = rlp.squareReoptOverlap;
-  legParams.unidimensionalTransport = rlp.unidimensionalTransport;
+  legParams.unidimensionalTransport =
+      rlp.unidimensionalTransport && m == LegalizationModel::L1;
   legParams.coarseningLimit = rlp.coarseningLimit;
-  LegalizationModel m = rlp.costModel;
   if (m == LegalizationModel::L1 || m == LegalizationModel::L2 ||
       m == LegalizationModel::LInf) {
     float dist = leg_.placementArea().width() + leg_.placementArea().height();
@@ -123,8 +124,8 @@ std::vector<float> GlobalPlacer::computePerCellPenalty() const {
   ret.reserve(leg_.nbCells());
 
   for (int i = 0; i < leg_.nbCells(); ++i) {
-    ret.push_back(
-        std::pow(leg_.cellDemand(i) / meanArea, params_.global.penalty.areaExponent));
+    ret.push_back(std::pow(leg_.cellDemand(i) / meanArea,
+                           params_.global.penalty.areaExponent));
   }
   return ret;
 }
@@ -180,7 +181,8 @@ void GlobalPlacer::run() {
     }
     penalty_ *= params_.global.penalty.updateFactor;
     penaltyCutoffDistance_ *= params_.global.penalty.cutoffDistanceUpdateFactor;
-    approximationDistance_ *= params_.global.continuousModel.approximationDistanceUpdateFactor;
+    approximationDistance_ *=
+        params_.global.continuousModel.approximationDistanceUpdateFactor;
   }
   runUB();
 }
@@ -196,8 +198,10 @@ float GlobalPlacer::valueUB() const {
 void GlobalPlacer::runInitialLB() {
   NetModel::Parameters params;
   params.netModel = params_.global.continuousModel.netModel;
-  params.tolerance = params_.global.continuousModel.conjugateGradientErrorTolerance;
-  params.maxNbIterations = params_.global.continuousModel.maxNbConjugateGradientSteps;
+  params.tolerance =
+      params_.global.continuousModel.conjugateGradientErrorTolerance;
+  params.maxNbIterations =
+      params_.global.continuousModel.maxNbConjugateGradientSteps;
   xPlacementLB_ = xtopo_.solveStar(params);
   yPlacementLB_ = ytopo_.solveStar(params);
   std::cout << std::defaultfloat << std::setprecision(4) << "#0:\tLB "
@@ -221,8 +225,10 @@ void GlobalPlacer::runLB() {
   params.netModel = params_.global.continuousModel.netModel;
   params.approximationDistance = approximationDistance_;
   params.penaltyCutoffDistance = penaltyCutoffDistance_;
-  params.tolerance = params_.global.continuousModel.conjugateGradientErrorTolerance;
-  params.maxNbIterations = params_.global.continuousModel.maxNbConjugateGradientSteps;
+  params.tolerance =
+      params_.global.continuousModel.conjugateGradientErrorTolerance;
+  params.maxNbIterations =
+      params_.global.continuousModel.maxNbConjugateGradientSteps;
 
   // Compute the per-cell penalty with randomization
   std::vector<float> penalty = computeIterationPerCellPenalty();
