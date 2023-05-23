@@ -797,6 +797,11 @@ class Circuit {
   int rowHeight() const;
 
   /**
+   * @brief Setup the rows to fill a given placement area
+   */
+  void setupRows(Rectangle placementArea, int rowHeight, bool alternatingOrientation=true);
+
+  /**
    * @brief Return the rows after removing the obstacles
    */
   std::vector<Row> computeRows(

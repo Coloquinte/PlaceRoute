@@ -277,6 +277,24 @@ int Circuit::rowHeight() const {
   return ret;
 }
 
+void Circuit::setupRows(Rectangle placementArea, int rowHeight,
+                        bool alternatingOrientation) {
+  if (rowHeight <= 0) {
+    throw std::runtime_error("Row height for row creation must be positive");
+  }
+  rows_.clear();
+  bool orient = true;
+  for (int y = placementArea.minY; y + rowHeight < placementArea.maxY;
+       y += rowHeight) {
+    CellOrientation dir = orient ? CellOrientation::N : CellOrientation::FS;
+    if (alternatingOrientation) {
+      orient = !orient;
+    }
+    rows_.emplace_back(placementArea.minX, placementArea.maxX, y, y + rowHeight,
+                       dir);
+  }
+}
+
 std::string Circuit::toString() const {
   std::stringstream ss;
   ss << "Circuit with " << nbCells() << " cells, " << nbNets() << " nets and "

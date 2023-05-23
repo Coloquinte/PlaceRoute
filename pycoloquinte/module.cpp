@@ -281,6 +281,8 @@ Construct a circuit.
                     "Standard cell rows")
       .def("add_net", &Circuit::addNet, "Add a net to the circuit")
       .def("hpwl", &Circuit::hpwl, "Compute the half-perimeter wirelength")
+      .def("setup_rows", &Circuit::setupRows,
+           "Setup the rows from a placement area")
       .def("place", &Circuit::place,
            "Run the whole placement algorithm (global and detailed)")
       .def(
