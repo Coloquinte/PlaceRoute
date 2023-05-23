@@ -65,13 +65,8 @@ IF(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     add_subdirectory(test)
 ENDIF()
 
-INSTALL(
-  TARGETS coloquinte
-  LIBRARY DESTINATION lib
-  COMPONENT library
-)
+install( TARGETS       coloquinte        DESTINATION lib${LIB_SUFFIX} )
 INSTALL(
   FILES ${COLOQUINTE_SOURCE_DIR}/src/coloquinte.hpp
-  DESTINATION include/coloquinte
-  COMPONENT headers
+  DESTINATION include/coriolis2/coloquinte
 )
