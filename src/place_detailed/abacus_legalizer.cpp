@@ -42,6 +42,9 @@ std::pair<bool, long long> AbacusLegalizer::evaluatePlacement(int cell,
   if (rowLegalizers_[row].remainingSpace() < cellWidth_[cell]) {
     return std::make_pair(false, 0);
   }
+  if (getOrientation(cell, row) == CellOrientation::INVALID) {
+    return std::make_pair(false, 0);
+  }
   int dist = rowLegalizers_[row].getCost(cellWidth_[cell], cellTargetX_[cell]);
   return std::make_pair(true, dist);
 }
