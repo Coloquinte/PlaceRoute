@@ -43,6 +43,8 @@ std::string toString(CellOrientation o) {
       return "FE";
     case CellOrientation::FW:
       return "FW";
+    case CellOrientation::INVALID:
+      return "INVALID";
     default:
       return "UnknownCellOrientation";
   }
