@@ -28,6 +28,8 @@ Circuit::Circuit(int nbCells) {
   cellY_.resize(nbCells);
   cellOrientation_.resize(nbCells);
   netLimits_.push_back(0);
+  isInUse_ = false;
+  hasSizeUpdate_ = false;
   check();
 }
 
@@ -37,6 +39,7 @@ void Circuit::addNet(const std::vector<int> &cells,
   if (cells.size() != xOffsets.size() || cells.size() != yOffsets.size()) {
     throw std::runtime_error("Inconsistent number of pins for the net");
   }
+  checkNotInUse();
   if (cells.empty()) {
     return;
   }
@@ -50,6 +53,7 @@ void Circuit::setNets(const std::vector<int> &limits,
                       const std::vector<int> &cells,
                       const std::vector<int> &xOffsets,
                       const std::vector<int> &yOffsets) {
+  checkNotInUse();
   assert(!limits.empty());
   assert(limits.front() == 0);
   assert(limits.back() == cells.size());
@@ -79,12 +83,18 @@ void Circuit::setCellY(const std::vector<int> &y) {
   cellY_ = y;
 }
 
+void Circuit::setRows(const std::vector<Row> &r) {
+  checkNotInUse();
+  rows_ = r;
+}
+
 void Circuit::setCellIsFixed(const std::vector<bool> &f) {
   if (f.size() != nbCells()) {
     throw std::runtime_error(
         "Number of elements is not the same as the number of cells of the "
         "circuit");
   }
+  checkNotInUse();
   cellIsFixed_ = f;
 }
 
@@ -94,6 +104,7 @@ void Circuit::setCellIsObstruction(const std::vector<bool> &f) {
         "Number of elements is not the same as the number of cells of the "
         "circuit");
   }
+  checkNotInUse();
   cellIsObstruction_ = f;
 }
 
@@ -112,6 +123,7 @@ void Circuit::setCellRowPolarity(const std::vector<CellRowPolarity> &orient) {
         "Number of elements is not the same as the number of cells of the "
         "circuit");
   }
+  checkNotInUse();
   cellRowPolarity_ = orient;
 }
 
@@ -121,6 +133,7 @@ void Circuit::setCellWidth(const std::vector<int> &widths) {
         "Number of elements is not the same as the number of cells of the "
         "circuit");
   }
+  setSizeUpdate();
   cellWidth_ = widths;
 }
 
@@ -130,6 +143,7 @@ void Circuit::setCellHeight(const std::vector<int> &heights) {
         "Number of elements is not the same as the number of cells of the "
         "circuit");
   }
+  setSizeUpdate();
   cellHeight_ = heights;
 }
 
@@ -283,6 +297,7 @@ void Circuit::setupRows(Rectangle placementArea, int rowHeight,
   if (rowHeight <= 0) {
     throw std::runtime_error("Row height for row creation must be positive");
   }
+  checkNotInUse();
   rows_.clear();
   bool orient = true;
   for (int y = placementArea.minY; y + rowHeight < placementArea.maxY;
@@ -554,17 +569,23 @@ std::string Circuit::report() const {
 
 void Circuit::placeGlobal(const ColoquinteParameters &params,
                           const std::optional<PlacementCallback> &callback) {
+  setInUse();
   GlobalPlacer::place(*this, params, callback);
+  clearInUse();
 }
 
 void Circuit::legalize(const ColoquinteParameters &params,
                        const std::optional<PlacementCallback> &callback) {
+  setInUse();
   DetailedPlacer::legalize(*this, params, callback);
+  clearInUse();
 }
 
 void Circuit::placeDetailed(const ColoquinteParameters &params,
                             const std::optional<PlacementCallback> &callback) {
+  setInUse();
   DetailedPlacer::place(*this, params, callback);
+  clearInUse();
 }
 
 float Circuit::meanDisruption(const PlacementSolution &a,
@@ -613,8 +634,8 @@ float Circuit::maxDisruption(const PlacementSolution &a,
 }
 
 std::vector<float> Circuit::allDistances(const PlacementSolution &a,
-                                const PlacementSolution &b,
-                                LegalizationModel costModel) {
+                                         const PlacementSolution &b,
+                                         LegalizationModel costModel) {
   if (a.size() != nbCells() || b.size() != nbCells()) {
     throw std::runtime_error("Solution size doesn't match number of cells");
   }
@@ -622,8 +643,15 @@ std::vector<float> Circuit::allDistances(const PlacementSolution &a,
   for (int i = 0; i < nbCells(); ++i) {
     Point pa = a[i].position;
     Point pb = b[i].position;
-    ret.push_back(norm((float) (pa.x - pb.x), (float) (pa.y - pb.y), costModel));
+    ret.push_back(norm((float)(pa.x - pb.x), (float)(pa.y - pb.y), costModel));
   }
   return ret;
+}
+
+void Circuit::checkNotInUse() const {
+  if (isInUse_) {
+    throw std::runtime_error(
+        "This operation is not allowed when the circuit is being placed");
+  }
 }
 }  // namespace coloquinte

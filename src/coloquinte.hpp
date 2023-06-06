@@ -772,7 +772,7 @@ class Circuit {
   /**
    * @brief Set all rows
    */
-  void setRows(const std::vector<Row> &r) { rows_ = r; }
+  void setRows(const std::vector<Row> &r);
 
   /**
    * @brief Add a single net
@@ -983,17 +983,59 @@ class Circuit {
    */
   void check() const;
 
+  /**
+   * @brief Compute the mean displacement between two placement solutions
+   */
   float meanDisruption(const PlacementSolution &a, const PlacementSolution &b,
                        LegalizationModel costModel);
+
+  /**
+   * @brief Compute the root-mean-square displacement between two placement
+   * solutions
+   */
   float rmsDisruption(const PlacementSolution &a, const PlacementSolution &b,
                       LegalizationModel costModel);
+
+  /**
+   * @brief Compute the max displacement between two placement solutions
+   */
   float maxDisruption(const PlacementSolution &a, const PlacementSolution &b,
                       LegalizationModel costModel);
+
+  /**
+   * @brief Return the flag indicating that the sizes have changes
+   */
+  bool hasSizeUpdate() const { return hasSizeUpdate_; }
+
+  /**
+   * @brief Set the flag indicating that the sizes have changes
+   */
+  void setSizeUpdate() { hasSizeUpdate_ = true; }
+
+  /**
+   * @brief Set the flag indicating that the sizes have changes
+   */
+  void clearSizeUpdate() { hasSizeUpdate_ = false; }
+
+  /**
+   * @brief Indicate that the circuit is currently being used
+   */
+  void setInUse() { isInUse_ = true; }
+
+  /**
+   * @brief Indicate that the circuit is not being used anymore
+   */
+  void clearInUse() { isInUse_ = false; }
 
  private:
   std::vector<float> allDistances(const PlacementSolution &a,
                                   const PlacementSolution &b,
                                   LegalizationModel costModel);
+
+  /**
+   * Check that the circuit is not being worked on right now
+   */
+  void checkNotInUse() const;
 
  public:
   std::vector<int> netLimits_;
@@ -1009,5 +1051,11 @@ class Circuit {
   std::vector<int> cellY_;
   std::vector<CellOrientation> cellOrientation_;
   std::vector<Row> rows_;
+
+  // Set whenever the circuit is actively being worked on
+  bool isInUse_;
+
+  // Set whenever an update has been made to the circuit
+  bool hasSizeUpdate_;
 };
 }  // namespace coloquinte

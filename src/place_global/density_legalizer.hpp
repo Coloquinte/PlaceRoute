@@ -70,14 +70,6 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
   float cellTargetY(int c) const { return cellTargetY_[c]; }
 
   /**
-   * @brief Update the demands of the cells
-   */
-  void updateCellDemand(std::vector<int> cellDemand) {
-    assert(cellDemand.size() == nbCells());
-    cellDemand_ = cellDemand;
-  }
-
-  /**
    * @brief Update the x coordinates to target
    */
   void updateCellTargetX(std::vector<float> cellTargetX) {

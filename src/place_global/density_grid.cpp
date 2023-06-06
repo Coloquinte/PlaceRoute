@@ -216,6 +216,24 @@ HierarchicalDensityPlacement HierarchicalDensityPlacement::fromIspdCircuit(
   return HierarchicalDensityPlacement(grid, demands);
 }
 
+void HierarchicalDensityPlacement::updateCellDemand(const Circuit &circuit) {
+  assert(circuit.nbCells() == nbCells());
+  std::vector<int> demands;
+  for (int i = 0; i < circuit.nbCells(); ++i) {
+    if (circuit.isFixed(i)) {
+      demands.push_back(0LL);
+    } else {
+      demands.push_back(circuit.area(i));
+    }
+  }
+  for (int i = 0; i < nbCells(); ++i) {
+    if ((cellDemand_[i] == 0) != (demands[i] == 0)) {
+      throw std::runtime_error("Cell demand cannot change to or from zero on update");
+    }
+  }
+  cellDemand_ = demands;
+}
+
 int HierarchicalDensityPlacement::nbNonEmptyCells() const {
   int ret = 0;
   for (int i = 0; i < nbCells(); ++i) {

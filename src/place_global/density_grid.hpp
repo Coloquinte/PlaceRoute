@@ -483,6 +483,19 @@ class HierarchicalDensityPlacement {
    */
   void check() const;
 
+  /**
+   * @brief Update the demands of the cells
+   */
+  void updateCellDemand(const std::vector<int> &cellDemand) {
+    assert(cellDemand.size() == nbCells());
+    cellDemand_ = cellDemand;
+  }
+
+  /**
+   * @brief Update the demands of the cells
+   */
+  void updateCellDemand(const Circuit &circuit);
+
  private:
   DensityGrid::BinGroup getGroup(int x, int y) const {
     return DensityGrid::BinGroup(

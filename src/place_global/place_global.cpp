@@ -250,6 +250,9 @@ void GlobalPlacer::runLB() {
 }
 
 void GlobalPlacer::runUB() {
+  if (circuit_.hasSizeUpdate()) {
+    leg_.updateCellDemand(circuit_);
+  }
   float w = params_.global.roughLegalization.targetBlending;
   std::vector<float> xTarget = blendPlacement(xPlacementLB_, xPlacementUB_, w);
   std::vector<float> yTarget = blendPlacement(yPlacementLB_, yPlacementUB_, w);
