@@ -173,7 +173,8 @@ struct CellPlacement {
   CellOrientation orientation;
 
   CellPlacement() {}
-  CellPlacement(int x, int y, CellOrientation o) : position(x, y), orientation(o) {}
+  CellPlacement(int x, int y, CellOrientation o)
+      : position(x, y), orientation(o) {}
 };
 
 using PlacementSolution = std::vector<CellPlacement>;
@@ -799,7 +800,8 @@ class Circuit {
   /**
    * @brief Setup the rows to fill a given placement area
    */
-  void setupRows(Rectangle placementArea, int rowHeight, bool alternatingOrientation=true);
+  void setupRows(Rectangle placementArea, int rowHeight,
+                 bool alternatingOrientation = true);
 
   /**
    * @brief Return the rows after removing the obstacles
@@ -980,6 +982,18 @@ class Circuit {
    * @brief Check the consistency of the datastructure
    */
   void check() const;
+
+  float meanDisruption(const PlacementSolution &a, const PlacementSolution &b,
+                       LegalizationModel costModel);
+  float rmsDisruption(const PlacementSolution &a, const PlacementSolution &b,
+                      LegalizationModel costModel);
+  float maxDisruption(const PlacementSolution &a, const PlacementSolution &b,
+                      LegalizationModel costModel);
+
+ private:
+  std::vector<float> allDistances(const PlacementSolution &a,
+                                  const PlacementSolution &b,
+                                  LegalizationModel costModel);
 
  public:
   std::vector<int> netLimits_;

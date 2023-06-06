@@ -13,6 +13,7 @@
 #include "place_global/density_legalizer.hpp"
 #include "place_global/net_model.hpp"
 #include "place_global/place_global.hpp"
+#include "utils/norm.hpp"
 
 namespace bpl = boost::polygon;
 namespace coloquinte {
@@ -564,5 +565,65 @@ void Circuit::legalize(const ColoquinteParameters &params,
 void Circuit::placeDetailed(const ColoquinteParameters &params,
                             const std::optional<PlacementCallback> &callback) {
   DetailedPlacer::place(*this, params, callback);
+}
+
+float Circuit::meanDisruption(const PlacementSolution &a,
+                              const PlacementSolution &b,
+                              LegalizationModel costModel) {
+  auto dist = allDistances(a, b, costModel);
+  float disp = 0.0f;
+  float totArea = 0.0f;
+  for (int i = 0; i < nbCells(); ++i) {
+    disp += area(i) * dist[i];
+    totArea += area(i);
+  }
+
+  disp /= totArea;
+  if (costModel == LegalizationModel::L1Squared ||
+      costModel == LegalizationModel::L2Squared ||
+      costModel == LegalizationModel::LInfSquared) {
+    disp = std::sqrt(disp);
+  }
+  return disp;
+}
+
+float Circuit::rmsDisruption(const PlacementSolution &a,
+                             const PlacementSolution &b,
+                             LegalizationModel costModel) {
+  auto dist = allDistances(a, b, costModel);
+  float disp = 0.0f;
+  float totArea = 0.0f;
+  for (int i = 0; i < nbCells(); ++i) {
+    disp += area(i) * dist[i] * dist[i];
+    totArea += area(i);
+  }
+  disp = std::sqrt(disp / totArea);
+  if (costModel == LegalizationModel::L1Squared ||
+      costModel == LegalizationModel::L2Squared ||
+      costModel == LegalizationModel::LInfSquared) {
+    disp = std::sqrt(disp);
+  }
+  return disp;
+}
+float Circuit::maxDisruption(const PlacementSolution &a,
+                             const PlacementSolution &b,
+                             LegalizationModel costModel) {
+  auto dist = allDistances(a, b, costModel);
+  return *std::max_element(dist.begin(), dist.end());
+}
+
+std::vector<float> Circuit::allDistances(const PlacementSolution &a,
+                                const PlacementSolution &b,
+                                LegalizationModel costModel) {
+  if (a.size() != nbCells() || b.size() != nbCells()) {
+    throw std::runtime_error("Solution size doesn't match number of cells");
+  }
+  std::vector<float> ret;
+  for (int i = 0; i < nbCells(); ++i) {
+    Point pa = a[i].position;
+    Point pb = b[i].position;
+    ret.push_back(norm((float) (pa.x - pb.x), (float) (pa.y - pb.y), costModel));
+  }
+  return ret;
 }
 }  // namespace coloquinte
