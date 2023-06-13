@@ -7,7 +7,7 @@ OPTION(BUILD_PYCOLOQUINTE "Build Coloquinte Python package")
 
 IF(BUILD_PYCOLOQUINTE)
     SET(Boost_USE_STATIC_LIBS ON)
-ENDIF(BUILD_PYCOLOQUINTE)
+ENDIF()
 
 FIND_PACKAGE(Boost REQUIRED COMPONENTS system filesystem iostreams program_options unit_test_framework)
 FIND_PACKAGE(LEMON NAMES LEMON lemon REQUIRED)
@@ -39,7 +39,12 @@ SET(SOURCES
   src/place_global/transportation_1d.cpp
 )
 
-add_library(coloquinte STATIC ${SOURCES})
+IF(BUILD_PYCOLOQUINTE)
+    add_library(coloquinte STATIC ${SOURCES})
+ELSE()
+	add_library(coloquinte SHARED ${SOURCES})
+ENDIF()
+
 set_target_properties(coloquinte PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 target_compile_features(coloquinte PRIVATE cxx_std_17)
 target_link_libraries(coloquinte
