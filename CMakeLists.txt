@@ -42,7 +42,7 @@ SET(SOURCES
 IF(BUILD_PYCOLOQUINTE)
     add_library(coloquinte STATIC ${SOURCES})
 ELSE()
-	add_library(coloquinte SHARED ${SOURCES})
+    add_library(coloquinte SHARED ${SOURCES})
 ENDIF()
 
 set_target_properties(coloquinte PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
@@ -54,8 +54,8 @@ target_link_libraries(coloquinte
 )
 
 IF(BUILD_PYCOLOQUINTE)
-	add_subdirectory(thirdparty/pybind11)
-	add_subdirectory(pycoloquinte)
+    add_subdirectory(thirdparty/pybind11)
+    add_subdirectory(pycoloquinte)
 ENDIF(BUILD_PYCOLOQUINTE)
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
