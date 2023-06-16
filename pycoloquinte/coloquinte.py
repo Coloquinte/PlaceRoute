@@ -322,6 +322,9 @@ def _str2bool(v):
 
 
 class Circuit(coloquinte_pybind.Circuit):
+    """
+    Representation of a circuit for the placement tool
+    """
     def __init__(self, nb_cells):
         super(Circuit, self).__init__(nb_cells)
         self._filename = None
@@ -331,7 +334,11 @@ class Circuit(coloquinte_pybind.Circuit):
     @staticmethod
     def read_ispd(filename, ignore_obstructions=False):
         """
-        Read an ISPD benchmark from its .aux file
+        Read an ISPD benchmark
+
+        :param filename: Path of the .aux file or its directory
+        :param ignore_obstructions: Do not consider preplaced macros as obstacles
+        :return: A new Circuit object
         """
         (
             aux_filename,
@@ -392,6 +399,9 @@ class Circuit(coloquinte_pybind.Circuit):
     def place_global(self, params, callback=None):
         """
         Run the global placement
+
+        :param params: An integer effort (1-9) or the placement parameters
+        :param callback: A callback to execute at each placement step
         """
         if not isinstance(params, ColoquinteParameters):
             if not isinstance(params, int):
@@ -402,6 +412,9 @@ class Circuit(coloquinte_pybind.Circuit):
     def legalize(self, params, callback=None):
         """
         Run the legalization
+
+        :param params: An integer effort (1-9) or the placement parameters
+        :param callback: A callback to execute at each placement step
         """
         if not isinstance(params, ColoquinteParameters):
             if not isinstance(params, int):
@@ -412,6 +425,9 @@ class Circuit(coloquinte_pybind.Circuit):
     def place_detailed(self, params, callback=None):
         """
         Run the detailed placement
+
+        :param params: An integer effort (1-9) or the placement parameters
+        :param callback: A callback to execute at each placement step
         """
         if not isinstance(params, ColoquinteParameters):
             if not isinstance(params, int):
@@ -420,6 +436,11 @@ class Circuit(coloquinte_pybind.Circuit):
         super().place_detailed(params, callback)
 
     def load_placement(self, filename):
+        """
+        Load a placement solution from an ISPD placement file
+
+        :param filename: Path of the file
+        """
         if filename is None:
             return
 
@@ -431,6 +452,8 @@ class Circuit(coloquinte_pybind.Circuit):
     def write_placement(self, filename):
         """
         Write the placement result in ISPD file format
+
+        :param filename: Path of the file
         """
         if filename is None:
             if self._filename is None:
@@ -455,6 +478,9 @@ class Circuit(coloquinte_pybind.Circuit):
                 print(f"{name}\t{x}\t{y}\t: {orient}", file=f)
 
     def write_image(self, filename, macros_only=False, image_width=2048):
+        """
+        Export an image of the circuit
+        """
         img, scale_factor = self._make_image(image_width)
         self._draw_rows(img, scale_factor)
         self._draw_cells(img, True, scale_factor)
@@ -463,6 +489,9 @@ class Circuit(coloquinte_pybind.Circuit):
         self._save_image(img, filename)
 
     def write_displacement(self, filename, pl1, pl2, image_width=2048):
+        """
+        Export an image representing the displacement between two solutions
+        """
         img, scale_factor = self._make_image(image_width)
         self._draw_rows(img, scale_factor)
         self._draw_cells(img, True, scale_factor)
@@ -656,6 +685,9 @@ def _show_params(obj, tabs):
 
 
 class OptimizationCallback:
+    """
+    Default callback for placement; used to save images, graphs and statistics
+    """
     def __init__(self, circuit, prefix, image_width, extension):
         self.circuit = circuit
         self.step = 1
@@ -671,7 +703,7 @@ class OptimizationCallback:
         if self.save_view:
             filename = f"{self.prefix}_{self.step:04d}_{step_name.name.lower()}.{self.extension}"
             self.circuit.write_image(filename, image_width=self.image_width)
-            self.save_graph()
+            self._save_graph()
         if self.save_displacement:
             if self.prev_placement is not None:
                 filename = f"{self.prefix}_{self.step:04d}_{step_name.name.lower()}_disp.{self.extension}"
@@ -682,7 +714,7 @@ class OptimizationCallback:
         self.history.append((self.step, step_name, self.circuit.hpwl()))
         self.step += 1
 
-    def save_graph(self):
+    def _save_graph(self):
         import matplotlib.pyplot as plt
 
         filename = f"{self.prefix}_WL.{self.extension}"
@@ -837,7 +869,7 @@ def main():
             f"{args.save_images}_placed.{args.image_extension}", False, args.image_width
         )
     if callback is not None:
-        callback.save_graph()
+        callback._save_graph()
 
 
 __all__ = [
