@@ -97,6 +97,10 @@ std::string toString(CellRowPolarity pol) {
       return "OPPOSITE";
     case CellRowPolarity::ANY:
       return "ANY";
+    case CellRowPolarity::NW:
+      return "NW";
+    case CellRowPolarity::SE:
+      return "SE";
     default:
       return "UnknownCellRowPolarity";
   }
