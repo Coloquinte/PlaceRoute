@@ -29,15 +29,33 @@ class DetailedPlacement {
   void exportPlacement(Circuit &circuit);
 
   /**
+   * @brief Create the datastructure
+   *      @param rows: Available rows for placement; must all be the right
+   * height for the cells
+   *      @param width: Width of the cells when placed in a row
+   *      @param posX: X coordinate (must be legal)
+   *      @param posY: Y coordinate (must be legal)
+   */
+  static DetailedPlacement fromPos(const std::vector<Row> &rows,
+                                   const std::vector<int> &width,
+                                   const std::vector<int> &posX,
+                                   const std::vector<int> &posY);
+
+  /**
    * @brief Initialize the datastructure
    *      @param rows: Available rows for placement; must all be the right
    * height for the cells
    *      @param width: Width of the cells when placed in a row
-   *      @param targetX: X coordinate (must be legal)
-   *      @param targetY: Y coordinate (must be legal)
+   *      @param posX: X coordinate (must be legal)
+   *      @param posY: Y coordinate (must be legal)
+   *      @param orient: Orientation of the cells (must be legal)
+   *      @param pol: Polarity of the cells with respect to the rows
+   *      @param cellIndex: Cell index in the original circuit
    */
   DetailedPlacement(const std::vector<Row> &rows, const std::vector<int> &width,
                     const std::vector<int> &posX, const std::vector<int> &posY,
+                    const std::vector<CellOrientation> &orient,
+                    const std::vector<CellRowPolarity> &pol,
                     const std::vector<int> &cellIndex);
 
   /**
@@ -147,6 +165,22 @@ class DetailedPlacement {
   Point cellPos(int c) const {
     assert(c >= 0 && c < nbCells());
     return Point(cellX_[c], cellY_[c]);
+  }
+
+  /**
+   * @brief Return the orientation of the cell
+   */
+  CellOrientation cellOrientation(int c) const {
+    assert(c >= 0 && c < nbCells());
+    return cellOrientation_[c];
+  }
+
+  /**
+   * @brief Return the polarity of the cell
+   */
+  CellRowPolarity cellRowPolarity(int c) const {
+    assert(c >= 0 && c < nbCells());
+    return cellRowPolarity_[c];
   }
 
   /**
@@ -274,6 +308,8 @@ class DetailedPlacement {
   std::vector<int> cellRow_;
   std::vector<int> cellX_;
   std::vector<int> cellY_;
+  std::vector<CellOrientation> cellOrientation_;
+  std::vector<CellRowPolarity> cellRowPolarity_;
   std::vector<int> cellIndex_;
 
   friend class DetailedPlacer;

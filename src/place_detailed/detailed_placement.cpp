@@ -26,9 +26,9 @@ DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit) {
   for (int i = 0; i < circuit.nbCells(); ++i) {
     cellIndex.push_back(i);
   }
-  // TODO: check that the orientations of the cells are compatible with the rows
-  return DetailedPlacement(circuit.computeRows(obstacles), widths,
-                           circuit.cellX_, circuit.cellY_, cellIndex);
+  return DetailedPlacement(
+      circuit.computeRows(obstacles), widths, circuit.cellX_, circuit.cellY_,
+      circuit.cellOrientation_, circuit.cellRowPolarity_, cellIndex);
 }
 
 DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit,
@@ -78,11 +78,15 @@ DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit,
   std::vector<int> widths(cellIndex.size());
   std::vector<int> cellX(cellIndex.size());
   std::vector<int> cellY(cellIndex.size());
+  std::vector<CellOrientation> cellOrientation(cellIndex.size());
+  std::vector<CellRowPolarity> cellPolarity(cellIndex.size());
   for (int i = 0; i < cellIndex.size(); ++i) {
     int c = cellIndex[i];
     widths[i] = circuit.cellWidth()[c];
     cellX[i] = circuit.cellX()[c];
     cellY[i] = circuit.cellY()[c];
+    cellOrientation[i] = circuit.cellOrientation()[c];
+    cellPolarity[i] = circuit.cellRowPolarity()[c];
   }
   // Additional fixed cell
   cellIndex.push_back(-1);
@@ -90,7 +94,8 @@ DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit,
   cellX.push_back(0);
   cellY.push_back(0);
 
-  return DetailedPlacement(rows, widths, cellX, cellY, cellIndex);
+  return DetailedPlacement(rows, widths, cellX, cellY, cellOrientation,
+                           cellPolarity, cellIndex);
 }
 
 void DetailedPlacement::exportPlacement(Circuit &circuit) {
@@ -104,22 +109,44 @@ void DetailedPlacement::exportPlacement(Circuit &circuit) {
     }
     circuit.cellX_[cell] = cellX(i);
     circuit.cellY_[cell] = cellY(i);
+    circuit.cellOrientation_[cell] = cellOrientation(i);
   }
+}
+
+DetailedPlacement DetailedPlacement::fromPos(const std::vector<Row> &rows,
+                                             const std::vector<int> &width,
+                                             const std::vector<int> &posX,
+                                             const std::vector<int> &posY) {
+  std::vector<CellOrientation> orient;
+  std::vector<CellRowPolarity> pol;
+  std::vector<int> cellIndex;
+  for (int i = 0; i < width.size(); ++i) {
+    orient.push_back(CellOrientation::N);
+    pol.push_back(CellRowPolarity::ANY);
+    cellIndex.push_back(i);
+  }
+  return DetailedPlacement(rows, width, posX, posY, orient, pol, cellIndex);
 }
 
 DetailedPlacement::DetailedPlacement(const std::vector<Row> &rows,
                                      const std::vector<int> &width,
                                      const std::vector<int> &posX,
                                      const std::vector<int> &posY,
+                                     const std::vector<CellOrientation> &orient,
+                                     const std::vector<CellRowPolarity> &pol,
                                      const std::vector<int> &cellIndex) {
   assert(posX.size() == width.size());
   assert(posY.size() == width.size());
+  assert(orient.size() == width.size());
+  assert(pol.size() == width.size());
   assert(cellIndex.size() == width.size());
 
   rows_ = rows;
   cellX_ = posX;
   cellY_ = posY;
   cellWidth_ = width;
+  cellOrientation_ = orient;
+  cellRowPolarity_ = pol;
   cellIndex_ = cellIndex;
 
   std::sort(rows_.begin(), rows_.end(), [](Rectangle a, Rectangle b) -> bool {
@@ -326,6 +353,11 @@ void DetailedPlacement::place(int c, int row, int pred, int x) {
     throw std::runtime_error("Cannot place the cell");
   }
   cellRow_[c] = row;
+  CellOrientation orient =
+      cellOrientationInRow(cellRowPolarity_[c], rows_[row].orientation);
+  if (orient != CellOrientation::UNKNOWN) {
+    cellOrientation_[c] = orient;
+  }
   int next = pred == -1 ? rowFirstCell(row) : cellNext(pred);
   if (pred == -1) {
     rowFirstCell_[row] = c;
@@ -515,6 +547,19 @@ void DetailedPlacement::check() const {
       }
       if (cellX(i) + cellWidth(i) > rows_[row].maxX) {
         throw std::runtime_error("Element is out of the row");
+      }
+    }
+  }
+
+  for (int i = 0; i < nbRows(); ++i) {
+    for (int c : rowCells(i)) {
+      CellOrientation cellOrient = cellOrientation(c);
+      CellRowPolarity cellPolarity = cellRowPolarity(c);
+      CellOrientation rowOrient = rows_[i].orientation;
+      CellOrientation expected = cellOrientationInRow(cellPolarity, rowOrient);
+      if (expected != CellOrientation::UNKNOWN && cellOrient != expected) {
+        throw std::runtime_error(
+            "Cell orientation seems incompatible with its row");
       }
     }
   }
