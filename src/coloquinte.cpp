@@ -293,13 +293,13 @@ int Circuit::rowHeight() const {
 }
 
 void Circuit::setupRows(Rectangle placementArea, int rowHeight,
-                        bool alternatingOrientation) {
+                        bool alternatingOrientation, bool initialOrientation) {
   if (rowHeight <= 0) {
     throw std::runtime_error("Row height for row creation must be positive");
   }
   checkNotInUse();
   rows_.clear();
-  bool orient = true;
+  bool orient = initialOrientation;
   for (int y = placementArea.minY; y + rowHeight < placementArea.maxY;
        y += rowHeight) {
     CellOrientation dir = orient ? CellOrientation::N : CellOrientation::FS;

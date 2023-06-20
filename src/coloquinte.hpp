@@ -810,7 +810,8 @@ class Circuit {
    * @brief Setup the rows to fill a given placement area
    */
   void setupRows(Rectangle placementArea, int rowHeight,
-                 bool alternatingOrientation = true);
+                 bool alternatingOrientation = true,
+                 bool initialOrientation = true);
 
   /**
    * @brief Return the rows after removing the obstacles
