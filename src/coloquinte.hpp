@@ -138,7 +138,9 @@ enum class CellOrientation {
   FE = 7,
   MY90 = 7,
   /// @brief Special value for invalid/forbidden/whatever
-  INVALID = 8
+  INVALID = 8,
+  /// @brief Special value for unknown
+  UNKNOWN = 9
 };
 
 /**
@@ -190,9 +192,16 @@ std::ostream &operator<<(std::ostream &, NetModelOption);
 std::ostream &operator<<(std::ostream &, CellRowPolarity);
 
 /**
- * Return the "opposite" row orientation (N <--> FS)
+ * @brief Return the "opposite" row orientation (N <--> FS)
  */
 CellOrientation oppositeRowOrientation(CellOrientation o);
+
+/**
+ * @brief Return the valid orientation for this combination of polarity and row
+ * orientation
+ */
+CellOrientation cellOrientationInRow(CellRowPolarity cellPolarity,
+                                     CellOrientation rowOrientation);
 
 /**
  * Return whether the cell view is turned (exchange width and height)

@@ -266,38 +266,13 @@ long long LegalizerBase::totalCellArea() const {
 
 CellOrientation LegalizerBase::getOrientation(int cell, int row) const {
   CellRowPolarity pol = cellRowPolarity_[cell];
-  if (pol == CellRowPolarity::ANY) {
+  CellOrientation rowOrientation = rows_[row].orientation;
+  CellOrientation orient = cellOrientationInRow(pol, rowOrientation);
+  if (orient == CellOrientation::UNKNOWN) {
     // Keep the same orientation
     return cellTargetOrientation_[cell];
   }
-  CellOrientation rowOrientation = rows_[row].orientation;
-  int nbRows = cellHeight_[cell] / rows_[row].height();
-  if (pol == CellRowPolarity::OPPOSITE) {
-    return oppositeRowOrientation(rowOrientation);
-  } else if (pol == CellRowPolarity::SAME) {
-    return rowOrientation;
-  } else if (pol == CellRowPolarity::NW) {
-    if (rowOrientation == CellOrientation::FN ||
-        rowOrientation == CellOrientation::N ||
-        rowOrientation == CellOrientation::FW ||
-        rowOrientation == CellOrientation::W) {
-      // TODO: Could be the opposite too
-      return rowOrientation;
-    }
-    return CellOrientation::INVALID;
-  } else if (pol == CellRowPolarity::SE) {
-    if (rowOrientation == CellOrientation::FS ||
-        rowOrientation == CellOrientation::S ||
-        rowOrientation == CellOrientation::FE ||
-        rowOrientation == CellOrientation::E) {
-      // TODO: Could be the opposite too
-      return rowOrientation;
-    }
-    return CellOrientation::INVALID;
-  } else {
-    // Shouldn't happen
-    abort();
-  }
+  return orient;
 }
 
 int LegalizerBase::rowHeight() const {

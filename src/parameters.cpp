@@ -125,6 +125,40 @@ std::ostream &operator<<(std::ostream &os, CellRowPolarity o) {
   return os;
 }
 
+CellOrientation cellOrientationInRow(CellRowPolarity cellPolarity,
+                                     CellOrientation rowOrientation) {
+  if (cellPolarity == CellRowPolarity::ANY) {
+    // Keep the same orientation
+    return CellOrientation::UNKNOWN;
+  }
+  if (cellPolarity == CellRowPolarity::OPPOSITE) {
+    return oppositeRowOrientation(rowOrientation);
+  } else if (cellPolarity == CellRowPolarity::SAME) {
+    return rowOrientation;
+  } else if (cellPolarity == CellRowPolarity::NW) {
+    if (rowOrientation == CellOrientation::FN ||
+        rowOrientation == CellOrientation::N ||
+        rowOrientation == CellOrientation::FW ||
+        rowOrientation == CellOrientation::W) {
+      // TODO: Could have a mirroring too
+      return rowOrientation;
+    }
+    return CellOrientation::INVALID;
+  } else if (cellPolarity == CellRowPolarity::SE) {
+    if (rowOrientation == CellOrientation::FS ||
+        rowOrientation == CellOrientation::S ||
+        rowOrientation == CellOrientation::FE ||
+        rowOrientation == CellOrientation::E) {
+      // TODO: Could have a mirroring too
+      return rowOrientation;
+    }
+    return CellOrientation::INVALID;
+  } else {
+    // Shouldn't happen
+    abort();
+  }
+}
+
 namespace {
 
 double interpolateEffort(double minVal, double maxVal, int effort,
