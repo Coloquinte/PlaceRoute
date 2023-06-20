@@ -481,6 +481,9 @@ std::string Circuit::report() const {
   ss << "\n";
 
   // Analyze and report possible issues
+  if (placeableCellArea > availableArea) {
+    ss << "ERROR: density is more than 100%.\n";
+  }
   if (nbUnalignedCells > 0) {
     ss << "WARNING: some cells are not aligned on a standard cell heights, "
        << "which is not supported.\n";
@@ -560,7 +563,7 @@ std::string Circuit::report() const {
   }
   if (evenRowWithBadPolarity) {
     ss << "WARNING: " << evenRowWithBadPolarity
-       << " cells occupy an eveb number of rows but are allowed to go to any "
+       << " cells occupy an even number of rows but are allowed to go to any "
           "row (SAME or OPPOSITE polarity).\n";
   }
 
