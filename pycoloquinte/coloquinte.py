@@ -325,6 +325,7 @@ class Circuit(coloquinte_pybind.Circuit):
     """
     Representation of a circuit for the placement tool
     """
+
     def __init__(self, nb_cells):
         super(Circuit, self).__init__(nb_cells)
         self._filename = None
@@ -550,6 +551,7 @@ class Circuit(coloquinte_pybind.Circuit):
         draw = ImageDraw.Draw(img)
 
         placement = self.cell_placement
+        orientation = self.cell_orientation
         fixed = self.cell_is_fixed
         row_height = self.row_height
         for i, pl in enumerate(placement):
@@ -564,15 +566,36 @@ class Circuit(coloquinte_pybind.Circuit):
                 continue
             if fixed[i]:
                 # Fixed cells and macros
-                draw.rectangle(rect, fill="gray", outline="black", width=1)
+                fill = "gray"
+                outline = "black"
+                width = 1
             elif pl.height > 4 * row_height:
                 # Movable macros
-                draw.rectangle(rect, fill="aqua",
-                               outline="mediumblue", width=1)
+                fill = "aqua"
+                outline = "mediumblue"
+                width = 1
             else:
                 # Nice standard cells (or close enough)
-                draw.rectangle(rect, fill="blue",
-                               outline="mediumblue", width=1)
+                fill = "blue"
+                outline = "mediumblue"
+                width = 1
+            draw.rectangle(rect, fill=fill, outline=outline, width=width)
+
+            # Show the orientation with a small square in the corner
+            osize = round(row_height / 5 / scale_factor)
+            osize = min(osize, xmx - xmn)
+            osize = min(osize, ymx - ymn)
+            if osize > 2:  # Only do it for 2px and more
+                if orientation[i] in [CellOrientation.N, CellOrientation.FW]:
+                    rect = [(xmn, ymn), (xmn+osize, ymn+osize)]
+                elif orientation[i] in [CellOrientation.S, CellOrientation.FE]:
+                    rect = [(xmx-osize, ymx-osize), (xmx, ymx)]
+                elif orientation[i] in [CellOrientation.FS, CellOrientation.E]:
+                    rect = [(xmn, ymx-osize), (xmn+osize, ymx)]
+                else:  # orientation[i] in [CellOrientation.FN, CellOrientation.W]:
+                    rect = [(xmx-osize, ymn), (xmx, ymn+osize)]
+                draw.rectangle(rect, fill=outline, outline=outline, width=width)
+
         return img
 
     def _draw_displacement(self, img, pl1, pl2, scale_factor):
@@ -688,6 +711,7 @@ class OptimizationCallback:
     """
     Default callback for placement; used to save images, graphs and statistics
     """
+
     def __init__(self, circuit, prefix, image_width, extension):
         self.circuit = circuit
         self.step = 1
