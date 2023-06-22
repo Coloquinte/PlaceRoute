@@ -300,7 +300,7 @@ void Circuit::setupRows(Rectangle placementArea, int rowHeight,
   checkNotInUse();
   rows_.clear();
   bool orient = initialOrientation;
-  for (int y = placementArea.minY; y + rowHeight < placementArea.maxY;
+  for (int y = placementArea.minY; y + rowHeight <= placementArea.maxY;
        y += rowHeight) {
     CellOrientation dir = orient ? CellOrientation::N : CellOrientation::FS;
     if (alternatingOrientation) {
