@@ -7,12 +7,14 @@ OPTION(BUILD_PYCOLOQUINTE "Build Coloquinte Python package")
 
 IF(BUILD_PYCOLOQUINTE)
     SET(Boost_USE_STATIC_LIBS ON)
+ELSE()
+    ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
 ENDIF()
 
 FIND_PACKAGE(Boost REQUIRED COMPONENTS system filesystem iostreams program_options unit_test_framework)
 FIND_PACKAGE(LEMON NAMES LEMON lemon REQUIRED)
 FIND_PACKAGE(Eigen3 3.3 REQUIRED NO_MODULE)
-find_package(Threads REQUIRED)
+FIND_PACKAGE(Threads REQUIRED)
 
 INCLUDE_DIRECTORIES(
     ${COLOQUINTE_SOURCE_DIR}/src
@@ -58,10 +60,10 @@ IF(BUILD_PYCOLOQUINTE)
     add_subdirectory(pycoloquinte)
 ENDIF(BUILD_PYCOLOQUINTE)
 
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+IF(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     enable_testing()
     add_subdirectory(test)
-endif()
+ENDIF()
 
 INSTALL(
   TARGETS coloquinte
