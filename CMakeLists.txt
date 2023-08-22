@@ -48,7 +48,7 @@ ELSE()
 ENDIF()
 
 set_target_properties(coloquinte PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
-target_compile_features(coloquinte PRIVATE cxx_std_17)
+target_compile_features(coloquinte PUBLIC cxx_std_17)
 target_link_libraries(coloquinte
   PRIVATE
   ${Boost_LIBRARIES}
