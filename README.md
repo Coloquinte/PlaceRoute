@@ -43,3 +43,27 @@ sudo apt-get install g++ cmake libboost-all-dev libeigen3-dev liblemon-dev
 cmake -B build; cmake --build build
 ```
 
+## Benchmarks
+
+Coloquinte is tested on the [ISPD06 benchmark suite](https://dl.acm.org/doi/10.1145/1123008.1123042). Below is the reported half-perimeter wirelength on these benchmarks (x10<sup>7</sup>) for various effort parameters.
+Higher effort = higher quality but higher runtime.
+
+
+| Benchmark | Effort 1 WL | Effort 3 WL | Effort 6 WL |
+| --------- | ----------- | ----------- | ----------- |
+| adaptec1  |        8,04 |        7,62 |        7,55 |
+| adaptec2  |        8,83 |        8,48 |        8,38 |
+| adaptec3  |       21,07 |       20,31 |       19,95 |
+| adaptec4  |       18,84 |       17,97 |       17,77 |
+| adaptec5  |       32,65 |       31,18 |       30,89 |
+| bigblue1  |       10,01 |        9,36 |        9,20 |
+| bigblue2  |       14,79 |       14,25 |       14,17 |
+| bigblue3  |       35,23 |       32,67 |       31,98 |
+| bigblue4  |       83,15 |       79,16 |       77,66 |
+| newblue1  |       60,68 |       18,75 |       34,54 |
+| newblue2  |       19,38 |       18,31 |       17,97 |
+| newblue3  |       33,70 |       26,06 |       25,84 |
+| newblue4  |       24,32 |       23,35 |       23,33 |
+| newblue5  |       42,29 |       39,39 |       39,02 |
+| newblue6  |       48,43 |       45,80 |       45,39 |
+| newblue7  |      102,11 |       97,81 |       96,47 |
