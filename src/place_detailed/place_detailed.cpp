@@ -551,12 +551,12 @@ class RowReordering {
   /**
    * @brief Number of registered regions
    */
-  int nbRegions() const { return regions_.size(); }
+  size_t nbRegions() const { return regions_.size(); }
 
   /**
    * @brief Number of registered cells
    */
-  int nbCells() const { return cells_.size(); }
+  size_t nbCells() const { return cells_.size(); }
 
   /**
    * @brief Add a region and its cells to be optimized
