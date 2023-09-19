@@ -9,7 +9,7 @@ project('coloquinte', 'cpp',
 
 coloquinte_includes = include_directories('src')
 boost_dep = dependency('boost', required: true)
-lemon_dep = dependency('lemon', method : 'cmake')
+lemon_dep = dependency('lemon', required: true)
 eigen_dep = dependency('eigen3', required: true)
 thread_dep = dependency('threads', required: true)
 
