@@ -37,10 +37,15 @@ python setup.py install
 
 ### C++ library
 
-Install dependencies and build Coloquinte using CMake :
+Install dependencies and build Coloquinte using CMake:
 ``` bash
 sudo apt-get install g++ cmake libboost-all-dev libeigen3-dev liblemon-dev
-cmake -B build; cmake --build build
+cmake -B build; cmake --build build; ctest --test-dir build
+```
+
+Or using Meson:
+```
+meson setup build; meson compile -C build; meson test -C build
 ```
 
 ## Benchmarks
