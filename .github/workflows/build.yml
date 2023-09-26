@@ -43,4 +43,7 @@ jobs:
       run: sudo apt-get install libboost-all-dev libeigen3-dev ninja-build; pip3 install cmake meson
 
     - name: Build
-      run: meson setup build; cd build; meson compile
+      run: meson setup build; meson compile -C build
+
+    - name: Test
+      run: meson test -C build
