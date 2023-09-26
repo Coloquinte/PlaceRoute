@@ -131,7 +131,7 @@ TransportationProblem::TransportationProblem(
     const std::vector<DemandType>& capacities,
     const std::vector<DemandType>& demands,
     const std::vector<std::vector<CostType> >& costs)
-    : capacities_(capacities), demands_(demands), costs_(costs) {
+    : demands_(demands), capacities_(capacities), costs_(costs) {
   resetAllocations();
   check();
 }
@@ -140,7 +140,7 @@ TransportationProblem::TransportationProblem(
     const std::vector<DemandType>& capacities,
     const std::vector<DemandType>& demands,
     const std::vector<std::vector<float> >& costs)
-    : capacities_(capacities), demands_(demands) {
+    : demands_(demands), capacities_(capacities) {
   costsFromIntegers(costs);
   resetAllocations();
   check();
@@ -166,8 +166,8 @@ void TransportationProblem::costsFromIntegers(
   assert (!costs.empty());
   assert (!costs.front().empty());
   costs_.resize(costs.size(), std::vector<CostType>(costs[0].size()));
-  for (int i = 0; i < costs.size(); ++i) {
-    for (int j = 0; j < costs[i].size(); ++j) {
+  for (size_t i = 0; i < costs.size(); ++i) {
+    for (size_t j = 0; j < costs[i].size(); ++j) {
       costs_[i][j] = std::round(costs[i][j] * conversionFactor_);
     }
   }
@@ -379,7 +379,7 @@ void TransportationProblem::setAssignment(const std::vector<int>& assignment) {
     throw std::runtime_error(
         "Assignment should be no larger than the number of sources");
   }
-  for (int src = 0; src < assignment.size(); ++src) {
+  for (size_t src = 0; src < assignment.size(); ++src) {
     int sink = assignment[src];
     if (sink < 0 || sink >= nbSinks()) {
       throw std::runtime_error("Assignment should be a valid sink index");

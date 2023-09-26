@@ -80,7 +80,7 @@ DetailedPlacement DetailedPlacement::fromIspdCircuit(const Circuit &circuit,
   std::vector<int> cellY(cellIndex.size());
   std::vector<CellOrientation> cellOrientation(cellIndex.size());
   std::vector<CellRowPolarity> cellPolarity(cellIndex.size());
-  for (int i = 0; i < cellIndex.size(); ++i) {
+  for (size_t i = 0; i < cellIndex.size(); ++i) {
     int c = cellIndex[i];
     widths[i] = circuit.cellWidth()[c];
     cellX[i] = circuit.cellX()[c];
@@ -120,7 +120,7 @@ DetailedPlacement DetailedPlacement::fromPos(const std::vector<Row> &rows,
   std::vector<CellOrientation> orient;
   std::vector<CellRowPolarity> pol;
   std::vector<int> cellIndex;
-  for (int i = 0; i < width.size(); ++i) {
+  for (size_t i = 0; i < width.size(); ++i) {
     orient.push_back(CellOrientation::N);
     pol.push_back(CellRowPolarity::ANY);
     cellIndex.push_back(i);
@@ -203,7 +203,7 @@ DetailedPlacement::DetailedPlacement(const std::vector<Row> &rows,
     for (int c : rowToCells[row]) {
       cellRow_[c] = row;
     }
-    for (int i = 0; i + 1 < rowToCells[row].size(); ++i) {
+    for (size_t i = 0; i + 1 < rowToCells[row].size(); ++i) {
       int c1 = rowToCells[row][i];
       int c2 = rowToCells[row][i + 1];
       cellNext_[c1] = c2;

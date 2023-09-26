@@ -68,7 +68,7 @@ void DetailedPlacer::run() {
     runSwaps(params_.detailed.localSearchNbNeighbours,
              params_.detailed.localSearchNbRows);
     auto swapValue = value();
-    std::cout << "\tSwaps " << value() << std::flush;
+    std::cout << "\tSwaps " << swapValue << std::flush;
     callback();
     if (params_.detailed.shiftMaxNbCells >= 2) {
       runShifts(params_.detailed.shiftNbRows, params_.detailed.shiftMaxNbCells);
@@ -724,9 +724,9 @@ void RowReordering::writeback() {
     for (int c : cells_) {
       placement_.unplace(c);
     }
-    for (int i = 0; i < nbRegions(); ++i) {
+    for (size_t i = 0; i < nbRegions(); ++i) {
       int pred = regions_[i].cellPred;
-      for (int j = 0; j < bestOrder_[i].size(); ++j) {
+      for (size_t j = 0; j < bestOrder_[i].size(); ++j) {
         int c = bestOrder_[i][j];
         placement_.place(c, regions_[i].row, pred, bestPositions_[i][j]);
         xtopo_.updateCellPos(c, placement_.cellX(c));
@@ -753,7 +753,7 @@ void RowReordering::check() const {
     throw std::runtime_error("Inconsistent number of regions");
   if (nbRegions() != bestPositions_.size())
     throw std::runtime_error("Inconsistent number of regions");
-  for (int i = 0; i < nbRegions(); ++i) {
+  for (size_t i = 0; i < nbRegions(); ++i) {
     if (bestOrder_[i].size() != bestPositions_[i].size())
       throw std::runtime_error("Inconsistent number of cells in regions");
   }
@@ -795,8 +795,8 @@ void DetailedPlacer::runReorderingOnRows(const std::vector<int> &rows,
   // Only select part of the cells so we never solve an optimization problem
   // bigger than maxNbCells
   int overlap = std::min(maxNbCells / 2, 10);
-  for (int start = 0; start < cells.size(); start += maxNbCells - overlap) {
-    int end = std::min(start + maxNbCells, (int)cells.size());
+  for (size_t start = 0; start < cells.size(); start += maxNbCells - overlap) {
+    size_t end = std::min(start + maxNbCells, cells.size());
     std::vector<int> subproblem(cells.begin() + start, cells.begin() + end);
     runReorderingOnCells(subproblem);
   }
