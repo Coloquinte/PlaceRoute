@@ -8,7 +8,7 @@ project('coloquinte', 'cpp',
 )
 
 coloquinte_includes = include_directories('src')
-boost_dep = dependency('boost', required: true)
+boost_dep = dependency('boost', required: true, modules: ['system', 'filesystem', 'iostreams', 'program_options', 'unit_test_framework'])
 eigen_dep = dependency('eigen3', required: true)
 thread_dep = dependency('threads', required: true)
 
@@ -47,3 +47,19 @@ install_headers('src/coloquinte.hpp')
 
 coloquinte_dep = declare_dependency(link_with : libcoloquinte, include_directories: coloquinte_includes)
 
+tests = [
+    'test_net_model'
+,   'test_density_legalizer'
+,   'test_density_grid'
+,   'test_row_legalizer'
+,   'test_legalizer'
+,   'test_incr_net_model'
+,   'test_detailed_placement'
+,   'test_row_neighbourhood'
+,   'test_transportation'
+]
+
+foreach testcase: tests
+  test_exec = executable(testcase, 'test/' + testcase + '.cpp', dependencies: [boost_dep, coloquinte_dep])
+  test(testcase, test_exec)
+endforeach
