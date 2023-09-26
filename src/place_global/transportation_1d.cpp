@@ -15,7 +15,7 @@ Transportation1dSorter::Transportation1dSorter(
   // Sort the sources and sinks
   std::vector<std::pair<long long, long long>> srcSort;
   srcSort.reserve(u.size());
-  for (long long i = 0; i < u.size(); ++i) {
+  for (size_t i = 0; i < u.size(); ++i) {
     if (s[i] > 0LL) {
       srcSort.emplace_back(u[i], i);
     }
@@ -23,7 +23,7 @@ Transportation1dSorter::Transportation1dSorter(
   std::sort(srcSort.begin(), srcSort.end());
   std::vector<std::pair<long long, long long>> snkSort;
   snkSort.reserve(v.size());
-  for (long long i = 0; i < v.size(); ++i) {
+  for (size_t i = 0; i < v.size(); ++i) {
     if (d[i] > 0LL) {
       snkSort.emplace_back(v[i], i);
     }
@@ -73,7 +73,7 @@ std::vector<int> Transportation1dSorter::convertAssignmentBack(
     const std::vector<int> &a) const {
   std::vector<int> ret;
   ret.resize(a.size());
-  for (int i = 0; i < a.size(); ++i) {
+  for (size_t i = 0; i < a.size(); ++i) {
     ret[srcOrder[i]] = snkOrder[a[i]];
   }
   return ret;
