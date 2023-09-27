@@ -627,9 +627,23 @@ void Circuit::expandCellSizes(double targetDensity, double rowSideMargin,
   double expansionFactor = targetDensity / density;
 
   // Apply the expansion
+  double missingArea = 0.0;
   for (int i = 0; i < nbCells(); ++i) {
     if (!cellIsFixed_[i]) {
-      cellWidth_[i] *= expansionFactor;
+      int h = cellHeight_[i];
+      int w = cellWidth_[i];
+      if (h <= 0 || w <= 0) {
+        continue;
+      }
+      double fracW = w * expansionFactor;
+      int newW = (int) fracW;
+      // Now, since we round down, we got some area missing
+      missingArea += h * (fracW - newW);
+      while (missingArea >= h) {
+        ++newW;
+        missingArea -= h;
+      }
+      cellWidth_[i] = newW;
     }
   }
 }
