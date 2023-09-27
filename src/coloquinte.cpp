@@ -591,6 +591,49 @@ void Circuit::placeDetailed(const ColoquinteParameters &params,
   clearInUse();
 }
 
+void Circuit::expandCellSizes(double targetDensity, double rowSideMargin,
+                              const std::vector<float> &targetExpansion) {
+  long long areaToPlace = 0LL;
+  int stdCellHeight = rowHeight();
+
+  // Compute placeable cell area
+  long long cellArea = 0LL;
+  for (int i = 0; i < nbCells(); ++i) {
+    if (!cellIsFixed_[i]) {
+      cellArea += area(i);
+    }
+  }
+
+  // Compute row area
+  long long rowArea = 0LL;
+  for (Row r : computeRows()) {
+    long long h = r.height();
+    long long w = r.width();
+    // Remove margin from the row
+    w -= 2 * rowSideMargin * h;
+    if (w > 0) {
+      rowArea += w * h;
+    }
+  }
+
+  // Compute the density and return if no further work is needed
+  if (cellArea == 0LL || rowArea == 0LL) {
+    return;
+  }
+  double density = (double)cellArea / (double)rowArea;
+  if (density >= targetDensity) {
+    return;
+  }
+  double expansionFactor = targetDensity / density;
+
+  // Apply the expansion
+  for (int i = 0; i < nbCells(); ++i) {
+    if (!cellIsFixed_[i]) {
+      cellWidth_[i] *= expansionFactor;
+    }
+  }
+}
+
 float Circuit::meanDisruption(const PlacementSolution &a,
                               const PlacementSolution &b,
                               LegalizationModel costModel) {
