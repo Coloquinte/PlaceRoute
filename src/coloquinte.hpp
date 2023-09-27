@@ -979,6 +979,21 @@ class Circuit {
                      const std::optional<PlacementCallback> &callback = {});
 
   /**
+   * @brief Apply cell size modifications to ensure that the circuit is spread
+   * uniformly
+   *
+   * @param targetFillRatio Target fill rate for the circuit, between 0 and 1
+   * exclusive
+   * @param rowSideMargin Margin applied to each row before computing available
+   * area, in standard cell heights
+   * @param targetExpansion Optional expansion target for each cell; must be at
+   * least 1
+   */
+  void expandCellSizes(
+      double targetFillRatio, double rowSideMargin = 2.0,
+      const std::vector<float> &targetExpansion = std::vector<float>());
+
+  /**
    * @brief Return a brief description of the circuit
    */
   std::string toString() const;

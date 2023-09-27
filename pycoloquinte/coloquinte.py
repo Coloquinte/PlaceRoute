@@ -776,6 +776,8 @@ def main():
     parser.add_argument("instance", help="Benchmark instance", nargs="?")
     parser.add_argument("--effort", help="Placement effort",
                         type=int, default=3)
+    parser.add_argument(
+        "--density", help="Expand the cells to reach the target density", type=float)
     parser.add_argument("--seed", help="Random seed", type=int, default=-1)
     parser.add_argument(
         "--load-solution", help="Load initial placement", metavar="FILE"
@@ -845,12 +847,16 @@ def main():
         return
 
     circuit = Circuit.read_ispd(args.instance, args.ignore_obstructions)
-    print(circuit.report())
     if args.ignore_obstructions:
         print("Ignoring macros for standard cell placement")
     if args.load_solution is not None:
         print(f"Loading initial solution")
         circuit.load_placement(args.load_solution)
+    if args.density is not None:
+        if args.density <= 0.0 or args.density >= 1.0:
+            raise RuntimeError("Target density should be strictly between 0 and 1.")
+        circuit.expand_cell_sizes(args.density, 0.0)
+    print(circuit.report())
 
     sys.stdout.flush()
     callback = None
