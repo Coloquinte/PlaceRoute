@@ -11,6 +11,7 @@ SET(TESTS
     test_detailed_placement
     test_row_neighbourhood
     test_transportation
+    test_expansion
 )
 
 FOREACH(TEST IN LISTS TESTS)

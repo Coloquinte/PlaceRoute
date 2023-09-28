@@ -309,9 +309,13 @@ Construct a circuit.
             circuit.placeDetailed(params, std::move(callback));
           },
           "Run the detailed placement algorithm")
-      .def("expand_cell_sizes", &Circuit::expandCellSizes,
-           py::arg("target_density"), py::arg("row_side_margin") = 2.0, py::arg("target_expansion") = std::vector<float>(),
+      .def("expand_cells_to_density", &Circuit::expandCellsToDensity,
+           py::arg("target_density"), py::arg("row_side_margin") = 0.0,
            "Expand the standard cells to reach the target density")
+      .def("expand_cells_by_factor", &Circuit::expandCellsByFactor,
+           py::arg("expansion_factor"), py::arg("max_density") = 1.0,
+           py::arg("row_side_margin") = 0.0,
+           "Expand the standard cells by an individual factor")
       .def("check", &Circuit::check, "Check the datastructure")
       .def("report", &Circuit::report)
       .def("__str__", &Circuit::toString)

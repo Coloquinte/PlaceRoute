@@ -979,19 +979,45 @@ class Circuit {
                      const std::optional<PlacementCallback> &callback = {});
 
   /**
-   * @brief Apply cell size modifications to ensure that the circuit is spread
-   * uniformly
+   * @brief Compute the area available for placement
    *
-   * @param targetFillRatio Target fill rate for the circuit, between 0 and 1
-   * exclusive
    * @param rowSideMargin Margin applied to each row before computing available
    * area, in standard cell heights
-   * @param targetExpansion Optional expansion target for each cell; must be at
-   * least 1
    */
-  void expandCellSizes(
-      double targetFillRatio, double rowSideMargin = 2.0,
-      const std::vector<float> &targetExpansion = std::vector<float>());
+  long long computePlacementArea(double rowSideMargin = 0.0) const;
+
+  /**
+   * @brief Apply cell size modifications to ensure that the circuit is spread
+   * uniformly, or as if it was a target density
+   *
+   * @param targetDensity Target density for the circuit, between 0 and 1
+   * exclusive. Cells will be expanded to match this density, which forces them
+   * to spread. Use 0 if no spreading is required.
+   * @param rowSideMargin Margin applied to each row before computing available
+   * area, in standard cell heights. Usually better than tweaking the density to
+   * make the placement feasible.
+   */
+  void expandCellsToDensity(double targetDensity, double rowSideMargin = 0.0);
+
+  /**
+   * @brief Apply cell size modifications to the circuit, with individual
+   * targets
+   *
+   * @param expansionFactor Optional expansion target for each cell; must be at
+   * least 1. If possible, each cell will be expanded by this factor.
+   * @param maxDensity Density cap when applying expansion. Target expansion
+   * will be adjusted to not go over this.
+   * @param rowSideMargin Margin applied to each row before computing available
+   * area, in standard cell heights.
+   */
+  void expandCellsByFactor(const std::vector<float> &expansionFactor,
+                           double maxDensity = 1.0, double rowSideMargin = 0.0);
+
+  /*
+   * TODO: find a way that the expansion could happen on both sides (cleaner),
+   * and not just on the right, but this would change the meaning of the
+   * coordinates from the original circuit.
+   */
 
   /**
    * @brief Return a brief description of the circuit

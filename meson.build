@@ -58,6 +58,7 @@ tests = [
 ,   'test_detailed_placement'
 ,   'test_row_neighbourhood'
 ,   'test_transportation'
+,   'test_expansion'
 ]
 
 foreach testcase: tests
