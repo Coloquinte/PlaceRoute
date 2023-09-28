@@ -591,19 +591,7 @@ void Circuit::placeDetailed(const ColoquinteParameters &params,
   clearInUse();
 }
 
-void Circuit::expandCellSizes(double targetDensity, double rowSideMargin,
-                              const std::vector<float> &targetExpansion) {
-  long long areaToPlace = 0LL;
-  int stdCellHeight = rowHeight();
-
-  // Compute placeable cell area
-  long long cellArea = 0LL;
-  for (int i = 0; i < nbCells(); ++i) {
-    if (!cellIsFixed_[i]) {
-      cellArea += area(i);
-    }
-  }
-
+long long Circuit::computePlacementArea(double rowSideMargin) const {
   // Compute row area
   long long rowArea = 0LL;
   for (Row r : computeRows()) {
@@ -615,6 +603,20 @@ void Circuit::expandCellSizes(double targetDensity, double rowSideMargin,
       rowArea += w * h;
     }
   }
+  return rowArea;
+}
+
+void Circuit::expandCellsToDensity(double targetDensity, double rowSideMargin) {
+  long long areaToPlace = 0LL;
+  // Compute placeable cell area
+  long long cellArea = 0LL;
+  for (int i = 0; i < nbCells(); ++i) {
+    if (!cellIsFixed_[i]) {
+      cellArea += area(i);
+    }
+  }
+
+  long long rowArea = computePlacementArea(rowSideMargin);
 
   // Compute the density and return if no further work is needed
   if (cellArea == 0LL || rowArea == 0LL) {
@@ -636,7 +638,7 @@ void Circuit::expandCellSizes(double targetDensity, double rowSideMargin,
         continue;
       }
       double fracW = w * expansionFactor;
-      int newW = (int) fracW;
+      int newW = (int)fracW;
       // Now, since we round down, we got some area missing
       missingArea += h * (fracW - newW);
       while (missingArea >= h) {
@@ -644,6 +646,65 @@ void Circuit::expandCellSizes(double targetDensity, double rowSideMargin,
         missingArea -= h;
       }
       cellWidth_[i] = newW;
+    }
+  }
+}
+
+void Circuit::expandCellsByFactor(const std::vector<float> &expansionFactor,
+                                  double maxDensity, double rowSideMargin) {
+  // Setup the target expansion if not done explicitly
+  if ((int)expansionFactor.size() != nbCells()) {
+    throw std::runtime_error(
+        "Target expansion should have one element per cell");
+  }
+  for (float e : expansionFactor) {
+    if (e < 0.999f) {
+      throw std::runtime_error(
+          "Target expansion for cells should be at least 1");
+    }
+  }
+
+  long long areaToPlace = 0LL;
+  // Compute placeable cell area
+  long long cellArea = 0LL;
+  long long expandedArea = 0LL;
+  for (int i = 0; i < nbCells(); ++i) {
+    if (!cellIsFixed_[i]) {
+      cellArea += area(i);
+      expandedArea += expansionFactor[i] * area(i);
+    }
+  }
+
+  long long rowArea = computePlacementArea(rowSideMargin);
+
+  // Compute the density and return if no further work is needed
+  if (cellArea == 0LL || rowArea == 0LL) {
+    return;
+  }
+
+  std::vector<float> expansion = expansionFactor;
+  double density = (double)cellArea / (double)rowArea;
+  if (density >= maxDensity) {
+    // No point in applying any expansion
+    return;
+  }
+
+  double expandedDensity = (double)expandedArea / (double)rowArea;
+  if (expandedDensity > maxDensity) {
+    // Adjust expansion so it's not too much
+    double ratio = (maxDensity - density) / (expandedDensity - density);
+    for (float &e : expansion) {
+      e = 1.0 + (e - 1.0) * ratio;
+    }
+  }
+
+  // Apply the expansion
+  double missingArea = 0.0;
+  for (int i = 0; i < nbCells(); ++i) {
+    if (!cellIsFixed_[i]) {
+      // Just round down here, as we don't want to redistribute expansion
+      // between the cells
+      cellWidth_[i] *= expansion[i];
     }
   }
 }

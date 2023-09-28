@@ -855,7 +855,7 @@ def main():
     if args.density is not None:
         if args.density <= 0.0 or args.density >= 1.0:
             raise RuntimeError("Target density should be strictly between 0 and 1.")
-        circuit.expand_cell_sizes(args.density, 0.0)
+        circuit.expand_cells_to_density(args.density, 0.0)
     print(circuit.report())
 
     sys.stdout.flush()
