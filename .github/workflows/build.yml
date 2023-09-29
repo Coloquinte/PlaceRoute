@@ -47,3 +47,26 @@ jobs:
 
     - name: Test
       run: meson test -C build
+
+  build-python:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Install dependencies
+      run: sudo apt-get install libboost-all-dev libeigen3-dev ninja-build liblemon-dev; pip3 install cmake meson
+
+    - name: Build
+      run: cd pycoloquinte; python3 setup.py install --user
+
+    - name: Download test
+      run: wget https://github.com/Coloquinte/PlaceRoute/releases/download/benchmark/adaptec1.tar.gz; tar -xzf adaptec1.tar.gz
+
+    - name: Run typical test
+      run: coloquinte --effort 1 adaptec1
+
+    - name: Run scaled test
+      run: coloquinte --effort 1 --density 0.75 adaptec1
