@@ -35,7 +35,7 @@ Circuit::Circuit(int nbCells) {
 
 void Circuit::addNet(const std::vector<int> &cells,
                      const std::vector<int> &xOffsets,
-                     const std::vector<int> &yOffsets) {
+                     const std::vector<int> &yOffsets, float weight) {
   if (cells.size() != xOffsets.size() || cells.size() != yOffsets.size()) {
     throw std::runtime_error("Inconsistent number of pins for the net");
   }
@@ -44,6 +44,7 @@ void Circuit::addNet(const std::vector<int> &cells,
     return;
   }
   netLimits_.push_back(netLimits_.back() + cells.size());
+  netWeights_.push_back(weight);
   pinCells_.insert(pinCells_.end(), cells.begin(), cells.end());
   pinXOffsets_.insert(pinXOffsets_.end(), xOffsets.begin(), xOffsets.end());
   pinYOffsets_.insert(pinYOffsets_.end(), yOffsets.begin(), yOffsets.end());
@@ -52,17 +53,30 @@ void Circuit::addNet(const std::vector<int> &cells,
 void Circuit::setNets(const std::vector<int> &limits,
                       const std::vector<int> &cells,
                       const std::vector<int> &xOffsets,
-                      const std::vector<int> &yOffsets) {
+                      const std::vector<int> &yOffsets,
+                      const std::vector<float> &weights) {
   checkNotInUse();
   assert(!limits.empty());
   assert(limits.front() == 0);
   assert(limits.back() == cells.size());
   assert(limits.back() == xOffsets.size());
   assert(limits.back() == yOffsets.size());
+  assert(limits.size() == weights.size() + 1 || weights.empty());
   netLimits_ = limits;
   pinCells_ = cells;
   pinXOffsets_ = xOffsets;
   pinYOffsets_ = yOffsets;
+  netWeights_ = weights;
+  netWeights_.resize(netLimits_.size() - 1, 1.0f);
+}
+
+void Circuit::setNetWeights(const std::vector<float> &w) {
+  if (w.size() != nbNets()) {
+    throw std::runtime_error(
+        "Number of weights is not the same as the number of nets of the "
+        "circuit");
+  }
+  netWeights_ = w;
 }
 
 void Circuit::setCellX(const std::vector<int> &x) {
@@ -346,6 +360,9 @@ void Circuit::check() const {
   if (netLimits_.front() != 0) {
     throw std::runtime_error("Size mismatch");
   }
+  if (netWeights_.size() != nbNets()) {
+    throw std::runtime_error("Size mismatch");
+  }
   if (pinCells_.size() != nbPins()) {
     throw std::runtime_error("Size mismatch");
   }
@@ -591,7 +608,7 @@ void Circuit::placeDetailed(const ColoquinteParameters &params,
   clearInUse();
 }
 
-long long Circuit::computePlacementArea(double rowSideMargin) const {
+long long Circuit::computeRowPlacementArea(double rowSideMargin) const {
   // Compute row area
   long long rowArea = 0LL;
   for (Row r : computeRows()) {
@@ -616,7 +633,7 @@ void Circuit::expandCellsToDensity(double targetDensity, double rowSideMargin) {
     }
   }
 
-  long long rowArea = computePlacementArea(rowSideMargin);
+  long long rowArea = computeRowPlacementArea(rowSideMargin);
 
   // Compute the density and return if no further work is needed
   if (cellArea == 0LL || rowArea == 0LL) {
@@ -675,7 +692,7 @@ void Circuit::expandCellsByFactor(const std::vector<float> &expansionFactor,
     }
   }
 
-  long long rowArea = computePlacementArea(rowSideMargin);
+  long long rowArea = computeRowPlacementArea(rowSideMargin);
 
   // Compute the density and return if no further work is needed
   if (cellArea == 0LL || rowArea == 0LL) {

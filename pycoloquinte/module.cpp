@@ -279,7 +279,9 @@ Construct a circuit.
                              "Standard-cell row height")
       .def_property("rows", &Circuit::rows, &Circuit::setRows,
                     "Standard cell rows")
-      .def("add_net", &Circuit::addNet, "Add a net to the circuit")
+      .def("add_net", &Circuit::addNet, py::arg("cells"), py::arg("x_offsets"),
+           py::arg("y_offsets"), py::arg("weight") = 1.0,
+           "Add a net to the circuit")
       .def("hpwl", &Circuit::hpwl, "Compute the half-perimeter wirelength")
       .def("setup_rows", &Circuit::setupRows,
            "Setup the rows from a placement area")

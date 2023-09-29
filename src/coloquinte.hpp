@@ -787,14 +787,20 @@ class Circuit {
    * @brief Add a single net
    */
   void addNet(const std::vector<int> &cells, const std::vector<int> &xOffsets,
-              const std::vector<int> &yOffsets);
+              const std::vector<int> &yOffsets, float weight = 1.0f);
 
   /**
    * @brief Set all nets
    */
   void setNets(const std::vector<int> &limits, const std::vector<int> &cells,
                const std::vector<int> &xOffsets,
-               const std::vector<int> &yOffsets);
+               const std::vector<int> &yOffsets,
+               const std::vector<float> &weights = std::vector<float>());
+
+  /**
+   * @brief Set the net weights
+   */
+  void setNetWeights(const std::vector<float> &weights);
 
   /**
    * @brief Return a bounding box of the placement area
@@ -905,11 +911,18 @@ class Circuit {
 
   /**
    * @brief Return the number of pins for a given net
-   *
    */
   int nbPinsNet(int net) const {
     assert(net < nbNets());
     return netLimits_[net + 1] - netLimits_[net];
+  }
+
+  /**
+   * @brief Return the weight associated with a net
+   */
+  float netWeight(int net) const {
+    assert(net < nbNets());
+    return netWeights_[net];
   }
 
   /**
@@ -977,14 +990,6 @@ class Circuit {
    */
   void placeDetailed(const ColoquinteParameters &params,
                      const std::optional<PlacementCallback> &callback = {});
-
-  /**
-   * @brief Compute the area available for placement
-   *
-   * @param rowSideMargin Margin applied to each row before computing available
-   * area, in standard cell heights
-   */
-  long long computePlacementArea(double rowSideMargin = 0.0) const;
 
   /**
    * @brief Apply cell size modifications to ensure that the circuit is spread
@@ -1084,12 +1089,21 @@ class Circuit {
                                   LegalizationModel costModel);
 
   /**
-   * Check that the circuit is not being worked on right now
+   * @brief Check that the circuit is not being worked on right now
    */
   void checkNotInUse() const;
 
+  /**
+   * @brief Compute the area available for placement
+   *
+   * @param rowSideMargin Margin applied to each row before computing available
+   * area, in standard cell heights
+   */
+  long long computeRowPlacementArea(double rowSideMargin = 0.0) const;
+
  public:
   std::vector<int> netLimits_;
+  std::vector<float> netWeights_;
   std::vector<int> pinCells_;
   std::vector<int> pinXOffsets_;
   std::vector<int> pinYOffsets_;
