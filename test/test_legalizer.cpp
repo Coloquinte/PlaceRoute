@@ -105,7 +105,6 @@ BOOST_AUTO_TEST_CASE(TestTwoRowCell1) {
   std::vector<int> heights = {20};
   std::vector<int> cellX = {0};
   std::vector<int> cellY = {0};
-  std::vector<int> cellIndex = {0, 1, 2, 3, 4};
   std::vector<CellRowPolarity> polarities = {CellRowPolarity::SAME};
   std::vector<CellOrientation> orientations = {CellOrientation::N};
   std::vector<Row> rows = {Row(0, 15, 10, 20, CellOrientation::N),
@@ -124,7 +123,6 @@ BOOST_AUTO_TEST_CASE(TestTwoRowCell2) {
   std::vector<int> heights = {20};
   std::vector<int> cellX = {0};
   std::vector<int> cellY = {20};
-  std::vector<int> cellIndex = {0, 1, 2, 3, 4};
   std::vector<CellRowPolarity> polarities = {CellRowPolarity::SAME};
   std::vector<CellOrientation> orientations = {CellOrientation::N};
   std::vector<Row> rows = {Row(0, 15, 10, 20, CellOrientation::N),
@@ -162,7 +160,6 @@ BOOST_AUTO_TEST_CASE(TestTwoRowCell4) {
   std::vector<int> heights = {20};
   std::vector<int> cellX = {0};
   std::vector<int> cellY = {20};
-  std::vector<int> cellIndex = {0, 1, 2, 3, 4};
   std::vector<CellRowPolarity> polarities = {CellRowPolarity::OPPOSITE};
   std::vector<CellOrientation> orientations = {CellOrientation::N};
   std::vector<Row> rows = {Row(0, 15, 10, 20, CellOrientation::N),
@@ -220,7 +217,6 @@ BOOST_AUTO_TEST_CASE(TestThreeRowCell1) {
   std::vector<int> heights = {30};
   std::vector<int> cellX = {8};
   std::vector<int> cellY = {30};
-  std::vector<int> cellIndex = {0, 1, 2, 3, 4};
   std::vector<CellRowPolarity> polarities = {CellRowPolarity::SAME};
   std::vector<CellOrientation> orientations = {CellOrientation::N};
   std::vector<Row> rows = {Row(0, 15, 10, 20, CellOrientation::N),
@@ -241,7 +237,6 @@ BOOST_AUTO_TEST_CASE(TestThreeRowCell2) {
   std::vector<int> heights = {30};
   std::vector<int> cellX = {8};
   std::vector<int> cellY = {0};
-  std::vector<int> cellIndex = {0, 1, 2, 3, 4};
   std::vector<CellRowPolarity> polarities = {CellRowPolarity::OPPOSITE};
   std::vector<CellOrientation> orientations = {CellOrientation::N};
   std::vector<Row> rows = {Row(0, 15, 10, 20, CellOrientation::N),

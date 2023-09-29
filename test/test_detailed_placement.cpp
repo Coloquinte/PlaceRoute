@@ -21,7 +21,6 @@ BOOST_AUTO_TEST_CASE(TestConstruction) {
   std::vector<int> widths = {4, 6, 5};
   std::vector<int> cellX = {8, 2, 2};
   std::vector<int> cellY = {10, 10, 20};
-  std::vector<int> cellIndex = {0, 1, 2};
   std::vector<Rectangle> rows = {{2, 12, 10, 20}, {2, 12, 20, 30}};
   DetailedPlacement pl =
       DetailedPlacement::fromPos(toRows(rows), widths, cellX, cellY);
@@ -32,7 +31,6 @@ BOOST_AUTO_TEST_CASE(TestBeforeRow) {
   std::vector<int> widths = {2};
   std::vector<int> cellX = {5};
   std::vector<int> cellY = {10};
-  std::vector<int> cellIndex = {0};
   std::vector<Rectangle> rows = {{6, 12, 10, 20}};
   BOOST_CHECK_THROW(
       DetailedPlacement::fromPos(toRows(rows), widths, cellX, cellY),
@@ -43,7 +41,6 @@ BOOST_AUTO_TEST_CASE(TestAfterRow) {
   std::vector<int> widths = {2};
   std::vector<int> cellX = {5};
   std::vector<int> cellY = {10};
-  std::vector<int> cellIndex = {0};
   std::vector<Rectangle> rows = {{-10, 6, 10, 20}};
   BOOST_CHECK_THROW(
       DetailedPlacement::fromPos(toRows(rows), widths, cellX, cellY),
@@ -54,7 +51,6 @@ BOOST_AUTO_TEST_CASE(TestBadY) {
   std::vector<int> widths = {2};
   std::vector<int> cellX = {5};
   std::vector<int> cellY = {11};
-  std::vector<int> cellIndex = {0};
   std::vector<Rectangle> rows = {{-20, 20, 10, 20}};
   BOOST_CHECK_THROW(
       DetailedPlacement::fromPos(toRows(rows), widths, cellX, cellY),
@@ -65,7 +61,6 @@ BOOST_AUTO_TEST_CASE(TestOverlap) {
   std::vector<int> widths = {2, 2};
   std::vector<int> cellX = {5, 6};
   std::vector<int> cellY = {10, 10};
-  std::vector<int> cellIndex = {0, 1};
   std::vector<Rectangle> rows = {{-20, 20, 10, 20}};
   BOOST_CHECK_THROW(
       DetailedPlacement::fromPos(toRows(rows), widths, cellX, cellY),

@@ -32,7 +32,7 @@ class TransportationSuccessiveShortestPath {
   /**
    * @brief Init from a transportation problem
    */
-  TransportationSuccessiveShortestPath(TransportationProblem& pb);
+  explicit TransportationSuccessiveShortestPath(TransportationProblem& pb);
 
   /**
    * @brief Run the whole algorithm

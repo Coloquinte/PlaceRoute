@@ -44,7 +44,7 @@ cmake -B build; cmake --build build; ctest --test-dir build
 ```
 
 Or using Meson:
-```
+``` bash
 meson setup build; meson compile -C build; meson test -C build
 ```
 
@@ -52,7 +52,6 @@ meson setup build; meson compile -C build; meson test -C build
 
 Coloquinte is tested on the [ISPD06 benchmark suite](https://dl.acm.org/doi/10.1145/1123008.1123042). Below is the reported half-perimeter wirelength on these benchmarks (x10<sup>7</sup>) for various effort parameters.
 Higher effort = higher quality but higher runtime.
-
 
 | Benchmark | Effort 1 WL | Effort 3 WL | Effort 6 WL |
 | --------- | ----------- | ----------- | ----------- |

@@ -147,7 +147,7 @@ Transportation1dSolver::Transportation1dSolver(std::vector<long long> &&u,
                                                std::vector<long long> &&v,
                                                std::vector<long long> &&s,
                                                std::vector<long long> &&d)
-    : Transportation1d(u, v, s, d) {
+    : Transportation1d(u, v, s, d), lastPosition(0LL) {
   setupData();
 }
 
