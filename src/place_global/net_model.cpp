@@ -34,7 +34,7 @@ NetModel NetModel::xTopology(const Circuit &circuit) {
         offsets.push_back(offset - 0.5f * circuit.placedWidth(cell));
       }
     }
-    ret.addNet(cells, offsets, minPos, maxPos);
+    ret.addNet(cells, offsets, minPos, maxPos, circuit.netWeight(i));
   }
   ret.check();
   return ret;
@@ -60,7 +60,7 @@ NetModel NetModel::yTopology(const Circuit &circuit) {
         offsets.push_back(offset - 0.5f * circuit.placedHeight(cell));
       }
     }
-    ret.addNet(cells, offsets, minPos, maxPos);
+    ret.addNet(cells, offsets, minPos, maxPos, circuit.netWeight(i));
   }
   ret.check();
   return ret;
