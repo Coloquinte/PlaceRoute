@@ -624,7 +624,6 @@ long long Circuit::computeRowPlacementArea(double rowSideMargin) const {
 }
 
 void Circuit::expandCellsToDensity(double targetDensity, double rowSideMargin) {
-  long long areaToPlace = 0LL;
   // Compute placeable cell area
   long long cellArea = 0LL;
   for (int i = 0; i < nbCells(); ++i) {
@@ -681,7 +680,6 @@ void Circuit::expandCellsByFactor(const std::vector<float> &expansionFactor,
     }
   }
 
-  long long areaToPlace = 0LL;
   // Compute placeable cell area
   long long cellArea = 0LL;
   long long expandedArea = 0LL;
@@ -716,7 +714,6 @@ void Circuit::expandCellsByFactor(const std::vector<float> &expansionFactor,
   }
 
   // Apply the expansion
-  double missingArea = 0.0;
   for (int i = 0; i < nbCells(); ++i) {
     if (!cellIsFixed_[i]) {
       // Just round down here, as we don't want to redistribute expansion

@@ -14,6 +14,9 @@ from coloquinte_pybind import (
     CellOrientation,
     CellRowPolarity,
     ColoquinteParameters,
+    GlobalPlacerParameters,
+    LegalizationParameters,
+    DetailedPlacerParameters,
     LegalizationModel,
     NetModel,
     PlacementStep,
@@ -592,15 +595,16 @@ class Circuit(coloquinte_pybind.Circuit):
                     rect = [(xmx-osize, ymx-osize), (xmx, ymx)]
                 elif orientation[i] in [CellOrientation.FS, CellOrientation.E]:
                     rect = [(xmn, ymx-osize), (xmn+osize, ymx)]
-                else:  # orientation[i] in [CellOrientation.FN, CellOrientation.W]:
+                else:
                     rect = [(xmx-osize, ymn), (xmx, ymn+osize)]
-                draw.rectangle(rect, fill=outline, outline=outline, width=width)
+                draw.rectangle(rect, fill=outline,
+                               outline=outline, width=width)
 
         return img
 
     def _draw_displacement(self, img, pl1, pl2, scale_factor):
         from PIL import ImageDraw
-        min_x, min_y, max_x, max_y = self._draw_area()
+        min_x, min_y = self._draw_area()[:2]
 
         draw = ImageDraw.Draw(img)
         fixed = self.cell_is_fixed
@@ -850,11 +854,12 @@ def main():
     if args.ignore_obstructions:
         print("Ignoring macros for standard cell placement")
     if args.load_solution is not None:
-        print(f"Loading initial solution")
+        print("Loading initial solution")
         circuit.load_placement(args.load_solution)
     if args.density is not None:
         if args.density <= 0.0 or args.density >= 1.0:
-            raise RuntimeError("Target density should be strictly between 0 and 1.")
+            raise RuntimeError(
+                "Target density should be strictly between 0 and 1.")
         circuit.expand_cells_to_density(args.density, 0.0)
     print(circuit.report())
 
@@ -905,6 +910,7 @@ def main():
 __all__ = [
     "Circuit",
     "GlobalPlacerParameters",
+    "LegalizationParameters",
     "DetailedPlacerParameters",
     "Rectangle",
     "LegalizationModel",

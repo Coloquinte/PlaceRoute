@@ -13,7 +13,6 @@
 namespace coloquinte {
 Legalizer Legalizer::fromIspdCircuit(const Circuit &circuit) {
   // Represent fixed cells with -1 width so they are not considered
-  int rowHeight = circuit.rowHeight();
   std::vector<int> widths;
   std::vector<int> heights;
   std::vector<int> x;
