@@ -19,4 +19,3 @@
 *   Parallel implementation for detailed placement
 *   Legalization cost models other than L1
 *   Reoptimization in legalization
-

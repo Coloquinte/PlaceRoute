@@ -536,7 +536,7 @@ class Circuit(coloquinte_pybind.Circuit):
 
     def _draw_rows(self, img, scale_factor):
         from PIL import ImageDraw
-        min_x, min_y, max_x, max_y = self._draw_area()
+        min_x, min_y = self._draw_area()[:2]
         draw = ImageDraw.Draw(img)
 
         rows = self.rows
