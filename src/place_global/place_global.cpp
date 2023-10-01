@@ -61,6 +61,8 @@ GlobalPlacer::GlobalPlacer(Circuit &circuit, const ColoquinteParameters &params)
       ytopo_(NetModel::yTopology(circuit)),
       params_(params),
       circuit_(circuit) {
+  circuit_.hasCellSizeUpdate_ = false;
+  circuit_.hasNetUpdate_ = false;
   rgen_.seed(params_.seed);
   averageCellLength_ = computeAverageCellSize();
   perCellPenalty_ = computePerCellPenalty();
@@ -250,10 +252,7 @@ void GlobalPlacer::runLB() {
 }
 
 void GlobalPlacer::runUB() {
-  if (circuit_.hasSizeUpdate()) {
-    leg_.updateCellDemand(circuit_);
-    circuit_.clearSizeUpdate();
-  }
+  updateCellSizes();
   float w = params_.global.roughLegalization.targetBlending;
   std::vector<float> xTarget = blendPlacement(xPlacementLB_, xPlacementUB_, w);
   std::vector<float> yTarget = blendPlacement(yPlacementLB_, yPlacementUB_, w);
@@ -271,5 +270,22 @@ void GlobalPlacer::callback(PlacementStep step,
   if (!callback_.has_value()) return;
   exportPlacement(circuit_, xplace, yplace);
   callback_.value()(step);
+}
+
+void GlobalPlacer::updateCellSizes() {
+  if (circuit_.hasCellSizeUpdate_) {
+    leg_.updateCellDemand(circuit_);
+    averageCellLength_ = computeAverageCellSize();
+    perCellPenalty_ = computePerCellPenalty();
+    circuit_.hasCellSizeUpdate_ = false;
+  }
+}
+
+void GlobalPlacer::updateNets() {
+  if (circuit_.hasNetUpdate_) {
+    xtopo_ = NetModel::xTopology(circuit_);
+    ytopo_ = NetModel::yTopology(circuit_);
+    circuit_.hasNetUpdate_ = false;
+  }
 }
 }  // namespace coloquinte

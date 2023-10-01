@@ -1058,31 +1058,6 @@ class Circuit {
   float maxDisruption(const PlacementSolution &a, const PlacementSolution &b,
                       LegalizationModel costModel);
 
-  /**
-   * @brief Return the flag indicating that the sizes have changes
-   */
-  bool hasSizeUpdate() const { return hasSizeUpdate_; }
-
-  /**
-   * @brief Set the flag indicating that the sizes have changes
-   */
-  void setSizeUpdate() { hasSizeUpdate_ = true; }
-
-  /**
-   * @brief Set the flag indicating that the sizes have changes
-   */
-  void clearSizeUpdate() { hasSizeUpdate_ = false; }
-
-  /**
-   * @brief Indicate that the circuit is currently being used
-   */
-  void setInUse() { isInUse_ = true; }
-
-  /**
-   * @brief Indicate that the circuit is not being used anymore
-   */
-  void clearInUse() { isInUse_ = false; }
-
  private:
   std::vector<float> allDistances(const PlacementSolution &a,
                                   const PlacementSolution &b,
@@ -1117,10 +1092,14 @@ class Circuit {
   std::vector<CellOrientation> cellOrientation_;
   std::vector<Row> rows_;
 
-  // Set whenever the circuit is actively being worked on
+  /**
+   * @brief Indicate that the circuit is actively being worked on and shouldn't
+   * be modified
+   */
   bool isInUse_;
 
   // Set whenever an update has been made to the circuit
-  bool hasSizeUpdate_;
+  bool hasCellSizeUpdate_;
+  bool hasNetUpdate_;
 };
 }  // namespace coloquinte

@@ -29,7 +29,8 @@ Circuit::Circuit(int nbCells) {
   cellOrientation_.resize(nbCells);
   netLimits_.push_back(0);
   isInUse_ = false;
-  hasSizeUpdate_ = false;
+  hasCellSizeUpdate_ = false;
+  hasNetUpdate_ = false;
   check();
 }
 
@@ -68,6 +69,7 @@ void Circuit::setNets(const std::vector<int> &limits,
   pinYOffsets_ = yOffsets;
   netWeights_ = weights;
   netWeights_.resize(netLimits_.size() - 1, 1.0f);
+  hasNetUpdate_ = true;
 }
 
 void Circuit::setNetWeights(const std::vector<float> &w) {
@@ -77,6 +79,7 @@ void Circuit::setNetWeights(const std::vector<float> &w) {
         "circuit");
   }
   netWeights_ = w;
+  hasNetUpdate_ = true;
 }
 
 void Circuit::setCellX(const std::vector<int> &x) {
@@ -147,7 +150,7 @@ void Circuit::setCellWidth(const std::vector<int> &widths) {
         "Number of elements is not the same as the number of cells of the "
         "circuit");
   }
-  setSizeUpdate();
+  hasCellSizeUpdate_ = true;
   cellWidth_ = widths;
 }
 
@@ -157,7 +160,7 @@ void Circuit::setCellHeight(const std::vector<int> &heights) {
         "Number of elements is not the same as the number of cells of the "
         "circuit");
   }
-  setSizeUpdate();
+  hasCellSizeUpdate_ = true;
   cellHeight_ = heights;
 }
 
@@ -589,23 +592,23 @@ std::string Circuit::report() const {
 
 void Circuit::placeGlobal(const ColoquinteParameters &params,
                           const std::optional<PlacementCallback> &callback) {
-  setInUse();
+  isInUse_ = true;
   GlobalPlacer::place(*this, params, callback);
-  clearInUse();
+  isInUse_ = false;
 }
 
 void Circuit::legalize(const ColoquinteParameters &params,
                        const std::optional<PlacementCallback> &callback) {
-  setInUse();
+  isInUse_ = true;
   DetailedPlacer::legalize(*this, params, callback);
-  clearInUse();
+  isInUse_ = false;
 }
 
 void Circuit::placeDetailed(const ColoquinteParameters &params,
                             const std::optional<PlacementCallback> &callback) {
-  setInUse();
+  isInUse_ = true;
   DetailedPlacer::place(*this, params, callback);
-  clearInUse();
+  isInUse_ = false;
 }
 
 long long Circuit::computeRowPlacementArea(double rowSideMargin) const {

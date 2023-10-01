@@ -113,6 +113,16 @@ class GlobalPlacer {
    */
   std::vector<float> computeIterationPerCellPenalty();
 
+  /**
+   * @brief React to a change in cell sizes during a callback
+   */
+  void updateCellSizes();
+
+  /**
+   * @brief React to a change in nets during a callback
+   */
+  void updateNets();
+
  private:
   DensityLegalizer leg_;
   NetModel xtopo_;

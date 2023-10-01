@@ -18,7 +18,8 @@ namespace coloquinte {
 void DetailedPlacer::legalize(
     Circuit &circuit, const ColoquinteParameters &params,
     const std::optional<PlacementCallback> &callback) {
-  circuit.clearSizeUpdate();
+  circuit.hasCellSizeUpdate_ = false;
+  circuit.hasNetUpdate_ = false;
   params.check();
   std::cout << "Legalization starting (WL " << circuit.hpwl() << ")"
             << std::endl;
@@ -35,7 +36,7 @@ void DetailedPlacer::legalize(
             << "s" << std::endl;
   if (callback.has_value()) {
     callback.value()(PlacementStep::Detailed);
-    if (circuit.hasSizeUpdate()) {
+    if (circuit.hasCellSizeUpdate_ || circuit.hasNetUpdate_) {
       throw std::runtime_error(
           "Updating the size of circuit elements is not supported during "
           "legalization.");
@@ -103,7 +104,7 @@ void DetailedPlacer::callback() {
   if (!callback_.has_value()) return;
   exportPlacement(circuit_);
   callback_.value()(PlacementStep::Detailed);
-  if (circuit_.hasSizeUpdate()) {
+  if (circuit_.hasCellSizeUpdate_ || circuit_.hasNetUpdate_) {
     throw std::runtime_error(
         "Updating the size of circuit elements is not supported during "
         "detailed placement.");
