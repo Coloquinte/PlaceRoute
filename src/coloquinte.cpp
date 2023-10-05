@@ -726,6 +726,36 @@ void Circuit::expandCellsByFactor(const std::vector<float> &expansionFactor,
   }
 }
 
+std::vector<float> Circuit::computeCellExpansion(
+    const std::vector<std::pair<Rectangle, float> > &congestionMap) const {
+  std::vector<std::pair<Rectangle, float> > expansionMap;
+  for (auto [r, c] : congestionMap) {
+    if (c > 0.0f) {
+      expansionMap.emplace_back(r, c + 1.0f);
+    }
+  }
+  //std::sort(expansionMap.begin(), expansionMap.end());
+
+  // Now analyze the expansion for each cell; use the maximum of the expansion
+  // maps it intersects
+  std::vector<float> expansions;
+  for (int i = 0; i < nbCells(); ++i) {
+    if (isFixed(i)) {
+      expansions.push_back(1.0f);
+    } else {
+      Rectangle place = placement(i);
+      float expansion = 1.0;
+      for (auto [r, e] : expansionMap) {
+        if (r.intersects(place)) {
+          expansion = std::max(expansion, e);
+        }
+      }
+      expansions.push_back(expansion);
+    }
+  }
+  return expansions;
+}
+
 float Circuit::meanDisruption(const PlacementSolution &a,
                               const PlacementSolution &b,
                               LegalizationModel costModel) {

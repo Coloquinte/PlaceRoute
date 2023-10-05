@@ -1025,6 +1025,16 @@ class Circuit {
    */
 
   /**
+   * @brief Compute the cell expansion required for a given congestion map
+   *
+   * @param congestionMap Region and associated congestion, as a proportion of
+   * the available routing resources (0.0 -> not congested; 0.5 -> 50% over
+   * routing capacity).
+   */
+  std::vector<float> computeCellExpansion(
+      const std::vector<std::pair<Rectangle, float> > &congestionMap) const;
+
+  /**
    * @brief Return a brief description of the circuit
    */
   std::string toString() const;
