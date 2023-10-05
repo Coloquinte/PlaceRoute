@@ -727,14 +727,28 @@ void Circuit::expandCellsByFactor(const std::vector<float> &expansionFactor,
 }
 
 std::vector<float> Circuit::computeCellExpansion(
-    const std::vector<std::pair<Rectangle, float> > &congestionMap) const {
+    const std::vector<std::pair<Rectangle, float> > &congestionMap,
+    float fixedPenalty, float penaltyFactor) const {
+  if (fixedPenalty < 0.0f || penaltyFactor < 1.0f) {
+    throw std::runtime_error(
+        "For cell expansion, fixed penalty should be non-negative, and penalty "
+        "factor should be at least 1");
+  }
   std::vector<std::pair<Rectangle, float> > expansionMap;
   for (auto [r, c] : congestionMap) {
-    if (c > 0.0f) {
-      expansionMap.emplace_back(r, c + 1.0f);
+    if (c > 1.0f) {
+      expansionMap.emplace_back(
+          r, (c - 1.0f) * penaltyFactor + fixedPenalty + 1.0);
     }
   }
-  //std::sort(expansionMap.begin(), expansionMap.end());
+
+  // Sort to allow binary search later
+  std::sort(
+      expansionMap.begin(), expansionMap.end(),
+      [](const CongestionRegion &a, const CongestionRegion &b) -> bool {
+        return a.first.minX < b.first.minX ||
+               (a.first.minX == b.first.minX && a.first.minY < b.first.minY);
+      });
 
   // Now analyze the expansion for each cell; use the maximum of the expansion
   // maps it intersects
@@ -745,6 +759,7 @@ std::vector<float> Circuit::computeCellExpansion(
     } else {
       Rectangle place = placement(i);
       float expansion = 1.0;
+      // TODO: use binary search here instead of dumb iteration
       for (auto [r, e] : expansionMap) {
         if (r.intersects(place)) {
           expansion = std::max(expansion, e);

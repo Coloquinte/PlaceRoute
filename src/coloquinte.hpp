@@ -1025,14 +1025,23 @@ class Circuit {
    */
 
   /**
+   * @brief Representation of a congested region, as a congestion factor
+   */
+  using CongestionRegion = std::pair<Rectangle, float>;
+
+  /**
    * @brief Compute the cell expansion required for a given congestion map
    *
    * @param congestionMap Region and associated congestion, as a proportion of
-   * the available routing resources (0.0 -> not congested; 0.5 -> 50% over
-   * routing capacity).
+   * the available routing capacity:
+   *   * 0.0 -> empty
+   *   * 0.5 -> 50% occupancy
+   *   * 1.0 -> 100% occupancy
+   *   * 1.1 -> 110% occupancy (CONGESTED)
    */
   std::vector<float> computeCellExpansion(
-      const std::vector<std::pair<Rectangle, float> > &congestionMap) const;
+      const std::vector<CongestionRegion> &congestionMap,
+      float fixedPenalty = 0.0, float penaltyFactor = 1.0) const;
 
   /**
    * @brief Return a brief description of the circuit

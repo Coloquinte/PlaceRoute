@@ -62,13 +62,18 @@ BOOST_AUTO_TEST_CASE(TestFactorExpansionMultiple) {
 }
 
 BOOST_AUTO_TEST_CASE(TestExpansionComputation) {
-  Circuit circuit(1);
-  circuit.setCellWidth({20});
-  circuit.setCellHeight({10});
-  circuit.setCellX({40});
-  circuit.setCellY({-100});
+  Circuit circuit(4);
+  circuit.setCellWidth({20, 20, 20, 20});
+  circuit.setCellHeight({10, 10, 10, 10});
+  circuit.setCellX({40, 9, 10, -5});
+  circuit.setCellY({-100, 19, 20, 19});
   std::vector<std::pair<Rectangle, float> > congestionMap;
+  congestionMap.emplace_back(Rectangle({0, 10, 10, 20}), 1.2);
+  congestionMap.emplace_back(Rectangle({-5, 0, 10, 20}), 1.5);
   std::vector<float> expansion = circuit.computeCellExpansion(congestionMap);
   BOOST_CHECK_EQUAL(expansion.size(), circuit.nbCells());
   BOOST_CHECK_EQUAL(expansion[0], 1.0f);
+  BOOST_CHECK_EQUAL(expansion[1], 1.2f);
+  BOOST_CHECK_EQUAL(expansion[2], 1.0f);
+  BOOST_CHECK_EQUAL(expansion[3], 1.5f);
 }

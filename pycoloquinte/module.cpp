@@ -318,6 +318,10 @@ Construct a circuit.
            py::arg("expansion_factor"), py::arg("max_density") = 1.0,
            py::arg("row_side_margin") = 0.0,
            "Expand the standard cells by an individual factor")
+      .def("compute_cell_expansion", &Circuit::computeCellExpansion,
+           py::arg("congestion_map"), py::arg("fixed_penalty") = 0.0,
+           py::arg("penalty_factor") = 1.0,
+           "Compute an expansion factor given a congestion map")
       .def("check", &Circuit::check, "Check the datastructure")
       .def("report", &Circuit::report)
       .def("export_ispd", &Circuit::exportIspd,
