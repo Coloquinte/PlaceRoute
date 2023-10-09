@@ -7,6 +7,10 @@ project('coloquinte', 'cpp',
   ],
 )
 
+if build_machine.system() == 'darwin'
+  add_project_arguments('-mmacosx-version-min=13.0', language: ['c','cpp'])
+endif
+
 coloquinte_includes = include_directories('src')
 boost_dep = dependency('boost', required: true, modules: ['system', 'filesystem', 'iostreams', 'program_options', 'unit_test_framework'])
 eigen_dep = dependency('eigen3', required: true)
