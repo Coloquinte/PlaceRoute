@@ -15,6 +15,7 @@ thread_dep = dependency('threads', required: true)
 cmake =import('cmake')
 cmake_opts = cmake.subproject_options()
 cmake_opts.add_cmake_defines({'CMAKE_POSITION_INDEPENDENT_CODE': true})
+cmake_opts.set_install(false)
 lemon = cmake.subproject('lemon', options: cmake_opts)
 lemon_dep = lemon.dependency('lemon')
 
@@ -46,6 +47,7 @@ libcoloquinte = shared_library('coloquinte',
 install_headers('src/coloquinte.hpp')
 
 coloquinte_dep = declare_dependency(link_with : libcoloquinte, include_directories: coloquinte_includes)
+
 
 tests = [
     'test_net_model'
