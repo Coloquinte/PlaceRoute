@@ -351,14 +351,14 @@ class HierarchicalDensityPlacement {
   /**
    * @brief Get the x center of a given bin in the current view
    */
-  float binX(int x, int y) const {
+  float binX(int x, [[maybe_unused]] int y) const {
     return 0.5 * (binLimitX(x + 1) + binLimitX(x));
   }
 
   /**
    * @brief Get the y center of a given bin in the current view
    */
-  float binY(int x, int y) const {
+  float binY([[maybe_unused]] int x, int y) const {
     return 0.5 * (binLimitY(y + 1) + binLimitY(y));
   }
 

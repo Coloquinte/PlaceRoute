@@ -27,7 +27,7 @@ void AbacusLegalizer::run() {
   for (int i = 0; i < nbRows(); ++i) {
     std::vector<int> pl = rowLegalizers_[i].getPlacement();
     assert(pl.size() == rowToCells_[i].size());
-    for (int j = 0; j < pl.size(); ++j) {
+    for (size_t j = 0; j < pl.size(); ++j) {
       int cell = rowToCells_[i][j];
       cellToX_[cell] = pl[j];
       cellToY_[cell] = rows_[i].minY;
@@ -56,7 +56,6 @@ void AbacusLegalizer::placeCell(int cell) {
    */
   int targetX = cellTargetX_[cell];
   int targetY = cellTargetY_[cell];
-  int bestX = 0;
   int bestRow = -1;
   long long bestDist = std::numeric_limits<long long>::max();
 
@@ -123,7 +122,7 @@ void AbacusLegalizer::check() const {
     }
   }
   for (int i = 0; i < nbRows(); ++i) {
-    for (int j = 0; j + 1 < rowToCells_[i].size(); ++j) {
+    for (size_t j = 0; j + 1 < rowToCells_[i].size(); ++j) {
       int c1 = rowToCells_[i][j];
       int c2 = rowToCells_[i][j + 1];
       if (cellToX_[c1] + cellWidth_[c1] > cellToX_[c2]) {

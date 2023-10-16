@@ -181,7 +181,7 @@ double interpolateLogEffort(double minVal, double maxVal, int effort,
 }  // namespace
 
 ColoquinteParameters::ColoquinteParameters(int effort, int seed)
-    : seed(seed), global(effort), legalization(effort), detailed(effort) {
+    : global(effort), legalization(effort), detailed(effort), seed(seed) {
   if (effort < 1 || effort > 9) {
     throw std::runtime_error("Placement effort must be between 1 and 9");
   }
@@ -222,7 +222,8 @@ PenaltyParameters::PenaltyParameters(int effort) {
   updateFactor = updateFactorArray[effort - 1];
 }
 
-ContinuousModelParameters::ContinuousModelParameters(int effort) {
+ContinuousModelParameters::ContinuousModelParameters(
+    [[maybe_unused]] int effort) {
   netModel = NetModelOption::BoundToBound;
   approximationDistance = 2.0;
   approximationDistanceUpdateFactor = 1.0;
@@ -275,7 +276,7 @@ DetailedPlacerParameters::DetailedPlacerParameters(int effort) {
   check();
 }
 
-LegalizationParameters::LegalizationParameters(int effort) {
+LegalizationParameters::LegalizationParameters([[maybe_unused]] int effort) {
   costModel = LegalizationModel::L1;
   orderingHeight = -1.0;
   // TODO: find best parameter

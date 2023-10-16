@@ -30,14 +30,15 @@ DensityLegalizer::Parameters::Parameters() {
 DensityLegalizer::DensityLegalizer(DensityGrid grid,
                                    std::vector<int> cellDemand,
                                    const Parameters &params)
-    : HierarchicalDensityPlacement(std::move(grid), std::move(cellDemand)) {
+    : HierarchicalDensityPlacement(std::move(grid), std::move(cellDemand)),
+      params_(params) {
   cellTargetX_.assign(nbCells(), 0.0f);
   cellTargetY_.assign(nbCells(), 0.0f);
 }
 
 DensityLegalizer::DensityLegalizer(HierarchicalDensityPlacement pl,
                                    const Parameters &params)
-    : HierarchicalDensityPlacement(std::move(pl)) {
+    : HierarchicalDensityPlacement(std::move(pl)), params_(params) {
   cellTargetX_.assign(nbCells(), 0.0f);
   cellTargetY_.assign(nbCells(), 0.0f);
 }

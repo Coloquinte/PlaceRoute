@@ -88,7 +88,7 @@ std::vector<int> RowLegalizer::getPlacement() const {
                    [](int a, int b) -> int { return std::min(a, b); });
 
   std::vector<int> ret(finalAbsPos.size());
-  for (int i = 0; i < finalAbsPos.size(); ++i) {
+  for (size_t i = 0; i < finalAbsPos.size(); ++i) {
     ret[i] = finalAbsPos[i] + cumWidth_[i];
 
     assert(finalAbsPos[i] >= begin_);

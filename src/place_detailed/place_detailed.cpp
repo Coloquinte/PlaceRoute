@@ -1,7 +1,9 @@
 #include "place_detailed.hpp"
 
+#define LEMON_NO_UNUSED_LOCAL_TYPEDEF_WARNINGS 1
 #include <lemon/network_simplex.h>
 #include <lemon/smart_graph.h>
+#undef LEMON_NO_UNUSED_LOCAL_TYPEDEF_WARNINGS
 
 #include <chrono>
 #include <iomanip>
