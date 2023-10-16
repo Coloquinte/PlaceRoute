@@ -117,14 +117,14 @@ void DensityGrid::updateBinsToSize(int maxSize) {
 }
 
 void DensityGrid::check() const {
-  assert(binCapacity_.size() == nbBinsX());
+  assert((int) binCapacity_.size() == nbBinsX());
   for (const auto &bc : binCapacity_) {
-    assert(bc.size() == nbBinsY());
+    assert((int) bc.size() == nbBinsY());
   }
-  assert(binX_.size() == nbBinsX());
-  assert(binY_.size() == nbBinsY());
-  assert(binLimitX_.size() == nbBinsX() + 1);
-  assert(binLimitY_.size() == nbBinsY() + 1);
+  assert((int) binX_.size() == nbBinsX());
+  assert((int) binY_.size() == nbBinsY());
+  assert((int) binLimitX_.size() == nbBinsX() + 1);
+  assert((int) binLimitY_.size() == nbBinsY() + 1);
   for (int i = 0; i < nbBinsX(); ++i) {
     assert(binLimitX_[i] <= binLimitX_[i + 1]);
   }
@@ -304,7 +304,7 @@ std::vector<float> spreadCells(const std::vector<float> &targets,
   std::vector<std::pair<float, int> > order;
   order.reserve(targets.size());
 
-  for (int i = 0; i < targets.size(); ++i) {
+  for (int i = 0; i < (int) targets.size(); ++i) {
     order.emplace_back(targets[i], i);
   }
   std::sort(order.begin(), order.end());
@@ -340,7 +340,7 @@ std::vector<float> HierarchicalDensityPlacement::spreadCoordX(
       }
       std::vector<float> coords =
           spreadCells(binTargets, binDemands, binLimitX(i), binLimitX(i + 1));
-      for (int k = 0; k < coords.size(); ++k) {
+      for (size_t k = 0; k < coords.size(); ++k) {
         ret[binCells(i, j)[k]] = coords[k];
       }
     }
@@ -361,7 +361,7 @@ std::vector<float> HierarchicalDensityPlacement::spreadCoordY(
       }
       std::vector<float> coords =
           spreadCells(binTargets, binDemands, binLimitY(j), binLimitY(j + 1));
-      for (int k = 0; k < coords.size(); ++k) {
+      for (size_t k = 0; k < coords.size(); ++k) {
         ret[binCells(i, j)[k]] = coords[k];
       }
     }
@@ -447,7 +447,7 @@ void HierarchicalDensityPlacement::setBinCells(int x, int y,
 
 namespace {
 bool canRefine(const std::vector<int> &limits) {
-  for (int i = 0; i + 1 < limits.size(); ++i) {
+  for (size_t i = 0; i + 1 < limits.size(); ++i) {
     if (limits[i + 1] - limits[i] > 1) {
       return true;
     }
@@ -458,7 +458,7 @@ void refine(const std::vector<int> &oldLimits, std::vector<int> &limits,
             std::vector<int> &parents) {
   limits.push_back(0);
   int minSplitSize = 2;
-  for (int i = 0; i + 1 < oldLimits.size(); ++i) {
+  for (int i = 0; i + 1 < (int) oldLimits.size(); ++i) {
     int e = oldLimits[i + 1];
     int b = oldLimits[i];
     if (e - b >= minSplitSize) {
@@ -610,7 +610,7 @@ void HierarchicalDensityPlacement::check() const {
     assert(!l.empty());
     assert(l.front() == 0);
     assert(l.back() == grid_.nbBinsX());
-    for (int i = 0; i + 1 < l.size(); ++i) {
+    for (size_t i = 0; i + 1 < l.size(); ++i) {
       assert(l[i] < l[i + 1]);
     }
   }
@@ -618,7 +618,7 @@ void HierarchicalDensityPlacement::check() const {
     assert(!l.empty());
     assert(l.front() == 0);
     assert(l.back() == grid_.nbBinsY());
-    for (int i = 0; i + 1 < l.size(); ++i) {
+    for (size_t i = 0; i + 1 < l.size(); ++i) {
       assert(l[i] < l[i + 1]);
     }
   }
@@ -632,9 +632,9 @@ void HierarchicalDensityPlacement::check() const {
     assert(yLimits_[i].size() == parentY_[i].size() + 1);
   }
   // Size of the allocation consistent
-  assert(binCells_.size() == nbBinsX());
+  assert((int) binCells_.size() == nbBinsX());
   for (const auto &bc : binCells_) {
-    assert(bc.size() == nbBinsY());
+    assert((int) bc.size() == nbBinsY());
   }
   // All cells placed once and consistent
   std::vector<int> placeX(nbCells(), -1);

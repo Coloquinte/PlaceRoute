@@ -68,7 +68,7 @@ NetModel NetModel::yTopology(const Circuit &circuit) {
 
 void NetModel::exportPlacementX(Circuit &circuit,
                                 const std::vector<float> &xplace) const {
-  assert(circuit.nbCells() == xplace.size());
+  assert(circuit.nbCells() == (int) xplace.size());
   assert(circuit.nbCells() == nbCells());
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (!circuit.isFixed(i)) {
@@ -79,7 +79,7 @@ void NetModel::exportPlacementX(Circuit &circuit,
 
 void NetModel::exportPlacementY(Circuit &circuit,
                                 const std::vector<float> &yplace) const {
-  assert(circuit.nbCells() == yplace.size());
+  assert(circuit.nbCells() == (int) yplace.size());
   assert(circuit.nbCells() == nbCells());
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (!circuit.isFixed(i)) {
@@ -137,16 +137,16 @@ void NetModel::addNet(const std::vector<int> &cells,
 }
 
 void NetModel::check() const {
-  if (netLimits_.size() != nbNets() + 1) {
+  if ((int) netLimits_.size() != nbNets() + 1) {
     throw std::runtime_error("Net number mismatch");
   }
-  if (netLimits_.front() != 0 || netLimits_.back() != netCells_.size()) {
+  if (netLimits_.front() != 0 || netLimits_.back() != (int) netCells_.size()) {
     throw std::runtime_error("Pin number mismatch");
   }
   if (netCells_.size() != netPinOffsets_.size()) {
     throw std::runtime_error("Pin number mismatch");
   }
-  if (netWeight_.size() != nbNets()) {
+  if ((int) netWeight_.size() != nbNets()) {
     throw std::runtime_error("Net number mismatch");
   }
   for (int c : netCells_) {
@@ -163,7 +163,7 @@ void NetModel::check() const {
   if (netLimits_.front() != 0) {
     throw std::runtime_error("Invalid net limit");
   }
-  if (netLimits_.back() != netCells_.size()) {
+  if (netLimits_.back() != (int) netCells_.size()) {
     throw std::runtime_error("Invalid net limit");
   }
 }
@@ -358,9 +358,9 @@ void MatrixCreator::addPenalty(const std::vector<float> &netPlacement,
                                const std::vector<float> &placementTarget,
                                const std::vector<float> &penaltyStrength,
                                float cutoffDistance) {
-  assert(netPlacement.size() == nbCells());
-  assert(placementTarget.size() == nbCells());
-  assert(penaltyStrength.size() == nbCells());
+  assert((int) netPlacement.size() == nbCells());
+  assert((int) placementTarget.size() == nbCells());
+  assert((int) penaltyStrength.size() == nbCells());
   for (int i = 0; i < nbCells_; ++i) {
     float dist = std::abs(netPlacement[i] - placementTarget[i]);
     float strength = penaltyStrength[i] / std::max(dist, cutoffDistance);
@@ -607,8 +607,8 @@ std::vector<float> MatrixCreator::solve(float tolerance, int maxIterations) {
 }
 
 void MatrixCreator::check() const {
-  assert(matSize() == initial_.size());
-  assert(matSize() == rhs_.size());
+  assert(matSize() == (int) initial_.size());
+  assert(matSize() == (int) rhs_.size());
 }
 
 std::vector<float> NetModel::solveStar(const Parameters &params) const {

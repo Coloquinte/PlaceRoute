@@ -111,7 +111,7 @@ int computeCost(const std::vector<int>& widths, const std::vector<int>& targets,
   assert(widths.size() == targets.size());
   assert(widths.size() == positions.size());
   int ret = 0;
-  for (int i = 0; i < widths.size(); ++i) {
+  for (size_t i = 0; i < widths.size(); ++i) {
     ret += widths[i] * std::abs(targets[i] - positions[i]);
   }
   return ret;
@@ -123,7 +123,7 @@ void fuzzRowLegalizer(int begin, int end, const std::vector<int>& widths,
 
   RowLegalizer leg(begin, end);
   int cumCost = 0;
-  for (int i = 0; i < widths.size(); ++i) {
+  for (size_t i = 0; i < widths.size(); ++i) {
     int predictedCost = leg.getCost(widths[i], targets[i]);
     int cost = leg.push(widths[i], targets[i]);
     BOOST_CHECK_EQUAL(predictedCost, cost);

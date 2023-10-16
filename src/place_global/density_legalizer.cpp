@@ -155,7 +155,7 @@ std::pair<std::vector<int>, std::vector<int> > DensityLegalizer::doSplit(
   for (int i = 0; i < ind; ++i) {
     ret.first.push_back(cellCosts[i].second);
   }
-  for (int i = ind; i < cellCosts.size(); ++i) {
+  for (size_t i = ind; i < cellCosts.size(); ++i) {
     ret.second.push_back(cellCosts[i].second);
   }
   return ret;
@@ -165,7 +165,7 @@ int DensityLegalizer::findIdealSplitPos(
     const std::vector<std::pair<float, int> > &cellCosts) const {
   // Find the ideal split position
   int splitInd = 0;
-  for (; splitInd < cellCosts.size(); ++splitInd) {
+  for (; splitInd < (int) cellCosts.size(); ++splitInd) {
     if (cellCosts[splitInd].first > 0.0) {
       break;
     }
@@ -181,7 +181,7 @@ int DensityLegalizer::findConstrainedSplitPos(
   for (int i = 0; i < targetPos; ++i) {
     demand1 += cellDemand_[cellCosts[i].second];
   }
-  for (int i = targetPos; i < cellCosts.size(); ++i) {
+  for (int i = targetPos; i < (int) cellCosts.size(); ++i) {
     demand2 += cellDemand_[cellCosts[i].second];
   }
   int splitPos = targetPos;
@@ -197,7 +197,7 @@ int DensityLegalizer::findConstrainedSplitPos(
     --splitPos;
   }
   // Remove from the right if overflowed
-  while (splitPos < cellCosts.size() && demand2 - capa2 > 0 && capa1 > 0) {
+  while (splitPos < (int) cellCosts.size() && demand2 - capa2 > 0 && capa1 > 0) {
     int dem = cellDemand_[cellCosts[splitPos].second];
     if (capa2 > 0 && demand2 - capa2 < demand1 - capa1 + dem) {
       // Stop if overflow would be bigger on the other side
@@ -299,10 +299,10 @@ void DensityLegalizer::reoptimize(
 
   // Reallocate the cells
   std::vector<std::vector<int> > binCells(bins.size());
-  for (int i = 0; i < cells.size(); ++i) {
+  for (size_t i = 0; i < cells.size(); ++i) {
     binCells[assignment[i]].push_back(cells[i]);
   }
-  for (int b = 0; b < bins.size(); ++b) {
+  for (size_t b = 0; b < bins.size(); ++b) {
     auto [x, y] = bins[b];
     setBinCells(x, y, binCells[b]);
   }
@@ -428,7 +428,7 @@ void DensityLegalizer::improveXTransport() {
     pb.balanceDemand();
     std::vector<int> assignment = pb.assign();
     std::vector<std::vector<int> > binCells(nbBinsX());
-    for (int i = 0; i < cells.size(); ++i) {
+    for (size_t i = 0; i < cells.size(); ++i) {
       binCells[assignment[i]].push_back(cells[i]);
     }
     for (int i = 0; i < nbBinsX(); ++i) {
@@ -462,7 +462,7 @@ void DensityLegalizer::improveYTransport() {
     pb.balanceDemand();
     std::vector<int> assignment = pb.assign();
     std::vector<std::vector<int> > binCells(nbBinsY());
-    for (int i = 0; i < cells.size(); ++i) {
+    for (size_t i = 0; i < cells.size(); ++i) {
       binCells[assignment[i]].push_back(cells[i]);
     }
     for (int j = 0; j < nbBinsY(); ++j) {

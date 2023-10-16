@@ -172,7 +172,7 @@ void DetailedPlacer::runInserts(int nbRows, int nbNeighbours) {
 
 void DetailedPlacer::runSwapsOneRow(int row, int nbNeighbours) {
   std::vector<int> cells = placement_.rowCells(row);
-  for (int i = 0; i < cells.size(); ++i) {
+  for (int i = 0; i < (int) cells.size(); ++i) {
     int b = std::max(0, i - nbNeighbours);
     int e = std::min((int)cells.size(), i + nbNeighbours + 1);
     std::vector<int> candidates(cells.begin() + b, cells.begin() + e);
@@ -184,7 +184,7 @@ void DetailedPlacer::runInsertsOneRow(int row, int nbNeighbours) {
   std::vector<int> cells = placement_.rowCells(row);
   // Consider insertion before the first cell
   cells.insert(cells.begin(), -1);
-  for (int i = 1; i < cells.size(); ++i) {
+  for (int i = 1; i < (int) cells.size(); ++i) {
     int b = std::max(0, i - nbNeighbours);
     int e = std::min((int)cells.size(), i + nbNeighbours + 1);
     std::vector<int> candidates(cells.begin() + b, cells.begin() + e);
@@ -196,7 +196,7 @@ void DetailedPlacer::runSwapsTwoRows(int r1, int r2, int nbNeighbours) {
   std::vector<int> cells1 = placement_.rowCells(r1);
   std::vector<int> cells2 = placement_.rowCells(r2);
   std::vector<int> closestIndex = computeClosestIndexInRow(cells1, cells2);
-  for (int i = 0; i < cells1.size(); ++i) {
+  for (int i = 0; i < (int) cells1.size(); ++i) {
     int closest = closestIndex[i];
     int b = std::max(0, closest - nbNeighbours);
     int e = std::min((int)cells2.size(), closest + nbNeighbours + 1);
@@ -221,7 +221,7 @@ void DetailedPlacer::runInsertsTwoRows(int r1, int r2, int nbNeighbours) {
   std::vector<int> cells2 = placement_.rowCells(r2);
   cells2.insert(cells2.begin(), -1);
   std::vector<int> closestIndex = computeClosestIndexInRow(cells1, cells2);
-  for (int i = 0; i < cells1.size(); ++i) {
+  for (int i = 0; i < (int) cells1.size(); ++i) {
     int closest = closestIndex[i];
     int b = std::max(0, closest - nbNeighbours);
     int e = std::min((int)cells2.size(), closest + nbNeighbours + 1);
@@ -372,7 +372,7 @@ std::vector<int> DetailedPlacer::computeClosestIndexInRow(
     int x = placement_.cellX(row1Cell);
     while (true) {
       int c = row2Cells[closest];
-      if (closest == row2Cells.size() - 1) {
+      if (closest == (int) row2Cells.size() - 1) {
         break;
       }
       if (c != -1 && placement_.cellX(c) < x) {
@@ -413,7 +413,7 @@ void DetailedPlacer::runShiftsOnRows(const std::vector<int> &rows,
   // Only select part of the cells so we never solve an optimization problem
   // bigger than maxNbCells
   int overlap = std::min(maxNbCells / 2, 10);
-  for (int start = 0; start < cells.size(); start += maxNbCells - overlap) {
+  for (int start = 0; start < (int) cells.size(); start += maxNbCells - overlap) {
     int end = std::min(start + maxNbCells, (int)cells.size());
     std::vector<int> subproblem(cells.begin() + start, cells.begin() + end);
     runShiftsOnCells(subproblem);
@@ -564,12 +564,12 @@ class RowReordering {
   /**
    * @brief Number of registered regions
    */
-  size_t nbRegions() const { return regions_.size(); }
+  int nbRegions() const { return regions_.size(); }
 
   /**
    * @brief Number of registered cells
    */
-  size_t nbCells() const { return cells_.size(); }
+  int nbCells() const { return cells_.size(); }
 
   /**
    * @brief Add a region and its cells to be optimized
@@ -737,7 +737,7 @@ void RowReordering::writeback() {
     for (int c : cells_) {
       placement_.unplace(c);
     }
-    for (size_t i = 0; i < nbRegions(); ++i) {
+    for (int i = 0; i < nbRegions(); ++i) {
       int pred = regions_[i].cellPred;
       for (size_t j = 0; j < bestOrder_[i].size(); ++j) {
         int c = bestOrder_[i][j];
@@ -758,15 +758,15 @@ void RowReordering::writeback() {
 }
 
 void RowReordering::check() const {
-  if (nbRegions() != order_.size())
+  if (nbRegions() != (int) order_.size())
     throw std::runtime_error("Inconsistent number of regions");
-  if (nbRegions() != positions_.size())
+  if (nbRegions() != (int) positions_.size())
     throw std::runtime_error("Inconsistent number of regions");
-  if (nbRegions() != bestOrder_.size())
+  if (nbRegions() != (int) bestOrder_.size())
     throw std::runtime_error("Inconsistent number of regions");
-  if (nbRegions() != bestPositions_.size())
+  if (nbRegions() != (int) bestPositions_.size())
     throw std::runtime_error("Inconsistent number of regions");
-  for (size_t i = 0; i < nbRegions(); ++i) {
+  for (int i = 0; i < nbRegions(); ++i) {
     if (bestOrder_[i].size() != bestPositions_[i].size())
       throw std::runtime_error("Inconsistent number of cells in regions");
   }

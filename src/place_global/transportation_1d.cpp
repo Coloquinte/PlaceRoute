@@ -294,7 +294,7 @@ Transportation1dSolver::Solution Transportation1dSolver::computeSolution()
   std::vector<std::tuple<int, int, long long>> ret;
   int i = 0;
   int j = 0;
-  while (i < p.size() && j < nbSinks()) {
+  while (i < (int) p.size() && j < nbSinks()) {
     long long bi = S[i] + p[i];
     long long ei = S[i + 1] + p[i];
     long long bj = D[j];
@@ -316,7 +316,7 @@ Transportation1dSolver::Solution Transportation1dSolver::computeSolution()
 std::vector<int> Transportation1dSolver::computeAssignment() const {
   std::vector<int> ret(p.size());
   int currentSink = 0;
-  for (int i = 0; i < p.size(); ++i) {
+  for (size_t i = 0; i < p.size(); ++i) {
     // Position of the middle of the source
     long long assignPos = p[i] + S[i] + s[i] / 2;
     while (D[currentSink + 1] <= assignPos) {
@@ -393,13 +393,13 @@ void Transportation1dSolver::checkSolutionOptimal(const Solution &alloc) const {
 
 void Transportation1dSolver::check() const {
   Transportation1d::check();
-  if (S.size() != nbSources() + 1) {
+  if ((int) S.size() != nbSources() + 1) {
     throw std::runtime_error("Inconsistant total supplies");
   }
-  if (D.size() != nbSinks() + 1) {
+  if ((int) D.size() != nbSinks() + 1) {
     throw std::runtime_error("Inconsistant total demands");
   }
-  if (p.size() > nbSources()) {
+  if ((int) p.size() > nbSources()) {
     throw std::runtime_error("Too many positions computed");
   }
   Transportation1d::checkSorted();
@@ -407,16 +407,16 @@ void Transportation1dSolver::check() const {
 }
 
 void Transportation1d::check() const {
-  if (u.size() != nbSources()) {
+  if ((int) u.size() != nbSources()) {
     throw std::runtime_error("Inconsistant source positions");
   }
-  if (v.size() != nbSinks()) {
+  if ((int) v.size() != nbSinks()) {
     throw std::runtime_error("Inconsistant sink positions");
   }
-  if (s.size() != nbSources()) {
+  if ((int) s.size() != nbSources()) {
     throw std::runtime_error("Inconsistant supplies");
   }
-  if (d.size() != nbSinks()) {
+  if ((int) d.size() != nbSinks()) {
     throw std::runtime_error("Inconsistant demands");
   }
   for (long long c : s) {
@@ -577,7 +577,7 @@ void Transportation1d::writeSolution(const Solution &sol, std::ostream &f) {
 void Transportation1d::writeAssignment(const std::vector<int> &sol,
                                        std::ostream &f) {
   f << sol.size() << std::endl;
-  for (int i = 0; i < sol.size(); ++i) {
+  for (size_t i = 0; i < sol.size(); ++i) {
     if (i > 0) f << " ";
     f << sol[i];
   }

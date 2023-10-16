@@ -453,34 +453,34 @@ Point DetailedPlacement::positionOnInsert(int c, int row, int pred) const {
 }
 
 void DetailedPlacement::check() const {
-  if (rows_.size() != nbRows()) {
+  if ((int) rows_.size() != nbRows()) {
     throw std::runtime_error("Row size mismatch");
   }
-  if (rowFirstCell_.size() != nbRows()) {
+  if ((int) rowFirstCell_.size() != nbRows()) {
     throw std::runtime_error("Row size mismatch");
   }
-  if (rowLastCell_.size() != nbRows()) {
+  if ((int) rowLastCell_.size() != nbRows()) {
     throw std::runtime_error("Row size mismatch");
   }
-  if (cellWidth_.size() != nbCells()) {
+  if ((int) cellWidth_.size() != nbCells()) {
     throw std::runtime_error("Cell size mismatch");
   }
-  if (cellPred_.size() != nbCells()) {
+  if ((int) cellPred_.size() != nbCells()) {
     throw std::runtime_error("Cell size mismatch");
   }
-  if (cellNext_.size() != nbCells()) {
+  if ((int) cellNext_.size() != nbCells()) {
     throw std::runtime_error("Cell size mismatch");
   }
-  if (cellRow_.size() != nbCells()) {
+  if ((int) cellRow_.size() != nbCells()) {
     throw std::runtime_error("Cell size mismatch");
   }
-  if (cellX_.size() != nbCells()) {
+  if ((int) cellX_.size() != nbCells()) {
     throw std::runtime_error("Cell size mismatch");
   }
-  if (cellY_.size() != nbCells()) {
+  if ((int) cellY_.size() != nbCells()) {
     throw std::runtime_error("Cell size mismatch");
   }
-  if (cellIndex_.size() != nbCells()) {
+  if ((int) cellIndex_.size() != nbCells()) {
     throw std::runtime_error("Cell size mismatch");
   }
   for (int i = 0; i < nbRows(); ++i) {

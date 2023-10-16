@@ -31,7 +31,7 @@ std::vector<float> blendPlacement(const std::vector<float> &v1,
   std::vector<float> ret;
   assert(v1.size() == v2.size());
   ret.reserve(v1.size());
-  for (int i = 0; i < v1.size(); ++i) {
+  for (size_t i = 0; i < v1.size(); ++i) {
     ret.push_back((1.0f - blending) * v1[i] + blending * v2[i]);
   }
   return ret;
@@ -99,8 +99,8 @@ void GlobalPlacer::exportPlacement(Circuit &circuit) const {
 void GlobalPlacer::exportPlacement(Circuit &circuit,
                                    const std::vector<float> &xplace,
                                    const std::vector<float> &yplace) {
-  assert(xplace.size() == circuit.nbCells());
-  assert(yplace.size() == circuit.nbCells());
+  assert((int) xplace.size() == circuit.nbCells());
+  assert((int) yplace.size() == circuit.nbCells());
 
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (circuit.isFixed(i)) {

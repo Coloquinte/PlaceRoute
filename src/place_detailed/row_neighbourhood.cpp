@@ -20,23 +20,23 @@ RowNeighbourhood::RowNeighbourhood(const std::vector<Row> &rows,
 }
 
 void RowNeighbourhood::check() const {
-  if (rowsBelow_.size() != nbRows()) {
+  if ((int) rowsBelow_.size() != nbRows()) {
     throw std::runtime_error("Inconsistent number of rows in neighbourhood");
   }
-  if (rowsAbove_.size() != nbRows()) {
+  if ((int) rowsAbove_.size() != nbRows()) {
     throw std::runtime_error("Inconsistent number of rows in neighbourhood");
   }
-  if (rowsLeft_.size() != nbRows()) {
+  if ((int) rowsLeft_.size() != nbRows()) {
     throw std::runtime_error("Inconsistent number of rows in neighbourhood");
   }
-  if (rowsRight_.size() != nbRows()) {
+  if ((int) rowsRight_.size() != nbRows()) {
     throw std::runtime_error("Inconsistent number of rows in neighbourhood");
   }
 }
 
 namespace {
 std::vector<int> keepFirstK(const std::vector<int> &inds, int nb) {
-  if (inds.size() <= nb) {
+  if ((int) inds.size() <= nb) {
     return inds;
   }
   return std::vector<int>(inds.begin(), inds.begin() + nb);
@@ -116,14 +116,14 @@ std::vector<std::vector<int> > RowNeighbourhood::rowsBelow(
   std::vector<std::pair<int, Rectangle> > sortedRows;
   sortedRows.reserve(rows.size());
 
-  for (int i = 0; i < rows.size(); ++i) {
+  for (int i = 0; i < (int) rows.size(); ++i) {
     sortedRows.emplace_back(i, rows[i]);
   }
   std::sort(sortedRows.begin(), sortedRows.end(), orderBelow);
-  for (int i = 0; i < sortedRows.size(); ++i) {
+  for (size_t i = 0; i < sortedRows.size(); ++i) {
     auto [ind1, row1] = sortedRows[i];
     int nbFound = 0;
-    for (int j = i + 1; j < sortedRows.size(); ++j) {
+    for (size_t j = i + 1; j < sortedRows.size(); ++j) {
       auto [ind2, row2] = sortedRows[j];
       if (isBelow(row2, row1)) {
         ret[ind1].push_back(ind2);
@@ -143,14 +143,14 @@ std::vector<std::vector<int> > RowNeighbourhood::rowsAbove(
   std::vector<std::pair<int, Rectangle> > sortedRows;
   sortedRows.reserve(rows.size());
 
-  for (int i = 0; i < rows.size(); ++i) {
+  for (int i = 0; i < (int) rows.size(); ++i) {
     sortedRows.emplace_back(i, rows[i]);
   }
   std::sort(sortedRows.begin(), sortedRows.end(), orderAbove);
-  for (int i = 0; i < sortedRows.size(); ++i) {
+  for (size_t i = 0; i < sortedRows.size(); ++i) {
     auto [ind1, row1] = sortedRows[i];
     int nbFound = 0;
-    for (int j = i + 1; j < sortedRows.size(); ++j) {
+    for (size_t j = i + 1; j < sortedRows.size(); ++j) {
       auto [ind2, row2] = sortedRows[j];
       if (isAbove(row2, row1)) {
         ret[ind1].push_back(ind2);
@@ -247,11 +247,11 @@ void RowNeighbourhood::buildRowsSides(const std::vector<Rectangle> &rows,
   std::vector<std::pair<int, Rectangle> > sortedRows;
   sortedRows.reserve(rows.size());
 
-  for (int i = 0; i < rows.size(); ++i) {
+  for (int i = 0; i < (int) rows.size(); ++i) {
     sortedRows.emplace_back(i, rows[i]);
   }
   std::sort(sortedRows.begin(), sortedRows.end(), orderSide);
-  for (int i = 0; i + 1 < sortedRows.size(); ++i) {
+  for (size_t i = 0; i + 1 < sortedRows.size(); ++i) {
     auto [ind1, row1] = sortedRows[i];
     auto [ind2, row2] = sortedRows[i + 1];
     if (isLeft(row1, row2)) {
