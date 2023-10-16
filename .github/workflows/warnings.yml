@@ -1,0 +1,28 @@
+name: No warnings
+
+on:
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ "*" ]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  no-warnings:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Install dependencies
+      run: sudo apt-get install libboost-all-dev libeigen3-dev ninja-build; pip3 install cmake meson
+
+    - name: Build
+      run: meson setup build --warnlevel=3 --werror; meson compile -C build
+
+    - name: Test
+      run: meson test -C build
