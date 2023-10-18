@@ -253,7 +253,7 @@ void DensityLegalizer::reoptimize(
       assignment.push_back(binCnt);
     }
   }
-  if (bins.empty()) {
+  if (bins.empty() || cells.empty()) {
     return;
   }
 
