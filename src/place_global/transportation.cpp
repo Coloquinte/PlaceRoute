@@ -174,10 +174,10 @@ void TransportationProblem::costsFromIntegers(
 }
 
 void TransportationProblem::check() const {
-  if ((int) demands_.size() != nbSources()) {
+  if ((int)demands_.size() != nbSources()) {
     throw std::runtime_error("Inconsistant demands");
   }
-  if ((int) capacities_.size() != nbSinks()) {
+  if ((int)capacities_.size() != nbSinks()) {
     throw std::runtime_error("Inconsistant capacities");
   }
   for (DemandType c : demands_) {
@@ -191,23 +191,23 @@ void TransportationProblem::check() const {
     }
   }
 
-  if ((int) costs_.size() != nbSinks()) {
+  if ((int)costs_.size() != nbSinks()) {
     throw std::runtime_error(
         "Inconsistant cost size (first dimension is sinks)");
   }
   for (const auto& c : costs_) {
-    if ((int) c.size() != nbSources()) {
+    if ((int)c.size() != nbSources()) {
       throw std::runtime_error(
           "Inconsistant cost size (second dimension is sources)");
     }
   }
 
-  if ((int) allocations_.size() != nbSinks()) {
+  if ((int)allocations_.size() != nbSinks()) {
     throw std::runtime_error(
         "Inconsistant allocation size (first dimension is sinks)");
   }
   for (const auto& c : allocations_) {
-    if ((int) c.size() != nbSources()) {
+    if ((int)c.size() != nbSources()) {
       throw std::runtime_error(
           "Inconsistant allocation size (second dimension is sources)");
     }
@@ -375,7 +375,7 @@ void TransportationProblem::setAllocations(
 
 void TransportationProblem::setAssignment(const std::vector<int>& assignment) {
   allocations_.assign(nbSinks(), std::vector<DemandType>(nbSources(), 0LL));
-  if ((int) assignment.size() > nbSources()) {
+  if ((int)assignment.size() > nbSources()) {
     throw std::runtime_error(
         "Assignment should be no larger than the number of sources");
   }
@@ -574,7 +574,8 @@ void TransportationSuccessiveShortestPath::initQueues(int sink) {
     for (int src : sources) {
       elements.emplace_back(pb_.movingCost(src, sink, dest), src);
     }
-    queues_[sink][dest] = PrioQueue(PrioQueue::value_compare(), std::move(elements));
+    queues_[sink][dest] =
+        PrioQueue(PrioQueue::value_compare(), std::move(elements));
   }
 }
 

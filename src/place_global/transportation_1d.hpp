@@ -71,7 +71,7 @@ class Transportation1d {
 
   /**
    * @brief Add more demand if there is not enough
-  */
+   */
   void balanceDemand();
 
   /**

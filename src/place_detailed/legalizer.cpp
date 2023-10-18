@@ -63,29 +63,29 @@ LegalizerBase::LegalizerBase(
 }
 
 void LegalizerBase::check() const {
-  if ((int) cellWidth_.size() != nbCells()) {
+  if ((int)cellWidth_.size() != nbCells()) {
     throw std::runtime_error("Number of cell widths does not match");
   }
-  if ((int) cellHeight_.size() != nbCells()) {
+  if ((int)cellHeight_.size() != nbCells()) {
     throw std::runtime_error("Number of cell heights does not match");
   }
-  if ((int) cellTargetX_.size() != nbCells()) {
+  if ((int)cellTargetX_.size() != nbCells()) {
     throw std::runtime_error("Number of cell x targets does not match");
   }
-  if ((int) cellTargetY_.size() != nbCells()) {
+  if ((int)cellTargetY_.size() != nbCells()) {
     throw std::runtime_error("Number of cell y targets does not match");
   }
-  if ((int) cellTargetOrientation_.size() != nbCells()) {
+  if ((int)cellTargetOrientation_.size() != nbCells()) {
     throw std::runtime_error(
         "Number of cell orientation targets does not match");
   }
-  if ((int) cellToX_.size() != nbCells()) {
+  if ((int)cellToX_.size() != nbCells()) {
     throw std::runtime_error("Number of cell x positions does not match");
   }
-  if ((int) cellToY_.size() != nbCells()) {
+  if ((int)cellToY_.size() != nbCells()) {
     throw std::runtime_error("Number of cell y positions does not match");
   }
-  if ((int) cellToOrientation_.size() != nbCells()) {
+  if ((int)cellToOrientation_.size() != nbCells()) {
     throw std::runtime_error("Number of cell orientations does not match");
   }
   for (Row r : rows_) {
@@ -108,7 +108,7 @@ void LegalizerBase::importLegalization(const LegalizerBase &leg,
   std::vector<int> x = leg.cellLegalX();
   std::vector<int> y = leg.cellLegalY();
   std::vector<CellOrientation> o = leg.cellLegalOrientation();
-  assert((int) cells.size() == leg.nbCells());
+  assert((int)cells.size() == leg.nbCells());
   for (size_t i = 0; i < cells.size(); ++i) {
     int c = cells[i];
     if (leg.cellIsPlaced_[i]) {

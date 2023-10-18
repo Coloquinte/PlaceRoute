@@ -58,9 +58,9 @@ void Circuit::setNets(const std::vector<int> &limits,
   checkNotInUse();
   assert(!limits.empty());
   assert(limits.front() == 0);
-  assert(limits.back() == (int) cells.size());
-  assert(limits.back() == (int) xOffsets.size());
-  assert(limits.back() == (int) yOffsets.size());
+  assert(limits.back() == (int)cells.size());
+  assert(limits.back() == (int)xOffsets.size());
+  assert(limits.back() == (int)yOffsets.size());
   assert(limits.size() == weights.size() + 1 || weights.empty());
   netLimits_ = limits;
   pinCells_ = cells;
@@ -71,7 +71,7 @@ void Circuit::setNets(const std::vector<int> &limits,
 }
 
 void Circuit::setNetWeights(const std::vector<float> &w) {
-  if ((int) w.size() != nbNets()) {
+  if ((int)w.size() != nbNets()) {
     throw std::runtime_error(
         "Number of weights is not the same as the number of nets of the "
         "circuit");
@@ -80,7 +80,7 @@ void Circuit::setNetWeights(const std::vector<float> &w) {
 }
 
 void Circuit::setCellX(const std::vector<int> &x) {
-  if ((int) x.size() != nbCells()) {
+  if ((int)x.size() != nbCells()) {
     throw std::runtime_error(
         "Number of elements is not the same as the number of cells of the "
         "circuit");
@@ -89,7 +89,7 @@ void Circuit::setCellX(const std::vector<int> &x) {
 }
 
 void Circuit::setCellY(const std::vector<int> &y) {
-  if ((int) y.size() != nbCells()) {
+  if ((int)y.size() != nbCells()) {
     throw std::runtime_error(
         "Number of elements is not the same as the number of cells of the "
         "circuit");
@@ -103,7 +103,7 @@ void Circuit::setRows(const std::vector<Row> &r) {
 }
 
 void Circuit::setCellIsFixed(const std::vector<bool> &f) {
-  if ((int) f.size() != nbCells()) {
+  if ((int)f.size() != nbCells()) {
     throw std::runtime_error(
         "Number of elements is not the same as the number of cells of the "
         "circuit");
@@ -113,7 +113,7 @@ void Circuit::setCellIsFixed(const std::vector<bool> &f) {
 }
 
 void Circuit::setCellIsObstruction(const std::vector<bool> &f) {
-  if ((int) f.size() != nbCells()) {
+  if ((int)f.size() != nbCells()) {
     throw std::runtime_error(
         "Number of elements is not the same as the number of cells of the "
         "circuit");
@@ -123,7 +123,7 @@ void Circuit::setCellIsObstruction(const std::vector<bool> &f) {
 }
 
 void Circuit::setCellOrientation(const std::vector<CellOrientation> &orient) {
-  if ((int) orient.size() != nbCells()) {
+  if ((int)orient.size() != nbCells()) {
     throw std::runtime_error(
         "Number of elements is not the same as the number of cells of the "
         "circuit");
@@ -132,7 +132,7 @@ void Circuit::setCellOrientation(const std::vector<CellOrientation> &orient) {
 }
 
 void Circuit::setCellRowPolarity(const std::vector<CellRowPolarity> &orient) {
-  if ((int) orient.size() != nbCells()) {
+  if ((int)orient.size() != nbCells()) {
     throw std::runtime_error(
         "Number of elements is not the same as the number of cells of the "
         "circuit");
@@ -142,7 +142,7 @@ void Circuit::setCellRowPolarity(const std::vector<CellRowPolarity> &orient) {
 }
 
 void Circuit::setCellWidth(const std::vector<int> &widths) {
-  if ((int) widths.size() != nbCells()) {
+  if ((int)widths.size() != nbCells()) {
     throw std::runtime_error(
         "Number of elements is not the same as the number of cells of the "
         "circuit");
@@ -152,7 +152,7 @@ void Circuit::setCellWidth(const std::vector<int> &widths) {
 }
 
 void Circuit::setCellHeight(const std::vector<int> &heights) {
-  if ((int) heights.size() != nbCells()) {
+  if ((int)heights.size() != nbCells()) {
     throw std::runtime_error(
         "Number of elements is not the same as the number of cells of the "
         "circuit");
@@ -162,7 +162,7 @@ void Circuit::setCellHeight(const std::vector<int> &heights) {
 }
 
 void Circuit::setSolution(const PlacementSolution &sol) {
-  if ((int) sol.size() != nbCells()) {
+  if ((int)sol.size() != nbCells()) {
     throw std::runtime_error(
         "Number of elements is not the same as the number of cells of the "
         "circuit");
@@ -333,25 +333,25 @@ std::string Circuit::toString() const {
 }
 
 void Circuit::check() const {
-  if ((int) cellWidth_.size() != nbCells()) {
+  if ((int)cellWidth_.size() != nbCells()) {
     throw std::runtime_error("Size mismatch");
   }
-  if ((int) cellHeight_.size() != nbCells()) {
+  if ((int)cellHeight_.size() != nbCells()) {
     throw std::runtime_error("Size mismatch");
   }
-  if ((int) cellIsFixed_.size() != nbCells()) {
+  if ((int)cellIsFixed_.size() != nbCells()) {
     throw std::runtime_error("Size mismatch");
   }
-  if ((int) cellIsObstruction_.size() != nbCells()) {
+  if ((int)cellIsObstruction_.size() != nbCells()) {
     throw std::runtime_error("Size mismatch");
   }
-  if ((int) cellX_.size() != nbCells()) {
+  if ((int)cellX_.size() != nbCells()) {
     throw std::runtime_error("Size mismatch");
   }
-  if ((int) cellY_.size() != nbCells()) {
+  if ((int)cellY_.size() != nbCells()) {
     throw std::runtime_error("Size mismatch");
   }
-  if ((int) cellOrientation_.size() != nbCells()) {
+  if ((int)cellOrientation_.size() != nbCells()) {
     throw std::runtime_error("Size mismatch");
   }
   if (netLimits_.empty()) {
@@ -360,16 +360,16 @@ void Circuit::check() const {
   if (netLimits_.front() != 0) {
     throw std::runtime_error("Size mismatch");
   }
-  if ((int) netWeights_.size() != nbNets()) {
+  if ((int)netWeights_.size() != nbNets()) {
     throw std::runtime_error("Size mismatch");
   }
-  if ((int) pinCells_.size() != nbPins()) {
+  if ((int)pinCells_.size() != nbPins()) {
     throw std::runtime_error("Size mismatch");
   }
-  if ((int) pinXOffsets_.size() != nbPins()) {
+  if ((int)pinXOffsets_.size() != nbPins()) {
     throw std::runtime_error("Size mismatch");
   }
-  if ((int) pinYOffsets_.size() != nbPins()) {
+  if ((int)pinYOffsets_.size() != nbPins()) {
     throw std::runtime_error("Size mismatch");
   }
 }
@@ -771,7 +771,7 @@ float Circuit::maxDisruption(const PlacementSolution &a,
 std::vector<float> Circuit::allDistances(const PlacementSolution &a,
                                          const PlacementSolution &b,
                                          LegalizationModel costModel) {
-  if ((int) a.size() != nbCells() || (int) b.size() != nbCells()) {
+  if ((int)a.size() != nbCells() || (int)b.size() != nbCells()) {
     throw std::runtime_error("Solution size doesn't match number of cells");
   }
   std::vector<float> ret;

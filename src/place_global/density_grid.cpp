@@ -117,14 +117,14 @@ void DensityGrid::updateBinsToSize(int maxSize) {
 }
 
 void DensityGrid::check() const {
-  assert((int) binCapacity_.size() == nbBinsX());
+  assert((int)binCapacity_.size() == nbBinsX());
   for (const auto &bc : binCapacity_) {
-    assert((int) bc.size() == nbBinsY());
+    assert((int)bc.size() == nbBinsY());
   }
-  assert((int) binX_.size() == nbBinsX());
-  assert((int) binY_.size() == nbBinsY());
-  assert((int) binLimitX_.size() == nbBinsX() + 1);
-  assert((int) binLimitY_.size() == nbBinsY() + 1);
+  assert((int)binX_.size() == nbBinsX());
+  assert((int)binY_.size() == nbBinsY());
+  assert((int)binLimitX_.size() == nbBinsX() + 1);
+  assert((int)binLimitY_.size() == nbBinsY() + 1);
   for (int i = 0; i < nbBinsX(); ++i) {
     assert(binLimitX_[i] <= binLimitX_[i + 1]);
   }
@@ -228,7 +228,8 @@ void HierarchicalDensityPlacement::updateCellDemand(const Circuit &circuit) {
   }
   for (int i = 0; i < nbCells(); ++i) {
     if ((cellDemand_[i] == 0) != (demands[i] == 0)) {
-      throw std::runtime_error("Cell demand cannot change to or from zero on update");
+      throw std::runtime_error(
+          "Cell demand cannot change to or from zero on update");
     }
   }
   cellDemand_ = demands;
@@ -304,7 +305,7 @@ std::vector<float> spreadCells(const std::vector<float> &targets,
   std::vector<std::pair<float, int> > order;
   order.reserve(targets.size());
 
-  for (int i = 0; i < (int) targets.size(); ++i) {
+  for (int i = 0; i < (int)targets.size(); ++i) {
     order.emplace_back(targets[i], i);
   }
   std::sort(order.begin(), order.end());
@@ -458,7 +459,7 @@ void refine(const std::vector<int> &oldLimits, std::vector<int> &limits,
             std::vector<int> &parents) {
   limits.push_back(0);
   int minSplitSize = 2;
-  for (int i = 0; i + 1 < (int) oldLimits.size(); ++i) {
+  for (int i = 0; i + 1 < (int)oldLimits.size(); ++i) {
     int e = oldLimits[i + 1];
     int b = oldLimits[i];
     if (e - b >= minSplitSize) {
@@ -632,9 +633,9 @@ void HierarchicalDensityPlacement::check() const {
     assert(yLimits_[i].size() == parentY_[i].size() + 1);
   }
   // Size of the allocation consistent
-  assert((int) binCells_.size() == nbBinsX());
+  assert((int)binCells_.size() == nbBinsX());
   for (const auto &bc : binCells_) {
-    assert((int) bc.size() == nbBinsY());
+    assert((int)bc.size() == nbBinsY());
   }
   // All cells placed once and consistent
   std::vector<int> placeX(nbCells(), -1);

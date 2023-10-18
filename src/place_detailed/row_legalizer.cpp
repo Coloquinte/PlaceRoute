@@ -8,7 +8,7 @@
 
 namespace coloquinte {
 inline long long RowLegalizer::getDisplacement(int width, int targetPos,
-                                         bool update) {
+                                               bool update) {
   int targetAbsPos = targetPos - usedSpace();
   int slope = -width;
 

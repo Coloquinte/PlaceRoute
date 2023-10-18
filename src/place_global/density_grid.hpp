@@ -487,7 +487,7 @@ class HierarchicalDensityPlacement {
    * @brief Update the demands of the cells
    */
   void updateCellDemand(const std::vector<int> &cellDemand) {
-    assert((int) cellDemand.size() == nbCells());
+    assert((int)cellDemand.size() == nbCells());
     cellDemand_ = cellDemand;
   }
 

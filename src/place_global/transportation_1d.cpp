@@ -294,7 +294,7 @@ Transportation1dSolver::Solution Transportation1dSolver::computeSolution()
   std::vector<std::tuple<int, int, long long>> ret;
   int i = 0;
   int j = 0;
-  while (i < (int) p.size() && j < nbSinks()) {
+  while (i < (int)p.size() && j < nbSinks()) {
     long long bi = S[i] + p[i];
     long long ei = S[i + 1] + p[i];
     long long bj = D[j];
@@ -393,13 +393,13 @@ void Transportation1dSolver::checkSolutionOptimal(const Solution &alloc) const {
 
 void Transportation1dSolver::check() const {
   Transportation1d::check();
-  if ((int) S.size() != nbSources() + 1) {
+  if ((int)S.size() != nbSources() + 1) {
     throw std::runtime_error("Inconsistant total supplies");
   }
-  if ((int) D.size() != nbSinks() + 1) {
+  if ((int)D.size() != nbSinks() + 1) {
     throw std::runtime_error("Inconsistant total demands");
   }
-  if ((int) p.size() > nbSources()) {
+  if ((int)p.size() > nbSources()) {
     throw std::runtime_error("Too many positions computed");
   }
   Transportation1d::checkSorted();
@@ -407,16 +407,16 @@ void Transportation1dSolver::check() const {
 }
 
 void Transportation1d::check() const {
-  if ((int) u.size() != nbSources()) {
+  if ((int)u.size() != nbSources()) {
     throw std::runtime_error("Inconsistant source positions");
   }
-  if ((int) v.size() != nbSinks()) {
+  if ((int)v.size() != nbSinks()) {
     throw std::runtime_error("Inconsistant sink positions");
   }
-  if ((int) s.size() != nbSources()) {
+  if ((int)s.size() != nbSources()) {
     throw std::runtime_error("Inconsistant supplies");
   }
-  if ((int) d.size() != nbSinks()) {
+  if ((int)d.size() != nbSinks()) {
     throw std::runtime_error("Inconsistant demands");
   }
   for (long long c : s) {

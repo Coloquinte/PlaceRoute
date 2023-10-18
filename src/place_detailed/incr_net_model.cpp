@@ -50,7 +50,7 @@ std::unordered_map<int, int> buildCellMapping(const Circuit &circuit,
   for (size_t i = 0; i < cells.size(); ++i) {
     int c = cells[i];
     assert(c >= 0 && c < circuit.nbCells());
-    cellMap[c] = (int) i;
+    cellMap[c] = (int)i;
   }
   assert(cellMap.size() == cells.size());
   return cellMap;
@@ -173,7 +173,7 @@ IncrNetModel IncrNetModelBuilder::build() const {
 }
 
 IncrNetModel IncrNetModelBuilder::build(const std::vector<int> &pos) const {
-  assert((int) pos.size() == nbCells());
+  assert((int)pos.size() == nbCells());
   IncrNetModel ret;
   ret.netLimits_ = netLimits_;
   ret.netCells_ = netCells_;
@@ -258,10 +258,10 @@ void IncrNetModel::recomputeNet(int net) {
 }
 
 void IncrNetModel::check() const {
-  if ((int) netLimits_.size() != nbNets() + 1) {
+  if ((int)netLimits_.size() != nbNets() + 1) {
     throw std::runtime_error("Net number mismatch");
   }
-  if (netLimits_.front() != 0 || netLimits_.back() != (int) netCells_.size()) {
+  if (netLimits_.front() != 0 || netLimits_.back() != (int)netCells_.size()) {
     throw std::runtime_error("Pin number mismatch");
   }
   if (netCells_.size() != netPinOffsets_.size()) {
@@ -278,19 +278,19 @@ void IncrNetModel::check() const {
       throw std::runtime_error("Invalid number of pins in nets");
     }
   }
-  if ((int) cellLimits_.size() != nbCells() + 1) {
+  if ((int)cellLimits_.size() != nbCells() + 1) {
     throw std::runtime_error("Cell number mismatch");
   }
-  if (cellLimits_.front() != 0 || cellLimits_.back() != (int) cellNets_.size()) {
+  if (cellLimits_.front() != 0 || cellLimits_.back() != (int)cellNets_.size()) {
     throw std::runtime_error("Pin number mismatch");
   }
   if (cellLimits_.back() != nbPins()) {
     throw std::runtime_error("Pin number mismatch");
   }
-  if ((int) cellNets_.size() != nbPins()) {
+  if ((int)cellNets_.size() != nbPins()) {
     throw std::runtime_error("Pin number mismatch");
   }
-  assert((int) cellPinOffsets_.size() == nbPins());
+  assert((int)cellPinOffsets_.size() == nbPins());
   for (int i = 0; i < nbCells(); ++i) {
     if (cellLimits_[i] > cellLimits_[i + 1]) {
       throw std::runtime_error("Invalid number of pins in cell");

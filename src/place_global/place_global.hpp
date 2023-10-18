@@ -90,7 +90,8 @@ class GlobalPlacer {
    * @brief Approximation distance used by the continuous model
    */
   float initialApproximationDistance() const {
-    return params_.global.continuousModel.approximationDistance * averageCellLength_;
+    return params_.global.continuousModel.approximationDistance *
+           averageCellLength_;
   }
 
   /**

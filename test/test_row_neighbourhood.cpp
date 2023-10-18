@@ -24,10 +24,8 @@ BOOST_AUTO_TEST_CASE(TestBasic1) {
 }
 
 BOOST_AUTO_TEST_CASE(TestBasic2) {
-  std::vector<Rectangle> rows = {{0, 100, 0, 12},
-                                 {10, 90, 12, 24},
-                                 {-200, -10, 0, 12},
-                                 {-100, 5, 12, 24}};
+  std::vector<Rectangle> rows = {
+      {0, 100, 0, 12}, {10, 90, 12, 24}, {-200, -10, 0, 12}, {-100, 5, 12, 24}};
   RowNeighbourhood neigh(rows, 3);
 
   BOOST_CHECK_EQUAL(neigh.rowsAbove(0).size(), 2);
@@ -74,7 +72,7 @@ BOOST_AUTO_TEST_CASE(TestAbove) {
                                  {99, 105, 10, 22}};
   int nbRows = rows.size();
   RowNeighbourhood neigh(rows, nbRows);
-  //checkNeighbourhoodComplete(neigh, nbRows);
+  // checkNeighbourhoodComplete(neigh, nbRows);
   BOOST_CHECK_EQUAL(neigh.rowsAbove(0).size(), nbRows - 1);
 }
 
@@ -86,7 +84,7 @@ BOOST_AUTO_TEST_CASE(TestBelow) {
                                  {99, 105, -24, 12}};
   int nbRows = rows.size();
   RowNeighbourhood neigh(rows, nbRows);
-  //checkNeighbourhoodComplete(neigh, nbRows);
+  // checkNeighbourhoodComplete(neigh, nbRows);
   BOOST_CHECK_EQUAL(neigh.rowsBelow(0).size(), nbRows - 1);
 }
 
@@ -98,7 +96,7 @@ BOOST_AUTO_TEST_CASE(TestLeft) {
                                  {-20, -5, 24, 36}};
   int nbRows = rows.size();
   RowNeighbourhood neigh(rows, nbRows);
-  //checkNeighbourhoodComplete(neigh, nbRows);
+  // checkNeighbourhoodComplete(neigh, nbRows);
   BOOST_CHECK_EQUAL(neigh.rowsLeft(0).size(), nbRows - 1);
 }
 
@@ -110,6 +108,6 @@ BOOST_AUTO_TEST_CASE(TestRight) {
                                  {104, 105, 12, 24}};
   int nbRows = rows.size();
   RowNeighbourhood neigh(rows, nbRows);
-  //checkNeighbourhoodComplete(neigh, nbRows);
+  // checkNeighbourhoodComplete(neigh, nbRows);
   BOOST_CHECK_EQUAL(neigh.rowsRight(0).size(), nbRows - 1);
 }

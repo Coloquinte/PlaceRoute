@@ -31,8 +31,7 @@ class DetailedPlacer {
   /**
    * @brief Initialize the datastructure
    */
-  explicit DetailedPlacer(Circuit &circuit,
-                          const ColoquinteParameters &params);
+  explicit DetailedPlacer(Circuit &circuit, const ColoquinteParameters &params);
 
   /**
    * @brief Run the whole detailed placement algorithm

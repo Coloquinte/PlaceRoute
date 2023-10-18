@@ -165,7 +165,7 @@ int DensityLegalizer::findIdealSplitPos(
     const std::vector<std::pair<float, int> > &cellCosts) const {
   // Find the ideal split position
   int splitInd = 0;
-  for (; splitInd < (int) cellCosts.size(); ++splitInd) {
+  for (; splitInd < (int)cellCosts.size(); ++splitInd) {
     if (cellCosts[splitInd].first > 0.0) {
       break;
     }
@@ -181,7 +181,7 @@ int DensityLegalizer::findConstrainedSplitPos(
   for (int i = 0; i < targetPos; ++i) {
     demand1 += cellDemand_[cellCosts[i].second];
   }
-  for (int i = targetPos; i < (int) cellCosts.size(); ++i) {
+  for (int i = targetPos; i < (int)cellCosts.size(); ++i) {
     demand2 += cellDemand_[cellCosts[i].second];
   }
   int splitPos = targetPos;
@@ -197,7 +197,7 @@ int DensityLegalizer::findConstrainedSplitPos(
     --splitPos;
   }
   // Remove from the right if overflowed
-  while (splitPos < (int) cellCosts.size() && demand2 - capa2 > 0 && capa1 > 0) {
+  while (splitPos < (int)cellCosts.size() && demand2 - capa2 > 0 && capa1 > 0) {
     int dem = cellDemand_[cellCosts[splitPos].second];
     if (capa2 > 0 && demand2 - capa2 < demand1 - capa1 + dem) {
       // Stop if overflow would be bigger on the other side

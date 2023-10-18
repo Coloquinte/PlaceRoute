@@ -99,8 +99,8 @@ void GlobalPlacer::exportPlacement(Circuit &circuit) const {
 void GlobalPlacer::exportPlacement(Circuit &circuit,
                                    const std::vector<float> &xplace,
                                    const std::vector<float> &yplace) {
-  assert((int) xplace.size() == circuit.nbCells());
-  assert((int) yplace.size() == circuit.nbCells());
+  assert((int)xplace.size() == circuit.nbCells());
+  assert((int)yplace.size() == circuit.nbCells());
 
   for (int i = 0; i < circuit.nbCells(); ++i) {
     if (circuit.isFixed(i)) {

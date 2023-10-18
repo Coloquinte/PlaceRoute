@@ -73,14 +73,14 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
    * @brief Update the x coordinates to target
    */
   void updateCellTargetX(const std::vector<float> &cellTargetX) {
-    assert((int) cellTargetX.size() == nbCells());
+    assert((int)cellTargetX.size() == nbCells());
     cellTargetX_ = cellTargetX;
   }
   /**
    * @brief Update the y coordinates to target
    */
   void updateCellTargetY(const std::vector<float> &cellTargetY) {
-    assert((int) cellTargetY.size() == nbCells());
+    assert((int)cellTargetY.size() == nbCells());
     cellTargetY_ = cellTargetY;
   }
 
@@ -148,7 +148,8 @@ class DensityLegalizer : public HierarchicalDensityPlacement {
   /**
    * @brief Improve neighbouring bin squares
    */
-  void improveSquareNeighbours(bool sameParentX = true, bool sameParentY = true);
+  void improveSquareNeighbours(bool sameParentX = true,
+                               bool sameParentY = true);
 
   /**
    * @brief Improve groups of side-adjacent bins

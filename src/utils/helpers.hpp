@@ -14,7 +14,7 @@ inline std::vector<int> computeSubdivisions(int min, int max, int number) {
   for (int i = 0; i < number + 1; ++i) {
     ret.push_back(min + (i * (max - min) / number));
   }
-  assert((int) ret.size() == number + 1);
+  assert((int)ret.size() == number + 1);
   assert(ret.front() == min);
   assert(ret.back() == max);
   return ret;

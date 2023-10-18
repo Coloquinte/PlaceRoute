@@ -63,8 +63,10 @@ BOOST_AUTO_TEST_CASE(TestSameOrientation1) {
   std::vector<int> heights = {10, 10};
   std::vector<int> cellX = {0, 0};
   std::vector<int> cellY = {0, 20};
-  std::vector<CellRowPolarity> polarities = {CellRowPolarity::SAME, CellRowPolarity::SAME};
-  std::vector<CellOrientation> orientations = {CellOrientation::N, CellOrientation::N};
+  std::vector<CellRowPolarity> polarities = {CellRowPolarity::SAME,
+                                             CellRowPolarity::SAME};
+  std::vector<CellOrientation> orientations = {CellOrientation::N,
+                                               CellOrientation::N};
   std::vector<Row> rows = {Row(0, 15, 10, 20, CellOrientation::S),
                            Row(0, 15, 20, 30, CellOrientation::N)};
 
@@ -84,8 +86,10 @@ BOOST_AUTO_TEST_CASE(TestOppositeOrientation1) {
   std::vector<int> heights = {10, 10};
   std::vector<int> cellX = {0, 0};
   std::vector<int> cellY = {0, 20};
-  std::vector<CellRowPolarity> polarities = {CellRowPolarity::OPPOSITE, CellRowPolarity::OPPOSITE};
-  std::vector<CellOrientation> orientations = {CellOrientation::N, CellOrientation::N};
+  std::vector<CellRowPolarity> polarities = {CellRowPolarity::OPPOSITE,
+                                             CellRowPolarity::OPPOSITE};
+  std::vector<CellOrientation> orientations = {CellOrientation::N,
+                                               CellOrientation::N};
   std::vector<Row> rows = {Row(0, 15, 10, 20, CellOrientation::S),
                            Row(0, 15, 20, 30, CellOrientation::N)};
 
