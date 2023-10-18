@@ -163,9 +163,9 @@ void TransportationProblem::costsFromIntegers(
   conversionFactor_ /= 4.0;
   conversionFactor_ /= costs.size();
   costs_.clear();
-  assert (!costs.empty());
-  assert (!costs.front().empty());
-  costs_.resize(costs.size(), std::vector<CostType>(costs[0].size()));
+  if (!costs.empty()) {
+    costs_.resize(costs.size(), std::vector<CostType>(costs[0].size()));
+  }
   for (size_t i = 0; i < costs.size(); ++i) {
     for (size_t j = 0; j < costs[i].size(); ++j) {
       costs_[i][j] = std::round(costs[i][j] * conversionFactor_);
