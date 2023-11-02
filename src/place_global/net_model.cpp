@@ -15,6 +15,9 @@ NetModel::Parameters::Parameters() {
 }
 
 NetModel NetModel::xTopology(const Circuit &circuit) {
+  Rectangle area = circuit.computePlacementArea();
+  float areaMin = area.minX;
+  float areaMax = area.maxX;
   NetModel ret(circuit.nbCells());
   for (int i = 0; i < circuit.nbNets(); ++i) {
     float minPos = std::numeric_limits<float>::infinity();
@@ -34,6 +37,8 @@ NetModel NetModel::xTopology(const Circuit &circuit) {
         offsets.push_back(offset - 0.5f * circuit.placedWidth(cell));
       }
     }
+    minPos = std::max(minPos, areaMin);
+    maxPos = std::max(maxPos, areaMax);
     ret.addNet(cells, offsets, minPos, maxPos, circuit.netWeight(i));
   }
   ret.check();
@@ -41,6 +46,9 @@ NetModel NetModel::xTopology(const Circuit &circuit) {
 }
 
 NetModel NetModel::yTopology(const Circuit &circuit) {
+  Rectangle area = circuit.computePlacementArea();
+  float areaMin = area.minY;
+  float areaMax = area.maxY;
   NetModel ret(circuit.nbCells());
   for (int i = 0; i < circuit.nbNets(); ++i) {
     float minPos = std::numeric_limits<float>::infinity();
@@ -60,6 +68,8 @@ NetModel NetModel::yTopology(const Circuit &circuit) {
         offsets.push_back(offset - 0.5f * circuit.placedHeight(cell));
       }
     }
+    minPos = std::max(minPos, areaMin);
+    maxPos = std::max(maxPos, areaMax);
     ret.addNet(cells, offsets, minPos, maxPos, circuit.netWeight(i));
   }
   ret.check();
