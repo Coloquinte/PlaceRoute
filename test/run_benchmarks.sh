@@ -30,7 +30,7 @@ do
 
 		# Run placement
 		echo "  Running benchmark ${name} effort ${effort}"
-		coloquinte ${benchmark} --effort $effort 2>&1 > "${logfile}" || echo "      Failure"
+		coloquinte "${benchmark}" --effort "${effort}" 2>&1 > "${logfile}" || echo "      Failure"
 
 		# Write the results (WL) in a csv
 		echo -n "${name} ${effort} " >> "${resfile}"

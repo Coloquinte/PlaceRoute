@@ -320,6 +320,8 @@ Construct a circuit.
            "Expand the standard cells by an individual factor")
       .def("check", &Circuit::check, "Check the datastructure")
       .def("report", &Circuit::report)
+      .def("export_ispd", &Circuit::exportIspd,
+           "Export the circuit to ISPD benchmark files")
       .def("__str__", &Circuit::toString)
       .def("__repr__", &Circuit::toString);
 }

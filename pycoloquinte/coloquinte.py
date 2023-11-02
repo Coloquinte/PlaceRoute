@@ -831,6 +831,10 @@ def main():
     parser.add_argument(
         "--image-extension", help=argparse.SUPPRESS, type=str, default="webp"
     )
+    # Export the ISPD benchmark files after reading
+    parser.add_argument(
+        "--export-ispd", help=argparse.SUPPRESS, type=str
+    )
 
     tuning_options = parser.add_argument_group("tuning options")
     _add_arguments(tuning_options, ColoquinteParameters(), [])
@@ -864,6 +868,9 @@ def main():
     print(circuit.report())
 
     sys.stdout.flush()
+    if args.export_ispd is not None:
+        print("Exporting as ISPD benchmark")
+        circuit.export_ispd(args.export_ispd)
     callback = None
     if args.save_images is not None:
         circuit.write_image(

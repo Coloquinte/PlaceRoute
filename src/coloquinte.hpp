@@ -1030,6 +1030,11 @@ class Circuit {
   std::string toString() const;
 
   /**
+   * @brief Export as an ISPD benchmark
+   */
+  void exportIspd(const std::string &filename) const;
+
+  /**
    * @brief Obtain a detailed report
    */
   std::string report() const;

@@ -25,6 +25,7 @@ INCLUDE_DIRECTORIES(
 SET(SOURCES
   src/coloquinte.cpp
   src/parameters.cpp
+  src/export.cpp
   src/place_global/net_model.cpp
   src/place_global/density_legalizer.cpp
   src/place_global/density_grid.cpp
