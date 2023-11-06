@@ -317,14 +317,15 @@ Construct a circuit.
       .def("expand_cells_by_factor", &Circuit::expandCellsByFactor,
            py::arg("expansion_factor"), py::arg("max_density") = 1.0,
            py::arg("row_side_margin") = 0.0,
-           "Expand the standard cells by an individual factor")
+           "Expand the standard cells by an individual factor, up to a maximum "
+           "density")
       .def("compute_cell_expansion", &Circuit::computeCellExpansion,
            py::arg("congestion_map"), py::arg("fixed_penalty") = 0.0,
            py::arg("penalty_factor") = 1.0,
            "Compute an expansion factor given a congestion map")
       .def("check", &Circuit::check, "Check the datastructure")
       .def("report", &Circuit::report)
-      .def("export_ispd", &Circuit::exportIspd,
+      .def("export_ispd", &Circuit::exportIspd, py::arg("filename"),
            "Export the circuit to ISPD benchmark files")
       .def("__str__", &Circuit::toString)
       .def("__repr__", &Circuit::toString);

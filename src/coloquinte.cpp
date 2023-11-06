@@ -669,8 +669,8 @@ void Circuit::expandCellsToDensity(double targetDensity, double rowSideMargin) {
   }
 }
 
-void Circuit::expandCellsByFactor(const std::vector<float> &expansionFactor,
-                                  double maxDensity, double rowSideMargin) {
+double Circuit::expandCellsByFactor(const std::vector<float> &expansionFactor,
+                                    double maxDensity, double rowSideMargin) {
   // Setup the target expansion if not done explicitly
   if ((int)expansionFactor.size() != nbCells()) {
     throw std::runtime_error(
@@ -697,14 +697,14 @@ void Circuit::expandCellsByFactor(const std::vector<float> &expansionFactor,
 
   // Compute the density and return if no further work is needed
   if (cellArea == 0LL || rowArea == 0LL) {
-    return;
+    return 1.0;
   }
 
   std::vector<float> expansion = expansionFactor;
   double density = (double)cellArea / (double)rowArea;
   if (density >= maxDensity) {
     // No point in applying any expansion
-    return;
+    return 1.0;
   }
 
   double expandedDensity = (double)expandedArea / (double)rowArea;
@@ -724,6 +724,8 @@ void Circuit::expandCellsByFactor(const std::vector<float> &expansionFactor,
       cellWidth_[i] *= expansion[i];
     }
   }
+
+  return expandedDensity / density;
 }
 
 std::vector<float> Circuit::computeCellExpansion(

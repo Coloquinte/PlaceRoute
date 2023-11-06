@@ -1014,9 +1014,12 @@ class Circuit {
    * will be adjusted to not go over this.
    * @param rowSideMargin Margin applied to each row before computing available
    * area, in standard cell heights.
+   *
+   * @return Average expansion
    */
-  void expandCellsByFactor(const std::vector<float> &expansionFactor,
-                           double maxDensity = 1.0, double rowSideMargin = 0.0);
+  double expandCellsByFactor(const std::vector<float> &expansionFactor,
+                             double maxDensity = 1.0,
+                             double rowSideMargin = 0.0);
 
   /*
    * TODO: find a way that the expansion could happen on both sides (cleaner),
