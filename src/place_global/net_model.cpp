@@ -38,7 +38,7 @@ NetModel NetModel::xTopology(const Circuit &circuit) {
       }
     }
     minPos = std::max(minPos, areaMin);
-    maxPos = std::max(maxPos, areaMax);
+    maxPos = std::min(maxPos, areaMax);
     ret.addNet(cells, offsets, minPos, maxPos, circuit.netWeight(i));
   }
   ret.check();
@@ -69,7 +69,7 @@ NetModel NetModel::yTopology(const Circuit &circuit) {
       }
     }
     minPos = std::max(minPos, areaMin);
-    maxPos = std::max(maxPos, areaMax);
+    maxPos = std::min(maxPos, areaMax);
     ret.addNet(cells, offsets, minPos, maxPos, circuit.netWeight(i));
   }
   ret.check();
