@@ -626,7 +626,8 @@ long long Circuit::computeRowPlacementArea(double rowSideMargin) const {
   return rowArea;
 }
 
-void Circuit::expandCellsToDensity(double targetDensity, double rowSideMargin) {
+void Circuit::expandCellsToDensity(double targetDensity, double rowSideMargin,
+                                   double maxExpandedWidth) {
   // Compute placeable cell area
   long long cellArea = 0LL;
   for (int i = 0; i < nbCells(); ++i) {
@@ -635,6 +636,7 @@ void Circuit::expandCellsToDensity(double targetDensity, double rowSideMargin) {
     }
   }
 
+  // Compute available area
   long long rowArea = computeRowPlacementArea(rowSideMargin);
 
   // Compute the density and return if no further work is needed
@@ -645,6 +647,14 @@ void Circuit::expandCellsToDensity(double targetDensity, double rowSideMargin) {
   if (density >= targetDensity) {
     return;
   }
+
+  // Compute maximum width of the rows
+  int maxRowWidth = 0;
+  for (const Row &row : rows_) {
+    maxRowWidth = std::max(maxRowWidth, row.width());
+  }
+  double maxCellWidth = maxRowWidth * maxExpandedWidth;
+
   double expansionFactor = targetDensity / density;
 
   // Apply the expansion
@@ -657,6 +667,11 @@ void Circuit::expandCellsToDensity(double targetDensity, double rowSideMargin) {
         continue;
       }
       double fracW = w * expansionFactor;
+      // Force the expansion to a maximum
+      if (fracW > (double)maxCellWidth) {
+        fracW = (double)maxCellWidth;
+      }
+
       int newW = (int)fracW;
       // Now, since we round down, we got some area missing
       missingArea += h * (fracW - newW);

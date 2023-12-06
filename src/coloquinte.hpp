@@ -1001,8 +1001,11 @@ class Circuit {
    * @param rowSideMargin Margin applied to each row before computing available
    * area, in standard cell heights. Usually better than tweaking the density to
    * make the placement feasible.
+   * @param maxExpandedWidth Maximum width of a cell after expansion, in maximum
+   * row width.
    */
-  void expandCellsToDensity(double targetDensity, double rowSideMargin = 0.0);
+  void expandCellsToDensity(double targetDensity, double rowSideMargin = 0.0,
+                            double maxExpandedWidth = 1.0);
 
   /**
    * @brief Apply cell size modifications to the circuit, with individual

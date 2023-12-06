@@ -313,7 +313,10 @@ Construct a circuit.
           "Run the detailed placement algorithm")
       .def("expand_cells_to_density", &Circuit::expandCellsToDensity,
            py::arg("target_density"), py::arg("row_side_margin") = 0.0,
-           "Expand the standard cells to reach the target density")
+           py::arg("max_expanded_size") = 1.0,
+           "Expand the standard cells to reach the target density, "
+           "with a margin in each row (in cell heights) and a maximum cell "
+           "expansion (in row widths)")
       .def("expand_cells_by_factor", &Circuit::expandCellsByFactor,
            py::arg("expansion_factor"), py::arg("max_density") = 1.0,
            py::arg("row_side_margin") = 0.0,
