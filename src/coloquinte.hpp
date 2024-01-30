@@ -66,7 +66,7 @@ struct Rectangle {
 /**
  * @brief Step of the placement process, for use in callbacks
  */
-enum class PlacementStep { LowerBound, UpperBound, Detailed };
+enum class PlacementStep { LowerBound, UpperBound, Detailed, PenaltyUpdate };
 
 /**
  * @brief Cost model to use when doing legalization
@@ -434,6 +434,19 @@ struct GlobalPlacerParameters {
    * global placement early
    */
   double distanceTolerance;
+
+  /**
+   * @brief Distance between lower and upper bound placement at which we start
+   * doing rounting and timing driven placement by calling PenaltyUpdate
+   * callbacks
+   */
+  double penaltyUpdateDistance;
+
+  /**
+   * @brief Ratio to decrease the distance between lower and upper bound
+   * placement before we retry calling PenaltyUpdate callbacks
+   */
+  double penaltyUpdateBackoff;
 
   /**
    * @brief Blending between lower-bound and upper-bound placement at export

@@ -237,6 +237,8 @@ GlobalPlacerParameters::GlobalPlacerParameters(int effort)
   nbInitialSteps = 0;
   nbStepsBeforeRoughLegalization = 1;
   distanceTolerance = 2.0;
+  penaltyUpdateDistance = 10.0;
+  penaltyUpdateBackoff = 2.0;
   // TODO: find best parameter
   exportBlending = 0.99;
   noise = 1.0e-4;
@@ -422,6 +424,14 @@ void GlobalPlacerParameters::check() const {
   if (noise < 0.0 || noise > 2.0) {
     throw std::runtime_error(
         "Noise should be a very small non-negative number");
+  }
+  if (penaltyUpdateDistance <= 0.0f) {
+    throw std::runtime_error(
+        "Invalid penalty update distance (should be positive)");
+  }
+  if (penaltyUpdateBackoff < 1.0f) {
+    throw std::runtime_error(
+        "Invalid penalty update backoff (should be at least 1)");
   }
 }
 

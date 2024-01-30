@@ -109,6 +109,14 @@ class GlobalPlacer {
   }
 
   /**
+   * @brief Distance between upper and lower bound at which we start routing
+   * and timing driven placement
+   */
+  float penaltyUpdateDistance() const {
+    return params_.global.penaltyUpdateDistance * averageCellLength_;
+  }
+
+  /**
    * @brief Compute the penalty forces for this iteration
    */
   std::vector<float> computeIterationPerCellPenalty();

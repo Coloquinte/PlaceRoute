@@ -82,6 +82,7 @@ PYBIND11_MODULE(coloquinte_pybind, m) {
       .value("LowerBound", PlacementStep::LowerBound)
       .value("UpperBound", PlacementStep::UpperBound)
       .value("Detailed", PlacementStep::Detailed)
+      .value("PenaltyUpdate", PlacementStep::PenaltyUpdate)
       .export_values();
 
   py::class_<ColoquinteParameters>(m, "ColoquinteParameters")

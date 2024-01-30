@@ -151,6 +151,7 @@ void GlobalPlacer::run() {
   penalty_ = params_.global.penalty.initialValue;
   approximationDistance_ = initialApproximationDistance();
   penaltyCutoffDistance_ = initialPenaltyCutoffDistance();
+  double nextPenaltyUpdateDistance = penaltyUpdateDistance();
 
   float lb = valueLB();
   float ub = std::numeric_limits<float>::infinity();
@@ -170,6 +171,10 @@ void GlobalPlacer::run() {
     if (gap < params_.global.gapTolerance || dist < distanceTolerance()) {
       std::cout << std::endl;
       break;
+    }
+    if (dist < nextPenaltyUpdateDistance) {
+      callback(PlacementStep::PenaltyUpdate, xPlacementUB_, yPlacementUB_);
+      nextPenaltyUpdateDistance /= params_.global.penaltyUpdateBackoff;
     }
     for (int i = 0; i < params_.global.nbStepsBeforeRoughLegalization; ++i) {
       if (i != 0) {
