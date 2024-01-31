@@ -163,7 +163,7 @@ void GlobalPlacer::run() {
     std::cout << std::defaultfloat << std::setprecision(4) << "\tUB " << ub;
 
     float dist = leg_.meanDistance();
-    std::cout << std::fixed << std::setprecision(1) << "\tDist " << dist;
+    std::cout << std::fixed << std::setprecision(1) << "\tDist " << dist / averageCellLength_;
     std::cout << std::flush;
 
     float gap = (ub - lb) / ub;
