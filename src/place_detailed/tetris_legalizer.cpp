@@ -1,6 +1,7 @@
 
 #include "place_detailed/tetris_legalizer.hpp"
 
+#include <algorithm>
 #include <limits>
 
 namespace coloquinte {
