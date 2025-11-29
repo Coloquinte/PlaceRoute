@@ -70,3 +70,21 @@ jobs:
 
     - name: Run scaled test
       run: coloquinte --effort 1 --density 0.75 adaptec1
+
+  nix:
+    name: Test/Nix (${{ matrix.system.nix }})
+    strategy:
+      matrix:
+        system:
+          [
+            { gha: ubuntu-latest, nix: "x86_64-linux" },
+            { gha: macos-13, nix: "x86_64-darwin" },
+            { gha: macos-14, nix: "aarch64-darwin" },
+          ]
+    runs-on: ${{ matrix.system.gha }}
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - run: nix build --impure --expr '(import <nixpkgs> {}).callPackage ./default.nix {}'

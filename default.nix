@@ -3,7 +3,7 @@
 
 stdenv.mkDerivation rec {
   pname = "coloquinte";
-  version = "0.3.1";
+  version = "0.4.2";
 
   meta = with lib; {
     description = "Placement library for electronic circuits";
@@ -16,7 +16,7 @@ stdenv.mkDerivation rec {
     owner = "coloquinte";
     repo = "PlaceRoute";
     rev = "${version}";
-    hash = "sha256-bPDXaNZCNBM0qiu+46cL/zH/41lwqHPqfqTzJaERgVQ=";
+    hash = "sha256-ReYoZPvfqWJ2LcyF12VY9nZAIvdHrgzot+JsxewCMXY=";
   };
 
   nativeBuildInputs = [
