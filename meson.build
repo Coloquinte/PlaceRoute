@@ -12,7 +12,14 @@ if build_machine.system() == 'darwin'
 endif
 
 coloquinte_includes = include_directories('src')
-boost_dep = dependency('boost', required: true, modules: ['system', 'filesystem', 'iostreams', 'program_options', 'unit_test_framework'])
+boost_base_dep = dependency('boost', required: true)
+if boost_base_dep.version().split('.')[1].to_int() < 89
+  boost_modules = ['system', 'filesystem', 'iostreams', 'program_options', 'unit_test_framework']
+else
+  boost_modules = ['filesystem', 'iostreams', 'program_options', 'unit_test_framework']
+endif
+boost_dep = dependency('boost', required: true, modules: boost_modules)
+
 eigen_dep = dependency('eigen3', required: true)
 thread_dep = dependency('threads', required: true)
 
