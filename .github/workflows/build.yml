@@ -57,7 +57,7 @@ jobs:
         submodules: recursive
 
     - name: Install dependencies
-      run: sudo apt-get install libboost-all-dev libeigen3-dev ninja-build liblemon-dev; pip3 install cmake meson
+      run: sudo apt-get install libboost-all-dev libeigen3-dev ninja-build liblemon-dev libbz2-dev liblzma-dev; pip3 install cmake meson
 
     - name: Build
       run: cd pycoloquinte; python3 setup.py install --user
